@@ -1,7 +1,6 @@
 "use client";
 
 import {useState, useEffect} from "react";
-import Image from "next/image";
 import {Fa0, Fa3, FaFileArrowDown, FaMoneyBillTrendUp, FaPhotoFilm, FaSpoon} from "react-icons/fa6";
 import {FaBitcoin, FaCoins, FaPercent, FaQrcode} from "react-icons/fa";
 
@@ -98,9 +97,8 @@ const appCategories = [
 ];
 
 // Modal component for apps
-const AppModal = ({app, isOpen, onClose}) => {
-    if (!isOpen) return null;
 
+const AppModal = ({app, isOpen, onClose}) => {
     // Dynamic import of app components
     const [AppComponent, setAppComponent] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -108,6 +106,9 @@ const AppModal = ({app, isOpen, onClose}) => {
 
     // Handle Escape key press to close modal
     useEffect(() => {
+        if (!isOpen) return;
+
+        
         const handleEscKey = (event) => {
             if (event.key === "Escape") {
                 onClose();
@@ -121,9 +122,10 @@ const AppModal = ({app, isOpen, onClose}) => {
         return () => {
             window.removeEventListener("keydown", handleEscKey);
         };
-    }, [onClose]);
+    }, [isOpen, onClose]);
 
     useEffect(() => {
+        if (!isOpen || !app) return;
         setIsLoading(true);
         setError(null);
 
@@ -134,56 +136,60 @@ const AppModal = ({app, isOpen, onClose}) => {
 
                 // Math apps
                 if (app.path === "math/rule-of-three") {
-                    const module = await import('@/apps/math/rule-of-three');
-                    Component = module.default;
+                    const importedModule = await import('@/apps/math/rule-of-three');
+                    Component = importedModule.default;
                 } else if (app.path === "math/compound-interest") {
-                    const module = await import('@/apps/math/compound-interest');
-                    Component = module.default;
+                    const importedModule = await import('@/apps/math/compound-interest');
+                    Component = importedModule.default;
                 } else if (app.path === "math/percentage") {
-                    const module = await import('@/apps/math/percentage');
-                    Component = module.default;
+                    const importedModule = await import('@/apps/math/percentage');
+                    Component = importedModule.default;
                 }
 
                 // Conversion apps
                 else if (app.path === "conversion/kitchen-units") {
-                    const module = await import('@/apps/conversion/kitchen-units');
-                    Component = module.default;
+                    const importedModule = await import('@/apps/conversion/kitchen-units');
+                    Component = importedModule.default;
                 } else if (app.path === "conversion/currency") {
-                    const module = await import('@/apps/conversion/currency');
-                    Component = module.default;
+                    const importedModule = await import('@/apps/conversion/currency');
+                    Component = importedModule.default;
                 } else if (app.path === "conversion/bitcoin") {
-                    const module = await import('@/apps/conversion/bitcoin');
-                    Component = module.default;
+                    const importedModule = await import('@/apps/conversion/bitcoin');
+                    Component = importedModule.default;
                 } else if (app.path === "conversion/file-size") {
-                    const module = await import('@/apps/conversion/file-size');
-                    Component = module.default;
+                    const importedModule = await import('@/apps/conversion/file-size');
+                    Component = importedModule.default;
                 } else if (app.path === "conversion/number-systems") {
-                    const module = await import('@/apps/conversion/number-systems');
-                    Component = module.default;
+                    const importedModule = await import('@/apps/conversion/number-systems');
+                    Component = importedModule.default;
                 }
 
                 // Personalization apps
                 else if (app.path === "personalization/qr-code") {
-                    const module = await import('@/apps/personalization/qr-code');
-                    Component = module.default;
+                    const importedModule = await import('@/apps/personalization/qr-code');
+                    Component = importedModule.default;
                 } else if (app.path === "personalization/image-to-svg") {
-                    const module = await import('@/apps/personalization/image-to-svg');
-                    Component = module.default;
+                    const importedModule = await import('@/apps/personalization/image-to-svg');
+                    Component = importedModule.default;
                 } else {
                     throw new Error(`App component not found for path: ${app.path}`);
                 }
 
+                
                 setAppComponent(() => Component);
                 setIsLoading(false);
             } catch (err) {
                 console.error("Error loading app component:", err);
+                
                 setError(`Erro ao carregar o aplicativo: ${err.message}`);
                 setIsLoading(false);
             }
         };
 
         loadComponent();
-    }, [app.path]);
+    }, [isOpen, app]);
+
+    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -219,6 +225,7 @@ const AppModal = ({app, isOpen, onClose}) => {
                                 {error}
                             </div>
                         ) : AppComponent ? (
+                            
                             <AppComponent/>
                         ) : (
                             <p className="text-gray-600 dark:text-gray-400">
@@ -236,6 +243,7 @@ export default function AppsPage() {
     const [selectedApp, setSelectedApp] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    
     const openAppModal = (app) => {
         setSelectedApp(app);
         setIsModalOpen(true);
@@ -243,7 +251,7 @@ export default function AppsPage() {
 
     const closeAppModal = () => {
         setIsModalOpen(false);
-        // Reset selected app after modal animation completes
+        // Reset the selected app after modal animation completes
         setTimeout(() => setSelectedApp(null), 300);
     };
 

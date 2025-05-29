@@ -9,7 +9,7 @@ const Footer = () => {
             1% better every day
           </p>
           <p className="text-md text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            "Yesterday I was clever, so I wanted to change the world. Today I am wise, so I am changing myself."
+            &quot;Yesterday I was clever, so I wanted to change the world. Today I am wise, so I am changing myself.&quot;
           </p>
         </div>
 

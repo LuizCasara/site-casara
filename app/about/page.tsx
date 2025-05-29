@@ -58,7 +58,7 @@ export default function About() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               <div className="flex items-start">
                 <span className="text-2xl mr-3">🔭</span>
-                <p className="text-gray-600 dark:text-gray-400">At the moment, I am working on "how to create a good young developer... with my son" 😆</p>
+                <p className="text-gray-600 dark:text-gray-400">At the moment, I am working on &quot;how to create a good young developer... with my son&quot; 😆</p>
               </div>
               <div className="flex items-start">
                 <span className="text-2xl mr-3">🌱</span>

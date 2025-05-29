@@ -7,7 +7,7 @@ export default function Home() {
       <section className="py-12 md:py-20">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl mb-6">
-            Hi, I'm <span className="text-green-500 dark:text-green-400">Luiz Casara</span>
+            Hi, I&apos;m <span className="text-green-500 dark:text-green-400">Luiz Casara</span>
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
             Web Developer & Software Engineer

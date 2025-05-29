@@ -9,8 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "15.1.8",
-    "potrace": "^2.1.8",
+    "next": "^15.3.3",
+    "potrace": "^2.1.1",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

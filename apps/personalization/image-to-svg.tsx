@@ -2,11 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import * as potrace from "potrace";
+import Image from "next/image";
 
 const ImageToSvgConverter = () => {
   // State for file and conversion
   const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<String>("");
   const [svgUrl, setSvgUrl] = useState("");
   const [isConverting, setIsConverting] = useState(false);
   const [error, setError] = useState("");
@@ -54,7 +55,7 @@ const ImageToSvgConverter = () => {
     setSelectedFile(file);
     const reader = new FileReader();
     reader.onload = () => {
-      setPreviewUrl(reader.result);
+      setPreviewUrl(typeof reader?.result === "string" ? reader.result : "");
     };
     reader.readAsDataURL(file);
   };
@@ -79,6 +80,7 @@ const ImageToSvgConverter = () => {
     setSvgUrl("");
 
     // Create a new image to load the file
+    // @ts-ignore
     const img = new Image();
     img.onload = () => {
       try {
@@ -349,10 +351,12 @@ const ImageToSvgConverter = () => {
               <div className="mb-4">
                 <p className="text-sm font-medium mb-2">Imagem Original:</p>
                 <div className="border rounded-md overflow-hidden bg-white dark:bg-gray-800 p-2">
-                  <img 
-                    src={previewUrl} 
+                  <Image
+                    src={typeof previewUrl === "string" ? previewUrl : ""}
                     alt="Preview" 
-                    className="max-w-full max-h-48 mx-auto object-contain" 
+                    className="max-w-full max-h-48 mx-auto object-contain"
+                    width={192}
+                    height={192}
                   />
                 </div>
               </div>

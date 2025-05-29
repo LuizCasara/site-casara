@@ -116,7 +116,7 @@ const QRCodeGenerator = () => {
                 setValues({
                     ...values,
                     logoFile: file,
-                    logoUrl: event.target.result
+                    logoUrl: typeof event.target.result === "string" ? event.target.result : ""
                 });
             };
             reader.readAsDataURL(file);
