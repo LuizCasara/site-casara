@@ -29,9 +29,11 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-        <link>
-
-        </link>
+        <head>
+            <link rel="manifest" href="/manifest.json"/>
+            <link rel="icon" href="/favicon-32x32.png"/>
+            <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+        </head>
 
         <body
             className={`${quicksand.variable} ${spaceMono.variable} antialiased min-h-screen flex flex-col`}
@@ -43,5 +45,6 @@ export default function RootLayout({
         <Footer/>
         </body>
         </html>
-    );
+    )
+        ;
 }

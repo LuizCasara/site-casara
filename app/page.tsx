@@ -21,7 +21,7 @@ export default function Home() {
               href="/projects" 
               className="rounded-md bg-green-500 px-5 py-3 text-white font-medium hover:bg-green-600 transition-colors"
             >
-              View All Projects
+              View Some Projects
             </Link>
           </div>
         </div>
