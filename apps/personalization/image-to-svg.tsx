@@ -316,7 +316,7 @@ const ImageToSvgConverter = () => {
             </div>
           )}
 
-          <div className="flex space-x-6">
+          <div className="flex flex-col xs:flex-row space-y-3 xs:space-y-0 xs:space-x-6">
             <button
               onClick={convertToSvg}
               className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:bg-gray-400"

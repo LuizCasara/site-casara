@@ -49,7 +49,7 @@ const BitcoinConverter = () => {
         }
 
         const data = await response.json();
-        
+
         if (!data.bitcoin) {
           throw new Error("Bitcoin data not available");
         }
@@ -68,12 +68,12 @@ const BitcoinConverter = () => {
         };
 
         setRates(formattedRates);
-        
+
         // Convert timestamp to readable date
         const lastUpdated = data.bitcoin.last_updated_at 
           ? new Date(data.bitcoin.last_updated_at * 1000).toLocaleString()
           : new Date().toLocaleString();
-          
+
         setLastUpdate(lastUpdated);
       } catch (err) {
         console.error("Error fetching Bitcoin rates:", err);
@@ -87,7 +87,7 @@ const BitcoinConverter = () => {
 
     // Refresh rates every 5 minutes
     const intervalId = setInterval(fetchRates, 5 * 60 * 1000);
-    
+
     return () => clearInterval(intervalId);
   }, []);
 
@@ -120,7 +120,7 @@ const BitcoinConverter = () => {
       }
 
       const data = await response.json();
-      
+
       if (!data.prices || data.prices.length === 0) {
         throw new Error("Historical data not available");
       }
@@ -274,7 +274,7 @@ const BitcoinConverter = () => {
         </div>
       </div>
 
-      <div className="flex space-x-6 mb-6">
+      <div className="flex flex-col xs:flex-row space-y-3 xs:space-y-0 xs:space-x-6 mb-6">
         <button
           onClick={calculateConversion}
           className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
