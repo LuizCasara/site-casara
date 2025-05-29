@@ -1,4 +1,3 @@
-import Link from 'next/link';
 
 const Footer = () => {
   return (
@@ -14,17 +13,17 @@ const Footer = () => {
           </p>
         </div>
 
-        {/* Bio Link */}
-        <div className="mb-8">
-          <a 
-            href="https://bio.site/luizcasara" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-green-500 hover:text-green-600 dark:hover:text-green-400 font-medium"
-          >
-            bio.site/luizcasara
-          </a>
-        </div>
+        {/*/!* Bio Link *!/*/}
+        {/*<div className="mb-8">*/}
+        {/*  <a */}
+        {/*    href="https://bio.site/luizcasara" */}
+        {/*    target="_blank" */}
+        {/*    rel="noopener noreferrer" */}
+        {/*    className="text-green-500 hover:text-green-600 dark:hover:text-green-400 font-medium"*/}
+        {/*  >*/}
+        {/*    bio.site/luizcasara*/}
+        {/*  </a>*/}
+        {/*</div>*/}
 
         {/* Copyright */}
         <div className="pt-6 border-t border-gray-200 dark:border-gray-800">

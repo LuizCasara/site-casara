@@ -21,14 +21,14 @@ const Header = () => {
             <Link href="/" className="text-foreground hover:text-gray-500 dark:hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
               Home
             </Link>
+            <Link href="/about" className="text-foreground hover:text-gray-500 dark:hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
+              About
+            </Link>
             <Link href="/projects" className="text-foreground hover:text-gray-500 dark:hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
               Projects
             </Link>
             <Link href="/apps" className="text-foreground hover:text-gray-500 dark:hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
               Apps
-            </Link>
-            <Link href="/about" className="text-foreground hover:text-gray-500 dark:hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
-              About
             </Link>
           </nav>
 

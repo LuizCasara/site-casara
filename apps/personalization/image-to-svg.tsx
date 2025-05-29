@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import * as potrace from "potrace";
 
 const ImageToSvgConverter = () => {
   // State for file and conversion
@@ -77,36 +78,94 @@ const ImageToSvgConverter = () => {
     setError("");
     setSvgUrl("");
 
-    // In a real implementation, we would use a library like potrace or send the image to a server
-    // For this demo, we'll simulate the conversion process
-
-    setTimeout(() => {
+    // Create a new image to load the file
+    const img = new Image();
+    img.onload = () => {
       try {
-        // Simulate SVG generation
-        // In a real app, this would be the result of actual conversion
-        const mockSvgContent = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
-            <rect width="100" height="100" fill="#f0f0f0"/>
-            <text x="50" y="50" font-family="Quicksand, sans-serif" font-size="12" text-anchor="middle">
-              SVG Preview (${conversionSettings.colorMode})
-            </text>
-            <text x="50" y="70" font-family="Quicksand, sans-serif" font-size="10" text-anchor="middle">
-              Simplification: ${conversionSettings.simplifyPaths}
-            </text>
-          </svg>
-        `;
+        // Create a canvas to draw the image
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
 
-        // Create a blob URL for the SVG
-        const blob = new Blob([mockSvgContent], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
+        // Set canvas size to match image
+        canvas.width = img.width;
+        canvas.height = img.height;
 
-        setSvgUrl(url);
-        setIsConverting(false);
+        // Draw image on canvas
+        ctx.drawImage(img, 0, 0);
+
+        // Apply grayscale or black and white if needed
+        if (conversionSettings.colorMode !== 'color') {
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imageData.data;
+
+          for (let i = 0; i < data.length; i += 4) {
+            // Convert to grayscale
+            const gray = (data[i] * 0.3 + data[i + 1] * 0.59 + data[i + 2] * 0.11);
+
+            if (conversionSettings.colorMode === 'grayscale') {
+              data[i] = data[i + 1] = data[i + 2] = gray;
+            } else if (conversionSettings.colorMode === 'blackAndWhite') {
+              // Black and white (threshold at 128)
+              const bw = gray > 128 ? 255 : 0;
+              data[i] = data[i + 1] = data[i + 2] = bw;
+            }
+          }
+
+          ctx.putImageData(imageData, 0, 0);
+        }
+
+        // Get image data as base64
+        const imageDataUrl = canvas.toDataURL('image/png');
+
+        // Configure potrace
+        const params = {
+          turdSize: 2, // Suppress speckles
+          optTolerance: 0.2,
+          threshold: -1, // Auto threshold
+          blackOnWhite: true,
+          optCurve: true,
+          alphaMax: 1,
+          background: conversionSettings.removeBackground ? null : '#fff'
+        };
+
+        // Adjust simplification based on user settings (1-5)
+        // Lower turdSize and higher alphaMax for more details (lower simplifyPaths value)
+        if (conversionSettings.simplifyPaths <= 2) {
+          params.turdSize = 1;
+          params.alphaMax = 1;
+        } else if (conversionSettings.simplifyPaths >= 4) {
+          params.turdSize = 5;
+          params.alphaMax = 0.5;
+        }
+
+        // Convert image to SVG using potrace
+        potrace.trace(imageDataUrl, params, (err, svgContent) => {
+          if (err) {
+            setError("Erro na conversão: " + err.message);
+            setIsConverting(false);
+            return;
+          }
+
+          // Create a blob URL for the SVG
+          const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+          const url = URL.createObjectURL(blob);
+
+          setSvgUrl(url);
+          setIsConverting(false);
+        });
       } catch (err) {
         setError("Erro na conversão. Por favor, tente novamente com outra imagem.");
         setIsConverting(false);
       }
-    }, 2000); // Simulate processing time
+    };
+
+    img.onerror = () => {
+      setError("Erro ao carregar a imagem. Verifique se o arquivo é válido.");
+      setIsConverting(false);
+    };
+
+    // Load the image from the file
+    img.src = previewUrl;
   };
 
   // Download SVG
@@ -140,8 +199,6 @@ const ImageToSvgConverter = () => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Conversão de PNG/JPG para SVG</h2>
-
       <div className="mb-6">
         <p className="text-gray-600 dark:text-gray-400 mb-4">
           Converta imagens PNG ou JPG para o formato SVG (gráficos vetoriais escaláveis).
@@ -181,7 +238,7 @@ const ImageToSvgConverter = () => {
                     id="colorMode"
                     value={conversionSettings.colorMode}
                     onChange={(e) => handleSettingChange("colorMode", e.target.value)}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-4 text-gray-800 border rounded-md"
                   >
                     <option value="color">Colorido</option>
                     <option value="grayscale">Escala de Cinza</option>
@@ -259,7 +316,7 @@ const ImageToSvgConverter = () => {
             </div>
           )}
 
-          <div className="flex space-x-4">
+          <div className="flex space-x-6">
             <button
               onClick={convertToSvg}
               className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:bg-gray-400"
@@ -370,7 +427,7 @@ const ImageToSvgConverter = () => {
           </ul>
 
           <p className="mt-2">
-            <strong>Nota:</strong> Esta é uma demonstração. Em uma implementação real, a conversão seria feita usando bibliotecas como Potrace, ImageTracer ou serviços de conversão.
+            <strong>Nota:</strong> Esta ferramenta utiliza a biblioteca Potrace para converter imagens em SVG. A qualidade da conversão pode variar dependendo da complexidade da imagem original.
           </p>
         </div>
       </div>

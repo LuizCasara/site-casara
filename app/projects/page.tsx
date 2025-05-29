@@ -78,6 +78,7 @@ export default function ProjectsPage() {
                 <Link 
                   href={project.link} 
                   className="text-green-500 dark:text-green-400 font-medium hover:underline"
+                  target="_blank"
                 >
                   View Project →
                 </Link>
