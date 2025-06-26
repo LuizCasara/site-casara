@@ -605,7 +605,7 @@ const DescubraSeuTemperamento = () => {
                             </div>
 
                             <div className="h-32 overflow-y-auto mb-6 content-center text-center">
-                                <h3 className="text-md">[ {testQuestions[currentQuestionIndex]?.category}{testQuestions[currentQuestionIndex]?.definicao} ]</h3>
+                                {/*<h3 className="text-md">[ {testQuestions[currentQuestionIndex]?.category}{testQuestions[currentQuestionIndex]?.definicao} ]</h3>*/}
                                 <h3 className="text-xl font-semibold">{testQuestions[currentQuestionIndex]?.question}</h3>
                             </div>
 
