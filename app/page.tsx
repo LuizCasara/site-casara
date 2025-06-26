@@ -18,17 +18,17 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
-              href="/projects" 
+              href="/apps"
               className="rounded-md bg-green-500 px-5 py-3 text-white font-medium hover:bg-green-600 transition-colors"
             >
-              View Some Projects
+              View Some Apps
             </Link>
           </div>
         </div>
       </section>
 
       {/* Skills Section */}
-      <section className="py-12 bg-gray-50 dark:bg-gray-900 rounded-lg my-12">
+      <section className="py-12 bg-gray-50 dark:bg-gray-900 rounded-lg my-12 hidden">
         <div className="max-w-4xl mx-auto px-4">
           <h2 className="text-3xl font-bold mb-8 text-center">Skills & Technologies</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">

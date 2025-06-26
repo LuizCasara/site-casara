@@ -162,7 +162,7 @@ const CompoundInterestCalculator = () => {
                         value={values.principal}
                         onChange={(e) => handleInputChange("principal", e.target.value)}
                         placeholder="Ex: 1000"
-                        className="w-full p-4 border rounded-md text-gray-900 dark:text-gray-100"
+                        className="w-full p-4 border rounded-md text-gray-900 "
                         min="0"
                         step="0.01"
                     />
@@ -178,7 +178,7 @@ const CompoundInterestCalculator = () => {
                         value={values.rate}
                         onChange={(e) => handleInputChange("rate", e.target.value)}
                         placeholder="Ex: 5.5"
-                        className="w-full p-4 border rounded-md text-gray-900 dark:text-gray-100"
+                        className="w-full p-4 border rounded-md text-gray-900 "
                         min="0"
                         step="0.01"
                     />
@@ -194,7 +194,7 @@ const CompoundInterestCalculator = () => {
                         value={values.time}
                         onChange={(e) => handleInputChange("time", e.target.value)}
                         placeholder="Ex: 5"
-                        className="w-full p-4 border rounded-md text-gray-900 dark:text-gray-100"
+                        className="w-full p-4 border rounded-md text-gray-900 "
                         min="0"
                         step="0.01"
                     />
@@ -208,7 +208,7 @@ const CompoundInterestCalculator = () => {
                         id="frequency"
                         value={values.frequency}
                         onChange={(e) => handleInputChange("frequency", e.target.value)}
-                        className="w-full p-4 border rounded-md text-gray-900 dark:text-gray-100"
+                        className="w-full p-4 border rounded-md text-gray-900 "
                     >
                         <option value="1">Anual</option>
                         <option value="2">Semestral</option>
@@ -228,7 +228,7 @@ const CompoundInterestCalculator = () => {
                         value={values.contribution}
                         onChange={(e) => handleInputChange("contribution", e.target.value)}
                         placeholder="Ex: 100"
-                        className="w-full p-4 border rounded-md text-gray-900 dark:text-gray-100"
+                        className="w-full p-4 border rounded-md text-gray-900 "
                         min="0"
                         step="0.01"
                     />
