@@ -146,7 +146,7 @@ const RuleOfThreeCalculator = () => {
                         value={values.a}
                         onChange={(e) => handleInputChange("a", e.target.value)}
                         placeholder="Valor de A"
-                        className={`p-4 border rounded-md text-gray-900 dark:text-gray-100 ${values.activeField === "a" ? "bg-gray-100 dark:bg-gray-800 dark:text-gray-200" : ""}`}
+                        className={`p-4 border rounded-md text-gray-900 ${values.activeField === "a" ? "bg-gray-800 text-gray-200" : ""}`}
                         disabled={values.activeField === "a"}
                     />
                 </div>
@@ -168,7 +168,7 @@ const RuleOfThreeCalculator = () => {
                         value={values.b}
                         onChange={(e) => handleInputChange("b", e.target.value)}
                         placeholder="Valor de B"
-                        className={`p-4 border rounded-md text-gray-900 dark:text-gray-100 ${values.activeField === "b" ? "bg-gray-100 dark:bg-gray-800 dark:text-gray-200" : ""}`}
+                        className={`p-4 border rounded-md text-gray-900 ${values.activeField === "b" ? "bg-gray-800 text-gray-200" : ""}`}
                         disabled={values.activeField === "b"}
                     />
                 </div>
@@ -190,7 +190,7 @@ const RuleOfThreeCalculator = () => {
                         value={values.c}
                         onChange={(e) => handleInputChange("c", e.target.value)}
                         placeholder="Valor de C"
-                        className={`p-4 border rounded-md text-gray-900 dark:text-gray-100 ${values.activeField === "c" ? "bg-gray-100 dark:bg-gray-800 dark:text-gray-200" : ""}`}
+                        className={`p-4 border rounded-md text-gray-900 ${values.activeField === "c" ? "bg-gray-800 text-gray-200" : ""}`}
                         disabled={values.activeField === "c"}
                     />
                 </div>
@@ -212,7 +212,7 @@ const RuleOfThreeCalculator = () => {
                         value={values.d}
                         onChange={(e) => handleInputChange("d", e.target.value)}
                         placeholder="Valor de D"
-                        className={`p-4 border rounded-md text-gray-900 dark:text-gray-100 ${values.activeField === "d" ? "bg-gray-100 dark:bg-gray-800 dark:text-gray-200" : ""}`}
+                        className={`p-4 border rounded-md text-gray-900 ${values.activeField === "d" ? "bg-gray-800 text-gray-200" : ""}`}
                         disabled={values.activeField === "d"}
                     />
                 </div>

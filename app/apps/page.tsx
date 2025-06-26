@@ -2,10 +2,23 @@
 
 import {useState, useEffect} from "react";
 import {Fa0, Fa3, FaFileArrowDown, FaMoneyBillTrendUp, FaPhotoFilm, FaSpoon} from "react-icons/fa6";
-import {FaBitcoin, FaCoins, FaPercent, FaQrcode} from "react-icons/fa";
+import {FaBitcoin, FaCoins, FaPercent, FaQrcode, FaBrain} from "react-icons/fa";
 
 // App categories and their respective apps
 const appCategories = [
+    {
+        id: "desenvolvimento-pessoal",
+        title: "Desenvolvimento Pessoal",
+        apps: [
+            {
+                id: "descubra-seu-temperamento",
+                title: "Descubra seu Temperamento",
+                description: "Descubra qual dos quatro temperamentos humanos é predominante em você.",
+                icon: <FaBrain size={32}/>,
+                path: "desenvolvimento-pessoal/descubra-seu-temperamento"
+            }
+        ]
+    },
     {
         id: "math",
         title: "Ferramentas Matemáticas e de Cálculo",
@@ -108,7 +121,7 @@ const AppModal = ({app, isOpen, onClose}) => {
     useEffect(() => {
         if (!isOpen) return;
 
-        
+
         const handleEscKey = (event) => {
             if (event.key === "Escape") {
                 onClose();
@@ -171,16 +184,22 @@ const AppModal = ({app, isOpen, onClose}) => {
                 } else if (app.path === "personalization/image-to-svg") {
                     const importedModule = await import('@/apps/personalization/image-to-svg');
                     Component = importedModule.default;
+                } 
+
+                // Desenvolvimento Pessoal apps
+                else if (app.path === "desenvolvimento-pessoal/descubra-seu-temperamento") {
+                    const importedModule = await import('@/apps/desenvolvimento-pessoal/descubra-seu-temperamento');
+                    Component = importedModule.default;
                 } else {
                     throw new Error(`App component not found for path: ${app.path}`);
                 }
 
-                
+
                 setAppComponent(() => Component);
                 setIsLoading(false);
             } catch (err) {
                 console.error("Error loading app component:", err);
-                
+
                 setError(`Erro ao carregar o aplicativo: ${err.message}`);
                 setIsLoading(false);
             }
@@ -225,7 +244,7 @@ const AppModal = ({app, isOpen, onClose}) => {
                                 {error}
                             </div>
                         ) : AppComponent ? (
-                            
+
                             <AppComponent/>
                         ) : (
                             <p className="text-gray-600 dark:text-gray-400">
@@ -243,7 +262,7 @@ export default function AppsPage() {
     const [selectedApp, setSelectedApp] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    
+
     const openAppModal = (app) => {
         setSelectedApp(app);
         setIsModalOpen(true);
