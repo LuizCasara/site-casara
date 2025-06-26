@@ -203,7 +203,9 @@ const DescubraSeuTemperamento = () => {
 
         // Sum scores for each category (0-5 scale)
         Object.values(answers).forEach(item => {
+            // @ts-ignore
             const category = item.question.category;
+            // @ts-ignore
             const score = item.answer;
 
             // Add the numeric score (0-5) to the category total
