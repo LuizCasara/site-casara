@@ -1,0 +1,221 @@
+[
+  {
+    "id": 1,
+    "pergunta": "Você tende a reagir rapidamente a eventos e estímulos?",
+    "classificacao": [
+      "quente"
+    ]
+  },
+  {
+    "id": 2,
+    "pergunta": "Suas emoções, embora intensas, tendem a passar rapidamente?",
+    "classificacao": [
+      "quente",
+      "umido"
+    ]
+  },
+  {
+    "id": 3,
+    "pergunta": "Você se sente energizado e proativo na maioria das situações?",
+    "classificacao": [
+      "quente"
+    ]
+  },
+  {
+    "id": 4,
+    "pergunta": "Você se adapta facilmente a novas situações e pessoas?",
+    "classificacao": [
+      "umido"
+    ]
+  },
+  {
+    "id": 5,
+    "pergunta": "Você é naturalmente sociável e gosta de estar rodeado de pessoas?",
+    "classificacao": [
+      "umido"
+    ]
+  },
+  {
+    "id": 6,
+    "pergunta": "Você tende a ser direto e expressivo em suas comunicações?",
+    "classificacao": [
+      "quente"
+    ]
+  },
+  {
+    "id": 7,
+    "pergunta": "Você busca ascensão e grandes feitos em suas ambições?",
+    "classificacao": [
+      "quente",
+      "seco"
+    ]
+  },
+  {
+    "id": 8,
+    "pergunta": "Você é facilmente entusiasmado com novas ideias ou projetos?",
+    "classificacao": [
+      "quente"
+    ]
+  },
+  {
+    "id": 9,
+    "pergunta": "Você tende a perdoar e seguir em frente com facilidade após desentendimentos?",
+    "classificacao": [
+      "umido"
+    ]
+  },
+  {
+    "id": 10,
+    "pergunta": "Você é uma pessoa de ação, mais inclinada a fazer do que a pensar?",
+    "classificacao": [
+      "quente"
+    ]
+  },
+  {
+    "id": 11,
+    "pergunta": "Você tende a refletir profundamente antes de tomar decisões?",
+    "classificacao": [
+      "frio"
+    ]
+  },
+  {
+    "id": 12,
+    "pergunta": "Você se apega a ideias e convicções por um longo tempo?",
+    "classificacao": [
+      "seco"
+    ]
+  },
+  {
+    "id": 13,
+    "pergunta": "Suas reações emocionais são geralmente lentas ou contidas?",
+    "classificacao": [
+      "frio"
+    ]
+  },
+  {
+    "id": 14,
+    "pergunta": "Você tem dificuldade em esquecer ofensas ou impressões marcantes?",
+    "classificacao": [
+      "Seco"
+    ]
+  },
+  {
+    "id": 15,
+    "pergunta": "Você busca profundidade e análise detalhada em tudo que faz?",
+    "classificacao": [
+      "Seco"
+    ]
+  },
+  {
+    "id": 16,
+    "pergunta": "Você valoriza ordem, estrutura e organização em seu ambiente?",
+    "classificacao": [
+      "seco"
+    ]
+  },
+  {
+    "id": 17,
+    "pergunta": "Você tende a ser mais reservado e introspectivo?",
+    "classificacao": [
+      "frio"
+    ]
+  },
+  {
+    "id": 18,
+    "pergunta": "Você é persistente e resistente a mudanças em seus planos?",
+    "classificacao": [
+      "seco"
+    ]
+  },
+  {
+    "id": 19,
+    "pergunta": "Você prefere observar e processar informações antes de se manifestar?",
+    "classificacao": [
+      "frio"
+    ]
+  },
+  {
+    "id": 20,
+    "pergunta": "Você tende a não mostrar suas emoções facilmente aos outros?",
+    "classificacao": [
+      "frio",
+      "seco"
+    ]
+  },
+  {
+    "id": 21,
+    "pergunta": "Você valoriza a calma e a tranquilidade em seu dia a dia?",
+    "classificacao": [
+      "frio"
+    ]
+  },
+  {
+    "id": 22,
+    "pergunta": "Você é geralmente imperturbável por pressões externas ou caos?",
+    "classificacao": [
+      "frio",
+      "umido"
+    ]
+  },
+  {
+    "id": 23,
+    "pergunta": "Você tende a ser pragmático e a confiar exclusivamente na razão?",
+    "classificacao": [
+      "frio",
+      "umido"
+    ]
+  },
+  {
+    "id": 24,
+    "pergunta": "Você é flexível e aberto a diferentes pontos de vista?",
+    "classificacao": [
+      "umido"
+    ]
+  },
+  {
+    "id": 25,
+    "pergunta": "Você se sente satisfeito em um ambiente sem a necessidade de conversar?",
+    "classificacao": [
+      "frio"
+    ]
+  },
+  {
+    "id": 26,
+    "pergunta": "Você é mais inclinado a ser um mediador em conflitos?",
+    "classificacao": [
+      "frio",
+      "umido"
+    ]
+  },
+  {
+    "id": 27,
+    "pergunta": "Você tende a ser cético ou cauteloso com o que é novo ou incerto?",
+    "classificacao": [
+      "frio",
+      "seco"
+    ]
+  },
+  {
+    "id": 28,
+    "pergunta": "Você é motivado por desafios árduos e complexos?",
+    "classificacao": [
+      "seco"
+    ]
+  },
+  {
+    "id": 29,
+    "pergunta": "Você tem uma forte vontade e determinação para alcançar seus objetivos?",
+    "classificacao": [
+      "quente",
+      "seco"
+    ]
+  },
+  {
+    "id": 30,
+    "pergunta": "Você tende a ser otimista sobre o futuro e confiante em si mesmo?",
+    "classificacao": [
+      "quente",
+      "umido"
+    ]
+  }
+]

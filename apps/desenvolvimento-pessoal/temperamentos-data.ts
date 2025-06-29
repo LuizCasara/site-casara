@@ -1,7 +1,5 @@
-// Dados dos temperamentos com perguntas para o teste
 export const temperamentosData = {
   "Sanguineo": {
-    "Elemento": "Ar",
     "Qualidades": [
       { "id": "SQ1", "definicao": "Comunicativo", "pergunta": "Sou uma pessoa comunicativa" },
       { "id": "SQ2", "definicao": "Destacado", "pergunta": "Costumo me destacar em grupos sociais" },
@@ -64,7 +62,6 @@ export const temperamentosData = {
     ]
   },
   "Colerico": {
-    "Elemento": "Fogo",
     "Qualidades": [
       { "id": "CQ1", "definicao": "Iracundo", "pergunta": "Me irrito com facilidade" },
       { "id": "CQ2", "definicao": "Sarcástico", "pergunta": "Costumo usar sarcasmo em minhas conversas" },
@@ -131,7 +128,6 @@ export const temperamentosData = {
     ]
   },
   "Melancolico": {
-    "Elemento": "Terra",
     "Qualidades": [
       { "id": "MQ1", "definicao": "Habilidoso", "pergunta": "Sou uma pessoa habilidosa em trabalhos detalhados" },
       { "id": "MQ2", "definicao": "Minucioso", "pergunta": "Sou minucioso ao realizar tarefas" },
@@ -200,7 +196,6 @@ export const temperamentosData = {
     ]
   },
   "Fleumatico": {
-    "Elemento": "Água",
     "Qualidades": [
       { "id": "FQ1", "definicao": "Calculista", "pergunta": "Você calcula cuidadosamente suas ações antes de agir?" },
       { "id": "FQ2", "definicao": "Calmo", "pergunta": "Você se mantém calmo mesmo em situações de estresse?" },
