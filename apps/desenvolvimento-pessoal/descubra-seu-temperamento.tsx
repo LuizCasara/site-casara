@@ -2,6 +2,7 @@
 
 import {useState, useEffect} from "react";
 import {FaUser} from "react-icons/fa";
+import {FaSpinner} from "react-icons/fa";
 import temperamentosJson from "./temperamentos.json";
 
 const DescubraSeuTemperamento = () => {
@@ -16,7 +17,6 @@ const DescubraSeuTemperamento = () => {
     const [testComplete, setTestComplete] = useState(false);
     const [results, setResults] = useState(null);
     const [testMode, setTestMode] = useState("normal"); // "normal" or "teste"
-    // Email sending is now completely silent, no need for emailSent state
 
     // State for real-time percentages
     const [temperamentPercentages, setTemperamentPercentages] = useState({
@@ -32,11 +32,18 @@ const DescubraSeuTemperamento = () => {
         "Umido": 0
     });
 
-    // Prepare test questions when component mounts
+    const [isPdfLoading, setIsPdfLoading] = useState(false);
+
+    // State to accumulate total scores for each characteristic
+    const [totalScore, setTotalScore] = useState({
+        "Quente": 0,
+        "Frio": 0,
+        "Seco": 0,
+        "Umido": 0
+    });
+
     useEffect(() => {
         const questions = [];
-
-        // Add questions from temperamentosJson
         temperamentosJson.forEach(item => {
             questions.push({
                 id: item.id,
@@ -44,48 +51,82 @@ const DescubraSeuTemperamento = () => {
                 classificacao: item.classificacao,
             });
         });
-
         // Shuffle questions
         const shuffledQuestions = questions.sort(() => Math.random() - 0.5);
-
-        // Use all questions
         setTestQuestions(shuffledQuestions);
     }, []);
 
-    // Handle input change
-    const handleInputChange = (value) => {
-        // Clear error when user types
-        if (error) setError("");
-        setUserName(value);
-    };
+    function resetTest() {
+        // Reset totalScore
+        setTotalScore({
+            "Quente": 0,
+            "Frio": 0,
+            "Seco": 0,
+            "Umido": 0
+        });
 
-    // Start the test
-    const startTest = () => {
-        // Validate input
-        if (!userName.trim()) {
-            setError("Por favor, insira seu nome para iniciar o teste.");
-            return;
-        }
+        // Reset percentages
+        setTemperamentPercentages({
+            "Sanguineo": 0,
+            "Colerico": 0,
+            "Melancolico": 0,
+            "Fleumatico": 0
+        });
 
-        // Reset test state
+        setCharacteristicPercentages({
+            "Quente": 0,
+            "Frio": 0,
+            "Seco": 0,
+            "Umido": 0
+        });
+    }
+
+    const resetForm = () => {
+        setUserName("");
+        setError("");
+        setShowTest(false);
         setCurrentQuestionIndex(0);
         setAnswers({});
         setAnswerHistory([]);
         setTestComplete(false);
         setResults(null);
+        setTestMode("normal"); // Reset to normal mode
+        resetTest();
+    };
 
-        // Show the test
+    const handleInputChange = (value) => {
+        if (error) setError("");
+        setUserName(value);
+    };
+
+    const startTest = () => {
+        if (!userName.trim()) {
+            setError("Por favor, insira seu nome para iniciar o teste.");
+            return;
+        }
+
+        setCurrentQuestionIndex(0);
+        setAnswers({});
+        setAnswerHistory([]);
+        setTestComplete(false);
+        setResults(null);
+        resetTest();
+
         setShowTest(true);
     };
 
     // Handle answering a question
     const answerQuestion = (answer) => {
+        // Get the current question's classification
+        const currentQuestion = testQuestions[currentQuestionIndex];
+        const classificacao = currentQuestion?.classificacao || [];
+
         // Save the answer
         setAnswers(prev => {
             return {
                 ...prev,
                 [currentQuestionIndex]: {
-                    question: testQuestions[currentQuestionIndex],
+                    question: currentQuestion,
                     answer
                 }
             }
@@ -96,10 +137,26 @@ const DescubraSeuTemperamento = () => {
             ...prev,
             {
                 questionIndex: currentQuestionIndex,
-                question: testQuestions[currentQuestionIndex],
+                question: currentQuestion,
                 answer
             }
         ]);
+
+        // Update totalScore based on the question's classification
+        setTotalScore(prev => {
+            const newScores = {...prev};
+
+            // Add the score to each characteristic in the classification
+            classificacao.forEach(type => {
+                const formattedType = type.charAt(0).toUpperCase() + type.slice(1);
+                if (newScores[formattedType] !== undefined) {
+                    newScores[formattedType] += answer;
+                }
+            });
+
+            console.log("answerQuestion newScores >", newScores);
+            return newScores;
+        });
 
         // Calculate percentages after each answer
         setTimeout(() => {
@@ -119,6 +176,9 @@ const DescubraSeuTemperamento = () => {
         if (currentQuestionIndex > 0) {
             // Get the last answer from history
             const lastAnswer = answerHistory[answerHistory.length - 1];
+            const lastQuestion = lastAnswer.question;
+            const lastScore = lastAnswer.answer;
+            const lastClassificacao = lastQuestion?.classificacao || [];
 
             // Remove the last answer from history
             setAnswerHistory(prev => prev.slice(0, -1));
@@ -130,83 +190,42 @@ const DescubraSeuTemperamento = () => {
                 return newAnswers;
             });
 
+            // Update totalScore by subtracting the last answer's score
+            setTotalScore(prev => {
+                const newScores = {...prev};
+
+                // Subtract the score from each characteristic in the classification
+                lastClassificacao.forEach(type => {
+                    const formattedType = type.charAt(0).toUpperCase() + type.slice(1);
+                    if (newScores[formattedType] !== undefined) {
+                        newScores[formattedType] -= lastScore;
+                    }
+                });
+
+                return newScores;
+            });
+
             // Go back to the previous question
             setCurrentQuestionIndex(prev => prev - 1);
 
             // Recalculate percentages with a clean state
             setTimeout(() => {
-                // This will recalculate based on the updated answers object
-                const updatedScores = calculatePercentages();
+                calculatePercentages();
 
                 // If we've gone back to the beginning (no answers), reset percentages
                 if (Object.keys(answers).length === 0) {
-                    setTemperamentPercentages({
-                        "Sanguineo": 0,
-                        "Colerico": 0,
-                        "Melancolico": 0,
-                        "Fleumatico": 0
-                    });
-
-                    setCharacteristicPercentages({
-                        "Quente": 0,
-                        "Frio": 0,
-                        "Seco": 0,
-                        "Umido": 0
-                    });
+                    resetTest();
                 }
             }, 0);
         }
     };
 
-    // Stop the test and show results
     const stopTest = () => {
         calculateResults();
     };
 
     // Calculate percentages in real-time
     const calculatePercentages = () => {
-        const scores = {
-            "Sanguineo": 0,
-            "Colerico": 0,
-            "Melancolico": 0,
-            "Fleumatico": 0,
-            "Quente": 0,
-            "Frio": 0,
-            "Seco": 0,
-            "Umido": 0
-        };
-
-        // Sum scores for each category based on classificacao array
-        Object.values(answers).forEach(item => {
-            // @ts-ignore
-            const classificacao = item.question.classificacao;
-            // @ts-ignore
-            const score = item.answer;
-
-            if (classificacao && Array.isArray(classificacao)) {
-                // Add the score to each temperament type in the classificacao array
-                classificacao.forEach(temperamentType => {
-                    // Convert temperament type to proper case for our scores object
-                    const formattedType = temperamentType.charAt(0).toUpperCase() + temperamentType.slice(1);
-
-                    // Map the temperament types from the JSON to our score categories
-                    const scoreCategory =
-                        formattedType === "Sanguineo" ? "Sanguineo" :
-                            formattedType === "Colerico" ? "Colerico" :
-                                formattedType === "Melancolico" ? "Melancolico" :
-                                    formattedType === "Fleumatico" ? "Fleumatico" :
-                                        formattedType === "Quente" ? "Quente" :
-                                            formattedType === "Frio" ? "Frio" :
-                                                formattedType === "Seco" ? "Seco" :
-                                                    formattedType === "Umido" ? "Umido" : null;
-
-                    if (scoreCategory && scores[scoreCategory] !== undefined) {
-                        scores[scoreCategory] += score;
-                    }
-                });
-            }
-        });
-
         // If no answers yet, return empty scores
         if (Object.keys(answers).length === 0) {
             setTemperamentPercentages({
@@ -223,101 +242,72 @@ const DescubraSeuTemperamento = () => {
                 "Umido": 0
             });
 
-            return scores;
+            return;
         }
 
-        // Calculate percentages based on accumulated scores
-        const totalCharScore = scores["Quente"] + scores["Frio"] + scores["Seco"] + scores["Umido"];
+        // Calculate total score for characteristics
+        const totalCharScore = totalScore.Quente + totalScore.Frio + totalScore.Seco + totalScore.Umido;
 
         // Calculate characteristic percentages
         if (totalCharScore > 0) {
-            // Create a copy of the scores for characteristics
-            const charScores = {
-                "Quente": scores["Quente"],
-                "Frio": scores["Frio"],
-                "Seco": scores["Seco"],
-                "Umido": scores["Umido"]
-            };
-
             // Calculate percentages
             const charPercentages = {
-                "Quente": Math.round((charScores["Quente"] / totalCharScore) * 100),
-                "Frio": Math.round((charScores["Frio"] / totalCharScore) * 100),
-                "Seco": Math.round((charScores["Seco"] / totalCharScore) * 100),
-                "Umido": Math.round((charScores["Umido"] / totalCharScore) * 100)
+                "Quente": Math.round((totalScore.Quente / totalCharScore) * 100),
+                "Frio": Math.round((totalScore.Frio / totalCharScore) * 100),
+                "Seco": Math.round((totalScore.Seco / totalCharScore) * 100),
+                "Umido": Math.round((totalScore.Umido / totalCharScore) * 100)
             };
 
-            // Ensure the sum is exactly 100% by adjusting the highest value if needed
-            const charSum = Object.values(charPercentages).reduce((a, b) => a + b, 0);
-            if (charSum !== 100 && charSum > 0) {
-                // Find the highest value to adjust
-                const highestChar = Object.entries(charPercentages)
-                    .sort((a, b) => b[1] - a[1])[0][0];
-                charPercentages[highestChar] += (100 - charSum);
-            }
+            // Ensure the sum is exactly 100% by adjusting the highest value if needed @TODO ver se esse bloco faz falta
+            // const charSum = Object.values(charPercentages).reduce((a, b) => a + b, 0);
+            // if (charSum !== 100 && charSum > 0) {
+            //     // Find the highest value to adjust
+            //     const highestChar = Object.entries(charPercentages)
+            //         .sort((a, b) => b[1] - a[1])[0][0];
+            //     charPercentages[highestChar] += (100 - charSum);
+            // }
 
             setCharacteristicPercentages(charPercentages);
 
-            // Sort characteristics by score to determine primary and secondary
-            const sortedChars = Object.entries(charScores)
-                .sort((a, b) => b[1] - a[1])
-                .map(entry => entry[0]);
+            // // Sort characteristics by score to determine primary and secondary
+            // const sortedChars = Object.entries(totalScore)
+            //     .sort((a, b) => b[1] - a[1])
+            //     .map(entry => entry[0]);
+            //
+            // // Calculate weights for each characteristic
+            // const charWeights = {
+            //     "Quente": 0,
+            //     "Frio": 0,
+            //     "Seco": 0,
+            //     "Umido": 0
+            // };
 
-            const primaryChar = sortedChars[0] || "";
-            const secondaryChar = sortedChars[1] || "";
-
-            // Create temperament scores based on characteristic combinations
+            // // Assign weights based on position (primary, secondary, etc.)
+            // const primaryWeight = 60;
+            // const secondaryWeight = 30;
+            // const otherWeight = 10;
+            //
+            // sortedChars.forEach((char, index) => {
+            //     if (index === 0) {
+            //         charWeights[char] = primaryWeight;
+            //     } else if (index === 1) {
+            //         charWeights[char] = secondaryWeight;
+            //     } else {
+            //         charWeights[char] = otherWeight;
+            //     }
+            // });
+            //
+            // Calculate temperament scores based on characteristic combinations
             const tempScores = {
-                "Sanguineo": 0,
-                "Colerico": 0,
-                "Melancolico": 0,
-                "Fleumatico": 0
+                // Sanguineo = Quente + Umido
+                "Sanguineo": (totalScore.Quente * 0.5) + (totalScore.Umido * 0.5),
+                // Colerico = Quente + Seco
+                "Colerico": (totalScore.Quente * 0.5) + (totalScore.Seco * 0.5),
+                // Melancolico = Frio + Seco
+                "Melancolico": (totalScore.Frio * 0.5) + (totalScore.Seco * 0.5),
+                // Fleumatico = Frio + Umido
+                "Fleumatico": (totalScore.Frio * 0.5) + (totalScore.Umido * 0.5)
             };
-
-            // Assign scores based on the combinations
-            if ((primaryChar === "Quente" && secondaryChar === "Umido") ||
-                (primaryChar === "Umido" && secondaryChar === "Quente")) {
-                tempScores["Sanguineo"] = 100;
-            } else if ((primaryChar === "Quente" && secondaryChar === "Seco") ||
-                (primaryChar === "Seco" && secondaryChar === "Quente")) {
-                tempScores["Colerico"] = 100;
-            } else if ((primaryChar === "Frio" && secondaryChar === "Seco") ||
-                (primaryChar === "Seco" && secondaryChar === "Frio")) {
-                tempScores["Melancolico"] = 100;
-            } else if ((primaryChar === "Frio" && secondaryChar === "Umido") ||
-                (primaryChar === "Umido" && secondaryChar === "Frio")) {
-                tempScores["Fleumatico"] = 100;
-            } else {
-                // Fallback if we don't have a clear combination
-                // Assign some weight to each temperament based on characteristics
-                if (primaryChar === "Quente") {
-                    tempScores["Sanguineo"] += 40;
-                    tempScores["Colerico"] += 40;
-                } else if (primaryChar === "Frio") {
-                    tempScores["Melancolico"] += 40;
-                    tempScores["Fleumatico"] += 40;
-                } else if (primaryChar === "Seco") {
-                    tempScores["Colerico"] += 40;
-                    tempScores["Melancolico"] += 40;
-                } else if (primaryChar === "Umido") {
-                    tempScores["Sanguineo"] += 40;
-                    tempScores["Fleumatico"] += 40;
-                }
-
-                if (secondaryChar === "Quente") {
-                    tempScores["Sanguineo"] += 20;
-                    tempScores["Colerico"] += 20;
-                } else if (secondaryChar === "Frio") {
-                    tempScores["Melancolico"] += 20;
-                    tempScores["Fleumatico"] += 20;
-                } else if (secondaryChar === "Seco") {
-                    tempScores["Colerico"] += 20;
-                    tempScores["Melancolico"] += 20;
-                } else if (secondaryChar === "Umido") {
-                    tempScores["Sanguineo"] += 20;
-                    tempScores["Fleumatico"] += 20;
-                }
-            }
 
             // Calculate temperament percentages
             const totalTempScore = Object.values(tempScores).reduce((a, b) => a + b, 0);
@@ -329,14 +319,14 @@ const DescubraSeuTemperamento = () => {
                     "Fleumatico": Math.round((tempScores["Fleumatico"] / totalTempScore) * 100)
                 };
 
-                // Ensure the sum is exactly 100% by adjusting the highest value if needed
-                const tempSum = Object.values(tempPercentages).reduce((a, b) => a + b, 0);
-                if (tempSum !== 100 && tempSum > 0) {
-                    // Find the highest value to adjust
-                    const highestTemp = Object.entries(tempPercentages)
-                        .sort((a, b) => b[1] - a[1])[0][0];
-                    tempPercentages[highestTemp] += (100 - tempSum);
-                }
+                // // Ensure the sum is exactly 100% by adjusting the highest value if needed @TODO ver se esse bloco faz falta
+                // const tempSum = Object.values(tempPercentages).reduce((a, b) => a + b, 0);
+                // if (tempSum !== 100 && tempSum > 0) {
+                //     // Find the highest value to adjust
+                //     const highestTemp = Object.entries(tempPercentages)
+                //         .sort((a, b) => b[1] - a[1])[0][0];
+                //     tempPercentages[highestTemp] += (100 - tempSum);
+                // }
 
                 setTemperamentPercentages(tempPercentages);
             } else {
@@ -364,66 +354,18 @@ const DescubraSeuTemperamento = () => {
                 "Fleumatico": 0
             });
         }
-
-        // Calculate characteristic percentages
-        if (totalCharScore > 0) {
-            // Create a copy of the scores for characteristics
-            const charScores = {
-                "Quente": scores["Quente"],
-                "Frio": scores["Frio"],
-                "Seco": scores["Seco"],
-                "Umido": scores["Umido"]
-            };
-
-            // Calculate percentages
-            const charPercentages = {
-                "Quente": Math.round((charScores["Quente"] / totalCharScore) * 100),
-                "Frio": Math.round((charScores["Frio"] / totalCharScore) * 100),
-                "Seco": Math.round((charScores["Seco"] / totalCharScore) * 100),
-                "Umido": Math.round((charScores["Umido"] / totalCharScore) * 100)
-            };
-
-            // Ensure the sum is exactly 100% by adjusting the highest value if needed
-            const charSum = Object.values(charPercentages).reduce((a, b) => a + b, 0);
-            if (charSum !== 100 && charSum > 0) {
-                // Find the highest value to adjust
-                const highestChar = Object.entries(charPercentages)
-                    .sort((a, b) => b[1] - a[1])[0][0];
-                charPercentages[highestChar] += (100 - charSum);
-            }
-
-            setCharacteristicPercentages(charPercentages);
-        } else {
-            // If no characteristic scores, set all to 0
-            setCharacteristicPercentages({
-                "Quente": 0,
-                "Frio": 0,
-                "Seco": 0,
-                "Umido": 0
-            });
-        }
-
-        return scores;
     };
 
     // Calculate test results
     const calculateResults = () => {
-        // Get the latest scores
-        const scores = calculatePercentages();
-
-        // Create separate copies for characteristic scores
-        const characteristicScores = {
-            "Quente": scores["Quente"],
-            "Frio": scores["Frio"],
-            "Seco": scores["Seco"],
-            "Umido": scores["Umido"]
-        };
+        // Calculate percentages first to ensure state is updated
+        calculatePercentages();
 
         // Calculate total score for characteristics
-        const totalCharScore = Object.values(characteristicScores).reduce((a, b) => a + b, 0);
+        const totalCharScore = totalScore.Quente + totalScore.Frio + totalScore.Seco + totalScore.Umido;
 
         // Sort characteristics by score and add percentage
-        const sortedCharacteristics = Object.entries(characteristicScores)
+        const sortedCharacteristics = Object.entries(totalScore)
             .sort((a, b) => b[1] - a[1])
             .map(entry => ({
                 name: entry[0],
@@ -449,78 +391,63 @@ const DescubraSeuTemperamento = () => {
             });
         }
 
-        // Determine temperament based on the dominant characteristics
-        // According to the rules:
-        // seco + quente = colerico
-        // umido + quente = sanguineo
-        // seco + frio = melancolico
-        // umido + frio = fleumatico
+        // // Calculate weights for each characteristic
+        // const charWeights = {
+        //     "Quente": 0,
+        //     "Frio": 0,
+        //     "Seco": 0,
+        //     "Umido": 0
+        // };
+        //
+        // // Assign weights based on position (primary, secondary, etc.)
+        // const primaryWeight = 60;
+        // const secondaryWeight = 30;
+        // const otherWeight = 10;
+        //
+        // sortedCharacteristics.forEach((char, index) => {
+        //     if (index === 0) {
+        //         charWeights[char.name] = primaryWeight;
+        //     } else if (index === 1) {
+        //         charWeights[char.name] = secondaryWeight;
+        //     } else {
+        //         charWeights[char.name] = otherWeight;
+        //     }
+        // });
 
-        // Get the two dominant characteristics
-        const primaryChar = sortedCharacteristics[0]?.name || "";
-        const secondaryChar = sortedCharacteristics[1]?.name || "";
-
-        // Create temperament scores based on characteristic combinations
+        // Calculate temperament scores based on characteristic combinations
         const temperamentScores = {
-            "Sanguineo": 0,
-            "Colerico": 0,
-            "Melancolico": 0,
-            "Fleumatico": 0
+            // Sanguineo = Quente + Umido
+            "Sanguineo": (totalScore.Quente * 0.5) + (totalScore.Umido * 0.5),
+            // Colerico = Quente + Seco
+            "Colerico": (totalScore.Quente * 0.5) + (totalScore.Seco * 0.5),
+            // Melancolico = Frio + Seco
+            "Melancolico": (totalScore.Frio * 0.5) + (totalScore.Seco * 0.5),
+            // Fleumatico = Frio + Umido
+            "Fleumatico": (totalScore.Frio * 0.5) + (totalScore.Umido * 0.5)
         };
 
-        // Assign scores based on the combinations
-        if ((primaryChar === "Quente" && secondaryChar === "Umido") ||
-            (primaryChar === "Umido" && secondaryChar === "Quente")) {
-            temperamentScores["Sanguineo"] = 100;
-        } else if ((primaryChar === "Quente" && secondaryChar === "Seco") ||
-            (primaryChar === "Seco" && secondaryChar === "Quente")) {
-            temperamentScores["Colerico"] = 100;
-        } else if ((primaryChar === "Frio" && secondaryChar === "Seco") ||
-            (primaryChar === "Seco" && secondaryChar === "Frio")) {
-            temperamentScores["Melancolico"] = 100;
-        } else if ((primaryChar === "Frio" && secondaryChar === "Umido") ||
-            (primaryChar === "Umido" && secondaryChar === "Frio")) {
-            temperamentScores["Fleumatico"] = 100;
-        } else {
-            // Fallback if we don't have a clear combination
-            // Assign some weight to each temperament based on characteristics
-            if (primaryChar === "Quente") {
-                temperamentScores["Sanguineo"] += 40;
-                temperamentScores["Colerico"] += 40;
-            } else if (primaryChar === "Frio") {
-                temperamentScores["Melancolico"] += 40;
-                temperamentScores["Fleumatico"] += 40;
-            } else if (primaryChar === "Seco") {
-                temperamentScores["Colerico"] += 40;
-                temperamentScores["Melancolico"] += 40;
-            } else if (primaryChar === "Umido") {
-                temperamentScores["Sanguineo"] += 40;
-                temperamentScores["Fleumatico"] += 40;
-            }
-
-            if (secondaryChar === "Quente") {
-                temperamentScores["Sanguineo"] += 20;
-                temperamentScores["Colerico"] += 20;
-            } else if (secondaryChar === "Frio") {
-                temperamentScores["Melancolico"] += 20;
-                temperamentScores["Fleumatico"] += 20;
-            } else if (secondaryChar === "Seco") {
-                temperamentScores["Colerico"] += 20;
-                temperamentScores["Melancolico"] += 20;
-            } else if (secondaryChar === "Umido") {
-                temperamentScores["Sanguineo"] += 20;
-                temperamentScores["Fleumatico"] += 20;
-            }
-        }
-
         // Sort temperaments by score and add percentage
+        const totalTempScore = Object.values(temperamentScores).reduce((a, b) => a + b, 0);
         const sortedTemperaments = Object.entries(temperamentScores)
             .sort((a, b) => b[1] - a[1])
             .map(entry => ({
                 name: entry[0],
                 score: entry[1],
-                percentage: entry[1]
+                percentage: totalTempScore > 0 ? Math.round((entry[1] / totalTempScore) * 100) : 0
             }));
+
+        // Ensure temperament percentages sum to 100%
+        if (totalTempScore > 0) {
+            const tempSum = sortedTemperaments.reduce((sum, temp) => sum + temp.percentage, 0);
+            if (tempSum !== 100) {
+                // Find the highest value to adjust
+                const highestIndex = sortedTemperaments
+                    .map((temp, index) => ({index, percentage: temp.percentage}))
+                    .sort((a, b) => b.percentage - a.percentage)[0].index;
+
+                sortedTemperaments[highestIndex].percentage += (100 - tempSum);
+            }
+        }
 
         const resultsData = {
             primaryTemperament: sortedTemperaments[0],
@@ -534,15 +461,14 @@ const DescubraSeuTemperamento = () => {
         setResults(resultsData);
         setTestComplete(true);
 
-        // Check if at least 20% of questions were answered
+        // Check if at least 50% of questions were answered
         const answeredQuestionsPercentage = (Object.keys(answers).length / testQuestions.length) * 100;
-        if (answeredQuestionsPercentage >= 20) {
+        if (answeredQuestionsPercentage >= 50 && testMode === "normal") {
             // Send email with test results
             sendTestResultsEmail(resultsData);
         }
     };
 
-    // Function to get browser information
     const getBrowserInfo = () => {
         const userAgent = navigator.userAgent;
         let browserName = "Unknown";
@@ -571,7 +497,6 @@ const DescubraSeuTemperamento = () => {
         return `${browserName} ${browserVersion} - ${navigator.platform}`;
     };
 
-    // Function to send test results via email - silent operation
     const sendTestResultsEmail = async (resultsData) => {
         try {
             await fetch('/api/send-email', {
@@ -592,17 +517,53 @@ const DescubraSeuTemperamento = () => {
         }
     };
 
-    // Reset the form
-    const resetForm = () => {
-        setUserName("");
-        setError("");
-        setShowTest(false);
-        setCurrentQuestionIndex(0);
-        setAnswers({});
-        setAnswerHistory([]);
-        setTestComplete(false);
-        setResults(null);
-        setTestMode("normal"); // Reset to normal mode
+    const downloadPdf = async () => {
+        try {
+            setIsPdfLoading(true);
+
+            // Call the API to generate the PDF
+            const response = await fetch('/api/generate-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: userName,
+                    date: new Date().toISOString(),
+                    results: results
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to generate PDF');
+            }
+
+            // Get the PDF blob from the response
+            const blob = await response.blob();
+
+            // Create a URL for the blob
+            const url = window.URL.createObjectURL(blob);
+
+            // Create a temporary link element
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `temperamento-${userName.replace(/\s+/g, '-').toLowerCase()}.pdf`;
+
+            // Append the link to the body
+            document.body.appendChild(link);
+
+            // Click the link to trigger the download
+            link.click();
+
+            // Clean up
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error('Error downloading PDF:', error);
+            // Handle error - could show a notification to the user
+        } finally {
+            setIsPdfLoading(false);
+        }
     };
 
     return (
@@ -706,7 +667,7 @@ const DescubraSeuTemperamento = () => {
                                         className="mr-2"
                                     />
                                     <label htmlFor="modeTeste" className="text-gray-700 dark:text-gray-300">
-                                        Teste
+                                        Debug (usado apenas para testar o funcionamento)
                                     </label>
                                 </div>
                             </div>
@@ -751,15 +712,28 @@ const DescubraSeuTemperamento = () => {
                             {testMode === "normal" ? "Modo Normal" : "Modo Teste"}
                         </span>
                     </div>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                        Responda às afirmações abaixo indicando o quanto você se identifica com cada afirmação ou
-                        pergunta.
+                    {/*<p className="text-gray-600 dark:text-gray-400 mb-2">*/}
+                    {/*    Responda às afirmações abaixo indicando o quanto você se identifica com cada afirmação ou*/}
+                    {/*    pergunta.*/}
+                    {/*</p>*/}
+                    <p className="text-gray-600 dark:text-gray-400 mb-4 font-medium bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md">
+                        <strong>Observação importante:</strong> Na dúvida olhar para o comportamento primitivo, de sua
+                        infância, e não o comportamento de hoje já condicionado.
                     </p>
 
                     {/* Real-time percentage counters - only shown in test mode */}
                     {testMode === "teste" && (
                         <div className="mb-6">
-                            <h3 className="text-lg font-semibold mb-2">Percentuais em Tempo Real:</h3>
+                            <h3 className="text-lg font-semibold mb-2">Percentuais em Tempo Real: </h3>
+                            <div className="mb-4 bg-gray-800 p-4 rounded-lg shadow-md">
+                                <h4 className="font-medium mb-2">Current Score</h4>
+                                <div className="grid grid-cols-4 gap-4 bg-gray-800 p-2">
+                                    <p>Frio: [{totalScore.Frio}]</p>
+                                    <p>Quente: [{totalScore.Quente}]</p>
+                                    <p>Seco: [{totalScore.Seco}]</p>
+                                    <p>Umido: [{totalScore.Umido}]</p>
+                                </div>
+                            </div>
                             <div className="grid grid-cols-2 gap-4 mb-4">
                                 <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
                                     <h4 className="font-medium mb-2">Temperamentos</h4>
@@ -885,29 +859,36 @@ const DescubraSeuTemperamento = () => {
 
                             <div className="mb-2 text-center">
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Quanto você se identifica com
-                                    esta afirmação?</p>
+                                    esta afirmação/pergunta?</p>
                             </div>
                             <div className="flex flex-wrap justify-center gap-2">
                                 <button
                                     onClick={() => answerQuestion(0)}
                                     className="w-28 h-16 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                                 >
-                                    <span className="text-lg font-bold">1</span>
-                                    <span className="text-xs">Nada / Não</span>
+                                    <span className="text-lg font-bold">Nada</span>
+                                    <span className="text-xs"></span>
+                                </button>
+                                <button
+                                    onClick={() => answerQuestion(1)}
+                                    className="w-28 h-16 flex flex-col items-center justify-center bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+                                >
+                                    <span className="text-lg font-bold">Pouco</span>
+                                    <span className="text-xs"></span>
                                 </button>
                                 <button
                                     onClick={() => answerQuestion(3)}
                                     className="w-28 h-16 flex flex-col items-center justify-center bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-md hover:bg-yellow-200 dark:hover:bg-yellow-800/50 transition-colors"
                                 >
-                                    <span className="text-lg font-bold">2</span>
-                                    <span className="text-xs">Médio / As Vezes</span>
+                                    <span className="text-lg font-bold">Médio</span>
+                                    <span className="text-xs"></span>
                                 </button>
                                 <button
                                     onClick={() => answerQuestion(5)}
                                     className="w-28 h-16 flex flex-col items-center justify-center bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-md hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors"
                                 >
-                                    <span className="text-lg font-bold">3</span>
-                                    <span className="text-xs">Totalmente / Sim</span>
+                                    <span className="text-lg font-bold">Totalmente</span>
+                                    <span className="text-xs"></span>
                                 </button>
                             </div>
                         </div>
@@ -922,12 +903,23 @@ const DescubraSeuTemperamento = () => {
                                 Voltar
                             </button>
                         )}
-                        <button
-                            onClick={stopTest}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-                        >
-                            Finalizar Teste
-                        </button>
+                        <div className="relative group">
+                            <button
+                                onClick={stopTest}
+                                disabled={Object.keys(answers).length < testQuestions.length}
+                                className={`px-4 py-2 ${Object.keys(answers).length < testQuestions.length
+                                    ? "bg-blue-300 cursor-not-allowed"
+                                    : "bg-blue-500 hover:bg-blue-600"} text-white rounded-md transition-colors`}
+                            >
+                                Finalizar Teste
+                            </button>
+                            {Object.keys(answers).length < testQuestions.length && (
+                                <div
+                                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Responda todas as perguntas para finalizar o teste
+                                </div>
+                            )}
+                        </div>
                         <button
                             onClick={resetForm}
                             className="px-4 py-2 bg-gray-200 dark:bg-gray-800 rounded-md hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
@@ -1213,6 +1205,20 @@ const DescubraSeuTemperamento = () => {
                             className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
                         >
                             Voltar ao Início
+                        </button>
+                        <button
+                            onClick={downloadPdf}
+                            disabled={isPdfLoading}
+                            className={`px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center ${isPdfLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
+                        >
+                            {isPdfLoading ? (
+                                <FaSpinner className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            )}
+                            {isPdfLoading ? 'Gerando PDF...' : 'Baixar Resultado em PDF'}
                         </button>
                         {/*<button*/}
                         {/*    onClick={() => {*/}
