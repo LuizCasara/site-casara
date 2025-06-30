@@ -27,7 +27,7 @@ const Header = () => {
             <Link href="/projects" className="text-foreground hover:text-gray-500 dark:hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
               Projects
             </Link>
-            <Link href="/apps" className="text-foreground hover:text-gray-500 dark:hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
+            <Link href="/app" className="text-foreground hover:text-gray-500 dark:hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
               Apps
             </Link>
           </nav>
@@ -54,7 +54,7 @@ const Header = () => {
             <Link href="/projects" className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-gray-100 dark:hover:bg-gray-800">
               Projects
             </Link>
-            <Link href="/apps" className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-gray-100 dark:hover:bg-gray-800">
+            <Link href="/app" className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-gray-100 dark:hover:bg-gray-800">
               Apps
             </Link>
             <Link href="/about" className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-gray-100 dark:hover:bg-gray-800">

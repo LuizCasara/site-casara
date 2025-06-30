@@ -567,7 +567,7 @@ const DescubraSeuTemperamento = () => {
     };
 
     return (
-        <div className="p-6 max-w-max mx-auto">
+        <div className="p-4 max-w-max mx-auto">
             {!showTest ? (
                 <>
                     <div className="mb-6">
@@ -577,8 +577,8 @@ const DescubraSeuTemperamento = () => {
                             características distintas:
                         </p>
 
-                        <div className="space-y-4 mb-6">
-                            <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-md">
+                        <div className="mb-6 grid sm:grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="p-4 h-52 bg-red-50 dark:bg-red-900/20 rounded-md">
                                 <h3 className="font-bold text-red-600 dark:text-red-400">Sanguíneo</h3>
                                 <p className="text-gray-700 dark:text-gray-300">
                                     Extrovertido, comunicativo, sociável e entusiasmado. Pessoas com este temperamento
@@ -586,7 +586,7 @@ const DescubraSeuTemperamento = () => {
                                 </p>
                             </div>
 
-                            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+                            <div className="p-4 h-52 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
                                 <h3 className="font-bold text-yellow-600 dark:text-yellow-400">Colérico</h3>
                                 <p className="text-gray-700 dark:text-gray-300">
                                     Enérgico, decidido, prático e orientado para objetivos. Pessoas com este
@@ -594,7 +594,7 @@ const DescubraSeuTemperamento = () => {
                                 </p>
                             </div>
 
-                            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                            <div className="p-4 h-52 bg-blue-50 dark:bg-blue-900/20 rounded-md">
                                 <h3 className="font-bold text-blue-600 dark:text-blue-400">Melancólico</h3>
                                 <p className="text-gray-700 dark:text-gray-300">
                                     Analítico, perfeccionista, sensível e detalhista. Pessoas com este temperamento
@@ -602,7 +602,7 @@ const DescubraSeuTemperamento = () => {
                                 </p>
                             </div>
 
-                            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-md">
+                            <div className="p-4 h-52 bg-green-50 dark:bg-green-900/20 rounded-md">
                                 <h3 className="font-bold text-green-600 dark:text-green-400">Fleumático</h3>
                                 <p className="text-gray-700 dark:text-gray-300">
                                     Calmo, paciente, equilibrado e diplomático. Pessoas com este temperamento tendem a
@@ -704,13 +704,13 @@ const DescubraSeuTemperamento = () => {
                 <div>
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-2xl font-bold">Olá, {userName}!</h2>
-                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                            testMode === "normal"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-                        }`}>
-                            {testMode === "normal" ? "Modo Normal" : "Modo Teste"}
-                        </span>
+                        {/*<span className={`px-3 py-1 text-xs font-medium rounded-full ${*/}
+                        {/*    testMode === "normal"*/}
+                        {/*        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"*/}
+                        {/*        : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"*/}
+                        {/*}`}>*/}
+                        {/*    {testMode === "normal" ? "Modo Normal" : "Modo Teste"}*/}
+                        {/*</span>*/}
                     </div>
                     {/*<p className="text-gray-600 dark:text-gray-400 mb-2">*/}
                     {/*    Responda às afirmações abaixo indicando o quanto você se identifica com cada afirmação ou*/}
@@ -837,7 +837,7 @@ const DescubraSeuTemperamento = () => {
                         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
                             <div className="mb-4">
                                 <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
-                                    <span>Pergunta {currentQuestionIndex + 1} de {testQuestions.length}</span>
+                                    <span>Pergunta {currentQuestionIndex + 1}/{testQuestions.length}</span>
                                     <span>{Math.round(((currentQuestionIndex + 1) / testQuestions.length) * 100)}% concluído</span>
                                 </div>
                                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
@@ -848,7 +848,7 @@ const DescubraSeuTemperamento = () => {
                                 </div>
                             </div>
 
-                            <div className="h-32 overflow-y-auto mb-6 content-center text-center">
+                            <div className="h-36 overflow-y-auto mb-6 content-center text-center">
                                 {testMode === "teste" && (
                                     <h3 className="text-md text-gray-500 dark:text-gray-400 mb-2">
                                         [ {testQuestions[currentQuestionIndex]?.classificacao?.join(", ")} ]
@@ -1212,10 +1212,12 @@ const DescubraSeuTemperamento = () => {
                             className={`px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center ${isPdfLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
                         >
                             {isPdfLoading ? (
-                                <FaSpinner className="w-4 h-4 mr-2 animate-spin" />
+                                <FaSpinner className="w-4 h-4 mr-2 animate-spin"/>
                             ) : (
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
                             )}
                             {isPdfLoading ? 'Gerando PDF...' : 'Baixar Resultado em PDF'}

@@ -18,7 +18,7 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
-              href="/apps"
+              href="/app"
               className="rounded-md bg-green-500 px-5 py-3 text-white font-medium hover:bg-green-600 transition-colors"
             >
               View Some Apps
