@@ -44,7 +44,7 @@
   },
   {
     "id": 7,
-    "pergunta": "Você busca ascensão e grandes feitos em suas ambições?",
+    "pergunta": "Você busca grandes feitos em sua vida?",
     "classificacao": [
       "quente",
       "seco"
@@ -96,14 +96,14 @@
     "id": 14,
     "pergunta": "Você tem dificuldade em esquecer ofensas ou impressões marcantes?",
     "classificacao": [
-      "Seco"
+      "seco"
     ]
   },
   {
     "id": 15,
     "pergunta": "Você busca profundidade e análise detalhada em tudo que faz?",
     "classificacao": [
-      "Seco"
+      "seco"
     ]
   },
   {
@@ -136,10 +136,9 @@
   },
   {
     "id": 20,
-    "pergunta": "Você tende a não mostrar suas emoções facilmente aos outros?",
+    "pergunta": "Você tende a esconder suas emoções dos outros?",
     "classificacao": [
-      "frio",
-      "seco"
+      "frio"
     ]
   },
   {
@@ -159,9 +158,8 @@
   },
   {
     "id": 23,
-    "pergunta": "Você tende a ser pragmático e a confiar exclusivamente na razão?",
+    "pergunta": "Você se considera uma pessoa flexível?",
     "classificacao": [
-      "frio",
       "umido"
     ]
   },
@@ -212,10 +210,81 @@
   },
   {
     "id": 30,
-    "pergunta": "Você tende a ser otimista sobre o futuro e confiante em si mesmo?",
+    "pergunta": "Você tende a ser otimista sobre o futuro?",
+    "classificacao": [
+      "umido"
+    ]
+  },
+  {
+    "id": 31,
+    "pergunta": "Você busca excelência em tudo que faz?",
     "classificacao": [
       "quente",
+      "seco"
+    ]
+  },
+  {
+    "id": 32,
+    "pergunta": "Você busca excelência em tudo que faz?",
+    "classificacao": [
+      "umido",
+      "quente"
+    ]
+  },
+  {
+    "id": 33,
+    "pergunta": "Você tende a ser confiante em si mesmo?",
+    "classificacao": [
+      "seco"
+    ]
+  },
+  {
+    "id": 34,
+    "pergunta": "Você demonstra as suas emoções facilmente aos outros?",
+    "classificacao": [
       "umido"
+    ]
+  },
+  {
+    "id": 35,
+    "pergunta": "Você é acolhedor com as pessoas?",
+    "classificacao": [
+      "umido"
+    ]
+  },
+  {
+    "id": 36,
+    "pergunta": "Você se considera uma pessoa energética?",
+    "classificacao": [
+      "quente"
+    ]
+  },
+  {
+    "id": 37,
+    "pergunta": "Você se mantém calmo na maioria das situações?",
+    "classificacao": [
+      "frio"
+    ]
+  },
+  {
+    "id": 38,
+    "pergunta": "Você se mantém concentrado facilmente?",
+    "classificacao": [
+      "frio"
+    ]
+  },
+  {
+    "id": 39,
+    "pergunta": "Você resiste a adaptações e mudanças?",
+    "classificacao": [
+      "seco"
+    ]
+  },
+  {
+    "id": 40,
+    "pergunta": "Você é extrovertido em ambientes sociais?",
+    "classificacao": [
+      "quente"
     ]
   }
 ]

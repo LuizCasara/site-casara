@@ -13,13 +13,14 @@ export async function POST(request) {
       },
     });
 
-    // Format date
-    const formattedDate = new Date(date).toLocaleDateString('pt-BR', {
+    // Format date with timezone
+    const formattedDate = new Date(date).toLocaleString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'America/Sao_Paulo'
     });
 
     // Create HTML content for the email
@@ -112,7 +113,7 @@ export async function POST(request) {
             <p><strong>Data:</strong> ${formattedDate}</p>
             <p><strong>Navegador:</strong> ${browserInfo}</p>
           </div>
-          
+
           <div class="section">
             <h2>Temperamentos</h2>
             ${results.allTemperaments.map((temp, index) => {
@@ -122,13 +123,13 @@ export async function POST(request) {
                 temp.name === "Colerico" ? "Colérico" :
                 temp.name === "Melancolico" ? "Melancólico" :
                 temp.name === "Fleumatico" ? "Fleumático" : temp.name;
-              
+
               const barColor = 
                 temp.name === "Sanguineo" ? "#e53935" :
                 temp.name === "Colerico" ? "#ffb300" :
                 temp.name === "Melancolico" ? "#1e88e5" :
                 temp.name === "Fleumatico" ? "#43a047" : "#999";
-              
+
               return `
                 <div class="temperament ${tempClass}">
                   <div style="display: flex; justify-content: space-between;">
@@ -142,7 +143,7 @@ export async function POST(request) {
               `;
             }).join('')}
           </div>
-          
+
           <div class="section">
             <h2>Características</h2>
             <table>
@@ -156,7 +157,7 @@ export async function POST(request) {
                   char.name === "Frio" ? "Frio" :
                   char.name === "Seco" ? "Seco" :
                   char.name === "Umido" ? "Úmido" : char.name;
-                
+
                 return `
                   <tr>
                     <td>${displayName}</td>
@@ -166,7 +167,7 @@ export async function POST(request) {
               }).join('')}
             </table>
           </div>
-          
+
           <div class="section">
             <h2>Interpretação</h2>
             <p>
@@ -205,7 +206,7 @@ export async function POST(request) {
           </div>
         </div>
         <div class="footer">
-          <p>Este email foi gerado automaticamente pelo teste de temperamento.</p>
+          <p>Email automatico para registro de teste de temperamento, feito no site luizcasara.com.</p>
         </div>
       </body>
       </html>
