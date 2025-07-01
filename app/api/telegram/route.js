@@ -6,9 +6,9 @@
 export async function sendTemperamentTestMessage(data) {
     const {name, date, browserInfo, results} = data;
 
-    const botToken = '7602219385:AAEPAg_brKnJe1JMLFAdKjTmDod8xVOreto';
-    const chatId = '-1002666793696';
-    const threadId = '2';
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+    const threadId = process.env.TELEGRAM_THREAD_ID;
 
     if (!botToken || !chatId) {
         throw new Error('Telegram bot token or chat ID not configured');
