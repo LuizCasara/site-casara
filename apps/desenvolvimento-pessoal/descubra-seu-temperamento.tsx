@@ -1,12 +1,11 @@
 "use client";
 
-import {useState, useEffect} from "react";
-import {FaUser} from "react-icons/fa";
-import {FaSpinner} from "react-icons/fa";
+import {useEffect, useState} from "react";
+import {FaSpinner, FaUser} from "react-icons/fa";
 import temperamentosJson from "./temperamentos.json";
+import {sendTemperamentTestMessage} from "@/app/api/telegram/route";
 
 const DescubraSeuTemperamento = () => {
-    // State for user name and whether to show the test
     const [userName, setUserName] = useState("");
     const [error, setError] = useState("");
     const [showTest, setShowTest] = useState(false);
@@ -466,6 +465,8 @@ const DescubraSeuTemperamento = () => {
         if (answeredQuestionsPercentage >= 50 && testMode === "normal") {
             // Send email with test results
             sendTestResultsEmail(resultsData);
+            // Send telegram message with test results
+            sendTelegramMessage(resultsData);
         }
     };
 
@@ -516,6 +517,19 @@ const DescubraSeuTemperamento = () => {
             // Silent error handling - no console logs or UI updates
         }
     };
+
+    const sendTelegramMessage = async (resultsData) => {
+        try {
+            await sendTemperamentTestMessage({
+                name: userName,
+                date: new Date().toISOString(),
+                browserInfo: getBrowserInfo(),
+                results: resultsData
+            });
+        } catch (telegramError) {
+            console.error('Error sending Telegram message:', telegramError);
+        }
+    }
 
     const downloadPdf = async () => {
         try {
@@ -736,7 +750,7 @@ const DescubraSeuTemperamento = () => {
                     {testMode === "teste" && (
                         <div className="mb-6">
                             <h3 className="text-lg font-semibold mb-2">Percentuais em Tempo Real: </h3>
-                            <div className="mb-4 bg-gray-800 p-4 rounded-lg shadow-md">
+                            <div className="mb-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
                                 <h4 className="font-medium mb-2">Current Score</h4>
                                 <div className="grid grid-cols-4 gap-4 bg-gray-800 p-2">
                                     <p>Frio: [{totalScore.Frio}]</p>
@@ -1233,6 +1247,7 @@ const DescubraSeuTemperamento = () => {
                             )}
                             {isPdfLoading ? 'Gerando PDF...' : 'Baixar Resultado em PDF'}
                         </button>
+                        {/*<button onClick={() => calculateResults()}>send telegram</button>*/}
                         {/*<button*/}
                         {/*    onClick={() => {*/}
                         {/*        setTestComplete(false);*/}
