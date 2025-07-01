@@ -2,7 +2,7 @@
 
 import {Fa0, Fa3, FaFileArrowDown, FaMoneyBillTrendUp, FaPhotoFilm, FaSpoon} from "react-icons/fa6";
 import {FaBitcoin, FaCoins, FaPercent, FaQrcode, FaBrain} from "react-icons/fa";
-import { useRouter } from "next/navigation";
+import {useRouter} from "next/navigation";
 
 const appCategories = [
     {
