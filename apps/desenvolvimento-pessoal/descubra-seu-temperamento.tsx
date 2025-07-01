@@ -534,8 +534,17 @@ const DescubraSeuTemperamento = () => {
                 }),
             });
 
+            // Check if the response is JSON (error) or PDF (success)
+            const contentType = response.headers.get('Content-Type');
+
             if (!response.ok) {
-                throw new Error('Failed to generate PDF');
+                if (contentType && contentType.includes('application/json')) {
+                    // Parse the error response
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to generate PDF');
+                } else {
+                    throw new Error('Failed to generate PDF');
+                }
             }
 
             // Get the PDF blob from the response
@@ -560,7 +569,9 @@ const DescubraSeuTemperamento = () => {
             document.body.removeChild(link);
         } catch (error) {
             console.error('Error downloading PDF:', error);
-            // Handle error - could show a notification to the user
+
+            // Show an alert to the user with a more helpful message
+            alert(`Não foi possível gerar o PDF. Por favor, tente novamente mais tarde. ${error.message}`);
         } finally {
             setIsPdfLoading(false);
         }
