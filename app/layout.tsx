@@ -1,4 +1,5 @@
 import type {Metadata} from "next";
+import {Analytics} from "@vercel/analytics/next"
 import {Quicksand, Space_Mono} from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
@@ -41,6 +42,7 @@ export default function RootLayout({
         <Header/>
         <main className="flex-grow">
             {children}
+            <Analytics/>
         </main>
         <Footer/>
         </body>
