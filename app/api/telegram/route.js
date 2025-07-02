@@ -57,12 +57,15 @@ async function sendTemperamentTestMessage(data) {
         }),
     });
 
+    // Clone the response before consuming it
+    const responseClone = response.clone();
+
     if (!response.ok) {
         const errorData = await response.json();
         throw new Error(`Telegram API error: ${JSON.stringify(errorData)}`);
     }
 
-    return await response.json();
+    return await responseClone.json();
 }
 
 /**

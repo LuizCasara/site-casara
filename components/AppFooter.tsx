@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from 'react';
-import { FaCoffee } from 'react-icons/fa';
+import {useState} from 'react';
+import {FaCoffee} from 'react-icons/fa';
 
-const AppFooter = ({ pixKey = "luiz9493@gmail.com" }) => {
+const AppFooter = ({pixKey = "cdb7e499-8263-4c43-9838-324585dbeea6"}) => {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {

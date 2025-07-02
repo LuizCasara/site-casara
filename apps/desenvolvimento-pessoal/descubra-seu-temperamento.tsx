@@ -551,6 +551,9 @@ const DescubraSeuTemperamento = () => {
             // Check if the response is JSON (error) or PDF (success)
             const contentType = response.headers.get('Content-Type');
 
+            // Clone the response before consuming it
+            const responseClone = response.clone();
+
             if (!response.ok) {
                 if (contentType && contentType.includes('application/json')) {
                     // Parse the error response
@@ -561,8 +564,8 @@ const DescubraSeuTemperamento = () => {
                 }
             }
 
-            // Get the PDF blob from the response
-            const blob = await response.blob();
+            // Get the PDF blob from the cloned response
+            const blob = await responseClone.blob();
 
             // Create a URL for the blob
             const url = window.URL.createObjectURL(blob);

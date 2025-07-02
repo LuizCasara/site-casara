@@ -17,12 +17,15 @@ export async function sendTemperamentTestMessage(data) {
             }),
         });
 
+        // Clone the response before consuming it
+        const responseClone = response.clone();
+
         if (!response.ok) {
             const errorData = await response.json();
             console.error(errorData.error || 'Failed to send Telegram message');
         }
 
-        return await response.json();
+        return await responseClone.json();
     } catch (error) {
         console.error('Error sending Telegram message:', error);
     }
