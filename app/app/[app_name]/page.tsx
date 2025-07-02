@@ -177,7 +177,7 @@ export default function AppPage() {
                     const importedModule = await import('@/apps/desenvolvimento-pessoal/descubra-seu-temperamento');
                     Component = importedModule.default;
                 } else {
-                    throw new Error(`App component not found for path: ${foundApp.path}`);
+                    console.error(`App component not found for path: ${foundApp.path}`);
                 }
 
                 setAppComponent(() => Component);

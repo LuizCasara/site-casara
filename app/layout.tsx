@@ -31,6 +31,7 @@ export default function RootLayout({
     return (
         <html lang="en">
         <head>
+            <title>Luiz Casara</title>
             <link rel="manifest" href="/manifest.json"/>
             <link rel="icon" href="/favicon-32x32.png"/>
             <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
