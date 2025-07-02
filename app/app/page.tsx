@@ -2,7 +2,8 @@
 
 import {Fa0, Fa3, FaFileArrowDown, FaMoneyBillTrendUp, FaPhotoFilm, FaSpoon} from "react-icons/fa6";
 import {FaBitcoin, FaCoins, FaPercent, FaQrcode, FaBrain} from "react-icons/fa";
-import { useRouter } from "next/navigation";
+import {useRouter} from "next/navigation";
+import AppFooter from "@/components/AppFooter";
 
 const appCategories = [
     {
@@ -155,6 +156,9 @@ export default function AppsPage() {
                     </section>
                 ))}
             </div>
+
+            {/* Support the developer footer */}
+            <AppFooter />
         </div>
     );
 }

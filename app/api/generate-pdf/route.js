@@ -1,22 +1,22 @@
-import { NextResponse } from 'next/server';
+import {NextResponse} from 'next/server';
 import puppeteer from 'puppeteer';
 
 export async function POST(request) {
-  try {
-    const { name, date, results } = await request.json();
+    try {
+        const {name, date, results} = await request.json();
 
-    // Format date with timezone
-    const formattedDate = new Date(date).toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'America/Sao_Paulo'
-    });
+        // Format date with timezone
+        const formattedDate = new Date(date).toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'America/Sao_Paulo'
+        });
 
-    // Create HTML content for the PDF (same as email template but without browser info)
-    const htmlContent = `
+        // Create HTML content for the PDF (same as email template but without browser info)
+        const htmlContent = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -108,20 +108,20 @@ export async function POST(request) {
           <div class="section">
             <h2>Temperamentos</h2>
             ${results.allTemperaments.map((temp, index) => {
-              const tempClass = temp.name.toLowerCase();
-              const displayName = 
+            const tempClass = temp.name.toLowerCase();
+            const displayName =
                 temp.name === "Sanguineo" ? "Sanguíneo" :
-                temp.name === "Colerico" ? "Colérico" :
-                temp.name === "Melancolico" ? "Melancólico" :
-                temp.name === "Fleumatico" ? "Fleumático" : temp.name;
+                    temp.name === "Colerico" ? "Colérico" :
+                        temp.name === "Melancolico" ? "Melancólico" :
+                            temp.name === "Fleumatico" ? "Fleumático" : temp.name;
 
-              const barColor = 
+            const barColor =
                 temp.name === "Sanguineo" ? "#e53935" :
-                temp.name === "Colerico" ? "#ffb300" :
-                temp.name === "Melancolico" ? "#1e88e5" :
-                temp.name === "Fleumatico" ? "#43a047" : "#999";
+                    temp.name === "Colerico" ? "#ffb300" :
+                        temp.name === "Melancolico" ? "#1e88e5" :
+                            temp.name === "Fleumatico" ? "#43a047" : "#999";
 
-              return `
+            return `
                 <div class="temperament ${tempClass}">
                   <div style="display: flex; justify-content: space-between;">
                     <strong>${index === 0 ? "Primário: " : index === 1 ? "Secundário: " : ""}${displayName}</strong>
@@ -132,7 +132,7 @@ export async function POST(request) {
                   </div>
                 </div>
               `;
-            }).join('')}
+        }).join('')}
           </div>
 
           <div class="section">
@@ -143,19 +143,19 @@ export async function POST(request) {
                 <th>Percentual</th>
               </tr>
               ${results.allCharacteristics.map(char => {
-                const displayName = 
-                  char.name === "Quente" ? "Quente" :
-                  char.name === "Frio" ? "Frio" :
-                  char.name === "Seco" ? "Seco" :
-                  char.name === "Umido" ? "Úmido" : char.name;
+            const displayName =
+                char.name === "Quente" ? "Quente" :
+                    char.name === "Frio" ? "Frio" :
+                        char.name === "Seco" ? "Seco" :
+                            char.name === "Umido" ? "Úmido" : char.name;
 
-                return `
+            return `
                   <tr>
                     <td>${displayName}</td>
                     <td>${char.percentage}%</td>
                   </tr>
                 `;
-              }).join('')}
+        }).join('')}
             </table>
           </div>
 
@@ -163,47 +163,47 @@ export async function POST(request) {
             <h2>Interpretação</h2>
             <p>
               O temperamento predominante é <strong>${
-                results.primaryTemperament.name === "Sanguineo" ? "Sanguíneo" :
+            results.primaryTemperament.name === "Sanguineo" ? "Sanguíneo" :
                 results.primaryTemperament.name === "Colerico" ? "Colérico" :
-                results.primaryTemperament.name === "Melancolico" ? "Melancólico" :
-                results.primaryTemperament.name === "Fleumatico" ? "Fleumático" : 
-                results.primaryTemperament.name
-              }</strong>, 
+                    results.primaryTemperament.name === "Melancolico" ? "Melancólico" :
+                        results.primaryTemperament.name === "Fleumatico" ? "Fleumático" :
+                            results.primaryTemperament.name
+        }</strong>, 
               com influência secundária de <strong>${
-                results.secondaryTemperament.name === "Sanguineo" ? "Sanguíneo" :
+            results.secondaryTemperament.name === "Sanguineo" ? "Sanguíneo" :
                 results.secondaryTemperament.name === "Colerico" ? "Colérico" :
-                results.secondaryTemperament.name === "Melancolico" ? "Melancólico" :
-                results.secondaryTemperament.name === "Fleumatico" ? "Fleumático" : 
-                results.secondaryTemperament.name
-              }</strong>.
+                    results.secondaryTemperament.name === "Melancolico" ? "Melancólico" :
+                        results.secondaryTemperament.name === "Fleumatico" ? "Fleumático" :
+                            results.secondaryTemperament.name
+        }</strong>.
             </p>
             <p>
               A pessoa tende a ser mais 
               <strong> ${
-                results.primaryCharacteristic.name === "Quente" ? "Quente" :
+            results.primaryCharacteristic.name === "Quente" ? "Quente" :
                 results.primaryCharacteristic.name === "Frio" ? "Frio" :
-                results.primaryCharacteristic.name === "Seco" ? "Seco" :
-                results.primaryCharacteristic.name === "Umido" ? "Úmido" : 
-                results.primaryCharacteristic.name
-              }</strong> e 
+                    results.primaryCharacteristic.name === "Seco" ? "Seco" :
+                        results.primaryCharacteristic.name === "Umido" ? "Úmido" :
+                            results.primaryCharacteristic.name
+        }</strong> e 
               <strong> ${
-                results.secondaryCharacteristic.name === "Quente" ? "Quente" :
+            results.secondaryCharacteristic.name === "Quente" ? "Quente" :
                 results.secondaryCharacteristic.name === "Frio" ? "Frio" :
-                results.secondaryCharacteristic.name === "Seco" ? "Seco" :
-                results.secondaryCharacteristic.name === "Umido" ? "Úmido" : 
-                results.secondaryCharacteristic.name
-              }</strong> em suas reações e comportamentos.
+                    results.secondaryCharacteristic.name === "Seco" ? "Seco" :
+                        results.secondaryCharacteristic.name === "Umido" ? "Úmido" :
+                            results.secondaryCharacteristic.name
+        }</strong> em suas reações e comportamentos.
             </p>
           </div>
 
           <div class="section">
             <h2>Detalhes do Temperamento ${
-              results.primaryTemperament.name === "Sanguineo" ? "Sanguíneo" :
-              results.primaryTemperament.name === "Colerico" ? "Colérico" :
-              results.primaryTemperament.name === "Melancolico" ? "Melancólico" :
-              results.primaryTemperament.name === "Fleumatico" ? "Fleumático" : 
-              results.primaryTemperament.name
-            }</h2>
+            results.primaryTemperament.name === "Sanguineo" ? "Sanguíneo" :
+                results.primaryTemperament.name === "Colerico" ? "Colérico" :
+                    results.primaryTemperament.name === "Melancolico" ? "Melancólico" :
+                        results.primaryTemperament.name === "Fleumatico" ? "Fleumático" :
+                            results.primaryTemperament.name
+        }</h2>
 
             ${results.primaryTemperament.name === "Sanguineo" ? `
               <div style="margin-bottom: 20px;">
@@ -335,28 +335,28 @@ export async function POST(request) {
       </html>
     `;
 
-    // Generate PDF using puppeteer
-    const browser = await puppeteer.launch({ headless: 'new' });
-    const page = await browser.newPage();
-    await page.setContent(htmlContent);
-    const pdf = await page.pdf({ format: 'A4' });
-    await browser.close();
+        // Generate PDF using puppeteer
+        const browser = await puppeteer.launch({headless: 'new'});
+        const page = await browser.newPage();
+        await page.setContent(htmlContent);
+        const pdf = await page.pdf({format: 'A4'});
+        await browser.close();
 
-    // Return the PDF as a response
-    return new NextResponse(pdf, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="temperamento-${name.replace(/\s+/g, '-').toLowerCase()}.pdf"`
-      }
-    });
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    return new NextResponse(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-  }
+        // Return the PDF as a response
+        return new NextResponse(pdf, {
+            status: 200,
+            headers: {
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': `attachment; filename="temperamento-${name.replace(/\s+/g, '-').toLowerCase()}.pdf"`
+            }
+        });
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        return new NextResponse(JSON.stringify({error: error.message}), {
+            status: 500,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+    }
 }

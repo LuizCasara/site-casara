@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { FaGithub, FaLinkedin, FaInstagram, FaEnvelope, FaGlobe } from "react-icons/fa";
+import { FaGithub, FaLinkedin, FaInstagram, FaEnvelope, FaGlobe, FaSpotify, FaSteam, FaDiscord } from "react-icons/fa";
 
 export default function About() {
   return (
@@ -123,6 +123,49 @@ export default function About() {
               <FaGlobe className="h-8 w-8" />
               <span className="sr-only">Bio Site</span>
             </Link>
+          </div>
+
+          <h3 className="text-xl font-bold mb-4">Gaming & Music</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex flex-col items-center">
+              <Link 
+                href="https://open.spotify.com/user/fencherlc?si=815f5363790f4ae1" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-300 transform transition-transform hover:scale-110 mb-2"
+              >
+                <FaSpotify className="h-8 w-8 mx-auto" />
+              </Link>
+              <h4 className="font-medium mb-1">Spotify</h4>
+              <a 
+                href="https://open.spotify.com/user/fencherlc?si=815f5363790f4ae1" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-sm text-green-500 hover:underline"
+              >
+                @fencherlc
+              </a>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex flex-col items-center">
+              <div className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transform transition-transform hover:scale-110 mb-2">
+                <FaSteam className="h-8 w-8 mx-auto" />
+              </div>
+              <h4 className="font-medium mb-1">Steam</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Friend Code: <span className="font-mono">140363246</span>
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex flex-col items-center">
+              <div className="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transform transition-transform hover:scale-110 mb-2">
+                <FaDiscord className="h-8 w-8 mx-auto" />
+              </div>
+              <h4 className="font-medium mb-1">Discord</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                fencher_lc
+              </p>
+            </div>
           </div>
 
           {/*<div className="inline-flex items-center justify-center w-full">*/}

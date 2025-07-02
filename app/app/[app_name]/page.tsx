@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+// import AppFooter from "@/components/AppFooter";
 
 // Import the app categories data
 const appCategories = [
@@ -110,7 +111,7 @@ const allApps = appCategories.flatMap(category =>
 export default function AppPage() {
     const params = useParams();
     const appName = params.app_name;
-    
+
     const [AppComponent, setAppComponent] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -176,7 +177,7 @@ export default function AppPage() {
                     const importedModule = await import('@/apps/desenvolvimento-pessoal/descubra-seu-temperamento');
                     Component = importedModule.default;
                 } else {
-                    throw new Error(`App component not found for path: ${foundApp.path}`);
+                    console.error(`App component not found for path: ${foundApp.path}`);
                 }
 
                 setAppComponent(() => Component);
@@ -231,6 +232,9 @@ export default function AppPage() {
                         </p>
                     )}
                 </div>
+
+                {/* Support the developer footer */}
+                {/*<AppFooter />*/}
             </div>
         </div>
     );
