@@ -4,7 +4,7 @@
  * @returns {Promise<Object>} - Response from Telegram API
  */
 export async function sendTemperamentTestMessage(data) {
-    const {name, date, browserInfo, results} = data;
+    const {name, date, results} = data;
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
