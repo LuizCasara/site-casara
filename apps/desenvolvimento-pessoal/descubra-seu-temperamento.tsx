@@ -3,7 +3,7 @@
 import {useEffect, useState} from "react";
 import {FaSpinner, FaUser} from "react-icons/fa";
 import temperamentosJson from "./temperamentos.json";
-import {sendTemperamentTestMessage} from "@/app/api/telegram/route";
+import {sendTemperamentTestMessage} from "@/app/api/telegram/utils";
 
 const DescubraSeuTemperamento = () => {
     const [userName, setUserName] = useState("");
@@ -555,9 +555,9 @@ const DescubraSeuTemperamento = () => {
                 if (contentType && contentType.includes('application/json')) {
                     // Parse the error response
                     const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to generate PDF');
+                    console.error(errorData.error || 'Failed to generate PDF');
                 } else {
-                    throw new Error('Failed to generate PDF');
+                    console.error('Failed to generate PDF');
                 }
             }
 

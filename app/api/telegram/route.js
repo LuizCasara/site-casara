@@ -1,9 +1,11 @@
+import {NextResponse} from 'next/server';
+
 /**
  * Sends a message to a Telegram group via bot for temperament test results
  * @param {Object} data - Test data including name, date, and results
  * @returns {Promise<Object>} - Response from Telegram API
  */
-export async function sendTemperamentTestMessage(data) {
+async function sendTemperamentTestMessage(data) {
     const {name, date, results} = data;
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -63,32 +65,32 @@ export async function sendTemperamentTestMessage(data) {
     return await response.json();
 }
 
-// /**
-//  * API route handler for sending Telegram notifications
-//  * Currently supports temperament test notifications, but can be expanded for other types
-//  */
-// export async function POST(request) {
-//     try {
-//         const data = await request.json();
-//         const {type} = data;
-//
-//         let result;
-//
-//         // Handle different notification types
-//         switch (type) {
-//             case 'temperament-test':
-//                 result = await sendTemperamentTestMessage(data);
-//                 break;
-//             default:
-//                 throw new Error(`Unsupported notification type: ${type}`);
-//         }
-//
-//         return NextResponse.json({success: true, result}, {status: 200});
-//     } catch (error) {
-//         console.error('Error sending Telegram notification:', error);
-//         return NextResponse.json(
-//             {error: error.message},
-//             {status: 500}
-//         );
-//     }
-// }
+/**
+ * API route handler for sending Telegram notifications
+ * Currently supports temperament test notifications, but can be expanded for other types
+ */
+export async function POST(request) {
+    try {
+        const data = await request.json();
+        const {type} = data;
+
+        let result;
+
+        // Handle different notification types
+        switch (type) {
+            case 'temperament-test':
+                result = await sendTemperamentTestMessage(data);
+                break;
+            default:
+                console.error(`Unsupported notification type: ${type}`);
+        }
+
+        return NextResponse.json({success: true, result}, {status: 200});
+    } catch (error) {
+        console.error('Error sending Telegram notification:', error);
+        return NextResponse.json(
+            {error: error.message},
+            {status: 500}
+        );
+    }
+}
