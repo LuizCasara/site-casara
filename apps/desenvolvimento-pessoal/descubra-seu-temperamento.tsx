@@ -551,24 +551,34 @@ const DescubraSeuTemperamento = () => {
             // Check if the response is JSON (error) or PDF (success)
             const contentType = response.headers.get('Content-Type');
 
-            // Clone the response before consuming it
-            const responseClone = response.clone();
-
             if (!response.ok) {
                 if (contentType && contentType.includes('application/json')) {
                     // Parse the error response
                     const errorData = await response.json();
                     console.error(errorData.error || 'Failed to generate PDF');
+                    throw new Error(errorData.error || 'Failed to generate PDF');
                 } else {
                     console.error('Failed to generate PDF');
+                    throw new Error('Failed to generate PDF');
                 }
             }
 
-            // Get the PDF blob from the cloned response
-            const blob = await responseClone.blob();
+            // Verify content type is PDF
+            if (!contentType || !contentType.includes('application/pdf')) {
+                console.error('Response is not a PDF');
+                throw new Error('Response is not a PDF');
+            }
+
+            // Get the PDF blob directly from the response
+            const blob = await response.blob();
+
+            // Verify blob size and type
+            if (blob.size === 0) {
+                throw new Error('PDF file is empty');
+            }
 
             // Create a URL for the blob
-            const url = window.URL.createObjectURL(blob);
+            const url = window.URL.createObjectURL(new Blob([blob], {type: 'application/pdf'}));
 
             // Create a temporary link element
             const link = document.createElement('a');
@@ -581,9 +591,11 @@ const DescubraSeuTemperamento = () => {
             // Click the link to trigger the download
             link.click();
 
-            // Clean up
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(link);
+            // Clean up after a short delay to ensure download starts
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(link);
+            }, 100);
         } catch (error) {
             console.error('Error downloading PDF:', error);
 
