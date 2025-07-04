@@ -67,7 +67,7 @@ export const PdfContent = React.forwardRef<HTMLDivElement, { data: PdfData }>((p
                 </div>
 
                 <div style={{marginBottom: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '5px'}}>
-                    <h2 style={{color: 'black'}}>Temperamentos</h2>
+                    <h2 style={{color: 'black', marginBottom: '20xp'}}>Temperamentos</h2>
                     {results.allTemperaments.map((temp: any, index: number) => {
                         const tempClass = getTemperamentBgClass(temp.name);
                         const displayName = getTemperamentDisplayName(temp.name);
@@ -101,7 +101,7 @@ export const PdfContent = React.forwardRef<HTMLDivElement, { data: PdfData }>((p
                 </div>
 
                 <div style={{marginBottom: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '5px'}}>
-                    <h2 style={{color: 'black'}}>Características</h2>
+                    <h2 style={{color: 'black', marginBottom: '20xp'}}>Características</h2>
                     <table style={{width: '100%', borderCollapse: 'collapse'}}>
                         <thead>
                         <tr>
@@ -157,7 +157,7 @@ export const PdfContent = React.forwardRef<HTMLDivElement, { data: PdfData }>((p
             <div style={{pageBreakAfter: 'always', height: 0}}></div>
 
             {/* Page 2 */}
-            <div style={{padding: '20px', color: 'black', marginTop: '20px'}}>
+            <div style={{padding: '20px', color: 'black', marginTop: '100px'}}>
                 <div style={{marginBottom: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '5px'}}>
                     <h2 style={{color: 'black'}}>Detalhes do Temperamento {getTemperamentDisplayName(results.primaryTemperament.name)}</h2>
 
