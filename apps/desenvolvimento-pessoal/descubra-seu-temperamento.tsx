@@ -1,14 +1,16 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {FaSpinner, FaUser} from "react-icons/fa";
 import temperamentosJson from "./temperamentos.json";
 import {sendTemperamentTestMessage} from "@/app/api/telegram/utils";
+import {generatePdf, PdfContent} from "@/utils/pdf-generator";
 
 const DescubraSeuTemperamento = () => {
     const [userName, setUserName] = useState("");
     const [error, setError] = useState("");
     const [showTest, setShowTest] = useState(false);
+    const pdfContentRef = useRef(null);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState({});
     const [answerHistory, setAnswerHistory] = useState([]);
@@ -531,99 +533,17 @@ const DescubraSeuTemperamento = () => {
         }
     }
 
+    // Removed PdfContent component - now imported from utils/pdf-generator.tsx
+
     const downloadPdf = async () => {
-        try {
-            setIsPdfLoading(true);
-
-            // Call the API to generate the PDF
-            const response = await fetch('/api/generate-pdf', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: userName,
-                    date: new Date().toISOString(),
-                    results: results
-                }),
-            });
-
-            // Check if the response is JSON (error) or PDF (success)
-            const contentType = response.headers.get('Content-Type');
-
-            if (!response.ok) {
-                if (contentType && contentType.includes('application/json')) {
-                    // Parse the error response
-                    const errorData = await response.json();
-                    console.error('Error data:', errorData);
-
-                    // Use the detailed error message if available
-                    const errorMessage = errorData.details || errorData.error || 'Failed to generate PDF';
-                    throw new Error(errorMessage);
-                } else {
-                    console.error('Failed to generate PDF');
-                    throw new Error('Failed to generate PDF');
-                }
-            }
-
-            // Verify content type is PDF
-            if (!contentType || !contentType.includes('application/pdf')) {
-                console.error('Response is not a PDF');
-                throw new Error('Response is not a PDF');
-            }
-
-            // Get the PDF blob directly from the response
-            const blob = await response.blob();
-
-            // Verify blob size and type
-            if (blob.size === 0) {
-                throw new Error('PDF file is empty');
-            }
-
-            // Create a URL for the blob
-            const url = window.URL.createObjectURL(new Blob([blob], {type: 'application/pdf'}));
-
-            // Create a temporary link element
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `temperamento-${userName.replace(/\s+/g, '-').toLowerCase()}.pdf`;
-
-            // Append the link to the body
-            document.body.appendChild(link);
-
-            // Click the link to trigger the download
-            link.click();
-
-            // Clean up after a short delay to ensure download starts
-            setTimeout(() => {
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(link);
-            }, 100);
-        } catch (error) {
-            console.error('Error downloading PDF:', error);
-
-            // Show an alert to the user with a more helpful message
-            // If the error message already contains detailed information, don't add the generic prefix
-            const errorMessage = error.message;
-            if (errorMessage.toLowerCase().includes('chrome') ||
-                errorMessage.toLowerCase().includes('puppeteer') ||
-                errorMessage.toLowerCase().includes('browser')) {
-                // For technical errors, show the full message with context
-                alert(`Não foi possível gerar o PDF. Erro técnico detectado: ${errorMessage}`);
-            } else if (errorMessage === 'Failed to generate PDF') {
-                // For generic errors, show a friendly message
-                alert('Não foi possível gerar o PDF. Por favor, tente novamente mais tarde.');
-            } else {
-                // For other errors, show the error message
-                alert(`Não foi possível gerar o PDF. ${errorMessage}`);
-            }
-        } finally {
-            setIsPdfLoading(false);
-        }
+        // Use the generatePdf function from the utils file
+        await generatePdf(pdfContentRef, userName, setIsPdfLoading);
     };
 
     return (
         <div className="p-4 max-w-max mx-auto">
+            {/* Hidden PDF content for generation */}
+            {results && <PdfContent ref={pdfContentRef} data={{name: userName, date: new Date().toISOString(), results: results}}/>}
             {!showTest ? (
                 <>
                     <div className="mb-6">
