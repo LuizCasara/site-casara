@@ -16,7 +16,7 @@
   },
   {
     "id": 3,
-    "pergunta": "Você se sente energizado e proativo na maioria das situações?",
+    "pergunta": "Você se sente disposto e proativo na maioria das situações?",
     "classificacao": [
       "quente"
     ]
@@ -44,7 +44,7 @@
   },
   {
     "id": 7,
-    "pergunta": "Você busca grandes feitos em sua vida?",
+    "pergunta": "As pessoas tendem a te achar 'mandão', 'dono da verdade' e 'grosseiro'?",
     "classificacao": [
       "quente",
       "seco"
@@ -110,6 +110,7 @@
     "id": 16,
     "pergunta": "Você valoriza ordem, estrutura e organização em seu ambiente?",
     "classificacao": [
+      "frio",
       "seco"
     ]
   },
@@ -122,7 +123,7 @@
   },
   {
     "id": 18,
-    "pergunta": "Você é persistente e resistente a mudanças em seus planos?",
+    "pergunta": "Você é resistente a mudanças em seus planos?",
     "classificacao": [
       "seco"
     ]
@@ -150,7 +151,7 @@
   },
   {
     "id": 22,
-    "pergunta": "Você é geralmente imperturbável por pressões externas ou caos?",
+    "pergunta": "Você prefere a paz e tende a evitar conflitos?",
     "classificacao": [
       "frio",
       "umido"
@@ -158,7 +159,7 @@
   },
   {
     "id": 23,
-    "pergunta": "Você se considera uma pessoa flexível?",
+    "pergunta": "As pessoas tendem a aproximar-se de você mesmo sem lhe conhecer muito?",
     "classificacao": [
       "umido"
     ]
@@ -172,14 +173,14 @@
   },
   {
     "id": 25,
-    "pergunta": "Você se sente satisfeito em um ambiente sem a necessidade de conversar?",
+    "pergunta": "Você prefere estar em ambientes em que possa conversar?",
     "classificacao": [
-      "frio"
+      "quente"
     ]
   },
   {
     "id": 26,
-    "pergunta": "Você é mais inclinado a ser um mediador em conflitos?",
+    "pergunta": "As pessoas tendem a achar que você é esquecida (o), tem cara de paisagem e é indiferente (tanto faz como tanto fez)?",
     "classificacao": [
       "frio",
       "umido"
@@ -187,7 +188,7 @@
   },
   {
     "id": 27,
-    "pergunta": "Você tende a ser cético ou cauteloso com o que é novo ou incerto?",
+    "pergunta": "As pessoas tendem a te achar sistemático, chato e reclamão?",
     "classificacao": [
       "frio",
       "seco"
@@ -202,9 +203,8 @@
   },
   {
     "id": 29,
-    "pergunta": "Você tem uma forte vontade e determinação para alcançar seus objetivos?",
+    "pergunta": "As pessoas tendem a te achar tenso e rígido?",
     "classificacao": [
-      "quente",
       "seco"
     ]
   },
@@ -225,7 +225,7 @@
   },
   {
     "id": 32,
-    "pergunta": "Você busca excelência em tudo que faz?",
+    "pergunta": "Você é uma pessoa alegre que coloca os outros pra cima?",
     "classificacao": [
       "umido",
       "quente"
@@ -254,7 +254,7 @@
   },
   {
     "id": 36,
-    "pergunta": "Você se considera uma pessoa energética?",
+    "pergunta": "Você é uma pessoa comunicativa?",
     "classificacao": [
       "quente"
     ]
@@ -275,7 +275,7 @@
   },
   {
     "id": 39,
-    "pergunta": "Você resiste a adaptações e mudanças?",
+    "pergunta": "Você é exigente consigo mesmo e com os outros?",
     "classificacao": [
       "seco"
     ]
