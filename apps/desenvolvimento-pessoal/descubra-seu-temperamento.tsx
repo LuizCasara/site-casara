@@ -613,46 +613,46 @@ const DescubraSeuTemperamento = () => {
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                Modo do Teste
-                            </label>
-                            <div className="flex space-x-4">
-                                <div className="flex items-center">
-                                    <input
-                                        type="radio"
-                                        id="modeNormal"
-                                        name="testMode"
-                                        value="normal"
-                                        checked={testMode === "normal"}
-                                        onChange={() => setTestMode("normal")}
-                                        className="mr-2"
-                                    />
-                                    <label htmlFor="modeNormal" className="text-gray-700 dark:text-gray-300">
-                                        Normal
-                                    </label>
-                                </div>
-                                <div className="flex items-center">
-                                    <input
-                                        type="radio"
-                                        id="modeTeste"
-                                        name="testMode"
-                                        value="teste"
-                                        checked={testMode === "teste"}
-                                        onChange={() => setTestMode("teste")}
-                                        className="mr-2"
-                                    />
-                                    <label htmlFor="modeTeste" className="text-gray-700 dark:text-gray-300">
-                                        Debug (usado apenas para testar o funcionamento)
-                                    </label>
-                                </div>
-                            </div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {testMode === "normal"
-                                    ? "Modo normal: apenas perguntas e botões."
-                                    : "Modo teste: mostra painéis de totalizadores e score detalhado para testes."}
-                            </p>
-                        </div>
+                        {/*<div>*/}
+                        {/*    <label className="block text-sm font-medium mb-2">*/}
+                        {/*        Modo do Teste*/}
+                        {/*    </label>*/}
+                        {/*    <div className="flex space-x-4">*/}
+                        {/*        <div className="flex items-center">*/}
+                        {/*            <input*/}
+                        {/*                type="radio"*/}
+                        {/*                id="modeNormal"*/}
+                        {/*                name="testMode"*/}
+                        {/*                value="normal"*/}
+                        {/*                checked={testMode === "normal"}*/}
+                        {/*                onChange={() => setTestMode("normal")}*/}
+                        {/*                className="mr-2"*/}
+                        {/*            />*/}
+                        {/*            <label htmlFor="modeNormal" className="text-gray-700 dark:text-gray-300">*/}
+                        {/*                Normal*/}
+                        {/*            </label>*/}
+                        {/*        </div>*/}
+                        {/*        <div className="flex items-center">*/}
+                        {/*            <input*/}
+                        {/*                type="radio"*/}
+                        {/*                id="modeTeste"*/}
+                        {/*                name="testMode"*/}
+                        {/*                value="teste"*/}
+                        {/*                checked={testMode === "teste"}*/}
+                        {/*                onChange={() => setTestMode("teste")}*/}
+                        {/*                className="mr-2"*/}
+                        {/*            />*/}
+                        {/*            <label htmlFor="modeTeste" className="text-gray-700 dark:text-gray-300">*/}
+                        {/*                Debug (usado apenas para testar o funcionamento)*/}
+                        {/*            </label>*/}
+                        {/*        </div>*/}
+                        {/*    </div>*/}
+                        {/*    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">*/}
+                        {/*        {testMode === "normal"*/}
+                        {/*            ? "Modo normal: apenas perguntas e botões."*/}
+                        {/*            : "Modo teste: mostra painéis de totalizadores e score detalhado para testes."}*/}
+                        {/*    </p>*/}
+                        {/*</div>*/}
                     </div>
 
                     <div className="flex space-x-6 mb-6">

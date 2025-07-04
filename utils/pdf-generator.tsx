@@ -139,7 +139,7 @@ export const PdfContent = React.forwardRef<HTMLDivElement, { data: PdfData }>((p
                     </table>
                 </div>
 
-                <div style={{marginTop: '10px', marginBottom: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '5px'}}>
+                <div style={{marginTop: '20px', marginBottom: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '5px'}}>
                     <h2 style={{color: 'black'}}>Interpretação</h2>
                     <p style={{color: 'black'}}>
                         O temperamento predominante é <strong>{getTemperamentDisplayName(results.primaryTemperament.name)}</strong>,
@@ -157,7 +157,7 @@ export const PdfContent = React.forwardRef<HTMLDivElement, { data: PdfData }>((p
             <div style={{pageBreakAfter: 'always', height: 0}}></div>
 
             {/* Page 2 */}
-            <div style={{padding: '20px', color: 'black', marginTop: '100px'}}>
+            <div style={{padding: '20px', color: 'black', marginTop: '200px'}}>
                 <div style={{marginBottom: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '5px'}}>
                     <h2 style={{color: 'black'}}>Detalhes do Temperamento {getTemperamentDisplayName(results.primaryTemperament.name)}</h2>
 
