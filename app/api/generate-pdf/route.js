@@ -1,5 +1,6 @@
 import {NextResponse} from 'next/server';
 import puppeteer from 'puppeteer';
+import {execSync} from 'child_process';
 
 export async function POST(request) {
     try {
@@ -335,11 +336,30 @@ export async function POST(request) {
       </html>
     `;
 
+        // Ensure Chrome is installed before launching Puppeteer
+        try {
+            // Try to install Chrome if it's not already installed
+            console.log('Ensuring Chrome is installed for Puppeteer...');
+            execSync('npx puppeteer browsers install chrome', {stdio: 'inherit'});
+            console.log('Chrome installation check completed.');
+        } catch (installError) {
+            console.error('Error during Chrome installation check:', installError);
+            // Continue anyway as Chrome might already be installed
+        }
+
         // Generate PDF using puppeteer with more robust settings
-        const browser = await puppeteer.launch({
+        const launchOptions = {
             headless: true, // Use traditional headless mode
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-        });
+        };
+
+        // Only add executablePath if the environment variable is set
+        if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+            console.log(`Using Chrome executable from: ${process.env.PUPPETEER_EXECUTABLE_PATH}`);
+            launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+        }
+
+        const browser = await puppeteer.launch(launchOptions);
         const page = await browser.newPage();
 
         // Set viewport for consistent rendering
@@ -376,7 +396,22 @@ export async function POST(request) {
         });
     } catch (error) {
         console.error('Error generating PDF:', error);
-        return new NextResponse(JSON.stringify({error: error.message}), {
+
+        // Create a more detailed error message for debugging
+        let errorMessage = 'Não foi possível gerar o PDF. Por favor, tente novamente mais tarde.';
+        let detailedError = error.message;
+
+        // Add more context if it's a Chrome not found error
+        if (error.message && error.message.includes('Could not find chrome')) {
+            detailedError += '\n\nTentando resolver automaticamente o problema de instalação do Chrome. ' +
+                'Se o erro persistir, entre em contato com o suporte.';
+        }
+
+        return new NextResponse(JSON.stringify({
+            error: errorMessage,
+            details: detailedError,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        }), {
             status: 500,
             headers: {
                 'Content-Type': 'application/json',
