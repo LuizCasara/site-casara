@@ -335,11 +335,35 @@ export async function POST(request) {
       </html>
     `;
 
-        // Generate PDF using puppeteer
-        const browser = await puppeteer.launch({headless: 'new'});
+        // Generate PDF using puppeteer with more robust settings
+        const browser = await puppeteer.launch({
+            headless: true, // Use traditional headless mode
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+        });
         const page = await browser.newPage();
-        await page.setContent(htmlContent);
-        const pdf = await page.pdf({format: 'A4'});
+
+        // Set viewport for consistent rendering
+        await page.setViewport({
+            width: 1200,
+            height: 1600,
+            deviceScaleFactor: 1,
+        });
+
+        await page.setContent(htmlContent, {waitUntil: 'networkidle0'});
+
+        // More specific PDF options for better compatibility
+        const pdf = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: {
+                top: '20px',
+                right: '20px',
+                bottom: '20px',
+                left: '20px'
+            },
+            preferCSSPageSize: true
+        });
+
         await browser.close();
 
         // Return the PDF as a response
