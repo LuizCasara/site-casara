@@ -555,8 +555,11 @@ const DescubraSeuTemperamento = () => {
                 if (contentType && contentType.includes('application/json')) {
                     // Parse the error response
                     const errorData = await response.json();
-                    console.error(errorData.error || 'Failed to generate PDF');
-                    throw new Error(errorData.error || 'Failed to generate PDF');
+                    console.error('Error data:', errorData);
+
+                    // Use the detailed error message if available
+                    const errorMessage = errorData.details || errorData.error || 'Failed to generate PDF';
+                    throw new Error(errorMessage);
                 } else {
                     console.error('Failed to generate PDF');
                     throw new Error('Failed to generate PDF');
@@ -600,7 +603,20 @@ const DescubraSeuTemperamento = () => {
             console.error('Error downloading PDF:', error);
 
             // Show an alert to the user with a more helpful message
-            alert(`Não foi possível gerar o PDF. Por favor, tente novamente mais tarde. ${error.message}`);
+            // If the error message already contains detailed information, don't add the generic prefix
+            const errorMessage = error.message;
+            if (errorMessage.toLowerCase().includes('chrome') ||
+                errorMessage.toLowerCase().includes('puppeteer') ||
+                errorMessage.toLowerCase().includes('browser')) {
+                // For technical errors, show the full message with context
+                alert(`Não foi possível gerar o PDF. Erro técnico detectado: ${errorMessage}`);
+            } else if (errorMessage === 'Failed to generate PDF') {
+                // For generic errors, show a friendly message
+                alert('Não foi possível gerar o PDF. Por favor, tente novamente mais tarde.');
+            } else {
+                // For other errors, show the error message
+                alert(`Não foi possível gerar o PDF. ${errorMessage}`);
+            }
         } finally {
             setIsPdfLoading(false);
         }
