@@ -117,7 +117,7 @@ const DescubraSeuTemperamento = () => {
     };
 
     // Handle answering a question
-    const answerQuestion = (answer) => {
+    const answerQuestion = async (answer) => {
         // Get the current question's classification
         const currentQuestion = testQuestions[currentQuestionIndex];
         const classificacao = currentQuestion?.classificacao || [];
@@ -168,7 +168,12 @@ const DescubraSeuTemperamento = () => {
         if (currentQuestionIndex < testQuestions.length - 1) {
             setCurrentQuestionIndex(prev => prev + 1);
         } else {
-            calculateResults();
+            try {
+                await calculateResults();
+            } catch (error) {
+                console.error('Error calculating results:', error);
+                // Silent error handling - don't show errors to the user
+            }
         }
     };
 
@@ -221,8 +226,13 @@ const DescubraSeuTemperamento = () => {
         }
     };
 
-    const stopTest = () => {
-        calculateResults();
+    const stopTest = async () => {
+        try {
+            await calculateResults();
+        } catch (error) {
+            console.error('Error calculating results:', error);
+            // Silent error handling - don't show errors to the user
+        }
     };
 
     // Calculate percentages in real-time
@@ -358,7 +368,7 @@ const DescubraSeuTemperamento = () => {
     };
 
     // Calculate test results
-    const calculateResults = () => {
+    const calculateResults = async () => {
         // Calculate percentages first to ensure state is updated
         calculatePercentages();
 
@@ -450,13 +460,30 @@ const DescubraSeuTemperamento = () => {
             }
         }
 
+        // Ensure we have at least 2 elements in each array to avoid undefined access
+        const ensureMinLength = (arr, minLength) => {
+            if (!Array.isArray(arr)) return new Array(minLength).fill({});
+            while (arr.length < minLength) {
+                arr.push({
+                    name: 'Não definido',
+                    score: 0,
+                    percentage: 0
+                });
+            }
+            return arr;
+        };
+
+        // Make sure arrays have at least 2 elements
+        const safeTemperaments = ensureMinLength(sortedTemperaments, 2);
+        const safeCharacteristics = ensureMinLength(sortedCharacteristics, 4);
+
         const resultsData = {
-            primaryTemperament: sortedTemperaments[0],
-            secondaryTemperament: sortedTemperaments[1],
-            primaryCharacteristic: sortedCharacteristics[0],
-            secondaryCharacteristic: sortedCharacteristics[1],
-            allTemperaments: sortedTemperaments,
-            allCharacteristics: sortedCharacteristics
+            primaryTemperament: safeTemperaments[0],
+            secondaryTemperament: safeTemperaments[1],
+            primaryCharacteristic: safeCharacteristics[0],
+            secondaryCharacteristic: safeCharacteristics[1],
+            allTemperaments: safeTemperaments,
+            allCharacteristics: safeCharacteristics
         };
 
         setResults(resultsData);
@@ -464,11 +491,16 @@ const DescubraSeuTemperamento = () => {
 
         // Check if at least 50% of questions were answered
         const answeredQuestionsPercentage = (Object.keys(answers).length / testQuestions.length) * 100;
-        if (answeredQuestionsPercentage >= 50 && testMode === "normal") {
-            // Send email with test results
-            sendTestResultsEmail(resultsData);
-            // Send telegram message with test results
-            sendTelegramMessage(resultsData);
+        if (answeredQuestionsPercentage >= 50 && testMode === "normal" && !userName.includes("teste")) {
+            try {
+                // Send email with test results
+                sendTestResultsEmail(resultsData);
+                // Send telegram message with test results
+                await sendTelegramMessage(resultsData);
+            } catch (error) {
+                console.error('Error in sending results:', error);
+                // Silent error handling - don't show errors to the user
+            }
         }
     };
 
