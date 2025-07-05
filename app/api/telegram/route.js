@@ -29,7 +29,7 @@ async function sendTemperamentTestMessage(data) {
     const getPropSafely = (obj, path, fallback = 'N/A') => {
         try {
             return path.split('.').reduce((o, p) => o?.[p], obj) ?? fallback;
-        } catch (_e) {
+        } catch {
             return fallback;
         }
     };
@@ -38,7 +38,7 @@ async function sendTemperamentTestMessage(data) {
     const getArrayElementSafely = (arr, index, propName, fallback = 'N/A') => {
         try {
             return arr?.[index]?.[propName] ?? fallback;
-        } catch (_e) {
+        } catch {
             return fallback;
         }
     };
