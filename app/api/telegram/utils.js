@@ -23,10 +23,17 @@ export async function sendTemperamentTestMessage(data) {
         if (!response.ok) {
             const errorData = await response.json();
             console.error(errorData.error || 'Failed to send Telegram message');
+            return {error: errorData.error || 'Failed to send Telegram message'};
         }
 
-        return await responseClone.json();
+        try {
+            return await responseClone.json();
+        } catch (jsonError) {
+            console.error('Error parsing response JSON:', jsonError);
+            return {success: true}; // Return a default response if JSON parsing fails
+        }
     } catch (error) {
         console.error('Error sending Telegram message:', error);
+        return {error: error.message || 'Error sending Telegram message'};
     }
 }

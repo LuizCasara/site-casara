@@ -25,6 +25,24 @@ async function sendTemperamentTestMessage(data) {
         timeZone: 'America/Sao_Paulo'
     });
 
+    // Safely access nested properties with fallbacks
+    const getPropSafely = (obj, path, fallback = 'N/A') => {
+        try {
+            return path.split('.').reduce((o, p) => o?.[p], obj) ?? fallback;
+        } catch {
+            return fallback;
+        }
+    };
+
+    // Safely get array element with fallback
+    const getArrayElementSafely = (arr, index, propName, fallback = 'N/A') => {
+        try {
+            return arr?.[index]?.[propName] ?? fallback;
+        } catch {
+            return fallback;
+        }
+    };
+
     // Create a summary message with date, time, name, and results
     const message = `
 📊 *Resultado do Teste de Temperamento*
@@ -33,13 +51,13 @@ async function sendTemperamentTestMessage(data) {
 👤 *Nome:* ${name}
 
 *Resultados:*
-🔸 *1º: ${results.primaryTemperament.name}* (${results.primaryTemperament.percentage}%)
-🔹 *2º: ${results.secondaryTemperament.name}* (${results.secondaryTemperament.percentage}%)
+🔸 *1º: ${getPropSafely(results, 'primaryTemperament.name', 'Não definido')}* (${getPropSafely(results, 'primaryTemperament.percentage', 0)}%)
+🔹 *2º: ${getPropSafely(results, 'secondaryTemperament.name', 'Não definido')}* (${getPropSafely(results, 'secondaryTemperament.percentage', 0)}%)
 
-▫️ ${results.allCharacteristics[0].name} (${results.allCharacteristics[0].percentage}%)
-▫️ ${results.allCharacteristics[1].name} (${results.allCharacteristics[1].percentage}%)
-▫️ ${results.allCharacteristics[2].name} (${results.allCharacteristics[2].percentage}%)
-▫️ ${results.allCharacteristics[3].name} (${results.allCharacteristics[3].percentage}%)
+▫️ ${getArrayElementSafely(results?.allCharacteristics, 0, 'name', 'Não definido')} (${getArrayElementSafely(results?.allCharacteristics, 0, 'percentage', 0)}%)
+▫️ ${getArrayElementSafely(results?.allCharacteristics, 1, 'name', 'Não definido')} (${getArrayElementSafely(results?.allCharacteristics, 1, 'percentage', 0)}%)
+▫️ ${getArrayElementSafely(results?.allCharacteristics, 2, 'name', 'Não definido')} (${getArrayElementSafely(results?.allCharacteristics, 2, 'percentage', 0)}%)
+▫️ ${getArrayElementSafely(results?.allCharacteristics, 3, 'name', 'Não definido')} (${getArrayElementSafely(results?.allCharacteristics, 3, 'percentage', 0)}%)
 `;
 
     // Send message to Telegram
