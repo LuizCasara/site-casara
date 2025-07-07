@@ -5,6 +5,7 @@ import {FaSpinner, FaUser} from "react-icons/fa";
 import temperamentosJson from "./temperamentos.json";
 import {sendTemperamentTestMessage} from "@/app/api/telegram/utils";
 import {generatePdf, PdfContent} from "@/utils/pdf-generator";
+import {trackPdfDownload, trackQuestionDropout, trackTemperamentDistribution, trackTestCompletion, trackTestStart} from "@/utils/analytics";
 
 const DescubraSeuTemperamento = () => {
     const [userName, setUserName] = useState("");
@@ -142,6 +143,9 @@ const DescubraSeuTemperamento = () => {
             return;
         }
 
+        // Track test start
+        trackTestStart(userName);
+
         setCurrentQuestionIndex(0);
         setAnswers({});
         setAnswerHistory([]);
@@ -264,6 +268,12 @@ const DescubraSeuTemperamento = () => {
 
     const stopTest = async () => {
         try {
+            // Track question dropouts if not all questions were answered
+            if (currentQuestionIndex < testQuestions.length - 1) {
+                const currentQuestion = testQuestions[currentQuestionIndex];
+                trackQuestionDropout(currentQuestionIndex, currentQuestion?.question || "");
+            }
+
             await calculateResults();
         } catch (error) {
             console.error('Error calculating results:', error);
@@ -525,6 +535,26 @@ const DescubraSeuTemperamento = () => {
         setResults(resultsData);
         setTestComplete(true);
 
+        // Track test completion and temperament distribution
+        const testDuration = Object.keys(answers).length * 10; // Rough estimate of test duration in seconds
+        trackTestCompletion({
+            ...resultsData,
+            testDuration
+        });
+
+        trackTemperamentDistribution({
+            temperamentPercentages: {
+                Sanguineo: resultsData.allTemperaments[0].name === "Sanguineo" ? resultsData.allTemperaments[0].percentage :
+                    resultsData.allTemperaments[1].name === "Sanguineo" ? resultsData.allTemperaments[1].percentage : 0,
+                Colerico: resultsData.allTemperaments[0].name === "Colerico" ? resultsData.allTemperaments[0].percentage :
+                    resultsData.allTemperaments[1].name === "Colerico" ? resultsData.allTemperaments[1].percentage : 0,
+                Melancolico: resultsData.allTemperaments[0].name === "Melancolico" ? resultsData.allTemperaments[0].percentage :
+                    resultsData.allTemperaments[1].name === "Melancolico" ? resultsData.allTemperaments[1].percentage : 0,
+                Fleumatico: resultsData.allTemperaments[0].name === "Fleumatico" ? resultsData.allTemperaments[0].percentage :
+                    resultsData.allTemperaments[1].name === "Fleumatico" ? resultsData.allTemperaments[1].percentage : 0
+            }
+        });
+
         // Check if at least 50% of questions were answered
         const answeredQuestionsPercentage = (Object.keys(answers).length / testQuestions.length) * 100;
         if (answeredQuestionsPercentage >= 50 && testMode === "normal" && !userName.includes("teste")) {
@@ -607,6 +637,11 @@ const DescubraSeuTemperamento = () => {
     // Removed PdfContent component - now imported from utils/pdf-generator.tsx
 
     const downloadPdf = async () => {
+        // Track PDF download
+        if (results && results.primaryTemperament) {
+            trackPdfDownload(userName, results.primaryTemperament.name);
+        }
+
         // Use the generatePdf function from the utils file
         await generatePdf(pdfContentRef, userName, setIsPdfLoading);
     };

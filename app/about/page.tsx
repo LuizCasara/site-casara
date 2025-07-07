@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { FaGithub, FaLinkedin, FaInstagram, FaEnvelope, FaGlobe, FaSpotify, FaSteam, FaDiscord } from "react-icons/fa";
+import {FaDiscord, FaEnvelope, FaGithub, FaGlobe, FaInstagram, FaLinkedin, FaSpotify, FaSteam} from "react-icons/fa";
+import {trackSocialMediaClick} from "@/utils/analytics";
 
 export default function About() {
   return (
@@ -85,6 +88,7 @@ export default function About() {
               target="_blank" 
               rel="noopener noreferrer"
               className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transform transition-transform hover:scale-110"
+              onClick={() => trackSocialMediaClick("GitHub")}
             >
               <FaGithub className="h-8 w-8" />
               <span className="sr-only">GitHub</span>
@@ -94,6 +98,7 @@ export default function About() {
               target="_blank" 
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transform transition-transform hover:scale-110"
+              onClick={() => trackSocialMediaClick("LinkedIn")}
             >
               <FaLinkedin className="h-8 w-8" />
               <span className="sr-only">LinkedIn</span>
@@ -103,6 +108,7 @@ export default function About() {
               target="_blank" 
               rel="noopener noreferrer"
               className="text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300 transform transition-transform hover:scale-110"
+              onClick={() => trackSocialMediaClick("Instagram")}
             >
               <FaInstagram className="h-8 w-8" />
               <span className="sr-only">Instagram</span>
@@ -110,6 +116,7 @@ export default function About() {
             <Link 
               href="mailto:luiz9493@gmail.com"
               className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transform transition-transform hover:scale-110"
+              onClick={() => trackSocialMediaClick("Email")}
             >
               <FaEnvelope className="h-8 w-8" />
               <span className="sr-only">Email</span>
@@ -119,6 +126,7 @@ export default function About() {
               target="_blank" 
               rel="noopener noreferrer"
               className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 transform transition-transform hover:scale-110"
+              onClick={() => trackSocialMediaClick("Bio Site")}
             >
               <FaGlobe className="h-8 w-8" />
               <span className="sr-only">Bio Site</span>
@@ -133,6 +141,7 @@ export default function About() {
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-300 transform transition-transform hover:scale-110 mb-2"
+                onClick={() => trackSocialMediaClick("Spotify")}
               >
                 <FaSpotify className="h-8 w-8 mx-auto" />
               </Link>
@@ -142,6 +151,7 @@ export default function About() {
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-sm text-green-500 hover:underline"
+                onClick={() => trackSocialMediaClick("Spotify Username")}
               >
                 @fencherlc
               </a>
