@@ -34,13 +34,14 @@ const getTemperamentBgClass = (name: string) => {
 // Interface for PDF data
 interface PdfData {
     name: string;
+    age?: string;
     date: string;
     results: any;
 }
 
 // Component to render PDF content (hidden in UI)
 export const PdfContent = React.forwardRef<HTMLDivElement, { data: PdfData }>((props, ref) => {
-    const {name, date, results} = props.data;
+    const {name, age, date, results} = props.data;
 
     // Format date with timezone
     const formattedDate = new Date(date).toLocaleString('pt-BR', {
@@ -63,6 +64,7 @@ export const PdfContent = React.forwardRef<HTMLDivElement, { data: PdfData }>((p
                 <div style={{marginBottom: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '5px'}}>
                     <h2 style={{color: 'black'}}>Informações</h2>
                     <p style={{color: 'black'}}><strong>Nome:</strong> {name}</p>
+                    {age && <p style={{color: 'black'}}><strong>Idade:</strong> {age}</p>}
                     <p style={{color: 'black'}}><strong>Data:</strong> {formattedDate}</p>
                 </div>
 

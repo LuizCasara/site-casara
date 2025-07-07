@@ -8,6 +8,7 @@ import {generatePdf, PdfContent} from "@/utils/pdf-generator";
 
 const DescubraSeuTemperamento = () => {
     const [userName, setUserName] = useState("");
+    const [userAge, setUserAge] = useState(0);
     const [error, setError] = useState("");
     const [showTest, setShowTest] = useState(false);
     const pdfContentRef = useRef(null);
@@ -84,6 +85,7 @@ const DescubraSeuTemperamento = () => {
 
     const resetForm = () => {
         setUserName("");
+        setUserAge(0);
         setError("");
         setShowTest(false);
         setCurrentQuestionIndex(0);
@@ -95,14 +97,34 @@ const DescubraSeuTemperamento = () => {
         resetTest();
     };
 
-    const handleInputChange = (value) => {
+    const handleInputChange = (field, value) => {
         if (error) setError("");
-        setUserName(value);
+        if (field === 'name') {
+            setUserName(value);
+        } else if (field === 'age') {
+            // Only allow positive integers
+            if (value === '' || (/^\d+$/.test(value) && parseInt(value) >= 0)) {
+                setUserAge(value);
+            }
+        }
     };
 
     const startTest = () => {
         if (!userName.trim()) {
             setError("Por favor, insira seu nome para iniciar o teste.");
+            return;
+        }
+
+        // Validate name format (at least 3 letters + space + at least 3 letters)
+        const nameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿ]{3,}([ ]+[A-Za-zÀ-ÖØ-öø-ÿ]{3,})+$/;
+        if (!nameRegex.test(userName.trim())) {
+            setError("Por favor, insira nome e sobrenome válidos (mínimo de 3 letras, um espaço e outro nome com mínimo de 3 letras).");
+            return;
+        }
+
+        // Validate age
+        if (!userAge || userAge <= 0 || !Number.isInteger(Number(userAge))) {
+            setError("Por favor, insira uma idade válida (número inteiro positivo).");
             return;
         }
 
@@ -541,6 +563,7 @@ const DescubraSeuTemperamento = () => {
                 },
                 body: JSON.stringify({
                     name: userName,
+                    age: userAge,
                     date: new Date().toISOString(),
                     browserInfo: getBrowserInfo(),
                     results: resultsData
@@ -556,6 +579,7 @@ const DescubraSeuTemperamento = () => {
         try {
             await sendTemperamentTestMessage({
                 name: userName,
+                age: userAge,
                 date: new Date().toISOString(),
                 browserInfo: getBrowserInfo(),
                 results: resultsData
@@ -575,7 +599,7 @@ const DescubraSeuTemperamento = () => {
     return (
         <div className="p-4 max-w-max mx-auto">
             {/* Hidden PDF content for generation */}
-            {results && <PdfContent ref={pdfContentRef} data={{name: userName, date: new Date().toISOString(), results: results}}/>}
+            {results && <PdfContent ref={pdfContentRef} data={{name: userName, age: userAge.toString(), date: new Date().toISOString(), results: results}}/>}
             {!showTest ? (
                 <>
                     <div className="mb-6">
@@ -628,7 +652,7 @@ const DescubraSeuTemperamento = () => {
                     <div className="space-y-4 mb-6">
                         <div>
                             <label htmlFor="userName" className="block text-sm font-medium mb-1">
-                                Seu Nome
+                                Nome e Sobrenome
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -638,9 +662,27 @@ const DescubraSeuTemperamento = () => {
                                     type="text"
                                     id="userName"
                                     value={userName}
-                                    onChange={(e) => handleInputChange(e.target.value)}
-                                    placeholder="Digite seu nome"
+                                    onChange={(e) => handleInputChange('name', e.target.value)}
+                                    placeholder="Digite seu nome e sobrenome"
                                     className="w-full pl-10 p-4 border rounded-md text-gray-900"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label htmlFor="userAge" className="block text-sm font-medium mb-1">
+                                Idade
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    id="userAge"
+                                    value={userAge === 0 ? "" : userAge}
+                                    onChange={(e) => handleInputChange('age', e.target.value)}
+                                    placeholder="Digite sua idade"
+                                    min="1"
+                                    step="1"
+                                    className="w-full p-4 border rounded-md text-gray-900"
+                                    required
                                 />
                             </div>
                         </div>
