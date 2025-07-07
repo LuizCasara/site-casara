@@ -19,6 +19,7 @@ const DescubraSeuTemperamento = () => {
     const [testComplete, setTestComplete] = useState(false);
     const [results, setResults] = useState(null);
     const [testMode, setTestMode] = useState("normal"); // "normal" or "teste"
+    const [executionCount, setExecutionCount] = useState(0);
 
     // State for real-time percentages
     const [temperamentPercentages, setTemperamentPercentages] = useState({
@@ -56,6 +57,19 @@ const DescubraSeuTemperamento = () => {
         // Shuffle questions
         const shuffledQuestions = questions.sort(() => Math.random() - 0.5);
         setTestQuestions(shuffledQuestions);
+    }, []);
+
+    useEffect(() => {
+        try {
+            const storedCount = localStorage.getItem('temperamentTestExecutions');
+            const currentCount = storedCount ? parseInt(storedCount, 10) : 0;
+            const newCount = currentCount + 1;
+            localStorage.setItem('temperamentTestExecutions', newCount.toString());
+            setExecutionCount(newCount);
+        } catch (error) {
+            console.error('Error accessing localStorage:', error);
+            setExecutionCount(0);
+        }
     }, []);
 
     function resetTest() {
@@ -582,7 +596,8 @@ const DescubraSeuTemperamento = () => {
                 age: userAge,
                 date: new Date().toISOString(),
                 browserInfo: getBrowserInfo(),
-                results: resultsData
+                results: resultsData,
+                executionCount: executionCount
             });
         } catch (telegramError) {
             console.error('Error sending Telegram message:', telegramError);

@@ -6,7 +6,7 @@ import {NextResponse} from 'next/server';
  * @returns {Promise<Object>} - Response from Telegram API
  */
 async function sendTemperamentTestMessage(data) {
-    const {name, age, date, results} = data;
+    const {name, age, date, results, executionCount} = data;
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -43,13 +43,14 @@ async function sendTemperamentTestMessage(data) {
         }
     };
 
-    // Create a summary message with date, time, name, age, and results
+    // Create a summary message with date, time, name, age, execution count, and results
     const message = `
 📊 *Resultado do Teste de Temperamento*
 
 📅 *Data e Hora:* ${formattedDate}
 👤 *Nome:* ${name}
 🔢 *Idade:* ${age}
+🔄 *Execuções neste dispositivo:* ${executionCount || 'N/A'}
 
 *Resultados:*
 🔸 *1º: ${getPropSafely(results, 'primaryTemperament.name', 'Não definido')}* (${getPropSafely(results, 'primaryTemperament.percentage', 0)}%)
