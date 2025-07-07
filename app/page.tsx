@@ -1,15 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { FaLightbulb, FaCode, FaRandom, FaBookOpen, FaChartLine, FaLaugh } from "react-icons/fa";
+import {useEffect, useState} from "react";
+import {FaBookOpen, FaChartLine, FaCode, FaLaugh, FaLightbulb, FaRandom} from "react-icons/fa";
+import {trackGenerateQuote, trackHomePageVisit, trackQuickAccessLink, trackReceiveTip} from "@/utils/analytics";
 
 export default function Home() {
   const [randomQuote, setRandomQuote] = useState("");
   const [randomTip, setRandomTip] = useState("");
 
+    // Track time spent on home page
+    useEffect(() => {
+      return trackHomePageVisit();
+    }, []);
+
   // Function to generate random tech tip
   const generateRandomTip = () => {
+      trackReceiveTip();
     const tips = [
       "Use keyboard shortcuts to boost productivity",
       "Regular backups can save you from disaster",
@@ -27,6 +34,7 @@ export default function Home() {
 
   // Function to generate random programming quote
   const generateRandomQuote = () => {
+      trackGenerateQuote();
     const quotes = [
       "\"Code is like humor. When you have to explain it, it's bad.\" – Cory House",
       "\"It's not a bug – it's an undocumented feature.\" – Anonymous",
@@ -120,19 +128,35 @@ export default function Home() {
           {/* Quick Access Cards */}
           <h3 className="text-2xl font-bold mb-6 text-center">Acesso Rápido</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            <Link href="/app/rule-of-three" className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center">
+              <Link
+                  href="/app/rule-of-three"
+                  className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center"
+                  onClick={() => trackQuickAccessLink("Regra de Três")}
+              >
               <FaRandom className="mx-auto mb-2 text-green-500" size={24} />
               <span className="block text-sm">Regra de Três</span>
             </Link>
-            <Link href="/app/compound-interest" className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center">
+              <Link
+                  href="/app/compound-interest"
+                  className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center"
+                  onClick={() => trackQuickAccessLink("Juros Compostos")}
+              >
               <FaChartLine className="mx-auto mb-2 text-green-500" size={24} />
               <span className="block text-sm">Juros Compostos</span>
             </Link>
-            <Link href="/app/qr-code" className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center">
+              <Link
+                  href="/app/qr-code"
+                  className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center"
+                  onClick={() => trackQuickAccessLink("Gerador QR Code")}
+              >
               <FaCode className="mx-auto mb-2 text-green-500" size={24} />
               <span className="block text-sm">Gerador QR Code</span>
             </Link>
-            <Link href="/app/descubra-seu-temperamento" className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center">
+              <Link
+                  href="/app/descubra-seu-temperamento"
+                  className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center"
+                  onClick={() => trackQuickAccessLink("Temperamento")}
+              >
               <FaLaugh className="mx-auto mb-2 text-green-500" size={24} />
               <span className="block text-sm">Temperamento</span>
             </Link>

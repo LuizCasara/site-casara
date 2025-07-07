@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 
 export async function POST(request) {
   try {
-    const { name, date, browserInfo, results } = await request.json();
+    const {name, age, date, browserInfo, results} = await request.json();
 
     // Create a transporter
     const transporter = nodemailer.createTransport({
@@ -110,6 +110,7 @@ export async function POST(request) {
           <div class="section">
             <h2>Informações</h2>
             <p><strong>Nome:</strong> ${name}</p>
+            <p><strong>Idade:</strong> ${age}</p>
             <p><strong>Data:</strong> ${formattedDate}</p>
             <p><strong>Navegador:</strong> ${browserInfo}</p>
           </div>

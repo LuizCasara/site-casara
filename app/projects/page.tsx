@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import {trackProjectClick} from "@/utils/analytics";
 
 // Project data - real projects I've worked on
 const projects = [
@@ -28,11 +31,6 @@ const projects = [
     link: "https://www.soupe.app/"
   }
 ];
-
-export const metadata = {
-  title: "Projects | Luiz Casara",
-  description: "Browse through my portfolio of web development and software engineering projects.",
-};
 
 export default function ProjectsPage() {
   return (
@@ -79,6 +77,7 @@ export default function ProjectsPage() {
                   href={project.link} 
                   className="text-green-500 dark:text-green-400 font-medium hover:underline"
                   target="_blank"
+                  onClick={() => trackProjectClick(project.title)}
                 >
                   View Project →
                 </Link>
