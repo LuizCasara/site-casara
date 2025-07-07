@@ -11,8 +11,7 @@ export default function Home() {
 
     // Track time spent on home page
     useEffect(() => {
-        const endTracking = trackHomePageVisit();
-        return endTracking;
+      return trackHomePageVisit();
     }, []);
 
   // Function to generate random tech tip
