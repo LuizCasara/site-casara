@@ -1,6 +1,6 @@
 'use client';
-import { type JSX, useEffect, useState } from 'react';
-import { motion, MotionProps } from 'framer-motion';
+import {type JSX, useEffect, useState} from 'react';
+import {motion, MotionProps} from 'framer-motion';
 
 type TextScrambleProps = {
   children: string;
@@ -74,6 +74,7 @@ export function TextScramble({
   useEffect(() => {
     if (!trigger) return;
     scramble();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trigger]);
 
   return (

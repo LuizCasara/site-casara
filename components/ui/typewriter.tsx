@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react"
-import { motion, Variants } from "framer-motion"
-import { cn } from "@/lib/utils"
+import {useEffect, useState} from "react"
+import {motion, Variants} from "framer-motion"
+import {cn} from "@/lib/utils"
 
 interface TypewriterProps {
   text: string | string[]
@@ -98,6 +98,7 @@ const Typewriter = ({
     displayText,
     isDeleting,
     speed,
+      initialDelay,
     deleteSpeed,
     waitTime,
     texts,
