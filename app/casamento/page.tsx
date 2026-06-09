@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
+import { trackCasamentoMapsClick, trackCasamentoRsvpWhatsapp } from '@/utils/analytics'
 
 // ─── Configurações ──────────────────────────────────────────────────────────
 const WEDDING_DATE = new Date('2026-07-11T00:00:00')
@@ -392,10 +393,12 @@ function DetailsSection() {
           transition={{ duration: 1, delay: 1 }}
           whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(212,175,55,0.2)' }}
           whileTap={{ scale: 0.97 }}
+          onClick={trackCasamentoMapsClick}
           className="inline-flex items-center gap-2 px-8 py-3 rounded-full"
           style={{ border: `1px solid ${G}`, color: G, textDecoration: 'none', fontFamily: 'var(--font-montserrat)', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
           📍 Ver no Google Maps
         </motion.a>
+
       </div>
     </section>
   )
@@ -571,6 +574,7 @@ function RSVPSection() {
             href={waUrl} target="_blank" rel="noopener noreferrer"
             whileHover={{ scale: 1.04, boxShadow: '0 0 50px rgba(212,175,55,0.3)' }}
             whileTap={{ scale: 0.97 }}
+            onClick={trackCasamentoRsvpWhatsapp}
             className="inline-flex items-center gap-3 px-10 py-4 rounded-full"
             style={{ background: `linear-gradient(135deg, ${G} 0%, #9A7B1C 100%)`, color: BG, textDecoration: 'none', fontFamily: 'var(--font-montserrat)', fontSize: '0.73rem', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600 }}>
             {/* WhatsApp icon */}

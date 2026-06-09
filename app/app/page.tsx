@@ -4,6 +4,7 @@ import Link from "next/link";
 import {Fa0, Fa3, FaFileArrowDown, FaMoneyBillTrendUp, FaPhotoFilm, FaSpoon} from "react-icons/fa6";
 import {FaBitcoin, FaCoins, FaPercent, FaQrcode, FaBrain} from "react-icons/fa";
 import {useLang} from "@/context/LanguageContext";
+import {trackAppClick} from "@/utils/analytics";
 
 const appCategories = [
     {
@@ -133,6 +134,7 @@ export default function AppsPage() {
                                     <Link
                                         key={app.id}
                                         href={`/app/${app.id}`}
+                                        onClick={() => trackAppClick(app.id, app.title)}
                                         className="block border border-gray-100 dark:border-gray-800 rounded-xl p-4 hover:border-gray-200 dark:hover:border-gray-700 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-all"
                                     >
                                         <div className="flex items-start gap-3 mb-2">
