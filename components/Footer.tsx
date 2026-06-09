@@ -1,5 +1,6 @@
 "use client"
 
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const Footer = () => {
@@ -24,7 +25,8 @@ const Footer = () => {
           </p>
 
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            © {new Date().getFullYear()} Luiz Casara
+            <Link href="/stats" className="hover:text-green-500 transition-colors duration-300" tabIndex={-1}>©</Link>
+            {" "}{new Date().getFullYear()} Luiz Casara
           </p>
 
         </div>
