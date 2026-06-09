@@ -1,4 +1,11 @@
+"use client"
+
+import { usePathname } from 'next/navigation';
+
 const Footer = () => {
+  const pathname = usePathname();
+  if (pathname.startsWith('/casamento')) return null;
+
   return (
     <footer className="border-t border-gray-100 dark:border-gray-800/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
