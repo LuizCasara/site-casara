@@ -1,35 +1,25 @@
-
 const Footer = () => {
   return (
-    <footer className="bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
-        {/* Quotes */}
-        <div className="mb-6">
-          <p className="text-xl font-medium text-gray-800 dark:text-gray-200 mb-6">
-            1% better every day
-          </p>
-          <p className="text-md text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            &quot;Yesterday I was clever, so I wanted to change the world. Today I am wise, so I am changing myself.&quot;
-          </p>
-        </div>
+    <footer className="border-t border-gray-100 dark:border-gray-800/60">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
 
-        {/*/!* Bio Link *!/*/}
-        {/*<div className="mb-8">*/}
-        {/*  <a */}
-        {/*    href="https://bio.site/luizcasara" */}
-        {/*    target="_blank" */}
-        {/*    rel="noopener noreferrer" */}
-        {/*    className="text-green-500 hover:text-green-600 dark:hover:text-green-400 font-medium"*/}
-        {/*  >*/}
-        {/*    bio.site/luizcasara*/}
-        {/*  </a>*/}
-        {/*</div>*/}
+          <div>
+            <p className="font-bold text-gray-900 dark:text-white mb-0.5">Luiz Casara</p>
+            <p className="text-xs font-mono text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+              Tech Lead · Senior Full-Stack Engineer
+            </p>
+          </div>
 
-        {/* Copyright */}
-        <div className="pt-6 border-t border-gray-200 dark:border-gray-800">
-          <p className="text-sm text-center text-gray-600 dark:text-gray-400">
-            © {new Date().getFullYear()} Luiz Casara. All rights reserved.
+          <p className="text-sm text-gray-500 dark:text-gray-400 italic text-center max-w-sm">
+            &quot;Yesterday I was clever, so I wanted to change the world.
+            Today I am wise, so I am changing myself.&quot;
           </p>
+
+          <p className="text-xs text-gray-400 dark:text-gray-500">
+            © {new Date().getFullYear()} Luiz Casara
+          </p>
+
         </div>
       </div>
     </footer>

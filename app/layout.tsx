@@ -1,9 +1,11 @@
 import type {Metadata} from "next";
 import {Analytics} from "@vercel/analytics/next"
+import {SpeedInsights} from "@vercel/speed-insights/next"
 import {Quicksand, Space_Mono} from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import {LanguageProvider} from "@/context/LanguageContext";
 
 const quicksand = Quicksand({
     variable: "--font-quicksand",
@@ -40,12 +42,15 @@ export default function RootLayout({
         <body
             className={`${quicksand.variable} ${spaceMono.variable} antialiased min-h-screen flex flex-col`}
         >
-        <Header/>
-        <main className="flex-grow">
-            {children}
-            <Analytics/>
-        </main>
-        <Footer/>
+        <LanguageProvider>
+            <Header/>
+            <main className="flex-grow">
+                {children}
+                <Analytics/>
+                <SpeedInsights/>
+            </main>
+            <Footer/>
+        </LanguageProvider>
         </body>
         </html>
     )
