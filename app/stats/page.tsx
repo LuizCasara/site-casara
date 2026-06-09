@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 
 type StatsData = {
   overview: { total_events: number; total_page_views: number; unique_routes: number };
@@ -198,7 +198,7 @@ export default function StatsPage() {
               <span className="text-green-400 animate-pulse text-lg leading-none">▮</span>
             </div>
             <p className="text-green-800 text-xs mt-1">
-              // dados de interação · luiz.dev · todos os eventos em tempo real
+                {'// dados de interação · luiz.dev · todos os eventos em tempo real'}
             </p>
           </div>
 
@@ -401,7 +401,7 @@ export default function StatsPage() {
 
           {/* Footer */}
           <div className="text-center text-green-900 text-xs py-2 tracking-widest">
-            // END_OF_REPORT · luiz.dev · {new Date().getFullYear()} · v1.0
+              {'// END_OF_REPORT · luiz.dev · '}{new Date().getFullYear()}{' · v1.0'}
           </div>
 
         </div>
