@@ -2,214 +2,317 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {FaDiscord, FaEnvelope, FaGithub, FaGlobe, FaInstagram, FaLinkedin, FaSpotify, FaSteam} from "react-icons/fa";
+import {FaGithub, FaGlobe, FaInstagram, FaLinkedin, FaWhatsapp} from "react-icons/fa";
 import {trackSocialMediaClick} from "@/utils/analytics";
+import {useLang} from "@/context/LanguageContext";
+import {Typewriter} from "@/components/ui/typewriter";
+
+const skills: Record<string, string[]> = {
+  "Liderança & Processo": ["Tech Leadership", "Spec-Driven Development", "Squad Management", "Architecture Review"],
+  "Front-End & Mobile": ["React", "Next.js", "TypeScript", "React Native", "Tailwind CSS", "Styled-Components"],
+  "Back-End & APIs": ["Node.js", "GraphQL (Apollo)", "REST APIs", "Java (JPA/Hibernate)", "Python", "Spring Boot"],
+  "Banco de Dados": ["PostgreSQL", "Oracle", "SQLite"],
+  "QA & DevOps": ["Cypress", "E2E Testing", "CI/CD Pipelines", "Git", "Linux"],
+  "AI Tools": ["Claude Code", "GitHub Copilot"],
+};
+
+const experience = [
+  {
+    role: "Tech Lead / Senior Front-End Engineer",
+    company: "Dock",
+    companyUrl: "https://dock.tech",
+    period: {pt: "Mai 2022 – Presente", en: "May 2022 – Present"},
+    description: {
+      pt: "Fintech de infraestrutura bancária (BaaS) para grandes instituições financeiras brasileiras.",
+      en: "Banking-as-a-service (BaaS) fintech powering major Brazilian financial institutions.",
+    },
+    highlights: {
+      pt: [
+        "Liderança de dois squads multifuncionais — arquitetura, planejamento e qualidade de código.",
+        "Dono técnico de 9 produtos financeiros, alguns com SLA ≤20ms e 350+ TPS de throughput sustentado.",
+        "Micro-frontend com React + TypeScript, GraphQL (Apollo), Node.js BFFs e Python APIs.",
+        "Conduzindo a adoção de Spec-Driven Development para melhorar previsibilidade entre squads.",
+      ],
+      en: [
+        "Leading two cross-functional squads — architecture decisions, delivery planning, and code quality.",
+        "Technical owner of 9 financial products, some with ≤20ms SLA and 350+ TPS sustained throughput.",
+        "Micro-frontend architecture with React + TypeScript, GraphQL (Apollo), Node.js BFFs, and Python APIs.",
+        "Driving Spec-Driven Development adoption to improve squad predictability and alignment.",
+      ],
+    },
+  },
+  {
+    role: "Senior Full-Stack Developer",
+    company: "TOTVS (Wealth Systems)",
+    companyUrl: "https://www.totvs.com",
+    period: {pt: "Out 2018 – Presente (Contrato)", en: "Oct 2018 – Present (Contract)"},
+    description: {
+      pt: "Maior empresa de ERP do Brasil, vertical de gestão de patrimônio.",
+      en: "Brazil's largest ERP company, wealth management vertical.",
+    },
+    highlights: {
+      pt: [
+        "Features front-end e mobile com React, React Native, TypeScript e Styled-Components.",
+        "CI/CD pipelines e iniciativas de qualidade E2E com Cypress.",
+        "AG Grid para experiências complexas de tabela de dados.",
+      ],
+      en: [
+        "Front-end and mobile features with React, React Native, TypeScript, and Styled-Components.",
+        "CI/CD pipelines and E2E quality initiatives using Cypress.",
+        "AG Grid implementations for complex data table experiences.",
+      ],
+    },
+  },
+  {
+    role: "Senior Full-Stack Developer",
+    company: "Maxxidata",
+    period: {pt: "Out 2019 – Jan 2023", en: "Oct 2019 – Jan 2023"},
+    description: {
+      pt: "Consultoria de tecnologia com projetos enterprise em múltiplos setores.",
+      en: "Technology consulting firm delivering enterprise solutions across multiple industries.",
+    },
+    highlights: {
+      pt: [
+        "Múltiplos projetos simultâneos, adaptando-se rapidamente a diferentes stacks e domínios.",
+        "Especialização em performance, design de APIs e práticas ágeis.",
+      ],
+      en: [
+        "Multiple concurrent projects, rapidly adapting to different tech stacks and business domains.",
+        "Expertise in performance optimization, API design, and agile delivery practices.",
+      ],
+    },
+  },
+  {
+    role: "Software Analyst & Developer",
+    company: "ISP Saúde (SmartBR)",
+    period: {pt: "Jan 2014 – Out 2018", en: "Jan 2014 – Oct 2018"},
+    description: {
+      pt: "Empresa de tecnologia para gestão de planos de saúde.",
+      en: "Healthcare technology company providing software for health plan management.",
+    },
+    highlights: {
+      pt: [
+        "Pioneiro na plataforma e-commerce da empresa usando React (micro-serviços) e Spring Boot.",
+        "Stack principal: Java com JPA/Hibernate, Oracle Database e REST APIs.",
+      ],
+      en: [
+        "Pioneered the company's e-commerce platform using React (micro-services) and Spring Boot.",
+        "Core stack: Java with JPA/Hibernate, Oracle Database, and REST APIs.",
+      ],
+    },
+  },
+];
+
+const translations = {
+  pt: {
+    bio1: `10+ anos de experiência construindo software de alta criticidade em escala. Atualmente Tech Lead na`,
+    bio1company: "Dock",
+    bio1end: ", uma fintech de infraestrutura bancária. Bacharel em Ciência da Computação pela Anhanguera — Cascavel, PR.",
+    bio2: `Sou movido por desafios complexos e pela melhoria constante. Fora do trabalho, sou Chefe Escoteiro e coordenador regional do movimento escoteiro no oeste do Paraná — papel que me ensinou tanto sobre liderança quanto qualquer projeto de tecnologia.`,
+    stackTitle: "Stack Técnico",
+    skillCategories: {
+      "Liderança & Processo": "Liderança & Processo",
+      "Front-End & Mobile": "Front-End & Mobile",
+      "Back-End & APIs": "Back-End & APIs",
+      "Banco de Dados": "Banco de Dados",
+      "QA & DevOps": "QA & DevOps",
+      "AI Tools": "AI Tools",
+    } as Record<string, string>,
+    experienceTitle: "Experiência",
+    beyondTitle: "Além do código",
+    beyondItems: [
+      {emoji: "🏕️", text: "Chefe Escoteiro voluntário — coordenador regional do movimento escoteiro no oeste do Paraná. Fundei um grupo escoteiro em 2012."},
+      {emoji: "🎮", text: "Gamer no Steam (Friend Code: 140363246) e ouvinte ativo no Spotify (@fencherlc)."},
+      {emoji: "🌱", text: "Aprendendo AWS e GoLang. Defensor da melhoria de 1% por dia."},
+    ],
+    contactTitle: "Contato",
+    contactText: "Sempre disponível para uma",
+    contactBold: "boa",
+    contactText2: "conversa!",
+  },
+  en: {
+    bio1: `10+ years of experience building high-criticality software at scale. Currently Tech Lead at`,
+    bio1company: "Dock",
+    bio1end: ", a banking-as-a-service fintech. Bachelor's in Computer Science from Anhanguera — Cascavel, Brazil.",
+    bio2: `I'm driven by complex challenges and constant improvement. Outside of work, I'm a Scout Leader and regional coordinator of the Scout movement in western Paraná — a role that taught me as much about leadership as any tech project.`,
+    stackTitle: "Tech Stack",
+    skillCategories: {
+      "Liderança & Processo": "Leadership & Process",
+      "Front-End & Mobile": "Front-End & Mobile",
+      "Back-End & APIs": "Back-End & APIs",
+      "Banco de Dados": "Databases",
+      "QA & DevOps": "QA & DevOps",
+      "AI Tools": "AI Tools",
+    } as Record<string, string>,
+    experienceTitle: "Experience",
+    beyondTitle: "Beyond the code",
+    beyondItems: [
+      {emoji: "🏕️", text: "Volunteer Scout Leader — regional coordinator of the Scout movement in western Paraná. Founded a Scout group in 2012."},
+      {emoji: "🎮", text: "Gamer on Steam (Friend Code: 140363246) and active Spotify listener (@fencherlc)."},
+      {emoji: "🌱", text: "Learning AWS and GoLang. Advocate for 1% daily improvement."},
+    ],
+    contactTitle: "Contact",
+    contactText: "Always available for a",
+    contactBold: "good",
+    contactText2: "conversation!",
+  },
+};
 
 export default function About() {
+  const {lang} = useLang();
+  const t = translations[lang];
+
   return (
     <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl mb-8 text-center">
-          About <span className="text-green-500 dark:text-green-400">Me</span>
-        </h1>
 
-        <div className="flex flex-col md:flex-row gap-8 items-center mb-12">
-          {/* Photo with animation */}
-          <div className="w-full md:w-1/3 flex justify-center">
-            <div className="relative w-64 h-64 rounded-full overflow-hidden border-4 border-green-500 shadow-xl transform transition-transform hover:scale-105 duration-300">
-              <Image
-                src="/luiz.jpeg"
-                alt="Luiz Claudio Perin Casara"
-                fill
-                sizes="(max-width: 768px) 100vw, 33vw"
-                className="object-cover"
-                priority
+        {/* Hero */}
+        <div className="flex flex-col md:flex-row gap-10 items-start mb-16">
+          <div className="flex-shrink-0">
+            <div className="relative w-28 h-28 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm">
+              <Image src="/luiz.jpeg" alt="Luiz Casara" fill sizes="112px" className="object-cover" priority />
+            </div>
+          </div>
+
+          <div>
+            <h1 className="text-3xl font-bold mb-1 text-gray-900 dark:text-white">Luiz Casara</h1>
+            <p className="font-mono text-xs text-green-500 dark:text-green-400 tracking-widest uppercase mb-3">
+              Tech Lead · Senior Full-Stack Engineer
+            </p>
+            <div className="font-mono text-sm text-gray-400 dark:text-gray-500 mb-4 h-5">
+              <Typewriter
+                text={lang === "pt"
+                  ? ["Lidero squads de alto desempenho", "Construo produtos financeiros em escala", "Chefe Escoteiro voluntário 🏕️", "1% melhor todo dia"]
+                  : ["Leading high-performance squads", "Building financial products at scale", "Volunteer Scout Leader 🏕️", "1% better every day"]
+                }
+                speed={55}
+                deleteSpeed={25}
+                waitTime={2200}
+                cursorChar="_"
+                cursorClassName=""
               />
             </div>
-          </div>
-
-          {/* Introduction */}
-          <div className="w-full md:w-2/3">
-            <h2 className="text-2xl font-bold mb-4 flex items-center">
-              <span className="mr-2">Greetings</span> 
-              <span className="animate-bounce inline-block">🐸</span>
-            </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
-              My name is Luiz Claudio Perin Casara, hailing from Brazil (🇧🇷), and I have been working as a Developer since 2015. 
-              Most of my experience comes from working with JS, ECS6, Node, React, React Native, Cypress, SQL, Postgress, and Oracle, 
-              and I am currently <b>TechLead</b> and involved in security level projects at <a href="https://dock.tech" target="_blank" rel="noopener noreferrer" className="text-green-500 hover:underline">Dock</a>.
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-3 max-w-2xl">
+              {t.bio1}{" "}
+              <a href="https://dock.tech" target="_blank" rel="noopener noreferrer" className="text-green-500 hover:underline">
+                {t.bio1company}
+              </a>
+              {t.bio1end}
             </p>
-            <p className="text-lg text-gray-600 dark:text-gray-400">
-              I am driven by new challenges, constantly looking for solutions to complex problems which others might avoid.
-            </p>
-          </div>
-        </div>
-
-        {/* More about me section */}
-        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 mb-12 transform transition-all hover:shadow-xl duration-300">
-          <h2 className="text-2xl font-bold mb-6">More About Me</h2>
-          <div className="space-y-4">
-            <p className="text-gray-600 dark:text-gray-400">
-              I possess a unique ability to simplify complex explanations while ensuring attention is paid to detail. 
-              I always strive to question projects to ensure we deliver the best possible experience for the end-user.
-            </p>
-            <p className="text-gray-600 dark:text-gray-400">
-              I am eager to learn and discover new libraries and frameworks, and I love working with people to share 
-              problem-solving strategies, make new connections, and find out more about the applications and life in general.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-              <div className="flex items-start">
-                <span className="text-2xl mr-3">🔭</span>
-                <p className="text-gray-600 dark:text-gray-400">At the moment, I am working on &quot;how to create a good young developer... with my son&quot; 😆</p>
-              </div>
-              <div className="flex items-start">
-                <span className="text-2xl mr-3">🌱</span>
-                <p className="text-gray-600 dark:text-gray-400">Currently, I am learning AWS and GoLang</p>
-              </div>
-              <div className="flex items-start">
-                <span className="text-2xl mr-3">💬</span>
-                <p className="text-gray-600 dark:text-gray-400">Ask me about Scouts Group, i love this movement!</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Connect with me section */}
-        <div className="text-center bg-gradient-to-r from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-6 rounded-lg">
-          <h2 className="text-2xl font-bold mb-6">Connect With Me</h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
-            Feel free to reach me at <a href="mailto:luiz9493@gmail.com" className="text-green-500 hover:underline">luiz9493@gmail.com</a> or on Telegran
-          </p>
-
-          <div className="flex justify-center space-x-6 mb-8">
-            <Link 
-              href="https://github.com/LuizCasara" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transform transition-transform hover:scale-110"
-              onClick={() => trackSocialMediaClick("GitHub")}
-            >
-              <FaGithub className="h-8 w-8" />
-              <span className="sr-only">GitHub</span>
-            </Link>
-            <Link 
-              href="https://www.linkedin.com/in/luiz-claudio-perin-casara-8bb1a5ab/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transform transition-transform hover:scale-110"
-              onClick={() => trackSocialMediaClick("LinkedIn")}
-            >
-              <FaLinkedin className="h-8 w-8" />
-              <span className="sr-only">LinkedIn</span>
-            </Link>
-            <Link 
-              href="https://www.instagram.com/luiz_cpc" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300 transform transition-transform hover:scale-110"
-              onClick={() => trackSocialMediaClick("Instagram")}
-            >
-              <FaInstagram className="h-8 w-8" />
-              <span className="sr-only">Instagram</span>
-            </Link>
-            <Link 
-              href="mailto:luiz9493@gmail.com"
-              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transform transition-transform hover:scale-110"
-              onClick={() => trackSocialMediaClick("Email")}
-            >
-              <FaEnvelope className="h-8 w-8" />
-              <span className="sr-only">Email</span>
-            </Link>
-            <Link 
-              href="https://bio.site/luizcasara"
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 transform transition-transform hover:scale-110"
-              onClick={() => trackSocialMediaClick("Bio Site")}
-            >
-              <FaGlobe className="h-8 w-8" />
-              <span className="sr-only">Bio Site</span>
-            </Link>
-          </div>
-
-          <h3 className="text-xl font-bold mb-4">Gaming & Music</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex flex-col items-center">
-              <Link 
-                href="https://open.spotify.com/user/fencherlc?si=815f5363790f4ae1" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-300 transform transition-transform hover:scale-110 mb-2"
-                onClick={() => trackSocialMediaClick("Spotify")}
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed max-w-2xl">{t.bio2}</p>
+            <div className="mt-5">
+              <a
+                href="/2026_Luiz_Casara_Resume_US.pdf"
+                download
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors"
               >
-                <FaSpotify className="h-8 w-8 mx-auto" />
-              </Link>
-              <h4 className="font-medium mb-1">Spotify</h4>
-              <a 
-                href="https://open.spotify.com/user/fencherlc?si=815f5363790f4ae1" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-sm text-green-500 hover:underline"
-                onClick={() => trackSocialMediaClick("Spotify Username")}
-              >
-                @fencherlc
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                Download CV (EN)
               </a>
             </div>
-
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex flex-col items-center">
-              <div className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transform transition-transform hover:scale-110 mb-2">
-                <FaSteam className="h-8 w-8 mx-auto" />
-              </div>
-              <h4 className="font-medium mb-1">Steam</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Friend Code: <span className="font-mono">140363246</span>
-              </p>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex flex-col items-center">
-              <div className="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transform transition-transform hover:scale-110 mb-2">
-                <FaDiscord className="h-8 w-8 mx-auto" />
-              </div>
-              <h4 className="font-medium mb-1">Discord</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
-                fencher_lc
-              </p>
-            </div>
           </div>
-
-          {/*<div className="inline-flex items-center justify-center w-full">*/}
-          {/*  <hr className="w-64 h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />*/}
-          {/*  <span className="absolute px-3 font-medium text-gray-900 -translate-x-1/2 bg-white left-1/2 dark:text-white dark:bg-gray-900">Would you like to find me?</span>*/}
-          {/*</div>*/}
-
-          {/*<div className="flex flex-wrap justify-center gap-4">*/}
-          {/*  <a */}
-          {/*    href="https://github.com/LuizCasara" */}
-          {/*    target="_blank" */}
-          {/*    rel="noopener noreferrer" */}
-          {/*    className="px-3 py-1 text-xs font-medium text-center text-white bg-gray-700 rounded-full hover:bg-gray-800 transition-colors flex items-center"*/}
-          {/*  >*/}
-          {/*    <FaGithub className="mr-1" /> GitHub Profile*/}
-          {/*  </a>*/}
-          {/*  <a */}
-          {/*    href="https://www.linkedin.com/in/luiz-claudio-perin-casara-8bb1a5ab/" */}
-          {/*    target="_blank" */}
-          {/*    rel="noopener noreferrer" */}
-          {/*    className="px-3 py-1 text-xs font-medium text-center text-white bg-blue-700 rounded-full hover:bg-blue-800 transition-colors flex items-center"*/}
-          {/*  >*/}
-          {/*    <FaLinkedin className="mr-1" /> LinkedIn Profile*/}
-          {/*  </a>*/}
-          {/*  <a */}
-          {/*    href="https://www.instagram.com/luiz_cpc" */}
-          {/*    target="_blank" */}
-          {/*    rel="noopener noreferrer" */}
-          {/*    className="px-3 py-1 text-xs font-medium text-center text-white bg-pink-600 rounded-full hover:bg-pink-700 transition-colors flex items-center"*/}
-          {/*  >*/}
-          {/*    <FaInstagram className="mr-1" /> Instagram Profile*/}
-          {/*  </a>*/}
-          {/*</div>*/}
         </div>
+
+        {/* Skills */}
+        <section className="mb-16">
+          <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">{t.stackTitle}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {Object.entries(skills).map(([category, items]) => (
+              <div key={category} className="p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
+                  {t.skillCategories[category]}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {items.map(item => (
+                    <span key={item} className="font-mono text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2.5 py-1 rounded-md">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Experience */}
+        <section className="mb-16">
+          <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">{t.experienceTitle}</h2>
+          <div className="space-y-4">
+            {experience.map((exp, i) => (
+              <div key={i} className="p-5 rounded-xl border border-gray-100 dark:border-gray-800">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 mb-2">
+                  <div>
+                    <h3 className="font-bold text-gray-900 dark:text-white">{exp.role}</h3>
+                    {exp.companyUrl ? (
+                      <a href={exp.companyUrl} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600 font-semibold text-sm">
+                        {exp.company}
+                      </a>
+                    ) : (
+                      <p className="text-green-500 font-semibold text-sm">{exp.company}</p>
+                    )}
+                  </div>
+                  <span className="font-mono text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap shrink-0">
+                    {exp.period[lang]}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-400 dark:text-gray-500 italic mb-3">{exp.description[lang]}</p>
+                <ul className="space-y-1">
+                  {exp.highlights[lang].map((h, j) => (
+                    <li key={j} className="text-sm text-gray-600 dark:text-gray-400 flex gap-2">
+                      <span className="text-green-500 shrink-0 mt-0.5">·</span>
+                      {h}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Personal */}
+        <section className="mb-16 p-6 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800">
+          <h2 className="text-xl font-bold mb-5 text-gray-900 dark:text-white">{t.beyondTitle}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 text-sm text-gray-600 dark:text-gray-400">
+            {t.beyondItems.map(({emoji, text}) => (
+              <div key={emoji} className="flex items-start gap-3">
+                <span className="text-2xl shrink-0">{emoji}</span>
+                <p>{text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Contact */}
+        <section>
+          <h2 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">{t.contactTitle}</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
+            {t.contactText} <strong className="text-gray-900 dark:text-white">{t.contactBold}</strong> {t.contactText2}
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {[
+              {href: "https://github.com/LuizCasara", icon: <FaGithub size={18} />, label: "GitHub", track: "GitHub"},
+              {href: "https://www.linkedin.com/in/luiz-claudio-perin-casara-8bb1a5ab/", icon: <FaLinkedin size={18} />, label: "LinkedIn", track: "LinkedIn"},
+              {href: "https://www.instagram.com/luiz_cpc", icon: <FaInstagram size={18} />, label: "Instagram", track: "Instagram"},
+              {href: "https://wa.me/5545991119881", icon: <FaWhatsapp size={18} />, label: "WhatsApp", track: "WhatsApp"},
+              {href: "https://bio.site/luizcasara", icon: <FaGlobe size={18} />, label: "Bio Site", track: "Bio Site"},
+            ].map(({href, icon, label, track}) => (
+              <Link
+                key={label}
+                href={href}
+                target={href.startsWith("mailto:") ? undefined : "_blank"}
+                rel={href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
+                onClick={() => trackSocialMediaClick(track)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              >
+                {icon}
+                <span className="text-sm font-medium">{label}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
       </div>
     </div>
   );

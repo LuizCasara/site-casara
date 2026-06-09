@@ -1,164 +1,159 @@
 "use client";
 
+import Link from "next/link";
 import {Fa0, Fa3, FaFileArrowDown, FaMoneyBillTrendUp, FaPhotoFilm, FaSpoon} from "react-icons/fa6";
 import {FaBitcoin, FaCoins, FaPercent, FaQrcode, FaBrain} from "react-icons/fa";
-import {useRouter} from "next/navigation";
-import AppFooter from "@/components/AppFooter";
+import {useLang} from "@/context/LanguageContext";
 
 const appCategories = [
     {
         id: "desenvolvimento-pessoal",
-        title: "Desenvolvimento Pessoal",
+        title: {pt: "Desenvolvimento Pessoal", en: "Personal Development"},
         apps: [
             {
                 id: "descubra-seu-temperamento",
                 title: "Descubra seu Temperamento",
                 description: "Descubra qual dos quatro temperamentos humanos é predominante em você.",
-                icon: <FaBrain size={32}/>,
-                path: "desenvolvimento-pessoal/descubra-seu-temperamento"
+                icon: <FaBrain size={18}/>,
             }
         ]
     },
     {
         id: "math",
-        title: "Ferramentas Matemáticas e de Cálculo",
+        title: {pt: "Matemática e Cálculo", en: "Math & Calculation"},
         apps: [
             {
                 id: "rule-of-three",
-                title: "Calculadora de Regra de Três",
-                description: "Calcule proporções automaticamente com esta calculadora interativa.",
-                icon: <Fa3 size={32}/>,
-                path: "math/rule-of-three"
+                title: "Regra de Três",
+                description: "Calcule proporções automaticamente.",
+                icon: <Fa3 size={18}/>,
             },
             {
                 id: "compound-interest",
-                title: "Calculadora de Juros Compostos",
-                description: "Calcule juros compostos com base em capital inicial, taxa e tempo.",
-                icon: <FaMoneyBillTrendUp size={32}/>,
-                path: "math/compound-interest"
+                title: "Juros Compostos",
+                description: "Calcule juros com capital, taxa e prazo.",
+                icon: <FaMoneyBillTrendUp size={18}/>,
             },
             {
                 id: "percentage",
-                title: "Calculadora de Porcentagem Avançada",
-                description: "Calcule porcentagens simples, aumentos, reduções e mais.",
-                icon: <FaPercent size={32}/>,
-                path: "math/percentage"
+                title: "Porcentagem",
+                description: "Calcule porcentagens, aumentos e reduções.",
+                icon: <FaPercent size={18}/>,
             }
         ]
     },
     {
         id: "conversion",
-        title: "Ferramentas de Conversão",
+        title: {pt: "Conversores", en: "Converters"},
         apps: [
             {
                 id: "kitchen-units",
-                title: "Conversor de Unidades de Cozinha",
-                description: "Converta medidas comuns em receitas com base em ingredientes específicos.",
-                icon: <FaSpoon size={32}/>,
-                path: "conversion/kitchen-units"
+                title: "Unidades de Cozinha",
+                description: "Converta xícaras, colheres e gramas por ingrediente.",
+                icon: <FaSpoon size={18}/>,
             },
             {
                 id: "currency",
-                title: "Conversor de Moedas",
-                description: "Converta moedas em tempo real.",
-                icon: <FaCoins size={32}/>,
-                path: "conversion/currency"
+                title: "Moedas",
+                description: "Converta entre moedas com taxas em tempo real.",
+                icon: <FaCoins size={18}/>,
             },
             {
                 id: "bitcoin",
-                title: "Conversor de Bitcoin",
-                description: "Converta Bitcoin para dólar, real e outras moedas em tempo real.",
-                icon: <FaBitcoin size={32}/>,
-                path: "conversion/bitcoin"
+                title: "Bitcoin",
+                description: "Converta BTC para dólar, real e outras moedas.",
+                icon: <FaBitcoin size={18}/>,
             },
             {
                 id: "file-size",
-                title: "Conversor de Arquivos Simples",
-                description: "Converta tamanhos de arquivo e estime tempo de download.",
-                icon: <FaFileArrowDown size={32}/>,
-                path: "conversion/file-size"
+                title: "Tamanho de Arquivo",
+                description: "Converta unidades e estime tempo de download.",
+                icon: <FaFileArrowDown size={18}/>,
             },
             {
                 id: "number-systems",
-                title: "Conversor de Sistemas Numéricos",
-                description: "Converta entre decimal, binário, hexadecimal e octal.",
-                icon: <Fa0 size={32}/>,
-                path: "conversion/number-systems"
+                title: "Sistemas Numéricos",
+                description: "Converta entre decimal, binário, hex e octal.",
+                icon: <Fa0 size={18}/>,
             }
         ]
     },
     {
         id: "personalization",
-        title: "Ferramentas de Personalização",
+        title: {pt: "Personalização", en: "Personalization"},
         apps: [
             {
                 id: "qr-code",
-                title: "Gerador de QR Code Personalizado",
-                description: "Crie QR codes para links, contatos ou texto, com opções de cores e logotipos.",
-                icon: <FaQrcode size={32}/>,
-                path: "personalization/qr-code"
+                title: "Gerador de QR Code",
+                description: "Crie QR codes personalizados com cores e logo.",
+                icon: <FaQrcode size={18}/>,
             },
             {
                 id: "image-to-svg",
-                title: "Conversão de PNG/JPG para SVG",
-                description: "Envie um arquivo que será processado e convertido para SVG.",
-                icon: <FaPhotoFilm size={32}/>,
-                path: "personalization/image-to-svg"
+                title: "PNG/JPG para SVG",
+                description: "Converta imagens para formato vetorial SVG.",
+                icon: <FaPhotoFilm size={18}/>,
             }
         ]
     }
 ];
 
-// App categories and their respective apps
+const translations = {
+    pt: {
+        title: "Mini Aplicativos",
+        desc: "Ferramentas que construí para uso no dia a dia.",
+    },
+    en: {
+        title: "Mini Apps",
+        desc: "Tools I built for everyday use.",
+    },
+};
 
 export default function AppsPage() {
-    const router = useRouter();
-
-    const navigateToApp = (app) => {
-        router.push(`/app/${app.id}`);
-    };
+    const {lang} = useLang();
+    const t = translations[lang];
 
     return (
         <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
-            {/* Page Header */}
-            <div className="max-w-4xl mx-auto text-center mb-12">
-                <h1 className="text-4xl font-bold mb-4">Mini Aplicativos</h1>
-                <p className="text-lg text-gray-600 dark:text-gray-400">
-                    Uma coleção de ferramentas úteis para ajudar em tarefas do dia a dia.
-                    Clique em qualquer card para acessar o aplicativo em uma página dedicada.
-                </p>
-            </div>
+            <div className="max-w-4xl mx-auto">
 
-            {/* App Categories */}
-            <div className="space-y-16">
-                {appCategories.map((category) => (
-                    <section key={category.id} className="space-y-6">
-                        <h2 className="text-2xl font-bold">{category.title}</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {category.apps.map((app) => (
-                                <div
-                                    key={app.id}
-                                    className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-                                    onClick={() => navigateToApp(app)}
-                                >
-                                    <div className="h-32 bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
-                                        <div className="flex items-center justify-center">
-                                            {app.icon}
+                <div className="mb-12">
+                    <h1 className="text-3xl font-bold mb-3 text-gray-900 dark:text-white">{t.title}</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xl leading-relaxed">{t.desc}</p>
+                </div>
+
+                <div className="space-y-10">
+                    {appCategories.map((category) => (
+                        <section key={category.id}>
+                            <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-4">
+                                {category.title[lang]}
+                            </h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {category.apps.map((app) => (
+                                    <Link
+                                        key={app.id}
+                                        href={`/app/${app.id}`}
+                                        className="block border border-gray-100 dark:border-gray-800 rounded-xl p-4 hover:border-gray-200 dark:hover:border-gray-700 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-all"
+                                    >
+                                        <div className="flex items-start gap-3 mb-2">
+                                            <div className="mt-0.5 text-green-500 shrink-0">
+                                                {app.icon}
+                                            </div>
+                                            <span className="font-semibold text-sm text-gray-900 dark:text-white leading-snug">
+                                                {app.title}
+                                            </span>
                                         </div>
-                                    </div>
-                                    <div className="p-6">
-                                        <h3 className="text-xl font-bold mb-2">{app.title}</h3>
-                                        <p className="text-gray-600 dark:text-gray-400">{app.description}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-                ))}
-            </div>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed pl-7">
+                                            {app.description}
+                                        </p>
+                                    </Link>
+                                ))}
+                            </div>
+                        </section>
+                    ))}
+                </div>
 
-            {/* Support the developer footer */}
-            <AppFooter />
+            </div>
         </div>
     );
 }

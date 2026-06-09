@@ -29,8 +29,6 @@ const BitcoinConverter = () => {
     const [loading, setLoading] = useState(false);
     const [rates, setRates] = useState(null);
     const [lastUpdate, setLastUpdate] = useState(null);
-    const [showHistory, setShowHistory] = useState(false);
-    const [historicalData, setHistoricalData] = useState([]);
 
     // Fetch Bitcoin rates from CoinGecko API
     useEffect(() => {
@@ -106,57 +104,12 @@ const BitcoinConverter = () => {
         });
     };
 
-    // Fetch historical data from CoinGecko
-    const fetchHistoricalData = async () => {
-        setLoading(true);
-        setError("");
-
-        try {
-            // Get 7 days of Bitcoin price history in the selected currency
-            const currency = values.toCurrency.toLowerCase();
-            const response = await fetch(
-                `https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=${currency}&days=7&interval=daily`
-            );
-
-            if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            if (!data.prices || data.prices.length === 0) {
-                throw new Error("Historical data not available");
-            }
-
-            // Format the historical data
-            
-            const history = data.prices.map(item => {
-                const [timestamp, price] = item;
-                return {
-                    date: new Date(timestamp).toLocaleDateString(),
-                    rate: price
-                };
-            });
-
-            setHistoricalData(history);
-            setShowHistory(true);
-        } catch (err) {
-            console.error("Error fetching historical data:", err);
-            setError("Não foi possível obter os dados históricos. Por favor, tente novamente mais tarde.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
     // Calculate the conversion
     const calculateConversion = () => {
         // Clear previous results and errors
         setResult(null);
         setError("");
-        setHistoricalData([]);
-        setShowHistory(false);
 
-        // Convert input to number
         const amount = parseFloat(values.amount);
 
         // Validate input
@@ -188,9 +141,6 @@ const BitcoinConverter = () => {
             converted,
             rate
         });
-
-        // Fetch historical data
-        fetchHistoricalData();
     };
 
     // Reset the converter
@@ -201,8 +151,6 @@ const BitcoinConverter = () => {
         });
         setResult(null);
         setError("");
-        setHistoricalData([]);
-        setShowHistory(false);
     };
 
     // Format currency
@@ -224,11 +172,6 @@ const BitcoinConverter = () => {
         return new Intl.NumberFormat('en-US', {
             maximumFractionDigits: 8
         }).format(value) + " BTC";
-    };
-
-    // Toggle history view
-    const toggleHistory = () => {
-        setShowHistory(!showHistory);
     };
 
     return (
@@ -312,51 +255,6 @@ const BitcoinConverter = () => {
                         <p className="text-sm">
                             Taxa de câmbio: 1 BTC = {formatCurrency(result.rate, result.toCurrency)}
                         </p>
-                        <button
-                            onClick={toggleHistory}
-                            className="text-sm underline mt-2 hidden"
-                        >
-                            {showHistory ? "Ocultar histórico" : "Ver histórico de 7 dias"}
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {false && showHistory && historicalData.length > 0 && (
-                <div className="mb-6 border rounded-md overflow-hidden">
-                    <h3 className="font-bold p-3 bg-gray-100 dark:bg-gray-800">Histórico de 7 dias:</h3>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead className="bg-gray-50 dark:bg-gray-900">
-                            <tr>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Data
-                                </th>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Taxa
-                                </th>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Valor Convertido
-                                </th>
-                            </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                            {historicalData.map((data, index) => (
-                                <tr key={index}
-                                    className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'}>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                        {data.date}
-                                    </td>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                        {formatCurrency(data.rate, values.toCurrency)}
-                                    </td>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                        {formatCurrency(parseFloat(values.amount) * data.rate, values.toCurrency)}
-                                    </td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             )}
@@ -375,10 +273,6 @@ const BitcoinConverter = () => {
                     <p>
                         <strong>Volatilidade:</strong> O preço do Bitcoin pode ser altamente volátil, com grandes
                         variações em curtos períodos de tempo.
-                    </p>
-                    <p>
-                        <strong>Histórico:</strong> Os dados históricos mostram a variação do preço do Bitcoin nos
-                        últimos 7 dias.
                     </p>
                 </div>
             </div>

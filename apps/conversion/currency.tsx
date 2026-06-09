@@ -31,8 +31,6 @@ const CurrencyConverter = () => {
     const [loading, setLoading] = useState(false);
     const [rates, setRates] = useState(null);
     const [lastUpdate, setLastUpdate] = useState(null);
-    const [showHistory, setShowHistory] = useState(false);
-    const [historicalData, setHistoricalData] = useState([]);
 
     // Mock exchange rates (in a real app, these would come from an API)
     useEffect(() => {
@@ -84,40 +82,12 @@ const CurrencyConverter = () => {
 
     // Swap currencies
     const swapCurrencies = () => {
-        setValues({
-            ...values,
-            fromCurrency: values.toCurrency,
-            toCurrency: values.fromCurrency
-        });
-
-        // If there's a result, recalculate
-        if (result) {
-            calculateConversion();
-        }
-    };
-
-    // Generate mock historical data
-    const generateHistoricalData = () => {
-        const today = new Date();
-        const data = [];
-
-        // Generate data for the last 7 days
-        for (let i = 6; i >= 0; i--) {
-            const date = new Date(today);
-            date.setDate(date.getDate() - i);
-
-            // Create a random fluctuation around the current rate
-            const baseRate = rates.rates[values.toCurrency] / rates.rates[values.fromCurrency];
-            const fluctuation = (Math.random() * 0.1) - 0.05; // Random between -5% and +5%
-            const rate = baseRate * (1 + fluctuation);
-
-            data.push({
-                date: date.toLocaleDateString(),
-                rate: rate
-            });
-        }
-
-        return data;
+        setValues(prev => ({
+            ...prev,
+            fromCurrency: prev.toCurrency,
+            toCurrency: prev.fromCurrency
+        }));
+        setResult(null);
     };
 
     // Calculate the conversion
@@ -125,13 +95,9 @@ const CurrencyConverter = () => {
         // Clear previous results and errors
         setResult(null);
         setError("");
-        setHistoricalData([]);
-        setShowHistory(false);
 
-        // Convert input to number
         const amount = parseFloat(values.amount);
 
-        // Validate input
         if (isNaN(amount) || amount <= 0) {
             setError("Por favor, insira um valor válido.");
             return;
@@ -142,7 +108,6 @@ const CurrencyConverter = () => {
             return;
         }
 
-        // Get exchange rates for the selected currencies
         const fromRate = rates.rates[values.fromCurrency];
         const toRate = rates.rates[values.toCurrency];
 
@@ -151,16 +116,9 @@ const CurrencyConverter = () => {
             return;
         }
 
-        // Calculate conversion
-        // First convert to USD (base currency), then to target currency
         const inUSD = amount / fromRate;
         const converted = inUSD * toRate;
 
-        // Generate historical data
-        const history = generateHistoricalData();
-        setHistoricalData(history);
-
-        // Set the result
         setResult({
             amount,
             fromCurrency: values.fromCurrency,
@@ -179,8 +137,6 @@ const CurrencyConverter = () => {
         });
         setResult(null);
         setError("");
-        setHistoricalData([]);
-        setShowHistory(false);
     };
 
     // Format currency
@@ -193,11 +149,6 @@ const CurrencyConverter = () => {
             style: 'currency',
             currency: currencyCode
         }).format(value);
-    };
-
-    // Toggle history view
-    const toggleHistory = () => {
-        setShowHistory(!showHistory);
     };
 
     return (
@@ -317,51 +268,6 @@ const CurrencyConverter = () => {
                         <p className="text-sm">
                             Taxa de câmbio: 1 {result.fromCurrency} = {result.rate.toFixed(4)} {result.toCurrency}
                         </p>
-                        <button
-                            onClick={toggleHistory}
-                            className="text-sm underline mt-2 hidden"
-                        >
-                            {showHistory ? "Ocultar histórico" : "Ver histórico de 7 dias"}
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {showHistory && historicalData.length > 0 && (
-                <div className="mb-6 border rounded-md overflow-hidden">
-                    <h3 className="font-bold p-3 bg-gray-100 dark:bg-gray-800 p-2">Histórico de 7 dias:</h3>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead className="bg-gray-50 dark:bg-gray-900">
-                            <tr>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Data
-                                </th>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Taxa
-                                </th>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Valor Convertido
-                                </th>
-                            </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                            {historicalData.map((data, index) => (
-                                <tr key={index}
-                                    className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'}>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                        {data.date}
-                                    </td>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                        {data.rate.toFixed(4)}
-                                    </td>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                        {formatCurrency(parseFloat(values.amount) * data.rate, values.toCurrency)}
-                                    </td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             )}
@@ -370,16 +276,10 @@ const CurrencyConverter = () => {
                 <h3 className="text-lg font-semibold mb-3">Informações:</h3>
                 <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
                     <p>
-                        <strong>Nota:</strong> Este conversor utiliza taxas de câmbio simuladas para fins de
-                        demonstração.
+                        <strong>Taxas de Câmbio:</strong> Este conversor utiliza a API ExchangeRate para taxas em tempo real.
                     </p>
                     <p>
-                        <strong>Taxas de Câmbio:</strong> Em uma aplicação real, as taxas seriam obtidas de APIs como
-                        Open Exchange Rates, Fixer.io ou API do Banco Central.
-                    </p>
-                    <p>
-                        <strong>Histórico:</strong> Os dados históricos mostrados são simulados e não representam
-                        variações reais do mercado.
+                        <strong>Nota:</strong> As taxas são atualizadas periodicamente. Para decisões financeiras importantes, consulte fontes oficiais.
                     </p>
                 </div>
             </div>
