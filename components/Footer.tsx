@@ -1,4 +1,12 @@
+"use client"
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
 const Footer = () => {
+  const pathname = usePathname();
+  if (pathname.startsWith('/casamento')) return null;
+
   return (
     <footer className="border-t border-gray-100 dark:border-gray-800/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -17,7 +25,8 @@ const Footer = () => {
           </p>
 
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            © {new Date().getFullYear()} Luiz Casara
+            <Link href="/stats" className="hover:text-green-500 transition-colors duration-300" tabIndex={-1}>©</Link>
+            {" "}{new Date().getFullYear()} Luiz Casara
           </p>
 
         </div>

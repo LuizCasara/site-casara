@@ -3,6 +3,7 @@
 import {useEffect, useRef, useState} from "react";
 import {FaSpinner, FaUser} from "react-icons/fa";
 import temperamentosJson from "./temperamentos.json";
+import tiebreakerQuestionsJson from "./tiebreakerQuestions.json";
 import {sendTemperamentTestMessage} from "@/app/api/telegram/utils";
 import {generatePdf, PdfContent} from "@/utils/pdf-generator";
 import {trackPdfDownload, trackQuestionDropout, trackTemperamentDistribution, trackTestCompletion, trackTestStart} from "@/utils/analytics";
@@ -21,7 +22,22 @@ const TEMPERAMENT_COLORS: Record<string, { bg: string; text: string }> = {
     Fleumatico: {bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-800 dark:text-green-200"},
 };
 
+const TEMPERAMENT_BAR: Record<string, string> = {
+    Sanguineo: "bg-red-400",
+    Colerico: "bg-yellow-400",
+    Melancolico: "bg-blue-400",
+    Fleumatico: "bg-green-400",
+};
+
+type Metrics = {
+    total_completed: number;
+    by_primary: { temperament: string; count: number }[];
+    averages: { sanguineo: number; colerico: number; melancolico: number; fleumatico: number; duration_seconds: number };
+};
+
 const EMPTY_SCORES = {Quente: 0, Frio: 0, Seco: 0, Umido: 0};
+
+const TIEBREAKER_THRESHOLD = 10;
 
 type Scores = typeof EMPTY_SCORES;
 
@@ -44,6 +60,12 @@ function displayChar(name: string) {
     return name === "Umido" ? "Úmido" : name;
 }
 
+function formatDuration(seconds: number): string {
+    if (seconds < 60) return `${seconds}s`;
+    const min = Math.round(seconds / 60);
+    return `~${min} min`;
+}
+
 const DescubraSeuTemperamento = () => {
     const [userName, setUserName] = useState("");
     const [userAge, setUserAge] = useState<number | "">(0);
@@ -59,6 +81,13 @@ const DescubraSeuTemperamento = () => {
     const [executionCount, setExecutionCount] = useState(0);
     const [isPdfLoading, setIsPdfLoading] = useState(false);
     const [totalScore, setTotalScore] = useState<Scores>({...EMPTY_SCORES});
+    const [tiebreakerPhase, setTiebreakerPhase] = useState(false);
+    const [tiebreakerQuestions, setTiebreakerQuestions] = useState<any[]>([]);
+    const [currentTiebreakerIndex, setCurrentTiebreakerIndex] = useState(0);
+    const [tiebreakerPair, setTiebreakerPair] = useState<[string, string]>(["", ""]);
+    const testStartTimeRef = useRef<number | null>(null);
+    const [metrics, setMetrics] = useState<Metrics | null>(null);
+    const [metricsLoading, setMetricsLoading] = useState(true);
 
     useEffect(() => {
         const questions = temperamentosJson.map(item => ({
@@ -67,6 +96,21 @@ const DescubraSeuTemperamento = () => {
             classificacao: item.classificacao,
         }));
         setTestQuestions(questions.sort(() => Math.random() - 0.5));
+    }, []);
+
+    const refreshMetrics = () => {
+        fetch('/api/metrics/temperament')
+            .then(r => r.json())
+            .then(setMetrics)
+            .catch(() => {});
+    };
+
+    useEffect(() => {
+        fetch('/api/metrics/temperament')
+            .then(r => r.json())
+            .then(setMetrics)
+            .catch(() => {})
+            .finally(() => setMetricsLoading(false));
     }, []);
 
     useEffect(() => {
@@ -91,6 +135,10 @@ const DescubraSeuTemperamento = () => {
         setTestComplete(false);
         setResults(null);
         setTotalScore({...EMPTY_SCORES});
+        setTiebreakerPhase(false);
+        setTiebreakerQuestions([]);
+        setCurrentTiebreakerIndex(0);
+        setTiebreakerPair(["", ""]);
     };
 
     const handleInputChange = (field: string, value: string) => {
@@ -122,6 +170,7 @@ const DescubraSeuTemperamento = () => {
         }
 
         trackTestStart(userName);
+        testStartTimeRef.current = Date.now();
 
         setCurrentQuestionIndex(0);
         setAnswers({});
@@ -187,7 +236,26 @@ const DescubraSeuTemperamento = () => {
         await calculateResults(totalScore, Object.keys(answers).length);
     };
 
-    const calculateResults = async (scores: Scores, answeredCount: number) => {
+    const answerTiebreakerQuestion = async (answer: number) => {
+        const currentQuestion = tiebreakerQuestions[currentTiebreakerIndex];
+        const classificacao: string[] = currentQuestion?.classificacao || [];
+
+        const newTotalScore = {...totalScore};
+        classificacao.forEach(type => {
+            const key = (type.charAt(0).toUpperCase() + type.slice(1)) as keyof Scores;
+            if (key in newTotalScore) newTotalScore[key] += answer;
+        });
+        setTotalScore(newTotalScore);
+
+        if (currentTiebreakerIndex < tiebreakerQuestions.length - 1) {
+            setCurrentTiebreakerIndex(prev => prev + 1);
+        } else {
+            setTiebreakerPhase(false);
+            await calculateResults(newTotalScore, Object.keys(answers).length, true);
+        }
+    };
+
+    const calculateResults = async (scores: Scores, answeredCount: number, skipTiebreaker = false) => {
         const totalCharScore = scores.Quente + scores.Frio + scores.Seco + scores.Umido;
 
         const sortedCharacteristics = Object.entries(scores)
@@ -226,6 +294,26 @@ const DescubraSeuTemperamento = () => {
             }
         }
 
+        if (!skipTiebreaker && totalTempScore > 0 && sortedTemperaments.length >= 2) {
+            const diff = Math.abs(sortedTemperaments[0].percentage - sortedTemperaments[1].percentage);
+            if (diff <= TIEBREAKER_THRESHOLD) {
+                const pairKey = [sortedTemperaments[0].name, sortedTemperaments[1].name].sort().join('-');
+                const tbData = tiebreakerQuestionsJson as Record<string, {id: string; pergunta: string; classificacao: string[]}[]>;
+                const tbQuestions = tbData[pairKey] ?? [];
+                if (tbQuestions.length > 0) {
+                    const selected = [...tbQuestions]
+                        .sort(() => Math.random() - 0.5)
+                        .slice(0, 5)
+                        .map(q => ({id: q.id, question: q.pergunta, classificacao: q.classificacao}));
+                    setTiebreakerPair([sortedTemperaments[0].name, sortedTemperaments[1].name]);
+                    setTiebreakerQuestions(selected);
+                    setCurrentTiebreakerIndex(0);
+                    setTiebreakerPhase(true);
+                    return;
+                }
+            }
+        }
+
         const pad = <T extends object>(arr: T[], min: number): T[] => {
             const r = [...arr];
             while (r.length < min) r.push({name: 'Não definido', score: 0, percentage: 0} as T);
@@ -247,16 +335,23 @@ const DescubraSeuTemperamento = () => {
         setResults(resultsData);
         setTestComplete(true);
 
-        trackTestCompletion({...resultsData, testDuration: answeredCount * 10});
+        const temperamentPercentages = Object.fromEntries(
+            ["Sanguineo", "Colerico", "Melancolico", "Fleumatico"].map(name => [
+                name,
+                safeTemperaments.find(t => t.name === name)?.percentage ?? 0,
+            ])
+        );
+        const durationSeconds = testStartTimeRef.current
+            ? Math.floor((Date.now() - testStartTimeRef.current) / 1000)
+            : answeredCount * 10;
 
-        trackTemperamentDistribution({
-            temperamentPercentages: Object.fromEntries(
-                ["Sanguineo", "Colerico", "Melancolico", "Fleumatico"].map(name => [
-                    name,
-                    safeTemperaments.find(t => t.name === name)?.percentage ?? 0,
-                ])
-            ),
+        trackTestCompletion({
+            ...resultsData,
+            temperamentPercentages,
+            testDuration: durationSeconds,
         });
+
+        setTimeout(refreshMetrics, 1500);
 
         const answeredPct = (answeredCount / testQuestions.length) * 100;
         if (answeredPct >= 50 && !userName.toLowerCase().includes("teste")) {
@@ -326,110 +421,201 @@ const DescubraSeuTemperamento = () => {
             )}
 
             {!showTest ? (
-                <>
-                    <div className="mb-6">
-                        <h2 className="text-xl font-bold mb-4">Os Quatro Temperamentos</h2>
+                <div className="space-y-8">
+                    {/* Seção 1: Informações */}
+                    <section>
+                        <h2 className="text-xl font-bold mb-3">Os Quatro Temperamentos</h2>
                         <p className="text-gray-600 dark:text-gray-400 mb-4">
                             Os temperamentos humanos são classificados em quatro tipos principais, cada um com
                             características distintas:
                         </p>
-
-                        <div className="mb-6 grid sm:grid-cols-1 md:grid-cols-4 gap-4">
-                            <div className="p-4 h-52 bg-red-50 dark:bg-red-900/20 rounded-md">
+                        <div className="grid sm:grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-md flex flex-col gap-3">
                                 <h3 className="font-bold text-red-600 dark:text-red-400">Sanguíneo</h3>
-                                <p className="text-gray-700 dark:text-gray-300">
-                                    Extrovertido, comunicativo, sociável e entusiasmado. Pessoas com este temperamento
-                                    tendem a ser otimistas e alegres.
+                                <p className="text-gray-700 dark:text-gray-300 text-sm">
+                                    Extrovertido, comunicativo, sociável e entusiasmado. Tende a ser otimista, alegre e carismático.
                                 </p>
+                                <div className="border-t border-red-200 dark:border-red-800 pt-2">
+                                    <p className="text-xs text-red-500 dark:text-red-400 font-medium mb-1">Pontos de atenção</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Impulsivo, desorganizado, dificuldade de foco e pode deixar projetos inacabados.</p>
+                                </div>
                             </div>
-                            <div className="p-4 h-52 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+                            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-md flex flex-col gap-3">
                                 <h3 className="font-bold text-yellow-600 dark:text-yellow-400">Colérico</h3>
-                                <p className="text-gray-700 dark:text-gray-300">
-                                    Enérgico, decidido, prático e orientado para objetivos. Pessoas com este
-                                    temperamento tendem a ser líderes naturais.
+                                <p className="text-gray-700 dark:text-gray-300 text-sm">
+                                    Enérgico, decidido, prático e orientado para objetivos. Tende a ser líder natural e independente.
                                 </p>
+                                <div className="border-t border-yellow-200 dark:border-yellow-800 pt-2">
+                                    <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium mb-1">Pontos de atenção</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Impaciente, dominador e pode ser insensível aos sentimentos dos outros.</p>
+                                </div>
                             </div>
-                            <div className="p-4 h-52 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md flex flex-col gap-3">
                                 <h3 className="font-bold text-blue-600 dark:text-blue-400">Melancólico</h3>
-                                <p className="text-gray-700 dark:text-gray-300">
-                                    Analítico, perfeccionista, sensível e detalhista. Pessoas com este temperamento
-                                    tendem a ser profundas e reflexivas.
+                                <p className="text-gray-700 dark:text-gray-300 text-sm">
+                                    Analítico, perfeccionista, sensível e detalhista. Tende a ser profundo, reflexivo e criativo.
                                 </p>
+                                <div className="border-t border-blue-200 dark:border-blue-800 pt-2">
+                                    <p className="text-xs text-blue-500 dark:text-blue-400 font-medium mb-1">Pontos de atenção</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Tendência ao pessimismo, autocrítica excessiva e propensão ao isolamento.</p>
+                                </div>
                             </div>
-                            <div className="p-4 h-52 bg-green-50 dark:bg-green-900/20 rounded-md">
+                            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-md flex flex-col gap-3">
                                 <h3 className="font-bold text-green-600 dark:text-green-400">Fleumático</h3>
-                                <p className="text-gray-700 dark:text-gray-300">
-                                    Calmo, paciente, equilibrado e diplomático. Pessoas com este temperamento tendem a
-                                    ser pacificadoras.
+                                <p className="text-gray-700 dark:text-gray-300 text-sm">
+                                    Calmo, paciente, equilibrado e diplomático. Tende a ser pacificador, confiável e observador.
                                 </p>
+                                <div className="border-t border-green-200 dark:border-green-800 pt-2">
+                                    <p className="text-xs text-green-600 dark:text-green-400 font-medium mb-1">Pontos de atenção</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Indeciso, procrastinador e tende a evitar conflitos mesmo quando necessário.</p>
+                                </div>
                             </div>
                         </div>
 
-                        <p className="text-gray-600 dark:text-gray-400 mb-6">
-                            Este teste ajudará você a descobrir qual é o seu temperamento predominante. Preencha seu
-                            nome e clique em "Iniciar Teste" para começar.
-                        </p>
-                    </div>
+                        <div className="mt-4 space-y-2 text-sm text-gray-500 dark:text-gray-400 border-t pt-4">
+                            <p><strong className="text-gray-700 dark:text-gray-300">Temperamento:</strong> É a maneira natural de uma pessoa reagir e interagir com o mundo ao seu redor.</p>
+                            <p><strong className="text-gray-700 dark:text-gray-300">Origem:</strong> A teoria dos quatro temperamentos tem origem na medicina antiga grega, com Hipócrates.</p>
+                            <p><strong className="text-gray-700 dark:text-gray-300">Combinações:</strong> A maioria das pessoas possui uma combinação de temperamentos, com um ou dois predominantes.</p>
+                        </div>
+                    </section>
 
-                    <div className="space-y-4 mb-6">
-                        <div>
-                            <label htmlFor="userName" className="block text-sm font-medium mb-1">
-                                Nome e Sobrenome
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <FaUser className="text-gray-400"/>
+                    {/* Seção 2: Estatísticas */}
+                    <section>
+                        <h2 className="text-xl font-bold mb-3">Estatísticas</h2>
+                        {metricsLoading ? (
+                            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 py-4">
+                                <FaSpinner className="animate-spin"/>
+                                <span className="text-sm">Carregando dados...</span>
+                            </div>
+                        ) : metrics && metrics.total_completed > 0 ? (
+                            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-5 space-y-5">
+                                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        <span className="text-2xl font-bold text-gray-900 dark:text-white mr-1">
+                                            {metrics.total_completed}
+                                        </span>
+                                        testes realizados
+                                    </p>
+                                    {metrics.averages.duration_seconds > 0 && (
+                                        <p className="text-sm text-gray-400 dark:text-gray-500">
+                                            · tempo médio{" "}
+                                            <span className="font-semibold text-gray-600 dark:text-gray-300">
+                                                {formatDuration(metrics.averages.duration_seconds)}
+                                            </span>
+                                        </p>
+                                    )}
                                 </div>
+                                <p className="text-xs text-gray-400 dark:text-gray-500 -mt-1">Distribuição dos resultados:</p>
+
+                                <div className="space-y-3">
+                                    {metrics.by_primary
+                                        .filter(item => item.temperament)
+                                        .map(item => {
+                                            const pct = Math.round((item.count / metrics.total_completed) * 100);
+                                            const barClass = TEMPERAMENT_BAR[item.temperament] ?? "bg-gray-400";
+                                            const colors = TEMPERAMENT_COLORS[item.temperament] ?? {
+                                                bg: "bg-gray-100 dark:bg-gray-700",
+                                                text: "text-gray-800 dark:text-gray-200",
+                                            };
+                                            return (
+                                                <div key={item.temperament}>
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span className={`text-sm font-medium ${colors.text}`}>
+                                                            {TEMPERAMENT_DISPLAY[item.temperament] ?? item.temperament}
+                                                        </span>
+                                                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                            {item.count} pessoas · {pct}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                                                        <div
+                                                            className={`${barClass} h-3 rounded-full transition-all duration-500`}
+                                                            style={{width: `${pct}%`}}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                </div>
+
+                                <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                                        Médias gerais — Sanguíneo {metrics.averages.sanguineo}% · Colérico {metrics.averages.colerico}% · Melancólico {metrics.averages.melancolico}% · Fleumático {metrics.averages.fleumatico}%
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-sm text-gray-400 dark:text-gray-500">Nenhum dado disponível ainda.</p>
+                        )}
+                    </section>
+
+                    {/* Seção 3: Responder */}
+                    <section>
+                        <h2 className="text-xl font-bold mb-3">Responder</h2>
+                        <p className="text-gray-600 dark:text-gray-400 mb-4">
+                            Preencha seu nome e clique em "Iniciar Teste" para descobrir seu temperamento predominante.
+                        </p>
+
+                        <div className="space-y-4 mb-6">
+                            <div>
+                                <label htmlFor="userName" className="block text-sm font-medium mb-1">
+                                    Nome e Sobrenome
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <FaUser className="text-gray-400"/>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        id="userName"
+                                        value={userName}
+                                        onChange={(e) => handleInputChange('name', e.target.value)}
+                                        placeholder="Digite seu nome e sobrenome"
+                                        className="w-full pl-10 p-4 border rounded-md text-gray-900"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label htmlFor="userAge" className="block text-sm font-medium mb-1">
+                                    Idade
+                                </label>
                                 <input
-                                    type="text"
-                                    id="userName"
-                                    value={userName}
-                                    onChange={(e) => handleInputChange('name', e.target.value)}
-                                    placeholder="Digite seu nome e sobrenome"
-                                    className="w-full pl-10 p-4 border rounded-md text-gray-900"
+                                    type="number"
+                                    id="userAge"
+                                    value={userAge === 0 ? "" : userAge}
+                                    onChange={(e) => handleInputChange('age', e.target.value)}
+                                    placeholder="Digite sua idade"
+                                    min="1"
+                                    step="1"
+                                    className="w-full p-4 border rounded-md text-gray-900"
+                                    required
                                 />
                             </div>
                         </div>
-                        <div>
-                            <label htmlFor="userAge" className="block text-sm font-medium mb-1">
-                                Idade
-                            </label>
-                            <input
-                                type="number"
-                                id="userAge"
-                                value={userAge === 0 ? "" : userAge}
-                                onChange={(e) => handleInputChange('age', e.target.value)}
-                                placeholder="Digite sua idade"
-                                min="1"
-                                step="1"
-                                className="w-full p-4 border rounded-md text-gray-900"
-                                required
-                            />
-                        </div>
-                    </div>
 
-                    <div className="flex space-x-6 mb-6">
-                        <button
-                            onClick={startTest}
-                            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-                        >
-                            Iniciar Teste
-                        </button>
-                        <button
-                            onClick={resetForm}
-                            className="px-4 py-2 bg-gray-200 dark:bg-gray-800 rounded-md hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
-                        >
-                            Limpar
-                        </button>
-                    </div>
-
-                    {error && (
-                        <div className="p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-md mb-4">
-                            {error}
+                        <div className="flex space-x-6 mb-6">
+                            <button
+                                onClick={startTest}
+                                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                            >
+                                Iniciar Teste
+                            </button>
+                            <button
+                                onClick={resetForm}
+                                className="px-4 py-2 bg-gray-200 dark:bg-gray-800 rounded-md hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                Limpar
+                            </button>
                         </div>
-                    )}
-                </>
-            ) : !testComplete ? (
+
+                        {error && (
+                            <div className="p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-md mb-4">
+                                {error}
+                            </div>
+                        )}
+                    </section>
+                </div>
+            ) : !testComplete && !tiebreakerPhase ? (
                 <div>
                     <h2 className="text-2xl font-bold mb-4">Olá, {userName}!</h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-4 font-medium bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md">
@@ -522,6 +708,75 @@ const DescubraSeuTemperamento = () => {
                             Cancelar Teste
                         </button>
                     </div>
+                </div>
+            ) : tiebreakerPhase ? (
+                <div>
+                    <h2 className="text-2xl font-bold mb-2">Perguntas de Desempate</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4 font-medium bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
+                        Suas respostas estão muito equilibradas
+                        entre <strong>{TEMPERAMENT_DISPLAY[tiebreakerPair[0]] ?? tiebreakerPair[0]}</strong> e{" "}
+                        <strong>{TEMPERAMENT_DISPLAY[tiebreakerPair[1]] ?? tiebreakerPair[1]}</strong>. Responda mais
+                        algumas perguntas para um resultado mais preciso.
+                    </p>
+
+                    {tiebreakerQuestions.length > 0 && (
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+                            <div className="mb-4">
+                                <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
+                                    <span>Desempate {currentTiebreakerIndex + 1}/{tiebreakerQuestions.length}</span>
+                                    <span>{Math.round(((currentTiebreakerIndex + 1) / tiebreakerQuestions.length) * 100)}% concluído</span>
+                                </div>
+                                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                                    <div
+                                        className="bg-blue-500 h-2.5 rounded-full"
+                                        style={{width: `${((currentTiebreakerIndex + 1) / tiebreakerQuestions.length) * 100}%`}}
+                                    ></div>
+                                </div>
+                            </div>
+
+                            <div className="h-36 overflow-y-auto mb-6 content-center text-center">
+                                <h3 className="text-xl font-semibold">{tiebreakerQuestions[currentTiebreakerIndex]?.question}</h3>
+                            </div>
+
+                            <div className="mb-2 text-center">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Quanto você se identifica com
+                                    esta afirmação/pergunta?</p>
+                            </div>
+                            <div className="flex flex-wrap justify-center gap-2">
+                                <button
+                                    onClick={() => answerTiebreakerQuestion(0)}
+                                    className="w-28 h-16 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                >
+                                    <span className="text-lg font-bold">Nada</span>
+                                </button>
+                                <button
+                                    onClick={() => answerTiebreakerQuestion(1)}
+                                    className="w-28 h-16 flex flex-col items-center justify-center bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+                                >
+                                    <span className="text-lg font-bold">Pouco</span>
+                                </button>
+                                <button
+                                    onClick={() => answerTiebreakerQuestion(3)}
+                                    className="w-28 h-16 flex flex-col items-center justify-center bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-md hover:bg-yellow-200 dark:hover:bg-yellow-800/50 transition-colors"
+                                >
+                                    <span className="text-lg font-bold">Médio</span>
+                                </button>
+                                <button
+                                    onClick={() => answerTiebreakerQuestion(5)}
+                                    className="w-28 h-16 flex flex-col items-center justify-center bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-md hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors"
+                                >
+                                    <span className="text-lg font-bold">Totalmente</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    <button
+                        onClick={resetForm}
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-800 rounded-md hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        Cancelar Teste
+                    </button>
                 </div>
             ) : (
                 <div>
@@ -771,25 +1026,6 @@ const DescubraSeuTemperamento = () => {
                 </div>
             )}
 
-            {(!showTest || testComplete) && (
-                <div className="mt-8 border-t pt-6">
-                    <h3 className="text-lg font-semibold mb-3">Informações:</h3>
-                    <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                        <p>
-                            <strong>Temperamento:</strong> É a maneira natural de uma pessoa reagir e interagir com o
-                            mundo ao seu redor.
-                        </p>
-                        <p>
-                            <strong>Origem:</strong> A teoria dos quatro temperamentos tem origem na medicina antiga
-                            grega, com Hipócrates.
-                        </p>
-                        <p>
-                            <strong>Combinações:</strong> A maioria das pessoas possui uma combinação de temperamentos,
-                            com um ou dois predominantes.
-                        </p>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

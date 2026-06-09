@@ -1,0 +1,50 @@
+{
+  "Colerico-Sanguineo": [
+    {"id": "tb-cs-1", "pergunta": "Você prefere trabalhar de forma autônoma, sem precisar da validação dos outros?", "classificacao": ["seco"]},
+    {"id": "tb-cs-2", "pergunta": "Você tende a ser exigente com as pessoas quando elas não entregam o que prometeram?", "classificacao": ["seco"]},
+    {"id": "tb-cs-3", "pergunta": "Você mantém suas posições mesmo sob forte pressão para mudar de ideia?", "classificacao": ["seco"]},
+    {"id": "tb-cs-4", "pergunta": "Você prefere tomar decisões em grupo, valorizando o consenso dos outros?", "classificacao": ["umido"]},
+    {"id": "tb-cs-5", "pergunta": "Você busca naturalmente a aprovação ou o afeto das pessoas que ama?", "classificacao": ["umido"]},
+    {"id": "tb-cs-6", "pergunta": "Você se adapta com facilidade ao estilo e ao ritmo das pessoas ao seu redor?", "classificacao": ["umido"]}
+  ],
+  "Colerico-Fleumatico": [
+    {"id": "tb-cf-1", "pergunta": "Você age com rapidez e determinação diante de obstáculos?", "classificacao": ["quente"]},
+    {"id": "tb-cf-2", "pergunta": "Você fica visivelmente irritado quando as coisas não andam no ritmo que deseja?", "classificacao": ["quente"]},
+    {"id": "tb-cf-3", "pergunta": "Você tem pouca paciência com indecisão ou falta de objetividade nos outros?", "classificacao": ["seco"]},
+    {"id": "tb-cf-4", "pergunta": "Você consegue manter a calma mesmo durante conflitos intensos?", "classificacao": ["frio"]},
+    {"id": "tb-cf-5", "pergunta": "Você raramente perde o controle emocional, mesmo em situações estressantes?", "classificacao": ["frio"]},
+    {"id": "tb-cf-6", "pergunta": "Você costuma concordar com os outros para evitar atritos desnecessários?", "classificacao": ["umido"]}
+  ],
+  "Colerico-Melancolico": [
+    {"id": "tb-cm-1", "pergunta": "Você tende a agir primeiro e analisar os detalhes depois?", "classificacao": ["quente"]},
+    {"id": "tb-cm-2", "pergunta": "Você se recupera rapidamente de erros e segue em frente sem remoer?", "classificacao": ["quente"]},
+    {"id": "tb-cm-3", "pergunta": "Você prefere resultados rápidos a resultados perfeitos?", "classificacao": ["quente"]},
+    {"id": "tb-cm-4", "pergunta": "Você planeja detalhadamente cada etapa antes de começar uma tarefa?", "classificacao": ["frio"]},
+    {"id": "tb-cm-5", "pergunta": "Críticas ou erros passados costumam te afetar por um longo tempo?", "classificacao": ["frio"]},
+    {"id": "tb-cm-6", "pergunta": "Você se preocupa intensamente com a possibilidade de cometer falhas?", "classificacao": ["frio"]}
+  ],
+  "Fleumatico-Melancolico": [
+    {"id": "tb-fm-1", "pergunta": "Você costuma ceder em conflitos para manter a harmonia no ambiente?", "classificacao": ["umido"]},
+    {"id": "tb-fm-2", "pergunta": "As pessoas costumam te descrever como alguém tranquilo e fácil de conviver?", "classificacao": ["umido"]},
+    {"id": "tb-fm-3", "pergunta": "Você se adapta com naturalidade às preferências e necessidades dos outros?", "classificacao": ["umido"]},
+    {"id": "tb-fm-4", "pergunta": "Você é muito autoexigente e raramente se sente plenamente satisfeito com seus resultados?", "classificacao": ["seco"]},
+    {"id": "tb-fm-5", "pergunta": "Você costuma guardar mágoas ou situações negativas por um longo período?", "classificacao": ["seco"]},
+    {"id": "tb-fm-6", "pergunta": "Você frequentemente rumina sobre problemas ou situações que te afetaram?", "classificacao": ["seco"]}
+  ],
+  "Fleumatico-Sanguineo": [
+    {"id": "tb-fs-1", "pergunta": "Você costuma agir por impulso quando está animado com uma nova ideia?", "classificacao": ["quente"]},
+    {"id": "tb-fs-2", "pergunta": "Suas emoções são facilmente percebidas pelas pessoas ao seu redor?", "classificacao": ["quente"]},
+    {"id": "tb-fs-3", "pergunta": "Você tende a falar bastante quando está entusiasmado com algo?", "classificacao": ["quente"]},
+    {"id": "tb-fs-4", "pergunta": "Você consegue facilmente não se envolver emocionalmente em situações de conflito alheias?", "classificacao": ["frio"]},
+    {"id": "tb-fs-5", "pergunta": "Você prefere ambientes tranquilos e previsíveis a ambientes agitados e cheios de novidades?", "classificacao": ["frio"]},
+    {"id": "tb-fs-6", "pergunta": "Você é conhecido por manter a calma mesmo quando os outros estão estressados?", "classificacao": ["frio"]}
+  ],
+  "Melancolico-Sanguineo": [
+    {"id": "tb-ms-1", "pergunta": "Você analisa profundamente todas as variáveis antes de tomar qualquer decisão?", "classificacao": ["frio"]},
+    {"id": "tb-ms-2", "pergunta": "Você tende a remoer situações que te afetaram emocionalmente por longos períodos?", "classificacao": ["frio"]},
+    {"id": "tb-ms-3", "pergunta": "Você é perfeccionista e raramente fica completamente satisfeito com seu próprio trabalho?", "classificacao": ["seco"]},
+    {"id": "tb-ms-4", "pergunta": "Você é espontâneo e gosta de improvisar nas situações sociais?", "classificacao": ["quente"]},
+    {"id": "tb-ms-5", "pergunta": "Você age com empolgação e energia mesmo antes de ter todos os detalhes planejados?", "classificacao": ["quente"]},
+    {"id": "tb-ms-6", "pergunta": "Você se sente rapidamente revigorado após interagir com outras pessoas?", "classificacao": ["umido"]}
+  ]
+}
