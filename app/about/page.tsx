@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {FaGithub, FaGlobe, FaInstagram, FaLinkedin, FaSpotify, FaSteam, FaWhatsapp} from "react-icons/fa";
+import {FaGithub, FaGlobe, FaInstagram, FaLinkedin, FaWhatsapp} from "react-icons/fa";
 import {trackSocialMediaClick} from "@/utils/analytics";
 import {useLang} from "@/context/LanguageContext";
 import {Typewriter} from "@/components/ui/typewriter";
