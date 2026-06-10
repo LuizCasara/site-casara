@@ -22,7 +22,11 @@ export async function POST(request: NextRequest) {
     `;
 
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: 'internal error' }, { status: 500 });
+  } catch (err) {
+    console.error('[api/events] error:', err);
+    return NextResponse.json(
+      { error: 'internal error', detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
   }
 }

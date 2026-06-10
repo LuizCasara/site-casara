@@ -18,7 +18,19 @@ const montserrat = Montserrat({
 
 export const metadata: Metadata = {
   title: 'Luiz & Kátia — 11.07.2026',
-  description: 'Você foi convidado para algo muito especial.',
+  description: 'Luiz Cláudio e Kátia da Costa estão se casando. Sábado, 11 de julho de 2026.',
+  openGraph: {
+    type: 'website',
+    url: 'https://luizcasara.com/casamento',
+    title: 'Luiz & Kátia — 11.07.2026',
+    description: 'Você foi convidado para algo muito especial. Sábado, 11 de julho de 2026.',
+    siteName: 'Luiz Casara',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Luiz & Kátia — 11.07.2026',
+    description: 'Você foi convidado para algo muito especial. Sábado, 11 de julho de 2026.',
+  },
   robots: { index: false, follow: false },
 }
 
