@@ -21,8 +21,29 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "Luiz Casara - Projects Portfolio",
-    description: "Portfolio website showcasing projects and professional experience in web development and software engineering.",
+    metadataBase: new URL("https://luizcasara.com"),
+    title: {
+        default: "Luiz Casara",
+        template: "%s | Luiz Casara",
+    },
+    description: "Tech Lead e Senior Full-Stack Engineer com 10+ anos construindo software de alta criticidade em escala. Responsável por 9 produtos financeiros com SLA de ≤20ms e 350+ TPS.",
+    openGraph: {
+        type: "website",
+        locale: "pt_BR",
+        url: "https://luizcasara.com",
+        siteName: "Luiz Casara",
+        title: "Luiz Casara – Tech Lead · Senior Full-Stack Engineer",
+        description: "10+ anos construindo software de alta criticidade em escala fintech. React, TypeScript, GraphQL, Node.js, Next.js.",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Luiz Casara – Tech Lead · Senior Full-Stack Engineer",
+        description: "10+ anos construindo software de alta criticidade em escala fintech. React, TypeScript, GraphQL, Node.js, Next.js.",
+    },
+    robots: {
+        index: true,
+        follow: true,
+    },
 };
 
 export default function RootLayout({
