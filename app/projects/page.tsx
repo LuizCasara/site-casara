@@ -1,7 +1,7 @@
 "use client";
 
-import { useLang } from "@/context/LanguageContext";
-import { ProjectAccordion } from "@/components/ui/interactive-image-accordion";
+import {useLang} from "@/context/LanguageContext";
+import {ProjectAccordion} from "@/components/ui/interactive-image-accordion";
 
 const projects = [
   {
@@ -28,10 +28,10 @@ const projects = [
   },
   {
     id: 3,
-    title: "Soupe",
-    image: "/thumbnails/soupeThumb.png",
+    title: "Sencia",
+    image: "/thumbnails/senciaThumb.png",
     tags: ["Next.js", "React", "Node.js", "PostgreSQL", "Java", "API Integration"],
-    link: "https://www.soupe.app/",
+    link: "https://sencia.app/",
     description: {
       pt: "Plataforma CRM para automação de negócios e tomada de decisão com analytics e relatórios.",
       en: "CRM platform for business automation and decision-making with analytics and reporting tools.",
