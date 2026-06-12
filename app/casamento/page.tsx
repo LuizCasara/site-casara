@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { motion, useInView } from 'framer-motion'
-import { trackCasamentoMapsClick, trackCasamentoRsvpWhatsapp } from '@/utils/analytics'
+import {useEffect, useRef, useState} from 'react'
+import {AnimatePresence, motion, useInView} from 'framer-motion'
+import {trackCasamentoMapsClick, trackCasamentoRsvpWhatsapp} from '@/utils/analytics'
 
 // ─── Configurações ──────────────────────────────────────────────────────────
 const WEDDING_DATE = new Date('2026-07-11T00:00:00')
@@ -470,74 +470,264 @@ function CountdownSection() {
 }
 
 // ─── 5. NOSSA HISTÓRIA (timeline) ─────────────────────────────────────────────
-// TODO: Adicionar fotos reais — substitua o emoji e adicione `photo` com URL da imagem
 const timelineItems = [
-  { emoji: '✨', title: 'O primeiro encontro', desc: 'Onde tudo começou...' },
-  { emoji: '💑', title: 'Nossa história', desc: 'Cada dia ao seu lado valeu a pena' },
-  { emoji: '💍', title: 'O pedido', desc: 'O momento em que dissemos sim para sempre' },
-  { emoji: '👰🤵', title: '11 de Julho de 2026', desc: 'O dia mais especial das nossas vidas' },
+  {photos: ['/casamento/2010.jpg', '/casamento/2011.jpg'], year: 'Começamos namorar', title: '2010'},
+  {photos: ['/casamento/2012.jpg'], year: 'Nos conhecemos melhor', title: '2012'},
+  {photos: ['/casamento/2012%20(2).jpg'], year: 'Noivamos', title: '2012'},
+  {photos: ['/casamento/2013.jpg'], year: 'Fomos morar juntos em Cascavel', title: '2013'},
+  {photos: ['/casamento/2015.jpg'], year: 'Nos divertimos', title: '2015'},
+  {photos: ['/casamento/2019.jpg', '/casamento/2019%20(2).jpg'], year: 'Viajamos', title: '2019'},
+  {photos: ['/casamento/2020.jpg', '/casamento/2020 (1).jpg'], year: 'Adotamos gatos', title: '2020'},
+  {photos: ['/casamento/2021%20(2).jpg', '/casamento/2021 (4).jpg'], year: 'Engravidamos', title: '2021'},
+  {photos: ['/casamento/2021%20(1).jpg', '/casamento/2021 (3).jpg', '/casamento/2022 (2).jpg', '/casamento/2022 (1).jpg'], year: 'Gus nasceu', title: '2021'},
+  {photos: ['/casamento/2022.jpg'], year: 'Gus fez 1 aninho', title: '2022'},
+  {photos: ['/casamento/2023.jpg', '/casamento/2023 (1).jpg'], year: 'Continuamos firmes!', title: '2023'},
+  {photos: ['/casamento/2024.jpg', '/casamento/2024%20(2).jpg', '/casamento/2025 (4).jpg'], year: 'Casamos outros amigos, Brincamos', title: '2024'},
+  {photos: ['/casamento/2025 (2).jpg', '/casamento/2025 (3).jpg'], year: 'Fortalecemos laços', title: '2025'},
+  {photos: ['/casamento/2025.jpg', '/casamento/2025 (6).jpg', '/casamento/2025 (7).jpg'], year: 'Fomos batizados', title: '2025'},
+  {photos: ['/casamento/2026.jpg', '/casamento/greta.jpg', '/casamento/greta_heart.mp4'], year: 'Gus vai ganhar uma irmã!', title: '2026'},
 ]
+
+function Lightbox({photos, onClose}: { photos: string[]; onClose: () => void }) {
+  const [idx, setIdx] = useState(0)
+  const multi = photos.length > 1
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'ArrowLeft') setIdx(i => (i - 1 + photos.length) % photos.length)
+      if (e.key === 'ArrowRight') setIdx(i => (i + 1) % photos.length)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose, photos.length])
+
+  const navBtn = (side: 'left' | 'right') => (
+      <button
+          onClick={(e) => {
+            e.stopPropagation()
+            setIdx(i => side === 'left'
+                ? (i - 1 + photos.length) % photos.length
+                : (i + 1) % photos.length)
+          }}
+          style={{
+            position: 'fixed', [side]: 12, top: '50%', transform: 'translateY(-50%)',
+            color: G, background: 'rgba(6,8,16,0.75)', border: `1px solid rgba(212,175,55,0.35)`,
+            borderRadius: '50%', width: 44, height: 44, cursor: 'pointer',
+            fontSize: '1.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            lineHeight: 1,
+          }}>
+        {side === 'left' ? '‹' : '›'}
+      </button>
+  )
+
+  return (
+      <motion.div
+          initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}
+          transition={{duration: 0.25}}
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{backgroundColor: 'rgba(6,8,16,0.95)', backdropFilter: 'blur(10px)', padding: '60px 20px'}}
+          onClick={onClose}>
+
+        {multi && navBtn('left')}
+
+        <AnimatePresence mode="wait">
+          <motion.div
+              key={idx}
+              initial={{opacity: 0, x: 24}}
+              animate={{opacity: 1, x: 0}}
+              exit={{opacity: 0, x: -24}}
+              transition={{duration: 0.18}}
+              onClick={(e) => e.stopPropagation()}
+              style={{position: 'relative'}}>
+            {photos[idx].toLowerCase().endsWith('.mp4') ? (
+                <>
+                  <video
+                      src={photos[idx]}
+                      loop
+                      playsInline
+                      ref={(el) => {
+                        if (!el) return
+                        el.muted = false
+                        el.play().catch(() => {
+                          // navegador bloqueou autoplay com som — toca mudo
+                          el.muted = true
+                          el.play().catch(() => {
+                          })
+                        })
+                      }}
+                      controls
+                      style={{
+                        maxWidth: multi ? 'min(76vw, 820px)' : 'min(90vw, 860px)',
+                        maxHeight: multi ? '72vh' : '82vh',
+                        objectFit: 'contain',
+                        borderRadius: 12,
+                        border: '1px solid rgba(212,175,55,0.3)',
+                        boxShadow: '0 0 80px rgba(0,0,0,0.8)',
+                        display: 'block',
+                      }}
+                  />
+                  <p
+                      style={{
+                        position: 'absolute',
+                        top: 16,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        whiteSpace: 'nowrap',
+                        color: G,
+                        fontFamily: 'var(--font-cormorant), serif',
+                        fontStyle: 'italic',
+                        fontSize: 'clamp(1.4rem, 5vw, 2.2rem)',
+                        textShadow: '0 2px 12px rgba(0,0,0,0.9)',
+                        pointerEvents: 'none',
+                      }}>
+                    Bem vinda Greta!
+                  </p>
+                </>
+            ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                    src={photos[idx]}
+                    alt={`foto ${idx + 1} de ${photos.length}`}
+                    style={{
+                      maxWidth: multi ? 'min(76vw, 820px)' : 'min(90vw, 860px)',
+                      maxHeight: multi ? '72vh' : '82vh',
+                      objectFit: 'contain',
+                      borderRadius: 12,
+                      border: '1px solid rgba(212,175,55,0.3)',
+                      boxShadow: '0 0 80px rgba(0,0,0,0.8)',
+                      display: 'block',
+                    }}
+                />
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {multi && navBtn('right')}
+
+        {multi && (
+            <div
+                onClick={(e) => e.stopPropagation()}
+                style={{position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6, alignItems: 'center'}}>
+              {photos.map((_, i) => (
+                  <button
+                      key={i}
+                      onClick={() => setIdx(i)}
+                      style={{
+                        width: i === idx ? 18 : 6, height: 6,
+                        borderRadius: 3,
+                        backgroundColor: i === idx ? G : 'rgba(212,175,55,0.35)',
+                        border: 'none', cursor: 'pointer', padding: 0,
+                        transition: 'all 0.25s',
+                      }}
+                  />
+              ))}
+            </div>
+        )}
+
+        <button
+            onClick={onClose}
+            style={{
+              position: 'fixed', top: 20, right: 20,
+              color: G, background: 'rgba(6,8,16,0.8)',
+              border: `1px solid rgba(212,175,55,0.4)`,
+              borderRadius: '50%', width: 44, height: 44,
+              cursor: 'pointer', fontSize: '1.1rem',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+          ✕
+        </button>
+      </motion.div>
+  )
+}
 
 function TimelineSection() {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, amount: 0.1 })
+  const [lightbox, setLightbox] = useState<string[] | null>(null)
 
   return (
-    <section className="py-24 px-6">
-      <div ref={ref} className="max-w-xl mx-auto">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1 }}
-          className="text-center mb-3"
-          style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic', fontSize: 'clamp(2.2rem, 6vw, 3.5rem)', color: IV, fontWeight: 300 }}>
-          Nossa História
-        </motion.h2>
-        <motion.p
-          initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.3, duration: 1 }}
-          className="text-center mb-16"
-          style={{ color: G, fontFamily: 'var(--font-montserrat)', fontSize: '0.65rem', letterSpacing: '0.35em', textTransform: 'uppercase' }}>
-          Uma jornada de amor
-        </motion.p>
+      <>
+        <AnimatePresence>
+          {lightbox && <Lightbox photos={lightbox} onClose={() => setLightbox(null)}/>}
+        </AnimatePresence>
 
-        <div className="relative">
-          {/* Linha central */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2"
-            style={{ background: `linear-gradient(to bottom, transparent, rgba(212,175,55,0.4), transparent)` }} />
+        <section className="py-24 px-6">
+          <div ref={ref} className="max-w-xl mx-auto">
+            <motion.h2
+                initial={{opacity: 0, y: 20}} animate={inView ? {opacity: 1, y: 0} : {}}
+                transition={{duration: 1}}
+                className="text-center mb-3"
+                style={{fontFamily: 'var(--font-cormorant)', fontStyle: 'italic', fontSize: 'clamp(2.2rem, 6vw, 3.5rem)', color: IV, fontWeight: 300}}>
+              Nossa História
+            </motion.h2>
+            <motion.p
+                initial={{opacity: 0}} animate={inView ? {opacity: 1} : {}}
+                transition={{delay: 0.3, duration: 1}}
+                className="text-center mb-16"
+                style={{color: G, fontFamily: 'var(--font-montserrat)', fontSize: '0.65rem', letterSpacing: '0.35em', textTransform: 'uppercase'}}>
+              Uma jornada de amor
+            </motion.p>
 
-          {timelineItems.map((item, i) => {
-            const isLeft = i % 2 === 0
-            return (
-              <motion.div key={i}
-                initial={{ opacity: 0, x: isLeft ? -40 : 40 }}
-                animate={inView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 1, delay: 0.3 + i * 0.2 }}
-                className="relative flex items-center gap-6 mb-14"
-                style={{ flexDirection: isLeft ? 'row' : 'row-reverse' }}>
+            <div className="relative">
+              <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2"
+                   style={{background: `linear-gradient(to bottom, transparent, rgba(212,175,55,0.4), transparent)`}}/>
 
-                {/* Texto */}
-                <div className="flex-1" style={{ textAlign: isLeft ? 'right' : 'left' }}>
-                  <p style={{ color: G, fontFamily: 'var(--font-cormorant)', fontStyle: 'italic', fontSize: '1.2rem', marginBottom: 4, lineHeight: 1.3 }}>
-                    {item.title}
-                  </p>
-                  <p style={{ color: '#8888AA', fontFamily: 'var(--font-montserrat)', fontSize: '0.78rem', lineHeight: 1.5 }}>
-                    {item.desc}
-                  </p>
-                </div>
+              {timelineItems.map((item, i) => {
+                const isLeft = i % 2 === 0
+                return (
+                    <motion.div key={i}
+                                initial={{opacity: 0, x: isLeft ? -40 : 40}}
+                                animate={inView ? {opacity: 1, x: 0} : {}}
+                                transition={{duration: 1, delay: 0.2 + i * 0.1}}
+                                className="relative flex items-center gap-6 mb-14"
+                                style={{flexDirection: isLeft ? 'row' : 'row-reverse'}}>
 
-                {/* Ícone central */}
-                <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-xl z-10"
-                  style={{ background: 'rgba(212,175,55,0.12)', border: `1px solid rgba(212,175,55,0.4)` }}>
-                  {item.emoji}
-                </div>
+                      <div className="flex-1" style={{textAlign: isLeft ? 'right' : 'left'}}>
+                        <p style={{color: G, fontFamily: 'var(--font-cormorant)', fontStyle: 'italic', fontSize: '1.6rem', marginBottom: 4, lineHeight: 1.3}}>
+                          {item.title}
+                        </p>
+                        <p style={{color: '#8888AA', fontFamily: 'var(--font-montserrat)', fontSize: '0.75rem', letterSpacing: '0.2em'}}>
+                          {item.year}
+                        </p>
+                      </div>
 
-                <div className="flex-1" />
-              </motion.div>
-            )
-          })}
-        </div>
-      </div>
-    </section>
+                      <div className="relative flex-shrink-0 z-10">
+                        <button
+                            onClick={() => setLightbox(item.photos)}
+                            className="w-16 h-16 rounded-full overflow-hidden group"
+                            style={{border: `2px solid rgba(212,175,55,0.5)`, padding: 0, background: 'none', cursor: 'pointer', display: 'block'}}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                              src={item.photos[0]}
+                              alt={item.year}
+                              className="group-hover:scale-110 transition-transform duration-300"
+                              style={{width: '100%', height: '100%', objectFit: 'cover', display: 'block'}}
+                          />
+                        </button>
+                        {item.photos.length > 1 && (
+                            <div style={{
+                              position: 'absolute', top: -3, right: -3,
+                              width: 18, height: 18, borderRadius: '50%',
+                              background: G, color: BG,
+                              fontSize: '0.55rem', fontWeight: 700,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontFamily: 'var(--font-montserrat)',
+                              pointerEvents: 'none',
+                            }}>
+                              {item.photos.length}
+                            </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1"/>
+                    </motion.div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      </>
   )
 }
 
@@ -657,9 +847,9 @@ export default function CasamentoPage() {
         <GoldDivider />
         <TimelineSection />
         <GoldDivider />
-        <RSVPSection />
-        <GoldDivider />
         <FinaleSection />
+        <GoldDivider/>
+        <RSVPSection/>
 
         <footer className="text-center py-10" style={{ borderTop: '1px solid rgba(212,175,55,0.1)' }}>
           <p style={{ color: '#3a3a4a', fontFamily: 'var(--font-montserrat)', fontSize: '0.6rem', letterSpacing: '0.25em', textTransform: 'uppercase' }}>
