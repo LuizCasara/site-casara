@@ -477,14 +477,18 @@ const timelineItems = [
   {photos: ['/casamento/2013.jpg'], year: 'Fomos morar juntos em Cascavel', title: '2013'},
   {photos: ['/casamento/2015.jpg'], year: 'Nos divertimos', title: '2015'},
   {photos: ['/casamento/2019.jpg', '/casamento/2019%20(2).jpg'], year: 'Viajamos', title: '2019'},
-  {photos: ['/casamento/2020.jpg', '/casamento/2020 (1).jpg'], year: 'Adotamos gatos', title: '2020'},
-  {photos: ['/casamento/2021%20(2).jpg', '/casamento/2021 (4).jpg'], year: 'Engravidamos', title: '2021'},
-  {photos: ['/casamento/2021%20(1).jpg', '/casamento/2021 (3).jpg', '/casamento/2022 (2).jpg', '/casamento/2022 (1).jpg'], year: 'Gus nasceu', title: '2021'},
+  {photos: ['/casamento/2020.jpg', '/casamento/2020%20(1).jpg'], year: 'Adotamos gatos', title: '2020'},
+  {photos: ['/casamento/2021%20(2).jpg', '/casamento/2021%20(4).jpg'], year: 'Engravidamos', title: '2021'},
+  {
+    photos: ['/casamento/2021%20(1).jpg', '/casamento/2021%20(3).jpg', '/casamento/2022%20(2).jpg', '/casamento/2022%20(1).jpg'],
+    year: 'Gus nasceu',
+    title: '2021'
+  },
   {photos: ['/casamento/2022.jpg'], year: 'Gus fez 1 aninho', title: '2022'},
-  {photos: ['/casamento/2023.jpg', '/casamento/2023 (1).jpg'], year: 'Continuamos firmes!', title: '2023'},
-  {photos: ['/casamento/2024.jpg', '/casamento/2024%20(2).jpg', '/casamento/2025 (4).jpg'], year: 'Casamos outros amigos, Brincamos', title: '2024'},
-  {photos: ['/casamento/2025 (2).jpg', '/casamento/2025 (3).jpg'], year: 'Fortalecemos laços', title: '2025'},
-  {photos: ['/casamento/2025.jpg', '/casamento/2025 (6).jpg', '/casamento/2025 (7).jpg'], year: 'Fomos batizados', title: '2025'},
+  {photos: ['/casamento/2023.jpg', '/casamento/2023%20(1).jpg'], year: 'Continuamos firmes!', title: '2023'},
+  {photos: ['/casamento/2024.jpg', '/casamento/2024%20(2).jpg', '/casamento/2025%20(4).jpg'], year: 'Casamos outros amigos, Brincamos', title: '2024'},
+  {photos: ['/casamento/2025%20(2).jpg', '/casamento/2025%20(3).jpg'], year: 'Fortalecemos laços', title: '2025'},
+  {photos: ['/casamento/2025.jpg', '/casamento/2025%20(6).jpg', '/casamento/2025%20(7).jpg'], year: 'Fomos batizados', title: '2025'},
   {photos: ['/casamento/2026.jpg', '/casamento/greta.jpg', '/casamento/greta_heart.mp4'], year: 'Gus vai ganhar uma irmã!', title: '2026'},
 ]
 
