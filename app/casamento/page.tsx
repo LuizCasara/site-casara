@@ -349,7 +349,7 @@ function DetailsSection() {
 
   const items = [
     { icon: '📅', label: 'Data', value: 'Sábado, 11 de Julho de 2026' },
-    { icon: '🕑', label: 'Horário', value: '11:00 horas' },
+    {icon: '🕑', label: 'Horário', value: '10:30 horas'},
     { icon: '📍', label: 'Local', value: 'Salão de Festas\nCondomínio Grand View' },
     { icon: '👔', label: 'Traje', value: 'Esporte Fino' },
   ]
@@ -737,7 +737,7 @@ function RSVPSection() {
   const inView = useInView(ref, { once: true, amount: 0.3 })
 
   const waMsg = encodeURIComponent(
-    `Olá Luiz! 🎊\nConfirmo minha presença no seu casamento com a Kátia em 11/07/2026!`
+      `Olá Luiz! \nConfirmo minha presença no seu casamento com a Kátia em 11/07/2026!`
   )
   const waUrl = `https://wa.me/${WHATSAPP_NUM}?text=${waMsg}`
 
@@ -806,7 +806,7 @@ function FinaleSection() {
           className="relative rounded-2xl overflow-hidden mb-16 w-full"
           style={{ aspectRatio: '16/9', border: '1px solid rgba(212,175,55,0.3)' }}>
           <iframe
-            src="https://www.youtube.com/embed/kQeOWLkXQWs"
+              src="https://www.youtube.com/embed/ZU6S1si8zGA"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
