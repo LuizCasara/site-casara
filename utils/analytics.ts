@@ -99,3 +99,20 @@ export const trackCasamentoMapsClick = () =>
 
 export const trackCasamentoRsvpWhatsapp = () =>
   trackEvent('casamento_rsvp_whatsapp_click');
+
+// ─── Nuvem de Palavras ──────────────────────────────────────────────────────
+
+export const trackWordSessionCreated = (sessionId: string, mode: 'fixed' | 'open') =>
+  trackEvent('word_session_created', { session_id: sessionId, mode });
+
+export const trackWordSessionSubmitted = (sessionId: string, mode: 'fixed' | 'open') =>
+  trackEvent('word_session_submitted', { session_id: sessionId, mode });
+
+export const trackWordSessionSaved = (sessionId: string) =>
+  trackEvent('word_session_saved', { session_id: sessionId });
+
+export const trackWordSessionDiscarded = (sessionId: string) =>
+  trackEvent('word_session_discarded', { session_id: sessionId });
+
+export const trackWordSessionFixedWordAdded = (sessionId: string, count: number) =>
+  trackEvent('word_session_fixed_word_added', { session_id: sessionId, count });
