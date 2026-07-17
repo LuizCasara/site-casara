@@ -7,7 +7,7 @@ import Image from "next/image";
 const ImageToSvgConverter = () => {
   // State for file and conversion
   const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState<String>("");
+  const [previewUrl, setPreviewUrl] = useState<string>("");
   const [svgUrl, setSvgUrl] = useState("");
   const [isConverting, setIsConverting] = useState(false);
   const [error, setError] = useState("");
@@ -79,9 +79,10 @@ const ImageToSvgConverter = () => {
     setError("");
     setSvgUrl("");
 
-    // Create a new image to load the file
-    // @ts-ignore
-    const img = new Image();
+    // Create a new image to load the file.
+    // `Image` in scope here is the imported next/image component, not the DOM
+    // constructor — must go through `window.Image` to build an HTMLImageElement.
+    const img = new window.Image();
     img.onload = () => {
       try {
         // Create a canvas to draw the image

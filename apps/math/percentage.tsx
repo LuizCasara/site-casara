@@ -70,12 +70,15 @@ const PercentageCalculator = () => {
         let calculatedValue;
         let explanation;
 
+        // Round only for display in the explanation text; the raw value still powers the result box
+        const fmt = (n: number) => (n % 1 !== 0 ? n.toFixed(2) : n.toString());
+
         // Calculate based on calculation type
         switch (values.calculationType) {
             case "percentOfValue":
                 // X% of Y
                 calculatedValue = (x / 100) * y;
-                explanation = `${x}% de ${y} = ${x} ÷ 100 × ${y} = ${calculatedValue}`;
+                explanation = `${x}% de ${y} = ${x} ÷ 100 × ${y} = ${fmt(calculatedValue)}`;
                 break;
 
             case "valueIsPercentOfWhat":
@@ -85,7 +88,7 @@ const PercentageCalculator = () => {
                     return;
                 }
                 calculatedValue = (x / y) * 100;
-                explanation = `${x} é ${calculatedValue}% de ${y} porque ${x} ÷ ${y} × 100 = ${calculatedValue}%`;
+                explanation = `${x} é ${fmt(calculatedValue)}% de ${y} porque ${x} ÷ ${y} × 100 = ${fmt(calculatedValue)}%`;
                 break;
 
             case "percentageChange":
@@ -96,7 +99,7 @@ const PercentageCalculator = () => {
                 }
                 calculatedValue = ((y - x) / Math.abs(x)) * 100;
                 const changeType = calculatedValue >= 0 ? "aumento" : "diminuição";
-                explanation = `A variação de ${x} para ${y} representa ${Math.abs(calculatedValue)}% de ${changeType}`;
+                explanation = `A variação de ${x} para ${y} representa ${fmt(Math.abs(calculatedValue))}% de ${changeType}`;
                 break;
 
             case "reversePercentage":
@@ -110,19 +113,19 @@ const PercentageCalculator = () => {
                     return;
                 }
                 calculatedValue = y / (1 + (x / 100));
-                explanation = `Se ${y} representa um valor após ${x > 0 ? 'aumento' : 'desconto'} de ${Math.abs(x)}%, o valor original era ${calculatedValue}`;
+                explanation = `Se ${y} representa um valor após ${x > 0 ? 'aumento' : 'desconto'} de ${Math.abs(x)}%, o valor original era ${fmt(calculatedValue)}`;
                 break;
 
             case "addPercentage":
                 // Add X% to Y
                 calculatedValue = y * (1 + (x / 100));
-                explanation = `${y} + ${x}% = ${y} × (1 + ${x} ÷ 100) = ${calculatedValue}`;
+                explanation = `${y} + ${x}% = ${y} × (1 + ${x} ÷ 100) = ${fmt(calculatedValue)}`;
                 break;
 
             case "subtractPercentage":
                 // Subtract X% from Y
                 calculatedValue = y * (1 - (x / 100));
-                explanation = `${y} - ${x}% = ${y} × (1 - ${x} ÷ 100) = ${calculatedValue}`;
+                explanation = `${y} - ${x}% = ${y} × (1 - ${x} ÷ 100) = ${fmt(calculatedValue)}`;
                 break;
 
             default:

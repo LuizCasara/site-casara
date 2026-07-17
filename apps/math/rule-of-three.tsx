@@ -68,14 +68,14 @@ const RuleOfThreeCalculator = () => {
         // Calculate based on which field is active
         let calculatedValue;
         if (values.activeField === "a") {
-            if (c === 0) {
-                setError("O valor de C não pode ser zero.");
-                return;
-            }
-            calculatedValue = (b * d) / c;
-        } else if (values.activeField === "b") {
             if (d === 0) {
                 setError("O valor de D não pode ser zero.");
+                return;
+            }
+            calculatedValue = (b * c) / d;
+        } else if (values.activeField === "b") {
+            if (c === 0) {
+                setError("O valor de C não pode ser zero.");
                 return;
             }
             calculatedValue = (a * d) / c;

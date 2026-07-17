@@ -294,7 +294,7 @@ const FileSizeConverter = () => {
                     <h3 className="font-bold mb-2">Resultado:</h3>
                     <div className="space-y-2">
                         <p>
-                            {result.originalSize} {fileSizeUnits.find(unit => unit.id === result.originalUnit)?.name} = {formatFileSize(result.convertedSize, fileSizeUnits.find(unit => unit.id === result.convertedUnit)?.name)}
+                            {formatFileSize(result.originalSize, fileSizeUnits.find(unit => unit.id === result.originalUnit)?.name)} = {formatFileSize(result.convertedSize, fileSizeUnits.find(unit => unit.id === result.convertedUnit)?.name)}
                         </p>
 
                         {result.downloadTime && (

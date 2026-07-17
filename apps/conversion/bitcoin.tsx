@@ -1,7 +1,6 @@
 "use client";
 
 import {useState, useEffect} from "react";
-import {FaBitcoin} from "react-icons/fa";
 
 const BitcoinConverter = () => {
     // Target currencies
