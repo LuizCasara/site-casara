@@ -3,16 +3,46 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SORTEIO_LIMITS, parseEntries, drawWinners } from "@/lib/sorteio";
+import { playSound, startLoop } from "@/lib/sound";
 import { trackSorteioRealizado } from "@/utils/analytics";
 
 type DrawRecord = { winners: string[]; timestamp: number };
 
-const SPIN_DURATION_MS = 1100;
-const SPIN_TICK_MS = 80;
+// Duração total do giro por vencedor, e o intervalo entre nomes varia dentro
+// desse tempo seguindo uma curva de aceleração/desaceleração (devagar no
+// início e no fim, rápido no meio) — física de roleta de verdade, em vez de
+// um ciclo de velocidade constante que passa rápido demais com poucos itens.
+const SPIN_DURATION_MS = 2800;
+const SPIN_TICK_MIN_MS = 55;
+const SPIN_TICK_MAX_MS = 240;
 const REVEAL_PAUSE_MS = 500;
 
 function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+function easedTickDelay(progress: number): number {
+  const shape = Math.sin(Math.min(1, Math.max(0, progress)) * Math.PI);
+  return SPIN_TICK_MAX_MS - shape * (SPIN_TICK_MAX_MS - SPIN_TICK_MIN_MS);
+}
+
+/** Cicla nomes aleatórios do pool por `durationMs`, com o intervalo entre
+ * trocas seguindo `easedTickDelay` — usa `setTimeout` recursivo (não
+ * `setInterval`) porque o atraso muda a cada passo. */
+function spinFor(pool: string[], durationMs: number, onTick: (name: string) => void): Promise<void> {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    function scheduleNext() {
+      const progress = (Date.now() - start) / durationMs;
+      onTick(pool[Math.floor(Math.random() * pool.length)]);
+      if (progress >= 1) {
+        resolve();
+        return;
+      }
+      setTimeout(scheduleNext, easedTickDelay(progress));
+    }
+    scheduleNext();
+  });
 }
 
 const CONFETTI_COLORS = ["#22c55e", "#eab308", "#3b82f6", "#ec4899", "#f97316"];
@@ -86,28 +116,23 @@ export default function Sorteio() {
     if (!animated) {
       setLastDrawAt(Date.now());
       setRevealed(winners);
+      playSound("reveal");
       setHistory((prev) => [{ winners, timestamp: Date.now() }, ...prev]);
       return;
     }
 
     setSpinning(true);
+    const stopLoop = startLoop("spin-loop", 0.5);
     let pool = eligiblePool;
     for (const winner of winners) {
-      const start = Date.now();
-      await new Promise<void>((resolve) => {
-        const interval = setInterval(() => {
-          setSpinningName(pool[Math.floor(Math.random() * pool.length)]);
-          if (Date.now() - start >= SPIN_DURATION_MS) {
-            clearInterval(interval);
-            resolve();
-          }
-        }, SPIN_TICK_MS);
-      });
+      await spinFor(pool, SPIN_DURATION_MS, setSpinningName);
       setSpinningName(null);
       setRevealed((prev) => [...prev, winner]);
+      playSound("reveal");
       pool = pool.filter((p) => p !== winner);
       await sleep(REVEAL_PAUSE_MS);
     }
+    stopLoop();
     setSpinning(false);
     setLastDrawAt(Date.now());
     setHistory((prev) => [{ winners, timestamp: Date.now() }, ...prev]);

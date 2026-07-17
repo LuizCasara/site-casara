@@ -12,6 +12,7 @@ import {
   podiumFullyRevealed,
   PODIUM_REVEAL_TOTAL_MS,
 } from "@/lib/quiz";
+import { playSound } from "@/lib/sound";
 
 const RESULTS_POLL_MS = 2500;
 
@@ -71,6 +72,9 @@ export default function QuizResultsPage() {
   const [showGabarito, setShowGabarito] = useState(false);
 
   const exportRef = useRef<HTMLDivElement>(null);
+  const notifiedQuestionRef = useRef<number | null>(null);
+  const soundRevealedPlacesRef = useRef(0);
+  const soundFanfarePlayedRef = useRef(false);
 
   const fetchResults = useCallback(async () => {
     try {
@@ -123,15 +127,41 @@ export default function QuizResultsPage() {
   }, [data?.title]);
 
   useEffect(() => {
-    if (data?.phase !== "finished" || !data.finished_at) return;
+    if (data?.phase !== "question" || !data.current_question) return;
+    const total = data.leaderboard.length;
+    const answered = data.current_question.answered_count;
+    if (total > 0 && answered >= total && notifiedQuestionRef.current !== data.current_question_index) {
+      notifiedQuestionRef.current = data.current_question_index;
+      playSound("notify");
+    }
+  }, [data?.phase, data?.current_question_index, data?.current_question, data?.leaderboard.length]);
+
+  useEffect(() => {
+    if (data?.phase !== "finished" || !data.finished_at) {
+      soundRevealedPlacesRef.current = 0;
+      soundFanfarePlayedRef.current = false;
+      return;
+    }
     // Prazo em relógio local (não corrigido) pra decidir quando parar — assim
     // o intervalo se autoencerra mesmo se a aba ficar em segundo plano e o
     // polling (que atualizaria offsetMs) parar de rodar nesse meio-tempo.
-    const deadlineMs = new Date(data.finished_at).getTime() + PODIUM_REVEAL_TOTAL_MS - offsetMs;
+    const finishedAtMs = new Date(data.finished_at).getTime();
+    const deadlineMs = finishedAtMs + PODIUM_REVEAL_TOTAL_MS - offsetMs;
     if (Date.now() >= deadlineMs) return;
     const interval = setInterval(() => {
-      setNowMs(Date.now());
-      if (Date.now() >= deadlineMs) clearInterval(interval);
+      const now = Date.now();
+      setNowMs(now);
+      const elapsedMs = now + offsetMs - finishedAtMs;
+      const places = podiumRevealedPlaces(elapsedMs);
+      if (places > soundRevealedPlacesRef.current) {
+        soundRevealedPlacesRef.current = places;
+        playSound("reveal");
+      }
+      if (podiumFullyRevealed(elapsedMs) && !soundFanfarePlayedRef.current) {
+        soundFanfarePlayedRef.current = true;
+        playSound("fanfare");
+      }
+      if (now >= deadlineMs) clearInterval(interval);
     }, 200);
     return () => clearInterval(interval);
   }, [data?.phase, data?.finished_at, offsetMs]);
@@ -249,6 +279,7 @@ export default function QuizResultsPage() {
                   startedAt={data.current_question.started_at}
                   timeLimitSeconds={data.current_question.time_limit_seconds}
                   offsetMs={offsetMs}
+                  playSound
                 />
               </div>
             )}

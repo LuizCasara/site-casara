@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import WordCloud from "@/components/WordCloud";
 import WordBarChart from "@/components/WordBarChart";
 import type { WordCount } from "@/lib/word-cloud";
+import { playSound } from "@/lib/sound";
 
 const RESULTS_POLL_MS = 2500;
 
@@ -35,6 +36,7 @@ export default function WordSessionResultsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("bubbles");
 
   const exportRef = useRef<HTMLDivElement>(null);
+  const prevParticipantsRef = useRef<number | null>(null);
 
   const fetchResults = useCallback(async () => {
     try {
@@ -81,6 +83,17 @@ export default function WordSessionResultsPage() {
   useEffect(() => {
     if (data?.title) document.title = `${data.title} — Resultados`;
   }, [data?.title]);
+
+  useEffect(() => {
+    if (data?.total_participants === undefined) return;
+    if (
+      prevParticipantsRef.current !== null &&
+      data.total_participants > prevParticipantsRef.current
+    ) {
+      playSound("pop");
+    }
+    prevParticipantsRef.current = data.total_participants;
+  }, [data?.total_participants]);
 
   useEffect(() => {
     function onFullscreenChange() {

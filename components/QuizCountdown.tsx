@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { playSound } from "@/lib/sound";
 
 type Props = {
   startedAt: string;
   timeLimitSeconds: number;
   offsetMs: number;
+  /** Toca tic-tac a cada segundo e um alarme no estouro do tempo — só a
+   * tela de resultados (telão) usa isso; a tela do participante fica muda. */
+  playSound?: boolean;
 };
 
 const TICK_MS = 150;
@@ -18,20 +22,37 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
  * `startedAt + timeLimitSeconds`, `offsetMs` corrige o relógio local errado
  * do dispositivo). Puramente visual — quem trava a resposta é sempre o
  * `phase` retornado pela API, nunca esse componente. */
-export default function QuizCountdown({ startedAt, timeLimitSeconds, offsetMs }: Props) {
+export default function QuizCountdown({ startedAt, timeLimitSeconds, offsetMs, playSound: soundEnabled }: Props) {
   const deadline = new Date(startedAt).getTime() + timeLimitSeconds * 1000;
   const [remainingMs, setRemainingMs] = useState(() =>
     Math.max(0, deadline - (Date.now() + offsetMs))
   );
+  const lastSecondRef = useRef<number | null>(null);
+  const alarmPlayedRef = useRef(false);
+
+  useEffect(() => {
+    lastSecondRef.current = null;
+    alarmPlayedRef.current = false;
+  }, [deadline]);
 
   useEffect(() => {
     function tick() {
-      setRemainingMs(Math.max(0, deadline - (Date.now() + offsetMs)));
+      const ms = Math.max(0, deadline - (Date.now() + offsetMs));
+      setRemainingMs(ms);
+      if (!soundEnabled) return;
+      const seconds = Math.ceil(ms / 1000);
+      if (ms > 0 && seconds !== lastSecondRef.current) {
+        lastSecondRef.current = seconds;
+        playSound("tick");
+      } else if (ms === 0 && !alarmPlayedRef.current) {
+        alarmPlayedRef.current = true;
+        playSound("alarm");
+      }
     }
     tick();
     const interval = setInterval(tick, TICK_MS);
     return () => clearInterval(interval);
-  }, [deadline, offsetMs]);
+  }, [deadline, offsetMs, soundEnabled]);
 
   const pct = Math.max(0, Math.min(1, remainingMs / (timeLimitSeconds * 1000)));
   const dashOffset = CIRCUMFERENCE * (1 - pct);
