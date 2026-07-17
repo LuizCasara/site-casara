@@ -106,6 +106,12 @@ const appCategories = [
                 title: "Nuvem de Palavras",
                 description: "Colete palavras dos participantes ao vivo via QR code e veja a nuvem crescer em tempo real.",
                 path: "dinamicas/nuvem-de-palavras"
+            },
+            {
+                id: "quiz-ao-vivo",
+                title: "Quiz ao Vivo",
+                description: "Crie um quiz com perguntas de múltipla escolha, tempo e ranking em tempo real.",
+                path: "dinamicas/quiz-ao-vivo"
             }
         ]
     }
@@ -193,6 +199,9 @@ export default function AppPage() {
                 // Dinâmicas ao Vivo apps
                 else if (foundApp.path === "dinamicas/nuvem-de-palavras") {
                     const importedModule = await import('@/apps/dinamicas/nuvem-de-palavras');
+                    Component = importedModule.default;
+                } else if (foundApp.path === "dinamicas/quiz-ao-vivo") {
+                    const importedModule = await import('@/apps/dinamicas/quiz-ao-vivo');
                     Component = importedModule.default;
                 } else {
                     console.error(`App component not found for path: ${foundApp.path}`);

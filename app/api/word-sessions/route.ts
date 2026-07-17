@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     for (;;) {
       try {
         await sql`
-          INSERT INTO word_sessions (id, host_token, results_token, title, description, mode, fixed_words, max_words)
+          INSERT INTO geav.word_sessions (id, host_token, results_token, title, description, mode, fixed_words, max_words)
           VALUES (
             ${id},
             ${hostToken},

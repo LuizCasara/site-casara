@@ -18,7 +18,7 @@ export async function GET(
   try {
     const [session] = await sql`
       SELECT results_token, host_token, title, description, status, accepting_responses
-      FROM word_sessions
+      FROM geav.word_sessions
       WHERE id = ${id}
     `;
     if (!session) {
@@ -37,13 +37,13 @@ export async function GET(
     const [[totals], words] = await Promise.all([
       sql`
         SELECT COUNT(*)::int AS total_participants
-        FROM word_submissions
+        FROM geav.word_submissions
         WHERE session_id = ${id}
       `,
       sql`
         SELECT MIN(e.word) AS word, COUNT(*)::int AS count
-        FROM word_entries e
-        JOIN word_submissions s ON s.id = e.submission_id
+        FROM geav.word_entries e
+        JOIN geav.word_submissions s ON s.id = e.submission_id
         WHERE s.session_id = ${id}
         GROUP BY e.word_normalized
         ORDER BY count DESC

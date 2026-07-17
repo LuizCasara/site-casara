@@ -116,3 +116,20 @@ export const trackWordSessionDiscarded = (sessionId: string) =>
 
 export const trackWordSessionFixedWordAdded = (sessionId: string, count: number) =>
   trackEvent('word_session_fixed_word_added', { session_id: sessionId, count });
+
+// ─── Quiz ao Vivo ───────────────────────────────────────────────────────────
+
+export const trackQuizSessionCreated = (sessionId: string, questionCount: number) =>
+  trackEvent('quiz_session_created', { session_id: sessionId, question_count: questionCount });
+
+export const trackQuizSessionJoined = (sessionId: string) =>
+  trackEvent('quiz_session_joined', { session_id: sessionId });
+
+export const trackQuizAnswerSubmitted = (sessionId: string) =>
+  trackEvent('quiz_answer_submitted', { session_id: sessionId });
+
+export const trackQuizSessionSaved = (sessionId: string) =>
+  trackEvent('quiz_session_saved', { session_id: sessionId });
+
+export const trackQuizSessionDiscarded = (sessionId: string) =>
+  trackEvent('quiz_session_discarded', { session_id: sessionId });

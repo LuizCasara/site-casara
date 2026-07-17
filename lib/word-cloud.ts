@@ -78,16 +78,8 @@ export function computeFontSizes(
   });
 }
 
-/** Short, URL-friendly id. Not a secret — only needs to avoid collisions,
- * which the caller should retry on (PRIMARY KEY conflict). */
-export function generateSessionId(): string {
-  return crypto.randomUUID().replace(/-/g, "").slice(0, 10);
-}
-
-/** Long random secret for host/results access tokens and participant ids. */
-export function generateToken(): string {
-  return crypto.randomUUID();
-}
+// Movidas para lib/session-ids.ts (genéricas, reusadas também pelo Quiz ao Vivo).
+export { generateSessionId, generateToken } from "./session-ids";
 
 export function canAcceptResponses(
   status: SessionStatus,

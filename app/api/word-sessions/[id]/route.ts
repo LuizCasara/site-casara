@@ -12,7 +12,7 @@ export async function GET(
   try {
     const [session] = await sql`
       SELECT title, description, mode, fixed_words, max_words, accepting_responses, status
-      FROM word_sessions
+      FROM geav.word_sessions
       WHERE id = ${id}
     `;
     if (!session) {
@@ -49,7 +49,7 @@ export async function PATCH(
 
     if (hasAccepting) {
       const [row] = await sql`
-        UPDATE word_sessions
+        UPDATE geav.word_sessions
         SET accepting_responses = ${body.accepting_responses}, updated_at = NOW()
         WHERE id = ${id} AND host_token = ${hostToken} AND status = 'active'
         RETURNING id, accepting_responses, status
@@ -72,7 +72,7 @@ export async function PATCH(
     }
 
     const [row] = await sql`
-      UPDATE word_sessions
+      UPDATE geav.word_sessions
       SET status = ${next}, updated_at = NOW()
       WHERE id = ${id} AND host_token = ${hostToken} AND status = 'active'
       RETURNING id, status

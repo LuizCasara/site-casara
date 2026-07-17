@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import sql from "@/lib/db";
 import { WORD_CLOUD_LIMITS, canAcceptResponses, dedupeWords, normalizeWord } from "@/lib/word-cloud";
+import { PARTICIPANT_ID_RE } from "@/lib/session-ids";
 
 export const dynamic = "force-dynamic";
-
-const PARTICIPANT_ID_RE = /^[0-9a-f-]{20,40}$/i;
 
 export async function POST(
   request: NextRequest,
@@ -36,7 +35,7 @@ export async function POST(
 
     const [session] = await sql`
       SELECT mode, fixed_words, max_words, accepting_responses, status
-      FROM word_sessions
+      FROM geav.word_sessions
       WHERE id = ${id}
     `;
     if (!session) {
@@ -75,11 +74,11 @@ export async function POST(
       // permite encadear o resultado de uma query dentro da próxima).
       await sql`
         WITH new_submission AS (
-          INSERT INTO word_submissions (session_id, participant_id)
+          INSERT INTO geav.word_submissions (session_id, participant_id)
           VALUES (${id}, ${participantId})
           RETURNING id
         )
-        INSERT INTO word_entries (submission_id, word, word_normalized)
+        INSERT INTO geav.word_entries (submission_id, word, word_normalized)
         SELECT new_submission.id, w.word, w.word_normalized
         FROM new_submission,
              UNNEST(${words}::text[], ${normalized}::text[]) AS w(word, word_normalized)
