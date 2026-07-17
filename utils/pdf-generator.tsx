@@ -1,34 +1,11 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import React, {RefObject} from 'react';
-
-// Helper function to get display name for temperaments
-const getTemperamentDisplayName = (name: string) => {
-    return name === "Sanguineo" ? "Sanguíneo" :
-        name === "Colerico" ? "Colérico" :
-            name === "Melancolico" ? "Melancólico" :
-                name === "Fleumatico" ? "Fleumático" : name;
-};
-
-// Helper function to get display name for characteristics
-const getCharacteristicDisplayName = (name: string) => {
-    return name === "Umido" ? "Úmido" : name;
-};
+import {TEMPERAMENT_INFO, getCharacteristicDisplayName, getTemperamentDisplayName} from '@/apps/desenvolvimento-pessoal/temperament-info';
 
 // Helper function to get color for temperament
 const getTemperamentColor = (name: string) => {
-    return name === "Sanguineo" ? "#e53935" :
-        name === "Colerico" ? "#ffb300" :
-            name === "Melancolico" ? "#1e88e5" :
-                name === "Fleumatico" ? "#43a047" : "#999";
-};
-
-// Helper function to get background color class for temperament
-const getTemperamentBgClass = (name: string) => {
-    return name === "Sanguineo" ? "sanguineo" :
-        name === "Colerico" ? "colerico" :
-            name === "Melancolico" ? "melancolico" :
-                name === "Fleumatico" ? "fleumatico" : "";
+    return (TEMPERAMENT_INFO as Record<string, { hexColor: string }>)[name]?.hexColor ?? "#999";
 };
 
 // Interface for PDF data
@@ -71,7 +48,6 @@ export const PdfContent = React.forwardRef<HTMLDivElement, { data: PdfData }>((p
                 <div style={{marginBottom: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '5px'}}>
                     <h2 style={{color: 'black', marginBottom: '20xp'}}>Temperamentos</h2>
                     {results.allTemperaments.map((temp: any, index: number) => {
-                        const tempClass = getTemperamentBgClass(temp.name);
                         const displayName = getTemperamentDisplayName(temp.name);
                         const barColor = getTemperamentColor(temp.name);
 
@@ -163,141 +139,32 @@ export const PdfContent = React.forwardRef<HTMLDivElement, { data: PdfData }>((p
                 <div style={{marginBottom: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '5px'}}>
                     <h2 style={{color: 'black'}}>Detalhes do Temperamento {getTemperamentDisplayName(results.primaryTemperament.name)}</h2>
 
-                    {results.primaryTemperament.name === "Sanguineo" && (
-                        <>
-                            <div style={{marginBottom: '20px'}}>
-                                <h3 style={{color: '#e53935', marginBottom: '10px'}}>Pontos Fortes</h3>
-                                <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
-                                    <li>Comunicativo e sociável</li>
-                                    <li>Entusiasta e otimista</li>
-                                    <li>Criativo e adaptável</li>
-                                    <li>Bom em iniciar projetos</li>
-                                    <li>Carismático e persuasivo</li>
-                                </ul>
-                            </div>
-                            <div style={{marginBottom: '20px'}}>
-                                <h3 style={{color: '#e53935', marginBottom: '10px'}}>Pontos de Atenção</h3>
-                                <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
-                                    <li>Pode ser desorganizado</li>
-                                    <li>Tendência a ser impulsivo</li>
-                                    <li>Dificuldade em manter o foco</li>
-                                    <li>Pode deixar projetos inacabados</li>
-                                    <li>Às vezes superficial nas relações</li>
-                                </ul>
-                            </div>
-                            <div style={{marginBottom: '20px'}}>
-                                <h3 style={{color: '#e53935', marginBottom: '10px'}}>Dicas para Relacionamentos</h3>
-                                <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
-                                    <li>Pratique a escuta ativa</li>
-                                    <li>Desenvolva compromisso e consistência</li>
-                                    <li>Estabeleça limites claros</li>
-                                    <li>Cultive relacionamentos mais profundos</li>
-                                </ul>
-                            </div>
-                        </>
-                    )}
-
-                    {results.primaryTemperament.name === "Colerico" && (
-                        <>
-                            <div style={{marginBottom: '20px'}}>
-                                <h3 style={{color: '#ffb300', marginBottom: '10px'}}>Pontos Fortes</h3>
-                                <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
-                                    <li>Decidido e determinado</li>
-                                    <li>Líder natural e visionário</li>
-                                    <li>Orientado para objetivos</li>
-                                    <li>Prático e eficiente</li>
-                                    <li>Confiante e independente</li>
-                                </ul>
-                            </div>
-                            <div style={{marginBottom: '20px'}}>
-                                <h3 style={{color: '#ffb300', marginBottom: '10px'}}>Pontos de Atenção</h3>
-                                <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
-                                    <li>Pode ser impaciente</li>
-                                    <li>Tendência a ser dominador</li>
-                                    <li>Às vezes insensível aos sentimentos alheios</li>
-                                    <li>Pode ser intolerante com erros</li>
-                                    <li>Dificuldade em delegar</li>
-                                </ul>
-                            </div>
-                            <div style={{marginBottom: '20px'}}>
-                                <h3 style={{color: '#ffb300', marginBottom: '10px'}}>Dicas para Relacionamentos</h3>
-                                <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
-                                    <li>Desenvolva paciência e empatia</li>
-                                    <li>Aprenda a ouvir sem interromper</li>
-                                    <li>Pratique a gentileza nas críticas</li>
-                                    <li>Reconheça os sentimentos dos outros</li>
-                                </ul>
-                            </div>
-                        </>
-                    )}
-
-                    {results.primaryTemperament.name === "Melancolico" && (
-                        <>
-                            <div style={{marginBottom: '20px'}}>
-                                <h3 style={{color: '#1e88e5', marginBottom: '10px'}}>Pontos Fortes</h3>
-                                <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
-                                    <li>Analítico e detalhista</li>
-                                    <li>Perfeccionista e organizado</li>
-                                    <li>Profundo e reflexivo</li>
-                                    <li>Sensível e empático</li>
-                                    <li>Criativo e artístico</li>
-                                </ul>
-                            </div>
-                            <div style={{marginBottom: '20px'}}>
-                                <h3 style={{color: '#1e88e5', marginBottom: '10px'}}>Pontos de Atenção</h3>
-                                <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
-                                    <li>Tendência ao pessimismo</li>
-                                    <li>Pode ser muito crítico</li>
-                                    <li>Dificuldade em tomar decisões</li>
-                                    <li>Propenso a mudanças de humor</li>
-                                    <li>Pode se isolar socialmente</li>
-                                </ul>
-                            </div>
-                            <div style={{marginBottom: '20px'}}>
-                                <h3 style={{color: '#1e88e5', marginBottom: '10px'}}>Dicas para Relacionamentos</h3>
-                                <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
-                                    <li>Cultive o otimismo</li>
-                                    <li>Estabeleça limites para autocrítica</li>
-                                    <li>Pratique a assertividade</li>
-                                    <li>Busque equilíbrio entre isolamento e socialização</li>
-                                </ul>
-                            </div>
-                        </>
-                    )}
-
-                    {results.primaryTemperament.name === "Fleumatico" && (
-                        <>
-                            <div style={{marginBottom: '20px'}}>
-                                <h3 style={{color: '#43a047', marginBottom: '10px'}}>Pontos Fortes</h3>
-                                <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
-                                    <li>Calmo e equilibrado</li>
-                                    <li>Paciente e diplomático</li>
-                                    <li>Confiável e consistente</li>
-                                    <li>Bom mediador de conflitos</li>
-                                    <li>Observador e analítico</li>
-                                </ul>
-                            </div>
-                            <div style={{marginBottom: '20px'}}>
-                                <h3 style={{color: '#43a047', marginBottom: '10px'}}>Pontos de Atenção</h3>
-                                <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
-                                    <li>Pode ser indeciso</li>
-                                    <li>Tendência à procrastinação</li>
-                                    <li>Às vezes falta iniciativa</li>
-                                    <li>Pode evitar conflitos necessários</li>
-                                    <li>Resistência a mudanças</li>
-                                </ul>
-                            </div>
-                            <div style={{marginBottom: '20px'}}>
-                                <h3 style={{color: '#43a047', marginBottom: '10px'}}>Dicas para Relacionamentos</h3>
-                                <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
-                                    <li>Desenvolva assertividade</li>
-                                    <li>Estabeleça metas e prazos</li>
-                                    <li>Pratique expressar suas emoções</li>
-                                    <li>Aprenda a lidar com conflitos de forma saudável</li>
-                                </ul>
-                            </div>
-                        </>
-                    )}
+                    {(() => {
+                        const info = TEMPERAMENT_INFO[results.primaryTemperament.name as keyof typeof TEMPERAMENT_INFO];
+                        if (!info) return null;
+                        return (
+                            <>
+                                <div style={{marginBottom: '20px'}}>
+                                    <h3 style={{color: info.hexColor, marginBottom: '10px'}}>Pontos Fortes</h3>
+                                    <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
+                                        {info.strengths.map(item => <li key={item}>{item}</li>)}
+                                    </ul>
+                                </div>
+                                <div style={{marginBottom: '20px'}}>
+                                    <h3 style={{color: info.hexColor, marginBottom: '10px'}}>Pontos de Atenção</h3>
+                                    <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
+                                        {info.attentionPoints.map(item => <li key={item}>{item}</li>)}
+                                    </ul>
+                                </div>
+                                <div style={{marginBottom: '20px'}}>
+                                    <h3 style={{color: info.hexColor, marginBottom: '10px'}}>Dicas para Relacionamentos</h3>
+                                    <ul style={{listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px', color: 'black'}}>
+                                        {info.relationshipTips.map(item => <li key={item}>{item}</li>)}
+                                    </ul>
+                                </div>
+                            </>
+                        );
+                    })()}
                 </div>
 
                 <div style={{textAlign: 'center', padding: '10px', fontSize: '12px', color: '#666'}}>
