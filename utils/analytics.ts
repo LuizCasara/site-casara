@@ -133,3 +133,8 @@ export const trackQuizSessionSaved = (sessionId: string) =>
 
 export const trackQuizSessionDiscarded = (sessionId: string) =>
   trackEvent('quiz_session_discarded', { session_id: sessionId });
+
+// ─── Sorteio ──────────────────────────────────────────────────────────────
+
+export const trackSorteioRealizado = (entryCount: number, winnerCount: number) =>
+  trackEvent('sorteio_realizado', { entry_count: entryCount, winner_count: winnerCount });

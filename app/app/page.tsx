@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {Fa0, Fa3, FaCloud, FaFileArrowDown, FaMoneyBillTrendUp, FaPhotoFilm, FaSpoon, FaTrophy} from "react-icons/fa6";
+import {Fa0, Fa3, FaCloud, FaDice, FaFileArrowDown, FaMoneyBillTrendUp, FaPhotoFilm, FaSpoon, FaTrophy} from "react-icons/fa6";
 import {FaBitcoin, FaCoins, FaPercent, FaQrcode, FaBrain} from "react-icons/fa";
 import {useLang} from "@/context/LanguageContext";
 import {trackAppClick} from "@/utils/analytics";
@@ -112,6 +112,12 @@ const appCategories = [
                 title: "Quiz ao Vivo",
                 description: "Crie um quiz com perguntas de múltipla escolha, tempo e ranking em tempo real.",
                 icon: <FaTrophy size={18}/>,
+            },
+            {
+                id: "sorteio",
+                title: "Sorteio",
+                description: "Cole uma lista de nomes separados por vírgula e sorteie vencedores com animação.",
+                icon: <FaDice size={18}/>,
             }
         ]
     }

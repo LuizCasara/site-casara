@@ -112,6 +112,12 @@ const appCategories = [
                 title: "Quiz ao Vivo",
                 description: "Crie um quiz com perguntas de múltipla escolha, tempo e ranking em tempo real.",
                 path: "dinamicas/quiz-ao-vivo"
+            },
+            {
+                id: "sorteio",
+                title: "Sorteio",
+                description: "Cole uma lista de nomes separados por vírgula e sorteie vencedores com animação.",
+                path: "dinamicas/sorteio"
             }
         ]
     }
@@ -202,6 +208,9 @@ export default function AppPage() {
                     Component = importedModule.default;
                 } else if (foundApp.path === "dinamicas/quiz-ao-vivo") {
                     const importedModule = await import('@/apps/dinamicas/quiz-ao-vivo');
+                    Component = importedModule.default;
+                } else if (foundApp.path === "dinamicas/sorteio") {
+                    const importedModule = await import('@/apps/dinamicas/sorteio');
                     Component = importedModule.default;
                 } else {
                     console.error(`App component not found for path: ${foundApp.path}`);
