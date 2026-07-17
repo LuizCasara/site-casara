@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { REAL_ROUTE_PATTERN } from '@/lib/routes';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -7,11 +8,16 @@ export async function GET(request: Request) {
   const days = period === '7d' ? 7 : period === '30d' ? 30 : 36500;
 
   try {
+    // Só arquivos e rotas reais (mesma allowlist do middleware) contam no topo
+    // e em TOP_ROTAS — descarta page_view de arquivo estático e sondas de bot
+    // que ficaram no histórico de antes desse filtro existir no middleware.
+    const IS_REAL_ROUTE = sql`route ~ ${REAL_ROUTE_PATTERN}`;
+
     const [overview] = await sql`
       SELECT
-        COUNT(*)                                                          AS total_events,
-        COUNT(*) FILTER (WHERE event_name = 'page_view')                 AS total_page_views,
-        COUNT(DISTINCT route) FILTER (WHERE event_name = 'page_view')    AS unique_routes
+        COUNT(*) FILTER (WHERE event_name != 'page_view' OR ${IS_REAL_ROUTE})              AS total_events,
+        COUNT(*) FILTER (WHERE event_name = 'page_view' AND ${IS_REAL_ROUTE})               AS total_page_views,
+        COUNT(DISTINCT route) FILTER (WHERE event_name = 'page_view' AND ${IS_REAL_ROUTE})  AS unique_routes
       FROM events
       WHERE created_at > NOW() - INTERVAL '1 day' * ${days}
     `;
@@ -29,6 +35,7 @@ export async function GET(request: Request) {
       SELECT route, COUNT(*) AS count
       FROM events
       WHERE event_name = 'page_view'
+        AND ${IS_REAL_ROUTE}
         AND created_at > NOW() - INTERVAL '1 day' * ${days}
       GROUP BY route
       ORDER BY count DESC
