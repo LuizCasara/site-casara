@@ -1,290 +1,282 @@
 [
   {
     "id": 1,
-    "pergunta": "Você tende a reagir rapidamente a eventos e estímulos?",
-    "classificacao": [
-      "quente"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você tende a reagir e agir rapidamente, no calor do momento?" },
+      { "polo": "frio", "frase": "Você tende a refletir com calma antes de agir?" }
     ]
   },
   {
     "id": 2,
-    "pergunta": "Suas emoções, embora intensas, tendem a passar rapidamente?",
-    "classificacao": [
-      "quente",
-      "umido"
+    "opcoes": [
+      { "polo": "quente", "frase": "Suas emoções sobem rápido, mas também passam rápido?" },
+      { "polo": "frio", "frase": "Suas emoções demoram a aparecer, mas também demoram a passar?" }
     ]
   },
   {
     "id": 3,
-    "pergunta": "Você se sente disposto e proativo na maioria das situações?",
-    "classificacao": [
-      "quente"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você se sente disposto e proativo na maior parte do tempo?" },
+      { "polo": "frio", "frase": "Você se sente mais confortável observando antes de agir?" }
     ]
   },
   {
     "id": 4,
-    "pergunta": "Você se adapta facilmente a novas situações e pessoas?",
-    "classificacao": [
-      "umido"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você costuma ser direto e expressivo ao comunicar o que pensa?" },
+      { "polo": "frio", "frase": "Você costuma medir bem as palavras antes de se expressar?" }
     ]
   },
   {
     "id": 5,
-    "pergunta": "Você é naturalmente sociável e gosta de estar rodeado de pessoas?",
-    "classificacao": [
-      "umido"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você se entusiasma com facilidade por novas ideias e projetos?" },
+      { "polo": "frio", "frase": "Você prefere avaliar bem uma ideia antes de se envolver com ela?" }
     ]
   },
   {
     "id": 6,
-    "pergunta": "Você tende a ser direto e expressivo em suas comunicações?",
-    "classificacao": [
-      "quente"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você é uma pessoa de ação, mais inclinada a fazer do que a pensar?" },
+      { "polo": "frio", "frase": "Você tende a refletir profundamente antes de tomar decisões?" }
     ]
   },
   {
     "id": 7,
-    "pergunta": "As pessoas tendem a te achar 'mandão', 'dono da verdade' e 'grosseiro'?",
-    "classificacao": [
-      "quente",
-      "seco"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você gosta de ambientes onde possa conversar bastante?" },
+      { "polo": "frio", "frase": "Você prefere ambientes mais silenciosos e tranquilos?" }
     ]
   },
   {
     "id": 8,
-    "pergunta": "Você é facilmente entusiasmado com novas ideias ou projetos?",
-    "classificacao": [
-      "quente"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você é uma pessoa comunicativa, que fala com facilidade?" },
+      { "polo": "frio", "frase": "Você é mais reservado, fala mais quando sente necessidade?" }
     ]
   },
   {
     "id": 9,
-    "pergunta": "Você tende a perdoar e seguir em frente com facilidade após desentendimentos?",
-    "classificacao": [
-      "umido"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você costuma se manifestar assim que forma uma opinião?" },
+      { "polo": "frio", "frase": "Você prefere processar bem as informações antes de se manifestar?" }
     ]
   },
   {
     "id": 10,
-    "pergunta": "Você é uma pessoa de ação, mais inclinada a fazer do que a pensar?",
-    "classificacao": [
-      "quente"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você se sente à vontade em ambientes sociais, mesmo com pessoas novas?" },
+      { "polo": "frio", "frase": "Você tende a se abrir mais depois de um tempo de confiança?" }
     ]
   },
   {
     "id": 11,
-    "pergunta": "Você tende a refletir profundamente antes de tomar decisões?",
-    "classificacao": [
-      "frio"
+    "opcoes": [
+      { "polo": "quente", "frase": "As pessoas tendem a te achar enérgico e direto?" },
+      { "polo": "frio", "frase": "As pessoas tendem a te achar contido e difícil de decifrar?" }
     ]
   },
   {
     "id": 12,
-    "pergunta": "Você se apega a ideias e convicções por um longo tempo?",
-    "classificacao": [
-      "seco"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você busca excelência agindo rápido e com intensidade?" },
+      { "polo": "frio", "frase": "Você busca excelência de forma calma e sistemática?" }
     ]
   },
   {
     "id": 13,
-    "pergunta": "Suas reações emocionais são geralmente lentas ou contidas?",
-    "classificacao": [
-      "frio"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você costuma contagiar os outros com a sua energia?" },
+      { "polo": "frio", "frase": "Você costuma manter a mesma tranquilidade, independente do clima ao redor?" }
     ]
   },
   {
     "id": 14,
-    "pergunta": "Você tem dificuldade em esquecer ofensas ou impressões marcantes?",
-    "classificacao": [
-      "seco"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você demonstra visivelmente quando algo te incomoda?" },
+      { "polo": "frio", "frase": "Você raramente demonstra quando algo te incomoda?" }
     ]
   },
   {
     "id": 15,
-    "pergunta": "Você busca profundidade e análise detalhada em tudo que faz?",
-    "classificacao": [
-      "seco"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você toma a iniciativa quando percebe que algo precisa ser feito?" },
+      { "polo": "frio", "frase": "Você prefere esperar o momento certo antes de agir?" }
     ]
   },
   {
     "id": 16,
-    "pergunta": "Você valoriza ordem, estrutura e organização em seu ambiente?",
-    "classificacao": [
-      "frio",
-      "seco"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você se anima rápido, mesmo com pequenas novidades do dia a dia?" },
+      { "polo": "frio", "frase": "Você mantém o mesmo ritmo emocional, independente do que acontece?" }
     ]
   },
   {
     "id": 17,
-    "pergunta": "Você tende a ser mais reservado e introspectivo?",
-    "classificacao": [
-      "frio"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você costuma expressar entusiasmo abertamente quando gosta de algo?" },
+      { "polo": "frio", "frase": "Você costuma guardar para si o que sente, mesmo entusiasmado?" }
     ]
   },
   {
     "id": 18,
-    "pergunta": "Você é resistente a mudanças em seus planos?",
-    "classificacao": [
-      "seco"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você se sente energizado ao estar no centro das atenções?" },
+      { "polo": "frio", "frase": "Você se sente mais confortável observando de um lugar discreto?" }
     ]
   },
   {
     "id": 19,
-    "pergunta": "Você prefere observar e processar informações antes de se manifestar?",
-    "classificacao": [
-      "frio"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você prefere agir agora e ajustar o rumo depois, se for preciso?" },
+      { "polo": "frio", "frase": "Você prefere ter um plano claro antes de dar o primeiro passo?" }
     ]
   },
   {
     "id": 20,
-    "pergunta": "Você tende a esconder suas emoções dos outros?",
-    "classificacao": [
-      "frio"
+    "opcoes": [
+      { "polo": "quente", "frase": "Você tende a esquentar rápido numa discussão?" },
+      { "polo": "frio", "frase": "Você tende a se manter calmo mesmo numa discussão intensa?" }
     ]
   },
   {
     "id": 21,
-    "pergunta": "Você valoriza a calma e a tranquilidade em seu dia a dia?",
-    "classificacao": [
-      "frio"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você se apega às suas ideias e convicções por muito tempo?" },
+      { "polo": "umido", "frase": "Você muda de ideia com facilidade quando ouve um bom argumento?" }
     ]
   },
   {
     "id": 22,
-    "pergunta": "Você prefere a paz e tende a evitar conflitos?",
-    "classificacao": [
-      "frio",
-      "umido"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você tem dificuldade em esquecer situações ou impressões marcantes?" },
+      { "polo": "umido", "frase": "Você costuma seguir em frente com facilidade após um desentendimento?" }
     ]
   },
   {
     "id": 23,
-    "pergunta": "As pessoas tendem a aproximar-se de você mesmo sem lhe conhecer muito?",
-    "classificacao": [
-      "umido"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você busca profundidade e análise detalhada em tudo que faz?" },
+      { "polo": "umido", "frase": "Você prefere ir com o fluxo, sem se aprofundar demais?" }
     ]
   },
   {
     "id": 24,
-    "pergunta": "Você é flexível e aberto a diferentes pontos de vista?",
-    "classificacao": [
-      "umido"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você prefere manter os planos como foram definidos originalmente?" },
+      { "polo": "umido", "frase": "Você se adapta com naturalidade a mudanças de planos?" }
     ]
   },
   {
     "id": 25,
-    "pergunta": "Você prefere estar em ambientes em que possa conversar?",
-    "classificacao": [
-      "quente"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você é motivado por desafios árduos e complexos?" },
+      { "polo": "umido", "frase": "Você é motivado principalmente pelo prazer de estar com outras pessoas?" }
     ]
   },
   {
     "id": 26,
-    "pergunta": "As pessoas tendem a achar que você é esquecida (o), tem cara de paisagem e é indiferente (tanto faz como tanto fez)?",
-    "classificacao": [
-      "frio",
-      "umido"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você costuma manter uma postura mais firme diante de mudanças?" },
+      { "polo": "umido", "frase": "Você costuma manter uma postura mais flexível diante de mudanças?" }
     ]
   },
   {
     "id": 27,
-    "pergunta": "As pessoas tendem a te achar sistemático, chato e reclamão?",
-    "classificacao": [
-      "frio",
-      "seco"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você é confiante em si mesmo, mesmo sem aprovação externa?" },
+      { "polo": "umido", "frase": "Você valoriza bastante a aprovação e o afeto das pessoas ao redor?" }
     ]
   },
   {
     "id": 28,
-    "pergunta": "Você é motivado por desafios árduos e complexos?",
-    "classificacao": [
-      "seco"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você é exigente consigo mesmo e com os outros?" },
+      { "polo": "umido", "frase": "Você tende a ser tolerante com falhas, suas e dos outros?" }
     ]
   },
   {
     "id": 29,
-    "pergunta": "As pessoas tendem a te achar tenso e rígido?",
-    "classificacao": [
-      "seco"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você prefere trabalhar de forma autônoma, sem depender da validação de ninguém?" },
+      { "polo": "umido", "frase": "Você prefere tomar decisões em grupo, valorizando o consenso?" }
     ]
   },
   {
     "id": 30,
-    "pergunta": "Você tende a ser otimista sobre o futuro?",
-    "classificacao": [
-      "umido"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você mantém suas posições mesmo sob forte pressão para mudar de ideia?" },
+      { "polo": "umido", "frase": "Você se ajusta com facilidade ao estilo das pessoas ao seu redor?" }
     ]
   },
   {
     "id": 31,
-    "pergunta": "Você busca excelência em tudo que faz?",
-    "classificacao": [
-      "quente",
-      "seco"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você valoriza ordem, estrutura e organização no ambiente?" },
+      { "polo": "umido", "frase": "Você se sente bem mesmo num ambiente mais espontâneo e desorganizado?" }
     ]
   },
   {
     "id": 32,
-    "pergunta": "Você é uma pessoa alegre que coloca os outros pra cima?",
-    "classificacao": [
-      "umido",
-      "quente"
+    "opcoes": [
+      { "polo": "seco", "frase": "As pessoas tendem a te achar mais criterioso e exigente?" },
+      { "polo": "umido", "frase": "As pessoas tendem a se aproximar de você com facilidade, mesmo sem te conhecer bem?" }
     ]
   },
   {
     "id": 33,
-    "pergunta": "Você tende a ser confiante em si mesmo?",
-    "classificacao": [
-      "seco"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você costuma guardar uma situação negativa por um longo período?" },
+      { "polo": "umido", "frase": "Você se recupera rápido emocionalmente após um desentendimento?" }
     ]
   },
   {
     "id": 34,
-    "pergunta": "Você demonstra as suas emoções facilmente aos outros?",
-    "classificacao": [
-      "umido"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você é bastante autoexigente com os resultados que entrega?" },
+      { "polo": "umido", "frase": "Você tende a ser otimista sobre o futuro, mesmo sem tudo garantido?" }
     ]
   },
   {
     "id": 35,
-    "pergunta": "Você é acolhedor com as pessoas?",
-    "classificacao": [
-      "umido"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você costuma retomar mentalmente problemas que te afetaram?" },
+      { "polo": "umido", "frase": "Você demonstra suas emoções com facilidade para as pessoas ao redor?" }
     ]
   },
   {
     "id": 36,
-    "pergunta": "Você é uma pessoa comunicativa?",
-    "classificacao": [
-      "quente"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você prefere manter distância emocional para decidir de forma mais racional?" },
+      { "polo": "umido", "frase": "Você é acolhedor e afetuoso com as pessoas que conhece?" }
     ]
   },
   {
     "id": 37,
-    "pergunta": "Você se mantém calmo na maioria das situações?",
-    "classificacao": [
-      "frio"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você tem pouca paciência com indecisão ou falta de objetividade?" },
+      { "polo": "umido", "frase": "Você costuma concordar com os outros para evitar atritos desnecessários?" }
     ]
   },
   {
     "id": 38,
-    "pergunta": "Você se mantém concentrado facilmente?",
-    "classificacao": [
-      "frio"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você acredita que o resultado importa mais do que manter todos confortáveis?" },
+      { "polo": "umido", "frase": "Você é naturalmente sociável e gosta de estar rodeado de pessoas?" }
     ]
   },
   {
     "id": 39,
-    "pergunta": "Você é exigente consigo mesmo e com os outros?",
-    "classificacao": [
-      "seco"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você analisa profundamente as variáveis antes de decidir?" },
+      { "polo": "umido", "frase": "Você decide com base em como se sente no momento?" }
     ]
   },
   {
     "id": 40,
-    "pergunta": "Você é extrovertido em ambientes sociais?",
-    "classificacao": [
-      "quente"
+    "opcoes": [
+      { "polo": "seco", "frase": "Você é perfeccionista e raramente fica satisfeito com o próprio trabalho?" },
+      { "polo": "umido", "frase": "Você é flexível e aberto a diferentes pontos de vista?" }
     ]
   }
 ]

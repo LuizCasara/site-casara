@@ -23,6 +23,11 @@ type StatsData = {
 
 type Period = "7d" | "30d" | "all";
 
+type GeoBreakdown = {
+  total:      number;
+  by_country: { country: string; count: number }[];
+};
+
 const EVENT_LABELS: Record<string, string> = {
   temperament_started:          "TEMP_STARTED",
   temperament_completed:        "TEMP_COMPLETED",
@@ -39,6 +44,46 @@ const EVENT_LABELS: Record<string, string> = {
   cv_download:                  "CV_DOWNLOAD",
   casamento_maps_click:         "WEDDING_MAP",
   casamento_rsvp_whatsapp_click:"WEDDING_RSVP",
+  word_session_created:         "WORD_SESSION_NEW",
+  word_session_submitted:       "WORD_SUBMIT",
+  word_session_saved:           "WORD_SAVED",
+  word_session_discarded:       "WORD_DISCARDED",
+  word_session_fixed_word_added:"WORD_FIXED_ADD",
+  quiz_session_created:         "QUIZ_SESSION_NEW",
+  quiz_session_joined:          "QUIZ_JOIN",
+  quiz_answer_submitted:        "QUIZ_ANSWER",
+  quiz_session_saved:           "QUIZ_SAVED",
+  quiz_session_discarded:       "QUIZ_DISCARDED",
+  sorteio_realizado:            "SORTEIO_RUN",
+};
+
+const EVENT_DESCRIPTIONS: Record<string, string> = {
+  temperament_started:          "Começou o teste de temperamento",
+  temperament_completed:        "Terminou o teste e viu o resultado",
+  temperament_dropout:          "Saiu no meio do teste",
+  temperament_pdf_download:     "Baixou o PDF do resultado",
+  temperament_distribution:     "Percentuais calculados ao final do teste",
+  home_time_spent:              "Tempo total na home antes de sair",
+  quote_click:                  "Gerou uma nova frase na home",
+  tip_click:                    "Gerou uma nova dica na home",
+  quick_access_click:           "Clicou num card de acesso rápido",
+  contact_click:                "Clicou num link de contato/rede social",
+  project_click:                "Abriu um projeto do portfólio",
+  app_click:                    "Abriu um mini-app a partir da listagem",
+  cv_download:                  "Baixou o currículo em PDF",
+  casamento_maps_click:         "Abriu o mapa do local do casamento",
+  casamento_rsvp_whatsapp_click:"Confirmou presença pelo WhatsApp",
+  word_session_created:         "Host criou uma sessão de Nuvem de Palavras",
+  word_session_submitted:       "Participante enviou palavra(s)",
+  word_session_saved:           "Host salvou a sessão encerrada",
+  word_session_discarded:       "Host descartou a sessão encerrada",
+  word_session_fixed_word_added:"Host adicionou palavra ao banco fixo",
+  quiz_session_created:         "Host criou uma sessão de Quiz ao Vivo",
+  quiz_session_joined:          "Participante entrou na sala do quiz",
+  quiz_answer_submitted:        "Participante respondeu uma pergunta",
+  quiz_session_saved:           "Host salvou o quiz encerrado",
+  quiz_session_discarded:       "Host descartou o quiz encerrado",
+  sorteio_realizado:            "Sorteio de nomes foi executado",
 };
 
 const TEMP_DISPLAY: Record<string, string> = {
@@ -62,6 +107,20 @@ const TEMP_TEXT_COLOR: Record<string, string> = {
   Fleumatico:  "text-green-400",
 };
 
+const regionNames = typeof Intl !== "undefined" && "DisplayNames" in Intl
+  ? new Intl.DisplayNames(["pt-BR"], { type: "region" })
+  : null;
+
+function countryLabel(code: string): string {
+  if (!code) return code;
+  try {
+    const name = regionNames?.of(code.toUpperCase());
+    return name && name !== code.toUpperCase() ? `${code} - ${name}` : code;
+  } catch {
+    return code;
+  }
+}
+
 function HBar({ value, max }: { value: number; max: number }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
   return (
@@ -71,7 +130,33 @@ function HBar({ value, max }: { value: number; max: number }) {
   );
 }
 
+function GeoBreakdownInline({ data, loading }: { data: GeoBreakdown | undefined; loading: boolean }) {
+  if (loading) {
+    return <p className="text-green-900 text-[10px] pl-4 py-1.5">CARREGANDO_GEO<span className="animate-pulse">...</span></p>;
+  }
+  if (!data) return null;
+  if (data.by_country.length === 0) {
+    return <p className="text-green-900 text-[10px] pl-4 py-1.5">SEM_DADOS_DE_GEO</p>;
+  }
+  const max = Math.max(...data.by_country.map(c => c.count), 1);
+  return (
+    <div className="pl-3 ml-1 mt-1.5 mb-2 border-l border-green-900/50 space-y-1.5">
+      {data.by_country.map(c => (
+        <div key={c.country} className="pl-2">
+          <div className="flex justify-between text-[10px] mb-0.5">
+            <span className="text-green-600">{countryLabel(c.country)}</span>
+            <span className="text-green-800">{c.count}</span>
+          </div>
+          <HBar value={c.count} max={max} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function TimelineChart({ data }: { data: { day: string; count: number }[] }) {
+  const [hovered, setHovered] = useState<number | null>(null);
+
   if (data.length < 2) return <p className="text-green-900 text-xs">NO_DATA</p>;
 
   const W = 800;
@@ -88,9 +173,27 @@ function TimelineChart({ data }: { data: { day: string; count: number }[] }) {
   const line = pts.map(([x, y]) => `${x},${y}`).join(" ");
   const area = [`${PAD},${H}`, ...pts.map(([x, y]) => `${x},${y}`), `${W - PAD},${H}`].join(" ");
 
+  const fmtDay = (day: string) => {
+    const [, m, d] = day.split("-");
+    return `${d}/${m}`;
+  };
+
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" preserveAspectRatio="none">
+      <div className="flex items-baseline justify-between text-xs mb-1 px-1 h-4">
+        <span className="text-green-500">
+          {hovered !== null ? `${fmtDay(data[hovered].day)}` : ""}
+        </span>
+        <span className="text-green-300 font-bold">
+          {hovered !== null ? `${data[hovered].count} eventos` : ""}
+        </span>
+      </div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full"
+        preserveAspectRatio="none"
+        onMouseLeave={() => setHovered(null)}
+      >
         <defs>
           <linearGradient id="tl" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%"   stopColor="#4ade80" stopOpacity="0.35" />
@@ -99,8 +202,23 @@ function TimelineChart({ data }: { data: { day: string; count: number }[] }) {
         </defs>
         <polygon points={area} fill="url(#tl)" />
         <polyline points={line} fill="none" stroke="#4ade80" strokeWidth="1.5" />
+        {hovered !== null && (
+          <line x1={pts[hovered][0]} y1={0} x2={pts[hovered][0]} y2={H} stroke="#4ade80" strokeOpacity={0.25} strokeWidth={1} />
+        )}
         {pts.map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r="2" fill="#4ade80" />
+          <circle key={i} cx={x} cy={y} r={hovered === i ? 3.5 : 2} fill="#4ade80" />
+        ))}
+        {/* Área de toque maior e invisível por ponto, só pra facilitar o hover */}
+        {pts.map(([x, y], i) => (
+          <circle
+            key={`hit-${i}`}
+            cx={x}
+            cy={y}
+            r={10}
+            fill="transparent"
+            style={{ pointerEvents: "all" }}
+            onMouseEnter={() => setHovered(i)}
+          />
         ))}
       </svg>
       <div className="flex justify-between text-green-900 text-xs mt-1 px-1">
@@ -139,6 +257,11 @@ export default function StatsPage() {
   const [period, setPeriod]   = useState<Period>("all");
   const [clock, setClock]     = useState("");
 
+  const [expandedRoute, setExpandedRoute] = useState<string | null>(null);
+  const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
+  const [geoCache, setGeoCache]     = useState<Record<string, GeoBreakdown>>({});
+  const [geoLoading, setGeoLoading] = useState<Record<string, boolean>>({});
+
   useEffect(() => {
     const tick = () =>
       setClock(
@@ -159,7 +282,39 @@ export default function StatsPage() {
       .then(setData)
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    // Breakdowns de geo são por período — descarta o que já foi expandido/cacheado.
+    setExpandedRoute(null);
+    setExpandedEvent(null);
+    setGeoCache({});
+    setGeoLoading({});
   }, [period]);
+
+  async function fetchGeo(key: string, params: string) {
+    if (geoCache[key] || geoLoading[key]) return;
+    setGeoLoading(prev => ({ ...prev, [key]: true }));
+    try {
+      const res  = await fetch(`/api/metrics/geo-breakdown?${params}&period=${period}`);
+      const json = await res.json();
+      setGeoCache(prev => ({ ...prev, [key]: json }));
+    } catch {
+      // silencioso — o painel simplesmente não expande
+    } finally {
+      setGeoLoading(prev => ({ ...prev, [key]: false }));
+    }
+  }
+
+  function toggleRouteGeo(route: string) {
+    if (expandedRoute === route) { setExpandedRoute(null); return; }
+    setExpandedRoute(route);
+    fetchGeo(`route:${route}`, `route=${encodeURIComponent(route)}`);
+  }
+
+  function toggleEventGeo(eventName: string) {
+    if (expandedEvent === eventName) { setExpandedEvent(null); return; }
+    setExpandedEvent(eventName);
+    fetchGeo(`event:${eventName}`, `event_name=${encodeURIComponent(eventName)}`);
+  }
 
   const maxEvent   = data ? Math.max(...data.by_event.map(e => e.count),   1) : 1;
   const maxRoute   = data ? Math.max(...data.by_route.map(r => r.count),   1) : 1;
@@ -325,13 +480,29 @@ export default function StatsPage() {
               <div className="space-y-3 overflow-y-auto max-h-80 pr-1">
                 {data.by_event.map(e => (
                   <div key={e.event_name}>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-green-500 truncate">
-                        {EVENT_LABELS[e.event_name] ?? e.event_name}
-                      </span>
-                      <span className="text-green-800 ml-2 shrink-0">{e.count}</span>
-                    </div>
-                    <HBar value={e.count} max={maxEvent} />
+                    <button
+                      type="button"
+                      onClick={() => toggleEventGeo(e.event_name)}
+                      className="w-full text-left bg-transparent border-0 p-0 m-0 cursor-pointer"
+                    >
+                      <div className="flex justify-between items-baseline gap-2 text-xs mb-1">
+                        <span className="text-green-500 truncate shrink-0 flex items-center gap-1">
+                          <span className={`text-green-800 inline-block transition-transform ${expandedEvent === e.event_name ? "rotate-90" : ""}`}>›</span>
+                          {EVENT_LABELS[e.event_name] ?? e.event_name}
+                        </span>
+                        <span className="text-green-900 truncate italic">
+                          {EVENT_DESCRIPTIONS[e.event_name] ?? ""}
+                        </span>
+                        <span className="text-green-800 ml-2 shrink-0">{e.count}</span>
+                      </div>
+                      <HBar value={e.count} max={maxEvent} />
+                    </button>
+                    {expandedEvent === e.event_name && (
+                      <GeoBreakdownInline
+                        data={geoCache[`event:${e.event_name}`]}
+                        loading={!!geoLoading[`event:${e.event_name}`]}
+                      />
+                    )}
                   </div>
                 ))}
               </div>
@@ -346,11 +517,26 @@ export default function StatsPage() {
               <div className="space-y-3">
                 {data.by_route.map(r => (
                   <div key={r.route}>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-green-500 truncate max-w-[75%]">{r.route || "/"}</span>
-                      <span className="text-green-800">{r.count}</span>
-                    </div>
-                    <HBar value={r.count} max={maxRoute} />
+                    <button
+                      type="button"
+                      onClick={() => toggleRouteGeo(r.route)}
+                      className="w-full text-left bg-transparent border-0 p-0 m-0 cursor-pointer"
+                    >
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-green-500 truncate max-w-[75%] flex items-center gap-1">
+                          <span className={`text-green-800 inline-block transition-transform ${expandedRoute === r.route ? "rotate-90" : ""}`}>›</span>
+                          {r.route || "/"}
+                        </span>
+                        <span className="text-green-800">{r.count}</span>
+                      </div>
+                      <HBar value={r.count} max={maxRoute} />
+                    </button>
+                    {expandedRoute === r.route && (
+                      <GeoBreakdownInline
+                        data={geoCache[`route:${r.route}`]}
+                        loading={!!geoLoading[`route:${r.route}`]}
+                      />
+                    )}
                   </div>
                 ))}
               </div>
@@ -362,7 +548,7 @@ export default function StatsPage() {
                   {data.by_country.length > 0 ? data.by_country.map(c => (
                     <div key={c.country}>
                       <div className="flex justify-between text-xs mb-1">
-                        <span className="text-green-500">{c.country}</span>
+                        <span className="text-green-500">{countryLabel(c.country)}</span>
                         <span className="text-green-800">{c.count}</span>
                       </div>
                       <HBar value={c.count} max={maxCountry} />

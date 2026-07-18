@@ -167,41 +167,53 @@ const QRCodeGenerator = () => {
                 }
                 return smsContent;
 
-            case "vcard":
+            case "vcard": {
+                // Per RFC 6350, backslash/comma/semicolon/newline are structural
+                // separators in vCard field values and must be escaped, or values
+                // like a Brazilian address ("Rua X, 123 - Bairro, Cidade") corrupt
+                // the field boundaries and break the generated contact card.
+                const escapeVCardValue = (value: string) =>
+                    value
+                        .replace(/\\/g, "\\\\")
+                        .replace(/,/g, "\\,")
+                        .replace(/;/g, "\\;")
+                        .replace(/\n/g, "\\n");
+
                 const v = values.vcard;
                 let vCardContent = "BEGIN:VCARD\nVERSION:3.0\n";
 
                 if (v.firstName || v.lastName) {
-                    vCardContent += `N:${v.lastName};${v.firstName};;;\n`;
-                    vCardContent += `FN:${v.firstName} ${v.lastName}\n`;
+                    vCardContent += `N:${escapeVCardValue(v.lastName)};${escapeVCardValue(v.firstName)};;;\n`;
+                    vCardContent += `FN:${escapeVCardValue(`${v.firstName} ${v.lastName}`.trim())}\n`;
                 }
 
                 if (v.organization) {
-                    vCardContent += `ORG:${v.organization}\n`;
+                    vCardContent += `ORG:${escapeVCardValue(v.organization)}\n`;
                 }
 
                 if (v.title) {
-                    vCardContent += `TITLE:${v.title}\n`;
+                    vCardContent += `TITLE:${escapeVCardValue(v.title)}\n`;
                 }
 
                 if (v.phone) {
-                    vCardContent += `TEL;TYPE=WORK,VOICE:${v.phone}\n`;
+                    vCardContent += `TEL;TYPE=WORK,VOICE:${escapeVCardValue(v.phone)}\n`;
                 }
 
                 if (v.email) {
-                    vCardContent += `EMAIL;TYPE=PREF,INTERNET:${v.email}\n`;
+                    vCardContent += `EMAIL;TYPE=PREF,INTERNET:${escapeVCardValue(v.email)}\n`;
                 }
 
                 if (v.website) {
-                    vCardContent += `URL:${v.website}\n`;
+                    vCardContent += `URL:${escapeVCardValue(v.website)}\n`;
                 }
 
                 if (v.address) {
-                    vCardContent += `ADR;TYPE=WORK:;;${v.address};;;;\n`;
+                    vCardContent += `ADR;TYPE=WORK:;;${escapeVCardValue(v.address)};;;;\n`;
                 }
 
                 vCardContent += "END:VCARD";
                 return vCardContent;
+            }
 
             default:
                 return "";
@@ -654,13 +666,19 @@ const QRCodeGenerator = () => {
                                                     type="color"
                                                     id="fgColor"
                                                     value={values.fgColor}
-                                                    onChange={(e) => handleInputChange("fgColor", e.target.value)}
+                                                    onChange={(e) => {
+                                                        handleInputChange("fgColor", e.target.value);
+                                                        setSelectedPreset(-1);
+                                                    }}
                                                     className="h-10 w-10 border rounded-l-md"
                                                 />
                                                 <input
                                                     type="text"
                                                     value={values.fgColor}
-                                                    onChange={(e) => handleInputChange("fgColor", e.target.value)}
+                                                    onChange={(e) => {
+                                                        handleInputChange("fgColor", e.target.value);
+                                                        setSelectedPreset(-1);
+                                                    }}
                                                     className="flex-1 p-2 border-l-0 rounded-r-md font-mono"
                                                 />
                                             </div>
@@ -674,13 +692,19 @@ const QRCodeGenerator = () => {
                                                     type="color"
                                                     id="bgColor"
                                                     value={values.bgColor}
-                                                    onChange={(e) => handleInputChange("bgColor", e.target.value)}
+                                                    onChange={(e) => {
+                                                        handleInputChange("bgColor", e.target.value);
+                                                        setSelectedPreset(-1);
+                                                    }}
                                                     className="h-10 w-10 border rounded-l-md"
                                                 />
                                                 <input
                                                     type="text"
                                                     value={values.bgColor}
-                                                    onChange={(e) => handleInputChange("bgColor", e.target.value)}
+                                                    onChange={(e) => {
+                                                        handleInputChange("bgColor", e.target.value);
+                                                        setSelectedPreset(-1);
+                                                    }}
                                                     className="flex-1 p-2 border-l-0 rounded-r-md font-mono"
                                                 />
                                             </div>

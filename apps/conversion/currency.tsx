@@ -32,37 +32,23 @@ const CurrencyConverter = () => {
     const [rates, setRates] = useState(null);
     const [lastUpdate, setLastUpdate] = useState(null);
 
-    // Mock exchange rates (in a real app, these would come from an API)
+    // Fetch live exchange rates
     useEffect(() => {
-        // Simulate API call to get exchange rates
         const fetchRates = async () => {
             setLoading(true);
 
-            const values = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-
-            // For this demo, we'll use mock data
-            // setTimeout(() => {
-            //   const mockRates = {
-            //     base: "USD",
-            //     rates: {
-            //       USD: 1,
-            //       EUR: 0.85,
-            //       BRL: 5.40,
-            //       GBP: 0.75,
-            //       JPY: 110.32,
-            //       CAD: 1.25,
-            //       AUD: 1.35,
-            //       CHF: 0.92,
-            //       CNY: 6.45,
-            //       ARS: 97.5,
-            //       MXN: 20.1
-            //     }
-            //   };
-
-            setRates(await values.json());
-            setLastUpdate(new Date().toLocaleString());
-            setLoading(false);
-            //}, 1000);
+            try {
+                const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                if (!response.ok) {
+                    throw new Error(`Request failed with status ${response.status}`);
+                }
+                setRates(await response.json());
+                setLastUpdate(new Date().toLocaleString());
+            } catch {
+                setError("Não foi possível carregar as taxas de câmbio no momento. Tente novamente mais tarde.");
+            } finally {
+                setLoading(false);
+            }
         };
 
         fetchRates();

@@ -13,9 +13,15 @@ function getSql(): NeonQueryFunction<false, false> {
     return _sql;
 }
 
-// Proxy que repassa a tagged template / chamadas para a conexão lazy,
-// evitando que `neon()` seja invocado no carregamento do módulo (build time).
-const sql = ((...args: Parameters<NeonQueryFunction<false, false>>) =>
-    getSql()(...args)) as NeonQueryFunction<false, false>;
+// Proxy que repassa a tagged template / chamadas e propriedades (ex: sql.transaction)
+// para a conexão lazy, evitando que `neon()` seja invocado no carregamento do módulo (build time).
+const sql = new Proxy(function () {} as unknown as NeonQueryFunction<false, false>, {
+    apply(_target, _thisArg, args) {
+        return (getSql() as unknown as (...a: unknown[]) => unknown)(...args);
+    },
+    get(_target, prop, receiver) {
+        return Reflect.get(getSql(), prop, receiver);
+    },
+}) as NeonQueryFunction<false, false>;
 
 export default sql;

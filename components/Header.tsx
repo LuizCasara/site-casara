@@ -26,7 +26,7 @@ const Header = () => {
   const {lang, toggle} = useLang();
   const links = navLinks[lang];
 
-  if (pathname.startsWith('/casamento')) return null;
+  if (pathname.startsWith('/casamento') || pathname.startsWith('/w/') || pathname.startsWith('/q/')) return null;
 
   return (
     <header className="sticky top-0 z-10 bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800/60">

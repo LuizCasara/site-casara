@@ -99,3 +99,42 @@ export const trackCasamentoMapsClick = () =>
 
 export const trackCasamentoRsvpWhatsapp = () =>
   trackEvent('casamento_rsvp_whatsapp_click');
+
+// ─── Nuvem de Palavras ──────────────────────────────────────────────────────
+
+export const trackWordSessionCreated = (sessionId: string, mode: 'fixed' | 'open') =>
+  trackEvent('word_session_created', { session_id: sessionId, mode });
+
+export const trackWordSessionSubmitted = (sessionId: string, mode: 'fixed' | 'open') =>
+  trackEvent('word_session_submitted', { session_id: sessionId, mode });
+
+export const trackWordSessionSaved = (sessionId: string) =>
+  trackEvent('word_session_saved', { session_id: sessionId });
+
+export const trackWordSessionDiscarded = (sessionId: string) =>
+  trackEvent('word_session_discarded', { session_id: sessionId });
+
+export const trackWordSessionFixedWordAdded = (sessionId: string, count: number) =>
+  trackEvent('word_session_fixed_word_added', { session_id: sessionId, count });
+
+// ─── Quiz ao Vivo ───────────────────────────────────────────────────────────
+
+export const trackQuizSessionCreated = (sessionId: string, questionCount: number) =>
+  trackEvent('quiz_session_created', { session_id: sessionId, question_count: questionCount });
+
+export const trackQuizSessionJoined = (sessionId: string) =>
+  trackEvent('quiz_session_joined', { session_id: sessionId });
+
+export const trackQuizAnswerSubmitted = (sessionId: string) =>
+  trackEvent('quiz_answer_submitted', { session_id: sessionId });
+
+export const trackQuizSessionSaved = (sessionId: string) =>
+  trackEvent('quiz_session_saved', { session_id: sessionId });
+
+export const trackQuizSessionDiscarded = (sessionId: string) =>
+  trackEvent('quiz_session_discarded', { session_id: sessionId });
+
+// ─── Sorteio ──────────────────────────────────────────────────────────────
+
+export const trackSorteioRealizado = (entryCount: number, winnerCount: number) =>
+  trackEvent('sorteio_realizado', { entry_count: entryCount, winner_count: winnerCount });

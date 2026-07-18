@@ -96,6 +96,30 @@ const appCategories = [
                 path: "personalization/image-to-svg"
             }
         ]
+    },
+    {
+        id: "dinamicas",
+        title: "Dinâmicas ao Vivo",
+        apps: [
+            {
+                id: "nuvem-de-palavras",
+                title: "Nuvem de Palavras",
+                description: "Colete palavras dos participantes ao vivo via QR code e veja a nuvem crescer em tempo real.",
+                path: "dinamicas/nuvem-de-palavras"
+            },
+            {
+                id: "quiz-ao-vivo",
+                title: "Quiz ao Vivo",
+                description: "Crie um quiz com perguntas de múltipla escolha, tempo e ranking em tempo real.",
+                path: "dinamicas/quiz-ao-vivo"
+            },
+            {
+                id: "sorteio",
+                title: "Sorteio",
+                description: "Cole uma lista de nomes separados por vírgula e sorteie vencedores com animação.",
+                path: "dinamicas/sorteio"
+            }
+        ]
     }
 ];
 
@@ -175,6 +199,18 @@ export default function AppPage() {
                 // Desenvolvimento Pessoal apps
                 else if (foundApp.path === "desenvolvimento-pessoal/descubra-seu-temperamento") {
                     const importedModule = await import('@/apps/desenvolvimento-pessoal/descubra-seu-temperamento');
+                    Component = importedModule.default;
+                }
+
+                // Dinâmicas ao Vivo apps
+                else if (foundApp.path === "dinamicas/nuvem-de-palavras") {
+                    const importedModule = await import('@/apps/dinamicas/nuvem-de-palavras');
+                    Component = importedModule.default;
+                } else if (foundApp.path === "dinamicas/quiz-ao-vivo") {
+                    const importedModule = await import('@/apps/dinamicas/quiz-ao-vivo');
+                    Component = importedModule.default;
+                } else if (foundApp.path === "dinamicas/sorteio") {
+                    const importedModule = await import('@/apps/dinamicas/sorteio');
                     Component = importedModule.default;
                 } else {
                     console.error(`App component not found for path: ${foundApp.path}`);

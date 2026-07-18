@@ -19,12 +19,6 @@ const KitchenUnitsConverter = () => {
         {id: "honey", name: "Mel", cupToGram: 340, tbspToGram: 21, tspToGram: 7},
     ];
 
-    // Define unit types
-    const unitTypes = [
-        {id: "volume", name: "Volume", units: ["cup", "tbsp", "tsp", "ml"]},
-        {id: "weight", name: "Peso", units: ["g", "kg", "oz", "lb"]},
-    ];
-
     // State for input values
     const [values, setValues] = useState({
         amount: "",
@@ -54,15 +48,6 @@ const KitchenUnitsConverter = () => {
         return ingredients.find(ing => ing.id === values.ingredient);
     };
 
-    // Check if a unit is volume or weight
-    const isVolumeUnit = (unit) => {
-        return ["cup", "tbsp", "tsp", "ml"].includes(unit);
-    };
-
-    const isWeightUnit = (unit) => {
-        return ["g", "kg", "oz", "lb"].includes(unit);
-    };
-
     // Convert between units
     const convertUnits = () => {
         // Clear previous results and errors
@@ -85,106 +70,131 @@ const KitchenUnitsConverter = () => {
             return;
         }
 
-        // Check if conversion is possible
-        const fromIsVolume = isVolumeUnit(values.fromUnit);
-        const toIsVolume = isVolumeUnit(values.toUnit);
-        const fromIsWeight = isWeightUnit(values.fromUnit);
-        const toIsWeight = isWeightUnit(values.toUnit);
-
         // If both units are of the same type (volume to volume or weight to weight)
         // or if we have conversion factors for the ingredient
         let convertedAmount;
         let conversionPath = "";
 
-        // First convert to grams or ml (base units)
+        // First convert to grams or ml (base units), tracking WHICH base unit we
+        // landed in — grams and milliliters are not interchangeable 1:1 for most
+        // ingredients (e.g. 1 cup of oil is 240ml but only ~221g), so a later step
+        // must never treat one as the other without an explicit conversion factor.
         let baseAmount;
+        let baseUnit; // "g" | "ml"
 
         // Convert from unit to base unit (g or ml)
         if (values.fromUnit === "cup") {
             if (ingredient.cupToGram) {
                 baseAmount = amount * ingredient.cupToGram;
+                baseUnit = "g";
                 conversionPath = `${amount} xícara(s) = ${baseAmount} g`;
             } else if (ingredient.cupToMl) {
                 baseAmount = amount * ingredient.cupToMl;
+                baseUnit = "ml";
                 conversionPath = `${amount} xícara(s) = ${baseAmount} ml`;
             }
         } else if (values.fromUnit === "tbsp") {
             if (ingredient.tbspToGram) {
                 baseAmount = amount * ingredient.tbspToGram;
+                baseUnit = "g";
                 conversionPath = `${amount} colher(es) de sopa = ${baseAmount} g`;
             } else if (ingredient.tbspToMl) {
                 baseAmount = amount * ingredient.tbspToMl;
+                baseUnit = "ml";
                 conversionPath = `${amount} colher(es) de sopa = ${baseAmount} ml`;
             }
         } else if (values.fromUnit === "tsp") {
             if (ingredient.tspToGram) {
                 baseAmount = amount * ingredient.tspToGram;
+                baseUnit = "g";
                 conversionPath = `${amount} colher(es) de chá = ${baseAmount} g`;
             } else if (ingredient.tspToMl) {
                 baseAmount = amount * ingredient.tspToMl;
+                baseUnit = "ml";
                 conversionPath = `${amount} colher(es) de chá = ${baseAmount} ml`;
             }
         } else if (values.fromUnit === "g") {
             baseAmount = amount;
+            baseUnit = "g";
             conversionPath = `${amount} g`;
         } else if (values.fromUnit === "kg") {
             baseAmount = amount * 1000;
+            baseUnit = "g";
             conversionPath = `${amount} kg = ${baseAmount} g`;
         } else if (values.fromUnit === "ml") {
             baseAmount = amount;
+            baseUnit = "ml";
             conversionPath = `${amount} ml`;
         } else if (values.fromUnit === "oz") {
             baseAmount = amount * 28.35;
+            baseUnit = "g";
             conversionPath = `${amount} oz = ${baseAmount} g`;
         } else if (values.fromUnit === "lb") {
             baseAmount = amount * 453.592;
+            baseUnit = "g";
             conversionPath = `${amount} lb = ${baseAmount} g`;
         }
 
-        // Now convert from base unit to target unit
+        if (baseAmount === undefined) {
+            setError("Não foi possível realizar esta conversão para o ingrediente selecionado.");
+            return;
+        }
+
+        // Now convert from base unit to target unit — only if the target's own
+        // conversion factor is expressed in the SAME base unit we just landed in.
         if (values.toUnit === "cup") {
-            if (ingredient.cupToGram && baseAmount) {
+            if (baseUnit === "g" && ingredient.cupToGram) {
                 convertedAmount = baseAmount / ingredient.cupToGram;
                 conversionPath += ` = ${convertedAmount.toFixed(2)} xícara(s)`;
-            } else if (ingredient.cupToMl && baseAmount) {
+            } else if (baseUnit === "ml" && ingredient.cupToMl) {
                 convertedAmount = baseAmount / ingredient.cupToMl;
                 conversionPath += ` = ${convertedAmount.toFixed(2)} xícara(s)`;
             }
         } else if (values.toUnit === "tbsp") {
-            if (ingredient.tbspToGram && baseAmount) {
+            if (baseUnit === "g" && ingredient.tbspToGram) {
                 convertedAmount = baseAmount / ingredient.tbspToGram;
                 conversionPath += ` = ${convertedAmount.toFixed(2)} colher(es) de sopa`;
-            } else if (ingredient.tbspToMl && baseAmount) {
+            } else if (baseUnit === "ml" && ingredient.tbspToMl) {
                 convertedAmount = baseAmount / ingredient.tbspToMl;
                 conversionPath += ` = ${convertedAmount.toFixed(2)} colher(es) de sopa`;
             }
         } else if (values.toUnit === "tsp") {
-            if (ingredient.tspToGram && baseAmount) {
+            if (baseUnit === "g" && ingredient.tspToGram) {
                 convertedAmount = baseAmount / ingredient.tspToGram;
                 conversionPath += ` = ${convertedAmount.toFixed(2)} colher(es) de chá`;
-            } else if (ingredient.tspToMl && baseAmount) {
+            } else if (baseUnit === "ml" && ingredient.tspToMl) {
                 convertedAmount = baseAmount / ingredient.tspToMl;
                 conversionPath += ` = ${convertedAmount.toFixed(2)} colher(es) de chá`;
             }
         } else if (values.toUnit === "g") {
-            convertedAmount = baseAmount;
-            conversionPath += ` = ${convertedAmount.toFixed(2)} g`;
+            if (baseUnit === "g") {
+                convertedAmount = baseAmount;
+                conversionPath += ` = ${convertedAmount.toFixed(2)} g`;
+            }
         } else if (values.toUnit === "kg") {
-            convertedAmount = baseAmount / 1000;
-            conversionPath += ` = ${convertedAmount.toFixed(4)} kg`;
+            if (baseUnit === "g") {
+                convertedAmount = baseAmount / 1000;
+                conversionPath += ` = ${convertedAmount.toFixed(4)} kg`;
+            }
         } else if (values.toUnit === "ml") {
-            convertedAmount = baseAmount;
-            conversionPath += ` = ${convertedAmount.toFixed(2)} ml`;
+            if (baseUnit === "ml") {
+                convertedAmount = baseAmount;
+                conversionPath += ` = ${convertedAmount.toFixed(2)} ml`;
+            }
         } else if (values.toUnit === "oz") {
-            convertedAmount = baseAmount / 28.35;
-            conversionPath += ` = ${convertedAmount.toFixed(2)} oz`;
+            if (baseUnit === "g") {
+                convertedAmount = baseAmount / 28.35;
+                conversionPath += ` = ${convertedAmount.toFixed(2)} oz`;
+            }
         } else if (values.toUnit === "lb") {
-            convertedAmount = baseAmount / 453.592;
-            conversionPath += ` = ${convertedAmount.toFixed(4)} lb`;
+            if (baseUnit === "g") {
+                convertedAmount = baseAmount / 453.592;
+                conversionPath += ` = ${convertedAmount.toFixed(4)} lb`;
+            }
         }
 
         if (convertedAmount === undefined) {
-            setError("Não foi possível realizar esta conversão para o ingrediente selecionado.");
+            setError(`Não é possível converter para ${formatUnitName(values.toUnit).toLowerCase()} usando ${ingredient.name.toLowerCase()}, pois não há um fator de conversão (densidade) cadastrado entre volume e peso para este ingrediente nessa unidade.`);
             return;
         }
 

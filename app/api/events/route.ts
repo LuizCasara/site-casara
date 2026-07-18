@@ -1,5 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server';
 import sql from '@/lib/db';
+import { parseBrowser } from '@/lib/request-meta';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,13 +12,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'event_name is required' }, { status: 400 });
     }
 
+    const country = request.headers.get('x-vercel-ip-country') ?? null;
+    const city    = request.headers.get('x-vercel-ip-city')    ?? null;
+    const browser = parseBrowser(request.headers.get('user-agent') ?? '');
+
     await sql`
-      INSERT INTO events (event_name, route, payload, resolution)
+      INSERT INTO events (event_name, route, payload, resolution, country, city, browser)
       VALUES (
         ${event_name},
         ${route ?? null},
         ${JSON.stringify(payload)},
-        ${resolution ?? null}
+        ${resolution ?? null},
+        ${country},
+        ${city},
+        ${browser}
       )
     `;
 

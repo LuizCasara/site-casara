@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {Fa0, Fa3, FaFileArrowDown, FaMoneyBillTrendUp, FaPhotoFilm, FaSpoon} from "react-icons/fa6";
+import {Fa0, Fa3, FaCloud, FaDice, FaFileArrowDown, FaMoneyBillTrendUp, FaPhotoFilm, FaSpoon, FaTrophy} from "react-icons/fa6";
 import {FaBitcoin, FaCoins, FaPercent, FaQrcode, FaBrain} from "react-icons/fa";
 import {useLang} from "@/context/LanguageContext";
 import {trackAppClick} from "@/utils/analytics";
@@ -94,6 +94,30 @@ const appCategories = [
                 title: "PNG/JPG para SVG",
                 description: "Converta imagens para formato vetorial SVG.",
                 icon: <FaPhotoFilm size={18}/>,
+            }
+        ]
+    },
+    {
+        id: "dinamicas",
+        title: {pt: "Dinâmicas ao Vivo", en: "Live Activities"},
+        apps: [
+            {
+                id: "nuvem-de-palavras",
+                title: "Nuvem de Palavras",
+                description: "Colete palavras dos participantes ao vivo via QR code e veja a nuvem crescer em tempo real.",
+                icon: <FaCloud size={18}/>,
+            },
+            {
+                id: "quiz-ao-vivo",
+                title: "Quiz ao Vivo",
+                description: "Crie um quiz com perguntas de múltipla escolha, tempo e ranking em tempo real.",
+                icon: <FaTrophy size={18}/>,
+            },
+            {
+                id: "sorteio",
+                title: "Sorteio",
+                description: "Cole uma lista de nomes separados por vírgula e sorteie vencedores com animação.",
+                icon: <FaDice size={18}/>,
             }
         ]
     }
