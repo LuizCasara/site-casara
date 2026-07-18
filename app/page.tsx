@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useEffect, useState} from "react";
-import {FaBookOpen, FaChartLine, FaCode, FaLaugh, FaLightbulb, FaRandom} from "react-icons/fa";
+import {FaBookOpen, FaCloud, FaDice, FaLaugh, FaLightbulb, FaQuestionCircle} from "react-icons/fa";
 import {trackGenerateQuote, trackHomePageVisit, trackQuickAccessLink, trackReceiveTip} from "@/utils/analytics";
 import {useLang} from "@/context/LanguageContext";
 import {TextScramble} from "@/components/ui/text-scramble";
@@ -28,10 +28,10 @@ const translations = {
     appsDesc: "Ferramentas que construí para uso no dia a dia.",
     seeAll: "Ver todos →",
     apps: [
-      {label: "Regra de Três"},
-      {label: "Juros Compostos"},
-      {label: "Gerador QR"},
       {label: "Temperamento"},
+      {label: "Nuvem de Palavras"},
+      {label: "Sorteio"},
+      {label: "Quiz ao Vivo"},
     ],
     funTitle: "Diversão",
     funDesc: "Para os momentos de inspiração (ou procrastinação).",
@@ -73,10 +73,10 @@ const translations = {
     appsDesc: "Tools I built for everyday use.",
     seeAll: "See all →",
     apps: [
-      {label: "Rule of Three"},
-      {label: "Compound Interest"},
-      {label: "QR Generator"},
       {label: "Temperament"},
+      {label: "Word Cloud"},
+      {label: "Raffle"},
+      {label: "Live Quiz"},
     ],
     funTitle: "Fun",
     funDesc: "For moments of inspiration (or procrastination).",
@@ -102,10 +102,10 @@ const translations = {
 };
 
 const appLinks = [
-  {href: "/app/rule-of-three", icon: <FaRandom className="text-green-500" size={20} />, trackLabel: "Regra de Três"},
-  {href: "/app/compound-interest", icon: <FaChartLine className="text-green-500" size={20} />, trackLabel: "Juros Compostos"},
-  {href: "/app/qr-code", icon: <FaCode className="text-green-500" size={20} />, trackLabel: "Gerador QR Code"},
   {href: "/app/descubra-seu-temperamento", icon: <FaLaugh className="text-green-500" size={20} />, trackLabel: "Temperamento"},
+  {href: "/app/nuvem-de-palavras", icon: <FaCloud className="text-green-500" size={20} />, trackLabel: "Nuvem de Palavras"},
+  {href: "/app/sorteio", icon: <FaDice className="text-green-500" size={20} />, trackLabel: "Sorteio"},
+  {href: "/app/quiz-ao-vivo", icon: <FaQuestionCircle className="text-green-500" size={20} />, trackLabel: "Quiz ao Vivo"},
 ];
 
 export default function Home() {
