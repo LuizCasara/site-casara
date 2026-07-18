@@ -49,8 +49,8 @@ const DescubraSeuTemperamento = () => {
     const [showTest, setShowTest] = useState(false);
     const pdfContentRef = useRef(null);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [answers, setAnswers] = useState<Record<number, { question: any; answer: number }>>({});
-    const [answerHistory, setAnswerHistory] = useState<{ questionIndex: number; question: any; answer: number }[]>([]);
+    const [answers, setAnswers] = useState<Record<number, { question: any; answer: string }>>({});
+    const [answerHistory, setAnswerHistory] = useState<{ questionIndex: number; question: any; answer: string }[]>([]);
     const [testQuestions, setTestQuestions] = useState<any[]>([]);
     const [testComplete, setTestComplete] = useState(false);
     const [results, setResults] = useState<any>(null);
@@ -68,8 +68,7 @@ const DescubraSeuTemperamento = () => {
     useEffect(() => {
         const questions = temperamentosJson.map(item => ({
             id: item.id,
-            question: item.pergunta,
-            classificacao: item.classificacao,
+            opcoes: [...item.opcoes].sort(() => Math.random() - 0.5),
         }));
         setTestQuestions(questions.sort(() => Math.random() - 0.5));
     }, []);
@@ -157,20 +156,16 @@ const DescubraSeuTemperamento = () => {
         setShowTest(true);
     };
 
-    const answerQuestion = async (answer: number) => {
+    const answerQuestion = async (polo: string) => {
         const currentQuestion = testQuestions[currentQuestionIndex];
-        const classificacao: string[] = currentQuestion?.classificacao || [];
 
-        // Compute new scores locally so calculateResults receives accurate data
+        const key = (polo.charAt(0).toUpperCase() + polo.slice(1)) as keyof Scores;
         const newTotalScore = {...totalScore};
-        classificacao.forEach(type => {
-            const key = (type.charAt(0).toUpperCase() + type.slice(1)) as keyof Scores;
-            if (key in newTotalScore) newTotalScore[key] += answer;
-        });
+        if (key in newTotalScore) newTotalScore[key] += 1;
 
-        const newAnswers = {...answers, [currentQuestionIndex]: {question: currentQuestion, answer}};
+        const newAnswers = {...answers, [currentQuestionIndex]: {question: currentQuestion, answer: polo}};
         setAnswers(newAnswers);
-        setAnswerHistory(prev => [...prev, {questionIndex: currentQuestionIndex, question: currentQuestion, answer}]);
+        setAnswerHistory(prev => [...prev, {questionIndex: currentQuestionIndex, question: currentQuestion, answer: polo}]);
         setTotalScore(newTotalScore);
 
         if (currentQuestionIndex < testQuestions.length - 1) {
@@ -184,7 +179,6 @@ const DescubraSeuTemperamento = () => {
         if (currentQuestionIndex === 0) return;
 
         const lastEntry = answerHistory[answerHistory.length - 1];
-        const lastClassificacao: string[] = lastEntry.question?.classificacao || [];
 
         setAnswerHistory(prev => prev.slice(0, -1));
         setAnswers(prev => {
@@ -193,11 +187,9 @@ const DescubraSeuTemperamento = () => {
             return next;
         });
 
+        const key = (lastEntry.answer.charAt(0).toUpperCase() + lastEntry.answer.slice(1)) as keyof Scores;
         const newTotalScore = {...totalScore};
-        lastClassificacao.forEach(type => {
-            const key = (type.charAt(0).toUpperCase() + type.slice(1)) as keyof Scores;
-            if (key in newTotalScore) newTotalScore[key] -= lastEntry.answer;
-        });
+        if (key in newTotalScore) newTotalScore[key] -= 1;
 
         // Reset to empty if going back before the first answer
         setTotalScore(answerHistory.length <= 1 ? {...EMPTY_SCORES} : newTotalScore);
@@ -207,20 +199,16 @@ const DescubraSeuTemperamento = () => {
     const stopTest = async () => {
         if (currentQuestionIndex < testQuestions.length - 1) {
             const currentQuestion = testQuestions[currentQuestionIndex];
-            trackQuestionDropout(currentQuestionIndex, currentQuestion?.question || "");
+            const questionText = currentQuestion?.opcoes?.map((o: {frase: string}) => o.frase).join(" / ") || "";
+            trackQuestionDropout(currentQuestionIndex, questionText);
         }
         await calculateResults(totalScore, Object.keys(answers).length);
     };
 
-    const answerTiebreakerQuestion = async (answer: number) => {
-        const currentQuestion = tiebreakerQuestions[currentTiebreakerIndex];
-        const classificacao: string[] = currentQuestion?.classificacao || [];
-
+    const answerTiebreakerQuestion = async (polo: string) => {
+        const key = (polo.charAt(0).toUpperCase() + polo.slice(1)) as keyof Scores;
         const newTotalScore = {...totalScore};
-        classificacao.forEach(type => {
-            const key = (type.charAt(0).toUpperCase() + type.slice(1)) as keyof Scores;
-            if (key in newTotalScore) newTotalScore[key] += answer;
-        });
+        if (key in newTotalScore) newTotalScore[key] += 1;
         setTotalScore(newTotalScore);
 
         if (currentTiebreakerIndex < tiebreakerQuestions.length - 1) {
@@ -272,13 +260,12 @@ const DescubraSeuTemperamento = () => {
             const diff = Math.abs(sortedTemperaments[0].percentage - sortedTemperaments[1].percentage);
             if (diff <= TIEBREAKER_THRESHOLD) {
                 const pairKey = [sortedTemperaments[0].name, sortedTemperaments[1].name].sort().join('-');
-                const tbData = tiebreakerQuestionsJson as Record<string, {id: string; pergunta: string; classificacao: string[]}[]>;
+                const tbData = tiebreakerQuestionsJson as Record<string, {id: string; opcoes: {polo: string; frase: string}[]}[]>;
                 const tbQuestions = tbData[pairKey] ?? [];
                 if (tbQuestions.length > 0) {
                     const selected = [...tbQuestions]
                         .sort(() => Math.random() - 0.5)
-                        .slice(0, 5)
-                        .map(q => ({id: q.id, question: q.pergunta, classificacao: q.classificacao}));
+                        .map(q => ({id: q.id, opcoes: [...q.opcoes].sort(() => Math.random() - 0.5)}));
                     setTiebreakerPair([sortedTemperaments[0].name, sortedTemperaments[1].name]);
                     setTiebreakerQuestions(selected);
                     setCurrentTiebreakerIndex(0);
@@ -610,39 +597,19 @@ const DescubraSeuTemperamento = () => {
                                 </div>
                             </div>
 
-                            <div className="h-36 overflow-y-auto mb-6 content-center text-center">
-                                <h3 className="text-xl font-semibold">{testQuestions[currentQuestionIndex]?.question}</h3>
+                            <div className="mb-4 text-center">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Qual das frases abaixo mais se parece com você?</p>
                             </div>
-
-                            <div className="mb-2 text-center">
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Quanto você se identifica com
-                                    esta afirmação/pergunta?</p>
-                            </div>
-                            <div className="flex flex-wrap justify-center gap-2">
-                                <button
-                                    onClick={() => answerQuestion(0)}
-                                    className="w-28 h-16 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                                >
-                                    <span className="text-lg font-bold">Nada</span>
-                                </button>
-                                <button
-                                    onClick={() => answerQuestion(1)}
-                                    className="w-28 h-16 flex flex-col items-center justify-center bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
-                                >
-                                    <span className="text-lg font-bold">Pouco</span>
-                                </button>
-                                <button
-                                    onClick={() => answerQuestion(3)}
-                                    className="w-28 h-16 flex flex-col items-center justify-center bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-md hover:bg-yellow-200 dark:hover:bg-yellow-800/50 transition-colors"
-                                >
-                                    <span className="text-lg font-bold">Médio</span>
-                                </button>
-                                <button
-                                    onClick={() => answerQuestion(5)}
-                                    className="w-28 h-16 flex flex-col items-center justify-center bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-md hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors"
-                                >
-                                    <span className="text-lg font-bold">Totalmente</span>
-                                </button>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                {testQuestions[currentQuestionIndex]?.opcoes.map((opcao: {polo: string; frase: string}) => (
+                                    <button
+                                        key={opcao.polo}
+                                        onClick={() => answerQuestion(opcao.polo)}
+                                        className="p-4 min-h-24 flex items-center justify-center text-center bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-md border border-gray-200 dark:border-gray-700 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-900/30 dark:hover:border-blue-700 transition-colors"
+                                    >
+                                        <span className="font-medium">{opcao.frase}</span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     )}
@@ -706,39 +673,19 @@ const DescubraSeuTemperamento = () => {
                                 </div>
                             </div>
 
-                            <div className="h-36 overflow-y-auto mb-6 content-center text-center">
-                                <h3 className="text-xl font-semibold">{tiebreakerQuestions[currentTiebreakerIndex]?.question}</h3>
+                            <div className="mb-4 text-center">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Qual das frases abaixo mais se parece com você?</p>
                             </div>
-
-                            <div className="mb-2 text-center">
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Quanto você se identifica com
-                                    esta afirmação/pergunta?</p>
-                            </div>
-                            <div className="flex flex-wrap justify-center gap-2">
-                                <button
-                                    onClick={() => answerTiebreakerQuestion(0)}
-                                    className="w-28 h-16 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                                >
-                                    <span className="text-lg font-bold">Nada</span>
-                                </button>
-                                <button
-                                    onClick={() => answerTiebreakerQuestion(1)}
-                                    className="w-28 h-16 flex flex-col items-center justify-center bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
-                                >
-                                    <span className="text-lg font-bold">Pouco</span>
-                                </button>
-                                <button
-                                    onClick={() => answerTiebreakerQuestion(3)}
-                                    className="w-28 h-16 flex flex-col items-center justify-center bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-md hover:bg-yellow-200 dark:hover:bg-yellow-800/50 transition-colors"
-                                >
-                                    <span className="text-lg font-bold">Médio</span>
-                                </button>
-                                <button
-                                    onClick={() => answerTiebreakerQuestion(5)}
-                                    className="w-28 h-16 flex flex-col items-center justify-center bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-md hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors"
-                                >
-                                    <span className="text-lg font-bold">Totalmente</span>
-                                </button>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                {tiebreakerQuestions[currentTiebreakerIndex]?.opcoes.map((opcao: {polo: string; frase: string}) => (
+                                    <button
+                                        key={opcao.polo}
+                                        onClick={() => answerTiebreakerQuestion(opcao.polo)}
+                                        className="p-4 min-h-24 flex items-center justify-center text-center bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-md border border-gray-200 dark:border-gray-700 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-900/30 dark:hover:border-blue-700 transition-colors"
+                                    >
+                                        <span className="font-medium">{opcao.frase}</span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     )}

@@ -38,7 +38,7 @@ Current apps live in:
 - `apps/math/` — rule-of-three, compound-interest, percentage
 - `apps/conversion/` — kitchen-units, currency, bitcoin, file-size, number-systems
 - `apps/personalization/` — qr-code, image-to-svg
-- `apps/desenvolvimento-pessoal/` — descubra-seu-temperamento
+- `apps/desenvolvimento-pessoal/` — descubra-seu-temperamento (forced-choice binary questions per axis, not a Likert scale — see `docs/testes-de-personalidade.md` before building another personality/temperament-style test)
 - `apps/dinamicas/` — nuvem-de-palavras and quiz-ao-vivo/ (host UI for live sessions; the public-facing side lives outside the mini-app shell, at `/w/[id]` and `/q/[id]` respectively — see "Nuvem de Palavras" and "Quiz ao Vivo" below), plus sorteio.tsx (single-screen, no session/backend — see "Sorteio" below). `quiz-ao-vivo` is a folder (`index.tsx` + `QuestionBuilder.tsx` + `ControlPanel.tsx`), not a single file — bigger feature, same dynamic-import mechanics (`@/apps/dinamicas/quiz-ao-vivo` resolves the folder's `index.tsx`)
 
 **To add a new app:** create the component in `apps/<category>/<slug>.tsx`, then add its entry to the `appCategories` array in both listing and routing files.
