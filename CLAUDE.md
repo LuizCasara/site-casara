@@ -38,18 +38,19 @@ Current apps live in:
 - `apps/math/` — rule-of-three, compound-interest, percentage
 - `apps/conversion/` — kitchen-units, currency, bitcoin, file-size, number-systems
 - `apps/personalization/` — qr-code, image-to-svg
-- `apps/desenvolvimento-pessoal/` — descubra-seu-temperamento (forced-choice binary questions per axis, not a Likert scale — see `docs/testes-de-personalidade.md` before building another personality/temperament-style test)
+- `apps/desenvolvimento-pessoal/` — descubra-seu-temperamento (forced-choice binary questions per axis, not a Likert scale — see `docs/testes-de-personalidade.md` before building another personality/temperament-style test) and descubra-sua-linguagem-do-amor (same forced-choice mechanics, but a 5-way pairing instead of 2 orthogonal axes — see "Descubra sua Linguagem do Amor" below and `docs/linguagens-do-amor-pesquisa.md`)
 - `apps/dinamicas/` — nuvem-de-palavras and quiz-ao-vivo/ (host UI for live sessions; the public-facing side lives outside the mini-app shell, at `/w/[id]` and `/q/[id]` respectively — see "Nuvem de Palavras" and "Quiz ao Vivo" below), plus sorteio.tsx (single-screen, no session/backend — see "Sorteio" below). `quiz-ao-vivo` is a folder (`index.tsx` + `QuestionBuilder.tsx` + `ControlPanel.tsx`), not a single file — bigger feature, same dynamic-import mechanics (`@/apps/dinamicas/quiz-ao-vivo` resolves the folder's `index.tsx`)
 
 **To add a new app:** create the component in `apps/<category>/<slug>.tsx`, then add its entry to the `appCategories` array in both listing and routing files.
 
 ### API Routes
 
-- `POST /api/telegram` — Sends temperament test results to a Telegram group (supports `type: "temperament-test"`)
-- `POST /api/send-email` — Sends formatted HTML email via nodemailer/Gmail
+- `POST /api/telegram` — Sends test results to a Telegram group; `type: "temperament-test"` and `type: "love-language-test"` post to the **same bot/chat**, but different topics (`TELEGRAM_THREAD_ID` vs `TELEGRAM_LOVE_LANGUAGES_THREAD_ID`)
+- `POST /api/send-email` — Sends formatted HTML email via nodemailer/Gmail (temperament test only — the love language test does not send email)
 - `POST /api/events` — Inserts an analytics event row into the Neon `events` table
-- `GET /api/metrics/stats` — Aggregate stats (page views, events, browsers, countries, timeline, temperament breakdown) for `/stats`, filterable by `period` (`7d` | `30d` | `all`)
+- `GET /api/metrics/stats` — Aggregate stats (page views, events, browsers, countries, timeline, temperament breakdown, love language breakdown) for `/stats`, filterable by `period` (`7d` | `30d` | `all`)
 - `GET /api/metrics/temperament` — Temperament test funnel/averages only
+- `GET /api/metrics/love-languages` — Love language test funnel/averages only (mirrors `/api/metrics/temperament`)
 - `POST /api/word-sessions` — Creates a word-cloud session, returns `{id, host_token, results_token}` once
 - `GET /api/word-sessions/[id]` / `PATCH /api/word-sessions/[id]` — Public read of session metadata / host-only update (`accepting_responses` toggle or terminal `status` change, requires `x-host-token`)
 - `PATCH /api/word-sessions/[id]/fixed-words` — Host-only, appends words to a fixed-mode session's word bank (requires `x-host-token`)
@@ -103,6 +104,17 @@ Unlike Nuvem de Palavras and Quiz ao Vivo, this one is **single-screen and clien
 - The animated reveal (slot-machine-style name cycling, one winner at a time) and the confetti burst are both hand-rolled with framer-motion (already a project dependency via the Quiz/Nuvem de Palavras animations) rather than pulling in a dedicated confetti library
 - The spin's tick interval is **not** a fixed `setInterval` — `spinFor()` uses a recursive `setTimeout` whose delay follows `easedTickDelay()` (a `Math.sin` curve: slow → fast → slow), so the roulette accelerates then decelerates into the landing name over a fixed `SPIN_DURATION_MS`, regardless of how many entries are in the pool. This is deliberate: with a naive fixed-speed loop, a short list "landed" almost instantly and killed the suspense — duration is now time-based, not cycle-count-based
 
+### Descubra sua Linguagem do Amor
+
+A second forced-choice personality-style test, `apps/desenvolvimento-pessoal/descubra-sua-linguagem-do-amor.tsx`, following the same lessons as the temperament test (see `docs/testes-de-personalidade.md`) but researched separately in `docs/linguagens-do-amor-pesquisa.md` — read that doc before changing the question bank or scoring.
+
+- `apps/desenvolvimento-pessoal/linguagens-do-amor.json` — 30 questions, same `{id, opcoes: [{polo, frase}]}` schema as `temperamentos.json`. **Structural difference from the temperament test**: instead of 2 orthogonal axes (quente/frio, seco/úmido), this is a 5-way category (`afirmacao`/`qualidade`/`presentes`/`servico`/`toque`) — every question pits exactly 2 of the 5 categories against each other, covering all `C(5,2) = 10` pairs × 3 repetitions, so each language appears in exactly 12 of the 30 questions (balance validated by script, not just by construction)
+- `apps/desenvolvimento-pessoal/love-language-info.ts` — `LOVE_LANGUAGE_INFO` (display name, Tailwind/hex colors, `description`, `howYouFeelLoved`, `commonMisunderstandings`, `relationshipTips`), same shape/purpose as `temperament-info.ts`
+- **No tiebreaker phase, unlike the temperament test.** The source theory itself expects mixed profiles (people commonly value more than one love language), so a close #1/#2 result isn't something to break with extra questions — `calculateResults` just flags `combined: true` when the top two percentages are within `COMBINED_RESULT_THRESHOLD` (10 points) of each other, and the results UI/PDF/Telegram message all present both languages together instead of forcing a single winner
+- `utils/love-language-pdf-generator.tsx` — `LoveLanguagePdfContent` + `generateLoveLanguagePdf`, reusing the shared `renderElementToPdf` engine now exported from `utils/pdf-generator.tsx` (the html2canvas → jsPDF assembly is identical between tests; only the content component and filename differ). If a third test-with-PDF app is ever added, extend this shared engine rather than copying it again
+- Email is intentionally **not** sent for this test (unlike temperament, which emails `fencher.aa@gmail.com`) — Telegram + in-app stats were the only notification channel requested when this app was built
+- Same `/stats` treatment as temperament: a `LINGUAGENS_DO_AMOR_ANALYSIS` panel next to `TEMPERAMENTO_ANALYSIS`, fed by the `love_languages` block in `GET /api/metrics/stats` (started/completed/conversion, per-language averages, `combined_rate`, avg duration) — see `app/stats/page.tsx`
+
 ### Sound effects
 
 Shared across all three live dynamics — `lib/sound.ts` exports `playSound(name)` (fire-and-forget, cached `HTMLAudioElement` per name) and `startLoop(name)` (returns a stop function, used only by Sorteio's spin). Every `.play()` is `.catch(() => {})`'d, same spirit as `toggleFullscreen`: a browser autoplay-policy rejection just means "no sound this time," never a thrown error. Effect files live in `public/sounds/*.mp3` — short (12-110KB) clips from [Mixkit's free SFX library](https://mixkit.co/free-sound-effects/) (no attribution required). Swapping a sound is a one-file replacement, no code change needed as long as the filename stays the same.
@@ -114,6 +126,7 @@ Required in `.env.local`:
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 TELEGRAM_THREAD_ID=
+TELEGRAM_LOVE_LANGUAGES_THREAD_ID=
 EMAIL_USER=
 EMAIL_PASS=
 DATABASE_URL=
@@ -125,7 +138,7 @@ All user interactions are tracked via `@vercel/analytics`. Tracking functions li
 
 ### PDF Generation
 
-`utils/pdf-generator.tsx` exports `PdfContent` (a hidden React component rendered off-screen) and `generatePdf` (uses html2canvas → jsPDF). Used only by the temperament test app.
+`utils/pdf-generator.tsx` exports `PdfContent` (a hidden React component rendered off-screen), `generatePdf` (temperament test), and the shared `renderElementToPdf` engine (html2canvas → jsPDF) that both tests build on. `utils/love-language-pdf-generator.tsx` reuses that engine for the love language test's own `LoveLanguagePdfContent`/`generateLoveLanguagePdf`.
 
 ### Fonts
 

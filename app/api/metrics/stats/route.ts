@@ -95,6 +95,30 @@ export async function GET(request: Request) {
       ORDER BY count DESC
     `;
 
+    const [loveLanguages] = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE event_name = 'love_language_started')                                                          AS total_started,
+        COUNT(*) FILTER (WHERE event_name = 'love_language_completed')                                                        AS total_completed,
+        COUNT(*) FILTER (WHERE event_name = 'love_language_completed' AND (payload->>'combined')::boolean)                    AS total_combined,
+        ROUND(AVG((payload->>'afirmacao')::numeric)        FILTER (WHERE event_name = 'love_language_completed'))             AS avg_afirmacao,
+        ROUND(AVG((payload->>'qualidade')::numeric)        FILTER (WHERE event_name = 'love_language_completed'))             AS avg_qualidade,
+        ROUND(AVG((payload->>'presentes')::numeric)        FILTER (WHERE event_name = 'love_language_completed'))             AS avg_presentes,
+        ROUND(AVG((payload->>'servico')::numeric)          FILTER (WHERE event_name = 'love_language_completed'))             AS avg_servico,
+        ROUND(AVG((payload->>'toque')::numeric)             FILTER (WHERE event_name = 'love_language_completed'))             AS avg_toque,
+        ROUND(AVG((payload->>'duration_seconds')::numeric) FILTER (WHERE event_name = 'love_language_completed'))             AS avg_duration_seconds
+      FROM events
+      WHERE created_at > NOW() - INTERVAL '1 day' * ${days}
+    `;
+
+    const loveLanguagesByPrimary = await sql`
+      SELECT payload->>'primary' AS language, COUNT(*) AS count
+      FROM events
+      WHERE event_name = 'love_language_completed'
+        AND created_at > NOW() - INTERVAL '1 day' * ${days}
+      GROUP BY payload->>'primary'
+      ORDER BY count DESC
+    `;
+
     return NextResponse.json({
       overview: {
         total_events:     Number(overview.total_events),
@@ -117,6 +141,23 @@ export async function GET(request: Request) {
         by_primary: byPrimary.map(r => ({
           temperament: r.temperament as string,
           count:       Number(r.count),
+        })),
+      },
+      love_languages: {
+        total_started:        Number(loveLanguages.total_started),
+        total_completed:      Number(loveLanguages.total_completed),
+        combined_rate: Number(loveLanguages.total_completed) > 0
+          ? Math.round((Number(loveLanguages.total_combined) / Number(loveLanguages.total_completed)) * 100)
+          : 0,
+        avg_afirmacao:        Number(loveLanguages.avg_afirmacao),
+        avg_qualidade:        Number(loveLanguages.avg_qualidade),
+        avg_presentes:        Number(loveLanguages.avg_presentes),
+        avg_servico:          Number(loveLanguages.avg_servico),
+        avg_toque:            Number(loveLanguages.avg_toque),
+        avg_duration_seconds: Number(loveLanguages.avg_duration_seconds),
+        by_primary: loveLanguagesByPrimary.map(r => ({
+          language: r.language as string,
+          count:    Number(r.count),
         })),
       },
     });

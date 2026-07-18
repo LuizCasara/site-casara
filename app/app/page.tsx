@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {Fa0, Fa3, FaCloud, FaDice, FaFileArrowDown, FaMoneyBillTrendUp, FaPhotoFilm, FaSpoon, FaTrophy} from "react-icons/fa6";
-import {FaBitcoin, FaCoins, FaPercent, FaQrcode, FaBrain} from "react-icons/fa";
+import {FaBitcoin, FaCoins, FaPercent, FaQrcode, FaBrain, FaHeart} from "react-icons/fa";
 import {useLang} from "@/context/LanguageContext";
 import {trackAppClick} from "@/utils/analytics";
 
@@ -16,6 +16,12 @@ const appCategories = [
                 title: "Descubra seu Temperamento",
                 description: "Descubra qual dos quatro temperamentos humanos é predominante em você.",
                 icon: <FaBrain size={18}/>,
+            },
+            {
+                id: "descubra-sua-linguagem-do-amor",
+                title: "Descubra sua Linguagem do Amor",
+                description: "Descubra como você prefere receber carinho, com base na teoria das 5 linguagens do amor.",
+                icon: <FaHeart size={18}/>,
             }
         ]
     },

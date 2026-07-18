@@ -177,10 +177,12 @@ export const PdfContent = React.forwardRef<HTMLDivElement, { data: PdfData }>((p
 
 PdfContent.displayName = 'PdfContent';
 
-// Function to generate and download PDF
-export const generatePdf = async (
+// Shared engine: captures a hidden content element with html2canvas and assembles
+// a (possibly multi-page) A4 PDF from it. Reused by every test's PDF download
+// (temperament, love languages, ...) — only the content component and filename differ.
+export const renderElementToPdf = async (
     pdfContentRef: RefObject<HTMLDivElement>,
-    userName: string,
+    filename: string,
     setIsPdfLoading: (loading: boolean) => void
 ) => {
     try {
@@ -238,7 +240,7 @@ export const generatePdf = async (
         }
 
         // Save the PDF
-        pdf.save(`temperamento-${userName.replace(/\s+/g, '-').toLowerCase()}.pdf`);
+        pdf.save(`${filename}.pdf`);
 
         return true;
     } catch (error) {
@@ -251,4 +253,13 @@ export const generatePdf = async (
     } finally {
         setIsPdfLoading(false);
     }
+};
+
+// Function to generate and download PDF
+export const generatePdf = async (
+    pdfContentRef: RefObject<HTMLDivElement>,
+    userName: string,
+    setIsPdfLoading: (loading: boolean) => void
+) => {
+    return renderElementToPdf(pdfContentRef, `temperamento-${userName.replace(/\s+/g, '-').toLowerCase()}`, setIsPdfLoading);
 };

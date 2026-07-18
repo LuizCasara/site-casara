@@ -73,6 +73,33 @@ export const trackTemperamentDistribution = (results: {
     fleumatico:  results.temperamentPercentages['Fleumatico']  ?? 0,
   });
 
+// ─── Teste de Linguagens do Amor ──────────────────────────────────────────────
+
+export const trackLoveLanguageTestStart = () =>
+  trackEvent('love_language_started');
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const trackLoveLanguageTestCompletion = (results: any) => {
+  const pct = results.languagePercentages ?? {};
+  trackEvent('love_language_completed', {
+    primary:          results.primary?.name,
+    secondary:        results.secondary?.name,
+    combined:         !!results.combined,
+    afirmacao:        pct['afirmacao'] ?? 0,
+    qualidade:        pct['qualidade'] ?? 0,
+    presentes:        pct['presentes'] ?? 0,
+    servico:          pct['servico']   ?? 0,
+    toque:            pct['toque']     ?? 0,
+    duration_seconds: results.testDuration,
+  });
+};
+
+export const trackLoveLanguageQuestionDropout = (questionIndex: number, questionText: string) =>
+  trackEvent('love_language_dropout', { question_index: questionIndex, question_text: questionText });
+
+export const trackLoveLanguagePdfDownload = (primaryLanguage: string) =>
+  trackEvent('love_language_pdf_download', { primary: primaryLanguage });
+
 // ─── About ────────────────────────────────────────────────────────────────────
 
 export const trackSocialMediaClick = (platform: string) =>

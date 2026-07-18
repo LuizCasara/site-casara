@@ -5,16 +5,28 @@
  * @returns {Promise<Object>} - Response from the API
  */
 export async function sendTemperamentTestMessage(data) {
+    return sendTelegramNotification({...data, type: 'temperament-test'});
+}
+
+/**
+ * Utility function to send love language test results to Telegram
+ * Posts to the same bot/chat as the temperament test, but a different topic
+ * (message_thread_id), configured via TELEGRAM_LOVE_LANGUAGES_THREAD_ID.
+ * @param {Object} data - Test data including name, date, and results
+ * @returns {Promise<Object>} - Response from the API
+ */
+export async function sendLoveLanguageTestMessage(data) {
+    return sendTelegramNotification({...data, type: 'love-language-test'});
+}
+
+async function sendTelegramNotification(body) {
     try {
         const response = await fetch('/api/telegram', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                ...data,
-                type: 'temperament-test' // Add the type required by the API
-            }),
+            body: JSON.stringify(body),
         });
 
         // Clone the response before consuming it
