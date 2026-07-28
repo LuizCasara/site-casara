@@ -257,19 +257,23 @@ Create `lib/book-categories.mjs`:
  * tags livres (o eixo transversal de busca). Se um livro pudesse ter várias
  * categorias, sua posição na prateleira seria ambígua.
  *
- * Esta lista é PROVISÓRIA — será substituída pela lista real do acervo do Luiz.
- * Nenhum outro arquivo depende do conteúdo daqui, apenas do formato, então
- * trocar os itens não gera retrabalho.
+ * Esta lista foi DERIVADA do acervo real (scripts/seed/acervo.json), agrupando
+ * os 51 livros e nomeando os agrupamentos — não foi inventada antes dos dados.
+ * A quantidade ao lado de cada uma é a contagem no acervo inicial.
+ *
+ * Não existe categoria "Fantasia": os dois livros que cairiam nela (O Hobbit,
+ * As Cavernas de Aço) ficam em Ficção com as tags "fantasia" e "ficção
+ * científica". Uma categoria de dois itens não justifica uma prateleira.
  */
 export const CATEGORIES = [
-    {id: 'ficcao', nome: 'Ficção', cor: '#8b5cf6'},
-    {id: 'fantasia', nome: 'Fantasia', cor: '#6366f1'},
-    {id: 'ficcao-cientifica', nome: 'Ficção Científica', cor: '#06b6d4'},
-    {id: 'nao-ficcao', nome: 'Não-ficção', cor: '#10b981'},
-    {id: 'tecnologia', nome: 'Tecnologia', cor: '#f59e0b'},
-    {id: 'negocios', nome: 'Negócios', cor: '#ef4444'},
-    {id: 'desenvolvimento-pessoal', nome: 'Desenvolvimento Pessoal', cor: '#ec4899'},
-    {id: 'biografia', nome: 'Biografia', cor: '#84cc16'},
+    {id: 'desenvolvimento-pessoal', nome: 'Desenvolvimento Pessoal', cor: '#ec4899'}, // 18
+    {id: 'ficcao', nome: 'Ficção', cor: '#6366f1'},                                   //  9
+    {id: 'negocios-financas', nome: 'Negócios e Finanças', cor: '#10b981'},           //  7
+    {id: 'lideranca-estrategia', nome: 'Liderança e Estratégia', cor: '#ef4444'},     //  4
+    {id: 'filosofia', nome: 'Filosofia', cor: '#8b5cf6'},                             //  4
+    {id: 'ciencia-sociedade', nome: 'Ciência e Sociedade', cor: '#06b6d4'},           //  4
+    {id: 'tecnologia', nome: 'Tecnologia', cor: '#f59e0b'},                           //  2
+    {id: 'espiritualidade', nome: 'Espiritualidade', cor: '#84cc16'},                 //  2
 ];
 
 export const CATEGORY_IDS = CATEGORIES.map((c) => c.id);
@@ -1998,15 +2002,338 @@ git commit -m "feat(livros): register routes for analytics, add tracking and doc
 
 ---
 
+### Task 12: CLI — comando `seed` (importação em lote)
+
+**Files:**
+- Create: `lib/book-sources/openlibrary-search.mjs`
+- Create: `lib/book-sources/openlibrary-search.test.mjs`
+- Modify: `scripts/livros.mjs`
+- Já existe (não criar): `scripts/seed/acervo.json`
+
+**Por que este comando existe:** o `add` funciona por ISBN, um livro por vez —
+é o fluxo do dia a dia. O acervo inicial tem 51 livros e **nenhum ISBN**, só
+título e autor. São caminhos diferentes na Open Library: `/api/books` (lookup por
+ISBN) versus `/search.json` (busca por título+autor).
+
+**A regra que evita dado sujo:** `scripts/seed/acervo.json` é a **fonte da
+verdade** para `title`, `author`, `rating`, `category`, `tags` e `status`. A
+Open Library fornece **apenas** capa, páginas e ano. Isso não é preferência —
+é necessidade verificada: a busca por "A Revolta de Atlas" devolve, dentro de
+`author_name`, um texto de marketing ("Best-seller há mais de 50 anos, com 11
+milhões de exemplares vendidos...") como se fosse um segundo autor, e casa com o
+box de 3 volumes (1232 páginas) em vez do livro.
+
+**Interfaces:**
+- Consumes: `buscarPorIsbn` não; usa `baixarCapa`, `slugify`, `slugLivre`, `resolverTags`, `tagsExistentes`, `CATEGORY_IDS`
+- Produces:
+  - `montarUrlBusca(title: string, author: string) => string`
+  - `parseBusca(json: object) => {pages, year, coverUrl} | null`
+  - `buscarPorTitulo(title: string, author: string) => Promise<{pages, year, coverUrl} | null>`
+  - subcomando `seed [--limit N] [--apply] [--incluir-revisar]`
+
+- [ ] **Step 1: Escreva o teste que falha**
+
+Create `lib/book-sources/openlibrary-search.test.mjs`:
+
+```js
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {montarUrlBusca, parseBusca} from './openlibrary-search.mjs';
+
+test('montarUrlBusca escapa acentos e espaços', () => {
+    const url = montarUrlBusca('A Revolução dos Bichos', 'George Orwell');
+    assert.ok(url.startsWith('https://openlibrary.org/search.json?'));
+    assert.ok(url.includes('title=A+Revolu%C3%A7%C3%A3o+dos+Bichos'));
+    assert.ok(url.includes('author=George+Orwell'));
+    assert.ok(url.includes('limit=1'));
+});
+
+test('parseBusca monta a URL da capa a partir do cover_i', () => {
+    const r = parseBusca({
+        numFound: 1,
+        docs: [{
+            title: 'O Hobbit',
+            cover_i: 15121777,
+            first_publish_year: 1937,
+            number_of_pages_median: 310,
+        }],
+    });
+    assert.equal(r.coverUrl, 'https://covers.openlibrary.org/b/id/15121777-L.jpg');
+    assert.equal(r.pages, 310);
+    assert.equal(r.year, 1937);
+});
+
+test('parseBusca devolve null quando não há resultado', () => {
+    assert.equal(parseBusca({numFound: 0, docs: []}), null);
+    assert.equal(parseBusca({}), null);
+});
+
+test('campos ausentes viram null, e a ausência de capa não invalida o resultado', () => {
+    const r = parseBusca({docs: [{title: 'X'}]});
+    assert.equal(r.coverUrl, null);
+    assert.equal(r.pages, null);
+    assert.equal(r.year, null);
+});
+
+test('parseBusca NUNCA devolve autor — o arquivo de seed é a fonte da verdade', () => {
+    // O registro real de "A Revolta de Atlas" traz marketing em author_name.
+    const r = parseBusca({
+        docs: [{
+            title: 'Box A Revolta de Atlas - 3 Volumes',
+            author_name: ['Ayn Rand', 'Best-seller há mais de 50 anos, com 11 milhões...'],
+            cover_i: 10489048,
+        }],
+    });
+    assert.equal(r.author, undefined);
+    assert.equal(r.title, undefined);
+});
+```
+
+- [ ] **Step 2: Rode para ver falhar**
+
+Run: `npm test`
+Expected: FAIL — `Cannot find module './openlibrary-search.mjs'`
+
+- [ ] **Step 3: Implemente a busca**
+
+Create `lib/book-sources/openlibrary-search.mjs`:
+
+```js
+/**
+ * Busca na Open Library por título + autor.
+ *
+ * Endpoint diferente do lookup por ISBN (openlibrary.mjs): /search.json em vez
+ * de /api/books. Usado só pelo comando `seed`, onde não existem ISBNs.
+ *
+ * Devolve APENAS pages, year e coverUrl. Nunca título nem autor: a busca da
+ * Open Library é suja nesses campos — o registro de "A Revolta de Atlas" traz
+ * um texto publicitário dentro de author_name, e a melhor correspondência de
+ * título costuma ser um box ou uma edição estrangeira.
+ */
+const ENDPOINT = 'https://openlibrary.org/search.json';
+const CAMPOS = 'title,author_name,first_publish_year,number_of_pages_median,cover_i';
+
+export function montarUrlBusca(title, author) {
+    const p = new URLSearchParams({
+        title: String(title),
+        author: String(author ?? ''),
+        limit: '1',
+        fields: CAMPOS,
+    });
+    return `${ENDPOINT}?${p}`;
+}
+
+/** Extrai só o que é confiável do primeiro resultado. */
+export function parseBusca(json) {
+    const doc = json?.docs?.[0];
+    if (!doc) return null;
+    return {
+        pages: Number(doc.number_of_pages_median) || null,
+        year: Number(doc.first_publish_year) || null,
+        coverUrl: doc.cover_i
+            ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
+            : null,
+    };
+}
+
+export async function buscarPorTitulo(title, author) {
+    try {
+        const res = await fetch(montarUrlBusca(title, author), {
+            headers: {'User-Agent': 'luizcasara.com/livros'},
+        });
+        if (!res.ok) return null;
+        return parseBusca(await res.json());
+    } catch {
+        return null;
+    }
+}
+```
+
+- [ ] **Step 4: Rode os testes para ver passar**
+
+Run: `npm test`
+Expected: PASS — 16 testes no total (11 anteriores + 5 desta task).
+
+- [ ] **Step 5: Implemente o comando `seed`**
+
+Modify `scripts/livros.mjs`, adicionando aos imports:
+
+```js
+import {buscarPorTitulo} from '../lib/book-sources/openlibrary-search.mjs';
+```
+
+E adicionando a função, antes do bloco `const [, , comando...]`:
+
+```js
+/** Pausa entre requisições — a Open Library não gosta de rajada. */
+const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function comandoSeed(sql, {limite, apply, incluirRevisar}) {
+    const arquivo = join(ROOT, 'scripts', 'seed', 'acervo.json');
+    const {livros} = JSON.parse(lerArquivo(arquivo, 'utf8'));
+
+    // Validação antes de qualquer rede: categoria inválida no arquivo é erro
+    // de digitação, e é melhor descobrir agora do que no livro 40.
+    const invalidos = livros.filter((l) => !CATEGORY_IDS.includes(l.category));
+    if (invalidos.length) {
+        console.error('Categorias inválidas no acervo.json:');
+        for (const l of invalidos) console.error(`  ${l.title} -> "${l.category}"`);
+        console.error(`Válidas: ${CATEGORY_IDS.join(', ')}`);
+        process.exit(1);
+    }
+
+    const jaExistem = new Set(
+        (await sql`SELECT slug FROM casara.books`).map((l) => l.slug));
+
+    let fila = livros.filter((l) => !jaExistem.has(slugify(l.title)));
+    if (!incluirRevisar) {
+        const pulados = fila.filter((l) => l._revisar);
+        for (const l of pulados) {
+            console.log(`⊘ pulando "${l.title}" — ${l._revisar}`);
+        }
+        fila = fila.filter((l) => !l._revisar);
+    }
+    if (limite) fila = fila.slice(0, limite);
+
+    if (!fila.length) {
+        console.log('Nada a importar. Todos os livros do acervo.json já estão no banco.');
+        return;
+    }
+
+    console.log(`\nImportando ${fila.length} livro(s)${apply ? '' : ' (DRY-RUN)'}...\n`);
+    const jaUsadas = await tagsExistentes(sql);
+    const resumo = [];
+
+    for (const livro of fila) {
+        const encontrado = await buscarPorTitulo(livro.title, livro.author);
+        await dormir(400);
+
+        const slug = await slugLivre(sql, slugify(livro.title), encontrado?.year ?? null);
+        const tags = resolverTags((livro.tags ?? []).join(','), jaUsadas);
+
+        const {coverPath, spineColor, placeholder} =
+            await baixarCapa(encontrado?.coverUrl ?? null, slug, livro.category, ROOT);
+
+        const linha = {
+            slug,
+            title: livro.title,
+            author: livro.author ?? null,
+            year: encontrado?.year ?? null,
+            pages: encontrado?.pages ?? null,
+            cover_path: coverPath,
+            spine_color: spineColor,
+            rating: livro.rating ?? null,
+            category: livro.category,
+            tags,
+            status: livro.status,
+            progress_pct: livro.status === 'lendo' ? (livro.progress_pct ?? 0) : null,
+        };
+
+        resumo.push({
+            título: livro.title,
+            slug,
+            achou: encontrado ? 'sim' : 'NÃO',
+            capa: placeholder ? 'placeholder' : 'real',
+            págs: linha.pages ?? '—',
+            ano: linha.year ?? '—',
+        });
+
+        if (apply) {
+            await sql`
+                INSERT INTO casara.books
+                    (slug, title, author, year, pages, cover_path, spine_color,
+                     rating, category, tags, status, progress_pct)
+                VALUES (${linha.slug}, ${linha.title}, ${linha.author}, ${linha.year},
+                        ${linha.pages}, ${linha.cover_path}, ${linha.spine_color},
+                        ${linha.rating}, ${linha.category}, ${linha.tags},
+                        ${linha.status}, ${linha.progress_pct})`;
+        }
+        console.log(`  ${apply ? '✓' : '·'} ${livro.title}`);
+    }
+
+    console.table(resumo);
+
+    const semCapa = resumo.filter((r) => r.capa === 'placeholder');
+    if (semCapa.length) {
+        console.log(`\n⚠  ${semCapa.length} livro(s) ficaram com capa placeholder.`);
+        console.log('   Coloque o JPG certo em public/livros/capas/<slug>.jpg (mesmo nome).');
+    }
+
+    if (!apply) {
+        console.log('\nDRY-RUN: nada foi gravado. Rode com --apply para importar.');
+        console.log('AVISO: as capas JÁ foram baixadas para public/livros/capas/ mesmo no dry-run.');
+    } else {
+        console.log(`\n✅ ${fila.length} livro(s) importado(s). As resenhas entram depois, com "edit".`);
+    }
+}
+```
+
+E acrescente o caso no `switch`:
+
+```js
+    case 'seed': {
+        const i = process.argv.indexOf('--limit');
+        await comandoSeed(sql, {
+            limite: i > -1 ? Number(process.argv[i + 1]) : null,
+            apply: process.argv.includes('--apply'),
+            incluirRevisar: process.argv.includes('--incluir-revisar'),
+        });
+        break;
+    }
+```
+
+E atualize a constante `AJUDA`, acrescentando após a linha do `edit`:
+
+```
+  node scripts/livros.mjs seed [--limit N] [--apply] [--incluir-revisar]
+```
+
+- [ ] **Step 6: Dry-run com 3 livros**
+
+Run: `node scripts/livros.mjs seed --limit 3`
+Expected: processa 3 livros, mostra a tabela com `achou`/`capa`/`págs`/`ano`, e
+termina com `DRY-RUN: nada foi gravado.` Confirme com `node scripts/livros.mjs list`
+que o banco não mudou.
+
+- [ ] **Step 7: Importe 3 livros de verdade**
+
+Run: `node scripts/livros.mjs seed --limit 3 --apply`
+Expected: `✅ 3 livro(s) importado(s).`
+
+Run: `node scripts/livros.mjs list`
+Expected: os 3 livros aparecem.
+
+Abra `http://localhost:3000/livros/lista` e confirme que as capas renderizam e
+que os filtros de categoria funcionam.
+
+- [ ] **Step 8: Verifique a idempotência**
+
+Run: `node scripts/livros.mjs seed --limit 3 --apply`
+Expected: os 3 primeiros são pulados por já existirem, e ele importa os 3
+seguintes — ou seja, rodar de novo **não duplica**. Confirme com `list`.
+
+- [ ] **Step 9: Commit**
+
+```bash
+git add lib/book-sources/openlibrary-search.mjs lib/book-sources/openlibrary-search.test.mjs scripts/livros.mjs
+git commit -m "feat(livros): add bulk seed command using Open Library title+author search"
+```
+
+---
+
 ## Definição de pronto
 
-Ao fim da Task 11:
+Ao fim da Task 12:
 
-- `npm test` passa com 11 testes de lógica pura.
+- `npm test` passa com 16 testes de lógica pura.
 - `rtk next build` completa sem erros.
 - `node scripts/livros.mjs add <isbn>` cadastra um livro de ponta a ponta, com
   capa baixada, cor extraída e resenha escrita no editor.
 - `node scripts/livros.mjs list` e `edit <slug>` funcionam.
+- `node scripts/livros.mjs seed --limit 3 --apply` importa 3 livros do
+  `scripts/seed/acervo.json`, e rodar de novo não duplica. Os 48 restantes ficam
+  para serem importados aos poucos — é a decisão explícita do Luiz, não uma
+  pendência.
 - `/livros/lista` mostra a grade e os filtros por categoria, tag e status
   funcionam via URL compartilhável.
 - `/livros/<slug>` renderiza ficha, resenha em Markdown e metadados OG.
@@ -2040,12 +2367,16 @@ Não crie esse arquivo preventivamente — só se o erro aparecer.
 
 ## Pendências conhecidas
 
-- **A taxonomia em `lib/book-categories.mjs` é provisória.** Será substituída
-  pela lista real derivada do acervo do Luiz. Nenhum arquivo depende do conteúdo,
-  só do formato `{id, nome, cor}` — trocar os itens não gera retrabalho, mas
-  livros já cadastrados com um `id` removido ficariam com categoria órfã
-  (`getCategory` devolve `null` e a UI omite o selo). Se a lista mudar depois de
-  haver livros, rode `edit` neles.
+- **Três livros do acervo estão marcados com `_revisar`** e o `seed` os pula por
+  padrão: *Forward* (de "Blake" — não consegui identificar o livro), *Sou Puta,
+  Doutor!* (título e autor incertos) e os dois sem nota na lista original
+  (*Disciplina é Liberdade*, *O Almanaque de Naval Ravikant*). Corrija o
+  `acervo.json` ou rode com `--incluir-revisar`.
+- **Capas serão baixadas mesmo em `seed --dry-run`.** É deliberado — é assim que
+  se descobre quais ficaram placeholder antes de gravar — mas significa que o
+  dry-run escreve em `public/livros/capas/`.
+- **As resenhas de todos os livros importados por `seed` começam vazias.** O
+  campo `review` é preenchido depois, um a um, com `edit <slug>`.
 - **`shelf_order` e `finished_at` não são preenchidos pelo CLI** nesta fase.
   `shelf_order` só importa para a estante 3D (fase 2); `finished_at` fica para
   quando houver uma visão de linha do tempo.
