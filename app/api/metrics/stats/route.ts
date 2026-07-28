@@ -18,13 +18,13 @@ export async function GET(request: Request) {
         COUNT(*) FILTER (WHERE event_name != 'page_view' OR ${IS_REAL_ROUTE})              AS total_events,
         COUNT(*) FILTER (WHERE event_name = 'page_view' AND ${IS_REAL_ROUTE})               AS total_page_views,
         COUNT(DISTINCT route) FILTER (WHERE event_name = 'page_view' AND ${IS_REAL_ROUTE})  AS unique_routes
-      FROM events
+      FROM casara.events
       WHERE created_at > NOW() - INTERVAL '1 day' * ${days}
     `;
 
     const byEvent = await sql`
       SELECT event_name, COUNT(*) AS count
-      FROM events
+      FROM casara.events
       WHERE event_name != 'page_view'
         AND created_at > NOW() - INTERVAL '1 day' * ${days}
       GROUP BY event_name
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
 
     const byRoute = await sql`
       SELECT route, COUNT(*) AS count
-      FROM events
+      FROM casara.events
       WHERE event_name = 'page_view'
         AND ${IS_REAL_ROUTE}
         AND created_at > NOW() - INTERVAL '1 day' * ${days}
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 
     const byBrowser = await sql`
       SELECT browser, COUNT(*) AS count
-      FROM events
+      FROM casara.events
       WHERE browser IS NOT NULL
         AND browser != ''
         AND created_at > NOW() - INTERVAL '1 day' * ${days}
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
 
     const byCountry = await sql`
       SELECT country, COUNT(*) AS count
-      FROM events
+      FROM casara.events
       WHERE country IS NOT NULL
         AND country != ''
         AND created_at > NOW() - INTERVAL '1 day' * ${days}
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
       SELECT
         TO_CHAR(DATE(created_at), 'YYYY-MM-DD') AS day,
         COUNT(*)                                 AS count
-      FROM events
+      FROM casara.events
       WHERE created_at > NOW() - INTERVAL '30 days'
       GROUP BY DATE(created_at)
       ORDER BY DATE(created_at)
@@ -82,13 +82,13 @@ export async function GET(request: Request) {
         ROUND(AVG((payload->>'melancolico')::numeric)      FILTER (WHERE event_name = 'temperament_completed'))         AS avg_melancolico,
         ROUND(AVG((payload->>'fleumatico')::numeric)       FILTER (WHERE event_name = 'temperament_completed'))         AS avg_fleumatico,
         ROUND(AVG((payload->>'duration_seconds')::numeric) FILTER (WHERE event_name = 'temperament_completed'))         AS avg_duration_seconds
-      FROM events
+      FROM casara.events
       WHERE created_at > NOW() - INTERVAL '1 day' * ${days}
     `;
 
     const byPrimary = await sql`
       SELECT payload->>'primary' AS temperament, COUNT(*) AS count
-      FROM events
+      FROM casara.events
       WHERE event_name = 'temperament_completed'
         AND created_at > NOW() - INTERVAL '1 day' * ${days}
       GROUP BY payload->>'primary'
@@ -106,13 +106,13 @@ export async function GET(request: Request) {
         ROUND(AVG((payload->>'servico')::numeric)          FILTER (WHERE event_name = 'love_language_completed'))             AS avg_servico,
         ROUND(AVG((payload->>'toque')::numeric)             FILTER (WHERE event_name = 'love_language_completed'))             AS avg_toque,
         ROUND(AVG((payload->>'duration_seconds')::numeric) FILTER (WHERE event_name = 'love_language_completed'))             AS avg_duration_seconds
-      FROM events
+      FROM casara.events
       WHERE created_at > NOW() - INTERVAL '1 day' * ${days}
     `;
 
     const loveLanguagesByPrimary = await sql`
       SELECT payload->>'primary' AS language, COUNT(*) AS count
-      FROM events
+      FROM casara.events
       WHERE event_name = 'love_language_completed'
         AND created_at > NOW() - INTERVAL '1 day' * ${days}
       GROUP BY payload->>'primary'

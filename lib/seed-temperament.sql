@@ -5,7 +5,7 @@
 -- Incluídos: id:97 e id:103 (resultados zerados — submissão sem respostas)
 -- Total: 109 registros
 
-INSERT INTO events (event_name, route, payload, created_at) VALUES
+INSERT INTO casara.events (event_name, route, payload, created_at) VALUES
 
 -- 2025-07-04
 ('temperament_completed', '/app/descubra-seu-temperamento', '{"primary":"Sanguineo","secondary":"Fleumatico","sanguineo":34,"colerico":25,"melancolico":16,"fleumatico":26}', '2025-07-04 14:13:22+00'),

@@ -33,8 +33,8 @@ export async function POST(
         WITH current_q AS (
           SELECT qq.id AS question_id, qq.correct_option_index, qq.time_limit_seconds,
                  qs.current_question_started_at
-          FROM geav.quiz_sessions qs
-          JOIN geav.quiz_questions qq
+          FROM casara.quiz_sessions qs
+          JOIN casara.quiz_questions qq
             ON qq.session_id = qs.id AND qq.order_index = qs.current_question_index
           WHERE qs.id = ${id}
             AND qs.phase = 'question'
@@ -52,7 +52,7 @@ export async function POST(
             time_limit_seconds
           FROM current_q
         )
-        INSERT INTO geav.quiz_answers (question_id, session_id, participant_id, selected_option_index, is_correct, points_awarded)
+        INSERT INTO casara.quiz_answers (question_id, session_id, participant_id, selected_option_index, is_correct, points_awarded)
         SELECT
           question_id, ${id}, ${participantId}, ${selectedOptionIndex}, is_correct,
           CASE

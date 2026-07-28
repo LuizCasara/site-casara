@@ -73,11 +73,11 @@ export async function POST(request: NextRequest) {
       try {
         await sql`
           WITH new_session AS (
-            INSERT INTO geav.quiz_sessions (id, host_token, results_token, title, description)
+            INSERT INTO casara.quiz_sessions (id, host_token, results_token, title, description)
             VALUES (${id}, ${hostToken}, ${resultsToken}, ${title}, ${description || null})
             RETURNING id
           )
-          INSERT INTO geav.quiz_questions (session_id, order_index, prompt, options, correct_option_index, time_limit_seconds)
+          INSERT INTO casara.quiz_questions (session_id, order_index, prompt, options, correct_option_index, time_limit_seconds)
           SELECT new_session.id, q.order_index, q.prompt, q.options, q.correct_option_index, q.time_limit_seconds
           FROM new_session,
                UNNEST(

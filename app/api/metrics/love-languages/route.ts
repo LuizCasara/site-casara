@@ -13,7 +13,7 @@ export async function GET() {
         ROUND(AVG((payload->>'toque')::numeric))             AS avg_toque,
         ROUND(AVG((payload->>'duration_seconds')::numeric)) AS avg_duration_seconds,
         COUNT(*) FILTER (WHERE (payload->>'combined')::boolean) AS total_combined
-      FROM events
+      FROM casara.events
       WHERE event_name = 'love_language_completed'
     `;
 
@@ -21,7 +21,7 @@ export async function GET() {
       SELECT
         payload->>'primary' AS language,
         COUNT(*)             AS count
-      FROM events
+      FROM casara.events
       WHERE event_name = 'love_language_completed'
       GROUP BY payload->>'primary'
       ORDER BY count DESC
@@ -29,7 +29,7 @@ export async function GET() {
 
     const [started] = await sql`
       SELECT COUNT(*) AS total_started
-      FROM events
+      FROM casara.events
       WHERE event_name = 'love_language_started'
     `;
 

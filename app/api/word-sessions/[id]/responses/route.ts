@@ -35,7 +35,7 @@ export async function POST(
 
     const [session] = await sql`
       SELECT mode, fixed_words, max_words, accepting_responses, status
-      FROM geav.word_sessions
+      FROM casara.word_sessions
       WHERE id = ${id}
     `;
     if (!session) {
@@ -74,11 +74,11 @@ export async function POST(
       // permite encadear o resultado de uma query dentro da próxima).
       await sql`
         WITH new_submission AS (
-          INSERT INTO geav.word_submissions (session_id, participant_id)
+          INSERT INTO casara.word_submissions (session_id, participant_id)
           VALUES (${id}, ${participantId})
           RETURNING id
         )
-        INSERT INTO geav.word_entries (submission_id, word, word_normalized)
+        INSERT INTO casara.word_entries (submission_id, word, word_normalized)
         SELECT new_submission.id, w.word, w.word_normalized
         FROM new_submission,
              UNNEST(${words}::text[], ${normalized}::text[]) AS w(word, word_normalized)

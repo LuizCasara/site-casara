@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     const rows = route
       ? await sql`
           SELECT country, COUNT(*) AS count
-          FROM events
+          FROM casara.events
           WHERE event_name = 'page_view'
             AND route = ${route}
             AND country IS NOT NULL AND country != ''
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
         `
       : await sql`
           SELECT country, COUNT(*) AS count
-          FROM events
+          FROM casara.events
           WHERE event_name = ${eventName}
             AND country IS NOT NULL AND country != ''
             AND created_at > NOW() - INTERVAL '1 day' * ${days}
@@ -39,14 +39,14 @@ export async function GET(request: Request) {
     const [totals] = route
       ? await sql`
           SELECT COUNT(*) AS total
-          FROM events
+          FROM casara.events
           WHERE event_name = 'page_view'
             AND route = ${route}
             AND created_at > NOW() - INTERVAL '1 day' * ${days}
         `
       : await sql`
           SELECT COUNT(*) AS total
-          FROM events
+          FROM casara.events
           WHERE event_name = ${eventName}
             AND created_at > NOW() - INTERVAL '1 day' * ${days}
         `;

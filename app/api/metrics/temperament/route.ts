@@ -11,7 +11,7 @@ export async function GET() {
         ROUND(AVG((payload->>'melancolico')::numeric))   AS avg_melancolico,
         ROUND(AVG((payload->>'fleumatico')::numeric))    AS avg_fleumatico,
         ROUND(AVG((payload->>'duration_seconds')::numeric)) AS avg_duration_seconds
-      FROM events
+      FROM casara.events
       WHERE event_name = 'temperament_completed'
     `;
 
@@ -19,7 +19,7 @@ export async function GET() {
       SELECT
         payload->>'primary' AS temperament,
         COUNT(*)            AS count
-      FROM events
+      FROM casara.events
       WHERE event_name = 'temperament_completed'
       GROUP BY payload->>'primary'
       ORDER BY count DESC
@@ -27,7 +27,7 @@ export async function GET() {
 
     const [started] = await sql`
       SELECT COUNT(*) AS total_started
-      FROM events
+      FROM casara.events
       WHERE event_name = 'temperament_started'
     `;
 

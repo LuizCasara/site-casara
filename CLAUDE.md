@@ -62,12 +62,21 @@ Current apps live in:
 - `POST /api/quiz-sessions/[id]/answers` — Public, submits an answer to the current question; scoring (correctness + speed bonus) is computed entirely inside the SQL statement, never in Node
 - `GET /api/quiz-sessions/[id]/results` — Leaderboard + current-question distribution + final gabarito, requires `x-results-token` or `x-host-token` header
 
+### Database tenancy — everything lives in the `casara` schema
+
+**The Neon database (`neondb`) is shared with another, unrelated site of the same owner, which owns the `geav` schema** (`geav.cancoes`, `geav.planos`, `geav.users`, and its own `geav.events` — 19 tables that this repo must never read or write). To keep the two tenants isolated, **every table this site owns lives in the `casara` schema**: `casara.events` plus the seven `word_*`/`quiz_*` tables.
+
+**The connection's `search_path` is just `"$user", public` — it does NOT include `casara`.** So every single query must qualify the table explicitly: `casara.events`, `casara.word_sessions`, `casara.quiz_sessions`, … An unqualified `FROM events` does not fall back to `casara` — it fails, or worse, silently resolves somewhere else. `public` is now intentionally empty of base tables.
+
+- `lib/schema.sql` — DDL for a clean install (creates the schema + all 8 tables)
+- `lib/migrations/001-schema-casara.sql` + `scripts/migrate-casara.mjs` — the one-time migration that moved these tables out of `public`/`geav` into `casara` (`ALTER TABLE ... SET SCHEMA`, applied 2026-07-27). Historical record; do not re-run
+
 ### Analytics & Data
 
 Two analytics systems run side by side, both driven from `utils/analytics.ts`'s `trackEvent`: Vercel Analytics (`track()`) and a self-hosted Neon Postgres store.
 
 - `lib/db.ts` — lazy-initialized Neon client (`sql` tagged template) reading `DATABASE_URL`; avoids connecting at build time
-- `lib/schema.sql` — DDL for the single `events` table (event_name, route, payload JSONB, geo/browser columns); run manually in the Neon SQL editor
+- `casara.events` — the single analytics table (event_name, route, payload JSONB, geo/browser columns)
 - `middleware.ts` — fire-and-forget inserts a `page_view` event per request (geo from Vercel headers, bot UAs filtered, skips `_next`/`api`/`_vercel`/favicon)
 - Adding a new tracked event: add a `trackX` function in `utils/analytics.ts`, call it from the component, and (optionally) add its label to `EVENT_LABELS` in `app/stats/page.tsx` for the dashboard
 
@@ -78,7 +87,7 @@ A Mentimeter-style live activity: a host creates a session in `apps/dinamicas/nu
 - `lib/session-ids.ts` — generic helpers shared by every live-session feature: `generateSessionId()` (short collision-retry id), `generateToken()` (host/results secrets), `PARTICIPANT_ID_RE`. `lib/word-cloud.ts` re-exports the first two for backwards compatibility with existing call sites
 - `lib/word-cloud.ts` — word-cloud-specific types (`SessionMode`, `SessionStatus`), validation/normalization (`normalizeWord`, `dedupeWords`, `WORD_CLOUD_LIMITS`), the font-size curve (`computeFontSizes`), and the `HOT_ACCENT_RGB`/`rgbToCss` color shared by the "texto" and "gráfico" views
 - Data model: `word_sessions` (one row per session, holds `host_token` + `results_token`), `word_submissions` (one row per participant, `UNIQUE(session_id, participant_id)` enforces one submission per device at the DB level), `word_entries` (one row per submitted word) — see `lib/schema.sql`
-- **These tables live under the `geav` Postgres schema** (`CREATE TABLE geav.word_sessions ...`) — run `lib/schema.sql` as-is in the Neon SQL editor. **The connection's `search_path` is just `"$user", public` — it does NOT include `geav`.** Every application query in `app/api/word-sessions/**` and `app/api/quiz-sessions/**` must explicitly qualify tables as `geav.word_sessions`, `geav.quiz_sessions`, etc. (confirmed by querying `SHOW search_path` directly — an earlier assumption that unqualified names resolved automatically was wrong and briefly left the app reading/writing a stray, unrelated `public.word_sessions` table instead of the real `geav` one; that duplicate may still exist and can be dropped once confirmed safe)
+- These tables live under the `casara` Postgres schema, like everything else this site owns — see "Database tenancy" above
 - Three tokens, three trust levels: `host_token` (full control, kept in the host's browser `localStorage` under the `minhas-nuvens` key), `results_token` (read-only, embedded in the `/resultados/[token]` URL so it can be opened on a separate screen/projector), `participant_id` (a `crypto.randomUUID()` a participant's browser generates once and reuses, enforcing the one-submission-per-device rule)
 - `components/WordCloud.tsx` — spiral word-packing + auto-fit-to-container scaling (canvas `measureText` for sizing, framer-motion for layout/pulse animation); `components/WordBarChart.tsx` — top-20 + "Outros" ranked bar chart. Both read from the same `GET .../results` payload
 - The results page plays a "pop" sound (see "Sound effects" below) whenever `total_participants` goes up between polls — edge-triggered off a ref, so it never fires on first load or when the poll returns an unchanged count

@@ -19,7 +19,7 @@ export async function GET(
     const [session] = await sql`
       SELECT results_token, host_token, title, description, status, phase,
              current_question_index, current_question_started_at, finished_at
-      FROM geav.quiz_sessions
+      FROM casara.quiz_sessions
       WHERE id = ${id}
     `;
     if (!session) {
@@ -37,11 +37,11 @@ export async function GET(
     const revealed = session.phase === "reveal";
 
     const [[totalsRow], leaderboard, currentQuestionRows, gabarito] = await Promise.all([
-      sql`SELECT COUNT(*)::int AS count FROM geav.quiz_questions WHERE session_id = ${id}`,
+      sql`SELECT COUNT(*)::int AS count FROM casara.quiz_questions WHERE session_id = ${id}`,
       sql`
         SELECT p.name, COALESCE(SUM(a.points_awarded), 0)::int AS score
-        FROM geav.quiz_participants p
-        LEFT JOIN geav.quiz_answers a ON a.session_id = p.session_id AND a.participant_id = p.participant_id
+        FROM casara.quiz_participants p
+        LEFT JOIN casara.quiz_answers a ON a.session_id = p.session_id AND a.participant_id = p.participant_id
         WHERE p.session_id = ${id}
         GROUP BY p.participant_id, p.name
         ORDER BY score DESC, p.participant_id ASC
@@ -55,15 +55,15 @@ export async function GET(
                   SELECT jsonb_object_agg(a2.selected_option_index, a2.cnt)
                   FROM (
                     SELECT selected_option_index, COUNT(*)::int AS cnt
-                    FROM geav.quiz_answers
+                    FROM casara.quiz_answers
                     WHERE question_id = qq.id
                     GROUP BY selected_option_index
                   ) a2
                 ),
                 '{}'::jsonb
               ) AS distribution
-            FROM geav.quiz_questions qq
-            LEFT JOIN geav.quiz_answers a ON a.question_id = qq.id
+            FROM casara.quiz_questions qq
+            LEFT JOIN casara.quiz_answers a ON a.question_id = qq.id
             WHERE qq.session_id = ${id} AND qq.order_index = ${session.current_question_index}
             GROUP BY qq.id, qq.prompt, qq.options, qq.correct_option_index, qq.time_limit_seconds
           `
@@ -73,8 +73,8 @@ export async function GET(
             SELECT qq.order_index, qq.prompt, qq.options, qq.correct_option_index,
               COUNT(a.id)::int AS total_answers,
               COUNT(a.id) FILTER (WHERE a.is_correct)::int AS correct_answers
-            FROM geav.quiz_questions qq
-            LEFT JOIN geav.quiz_answers a ON a.question_id = qq.id
+            FROM casara.quiz_questions qq
+            LEFT JOIN casara.quiz_answers a ON a.question_id = qq.id
             WHERE qq.session_id = ${id}
             GROUP BY qq.id, qq.order_index, qq.prompt, qq.options, qq.correct_option_index
             ORDER BY qq.order_index

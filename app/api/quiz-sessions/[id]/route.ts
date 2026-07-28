@@ -13,7 +13,7 @@ export async function GET(
   try {
     const [session] = await sql`
       SELECT title, description, status, phase, current_question_index, current_question_started_at, finished_at
-      FROM geav.quiz_sessions
+      FROM casara.quiz_sessions
       WHERE id = ${id}
     `;
     if (!session) {
@@ -24,11 +24,11 @@ export async function GET(
     const revealed = session.phase === "reveal" || session.phase === "finished";
 
     const [[totalsRow], currentQuestionRows] = await Promise.all([
-      sql`SELECT COUNT(*)::int AS count FROM geav.quiz_questions WHERE session_id = ${id}`,
+      sql`SELECT COUNT(*)::int AS count FROM casara.quiz_questions WHERE session_id = ${id}`,
       showsQuestion
         ? sql`
             SELECT id, prompt, options, time_limit_seconds, correct_option_index
-            FROM geav.quiz_questions
+            FROM casara.quiz_questions
             WHERE session_id = ${id} AND order_index = ${session.current_question_index}
           `
         : Promise.resolve([]),
@@ -39,7 +39,7 @@ export async function GET(
     let participant = null;
     if (participantId) {
       const [participantRow] = await sql`
-        SELECT name FROM geav.quiz_participants WHERE session_id = ${id} AND participant_id = ${participantId}
+        SELECT name FROM casara.quiz_participants WHERE session_id = ${id} AND participant_id = ${participantId}
       `;
       if (!participantRow) {
         participant = { joined: false };
@@ -48,8 +48,8 @@ export async function GET(
           sql`
             WITH scores AS (
               SELECT p.participant_id, COALESCE(SUM(a.points_awarded), 0)::int AS total
-              FROM geav.quiz_participants p
-              LEFT JOIN geav.quiz_answers a ON a.session_id = p.session_id AND a.participant_id = p.participant_id
+              FROM casara.quiz_participants p
+              LEFT JOIN casara.quiz_answers a ON a.session_id = p.session_id AND a.participant_id = p.participant_id
               WHERE p.session_id = ${id}
               GROUP BY p.participant_id
             ), ranked AS (
@@ -62,7 +62,7 @@ export async function GET(
           currentQuestion
             ? sql`
                 SELECT selected_option_index, is_correct, points_awarded
-                FROM geav.quiz_answers
+                FROM casara.quiz_answers
                 WHERE question_id = ${currentQuestion.id} AND participant_id = ${participantId}
               `
             : Promise.resolve([]),
@@ -129,7 +129,7 @@ export async function PATCH(
         );
       }
       const [row] = await sql`
-        UPDATE geav.quiz_sessions
+        UPDATE casara.quiz_sessions
         SET status = ${next}, updated_at = NOW()
         WHERE id = ${id} AND host_token = ${hostToken} AND status = 'active'
         RETURNING id, status
@@ -147,7 +147,7 @@ export async function PATCH(
 
     if (action === "start") {
       const [row] = await sql`
-        UPDATE geav.quiz_sessions
+        UPDATE casara.quiz_sessions
         SET phase = 'question', current_question_index = 0, current_question_started_at = NOW(), updated_at = NOW()
         WHERE id = ${id} AND host_token = ${hostToken} AND status = 'active' AND phase = 'lobby'
         RETURNING id, phase, current_question_index
@@ -160,7 +160,7 @@ export async function PATCH(
 
     if (action === "reveal") {
       const [row] = await sql`
-        UPDATE geav.quiz_sessions
+        UPDATE casara.quiz_sessions
         SET phase = 'reveal', updated_at = NOW()
         WHERE id = ${id} AND host_token = ${hostToken} AND status = 'active' AND phase = 'question'
         RETURNING id, phase
@@ -183,12 +183,12 @@ export async function PATCH(
       // rodada seguinte. quiz_answers cai junto via ON DELETE CASCADE.
       const [row] = await sql`
         WITH target AS (
-          SELECT id FROM geav.quiz_sessions
+          SELECT id FROM casara.quiz_sessions
           WHERE id = ${id} AND host_token = ${hostToken} AND status = 'active' AND phase = 'finished'
         ), deleted AS (
-          DELETE FROM geav.quiz_participants WHERE session_id IN (SELECT id FROM target)
+          DELETE FROM casara.quiz_participants WHERE session_id IN (SELECT id FROM target)
         )
-        UPDATE geav.quiz_sessions
+        UPDATE casara.quiz_sessions
         SET phase = 'lobby', current_question_index = NULL, current_question_started_at = NULL,
             finished_at = NULL, updated_at = NOW()
         WHERE id IN (SELECT id FROM target)
@@ -203,9 +203,9 @@ export async function PATCH(
     if (action === "next") {
       const [row] = await sql`
         WITH total AS (
-          SELECT COUNT(*)::int AS count FROM geav.quiz_questions WHERE session_id = ${id}
+          SELECT COUNT(*)::int AS count FROM casara.quiz_questions WHERE session_id = ${id}
         )
-        UPDATE geav.quiz_sessions
+        UPDATE casara.quiz_sessions
         SET
           phase = CASE WHEN current_question_index + 1 < total.count THEN 'question' ELSE 'finished' END,
           current_question_index = LEAST(current_question_index + 1, total.count - 1),
