@@ -38,18 +38,19 @@ Current apps live in:
 - `apps/math/` — rule-of-three, compound-interest, percentage
 - `apps/conversion/` — kitchen-units, currency, bitcoin, file-size, number-systems
 - `apps/personalization/` — qr-code, image-to-svg
-- `apps/desenvolvimento-pessoal/` — descubra-seu-temperamento (forced-choice binary questions per axis, not a Likert scale — see `docs/testes-de-personalidade.md` before building another personality/temperament-style test)
+- `apps/desenvolvimento-pessoal/` — descubra-seu-temperamento (forced-choice binary questions per axis, not a Likert scale — see `docs/testes-de-personalidade.md` before building another personality/temperament-style test) and descubra-sua-linguagem-do-amor (same forced-choice mechanics, but a 5-way pairing instead of 2 orthogonal axes — see "Descubra sua Linguagem do Amor" below and `docs/linguagens-do-amor-pesquisa.md`)
 - `apps/dinamicas/` — nuvem-de-palavras and quiz-ao-vivo/ (host UI for live sessions; the public-facing side lives outside the mini-app shell, at `/w/[id]` and `/q/[id]` respectively — see "Nuvem de Palavras" and "Quiz ao Vivo" below), plus sorteio.tsx (single-screen, no session/backend — see "Sorteio" below). `quiz-ao-vivo` is a folder (`index.tsx` + `QuestionBuilder.tsx` + `ControlPanel.tsx`), not a single file — bigger feature, same dynamic-import mechanics (`@/apps/dinamicas/quiz-ao-vivo` resolves the folder's `index.tsx`)
 
 **To add a new app:** create the component in `apps/<category>/<slug>.tsx`, then add its entry to the `appCategories` array in both listing and routing files.
 
 ### API Routes
 
-- `POST /api/telegram` — Sends temperament test results to a Telegram group (supports `type: "temperament-test"`)
-- `POST /api/send-email` — Sends formatted HTML email via nodemailer/Gmail
+- `POST /api/telegram` — Sends test results to a Telegram group; `type: "temperament-test"` and `type: "love-language-test"` post to the **same bot/chat**, but different topics (`TELEGRAM_THREAD_ID` vs `TELEGRAM_LOVE_LANGUAGES_THREAD_ID`)
+- `POST /api/send-email` — Sends formatted HTML email via nodemailer/Gmail (temperament test only — the love language test does not send email)
 - `POST /api/events` — Inserts an analytics event row into the Neon `events` table
-- `GET /api/metrics/stats` — Aggregate stats (page views, events, browsers, countries, timeline, temperament breakdown) for `/stats`, filterable by `period` (`7d` | `30d` | `all`)
+- `GET /api/metrics/stats` — Aggregate stats (page views, events, browsers, countries, timeline, temperament breakdown, love language breakdown) for `/stats`, filterable by `period` (`7d` | `30d` | `all`)
 - `GET /api/metrics/temperament` — Temperament test funnel/averages only
+- `GET /api/metrics/love-languages` — Love language test funnel/averages only (mirrors `/api/metrics/temperament`)
 - `POST /api/word-sessions` — Creates a word-cloud session, returns `{id, host_token, results_token}` once
 - `GET /api/word-sessions/[id]` / `PATCH /api/word-sessions/[id]` — Public read of session metadata / host-only update (`accepting_responses` toggle or terminal `status` change, requires `x-host-token`)
 - `PATCH /api/word-sessions/[id]/fixed-words` — Host-only, appends words to a fixed-mode session's word bank (requires `x-host-token`)
@@ -61,12 +62,21 @@ Current apps live in:
 - `POST /api/quiz-sessions/[id]/answers` — Public, submits an answer to the current question; scoring (correctness + speed bonus) is computed entirely inside the SQL statement, never in Node
 - `GET /api/quiz-sessions/[id]/results` — Leaderboard + current-question distribution + final gabarito, requires `x-results-token` or `x-host-token` header
 
+### Database tenancy — everything lives in the `casara` schema
+
+**The Neon database (`neondb`) is shared with another, unrelated site of the same owner, which owns the `geav` schema** (`geav.cancoes`, `geav.planos`, `geav.users`, and its own `geav.events` — 19 tables that this repo must never read or write). To keep the two tenants isolated, **every table this site owns lives in the `casara` schema**: `casara.events` plus the seven `word_*`/`quiz_*` tables.
+
+**The connection's `search_path` is just `"$user", public` — it does NOT include `casara`.** So every single query must qualify the table explicitly: `casara.events`, `casara.word_sessions`, `casara.quiz_sessions`, … An unqualified `FROM events` does not fall back to `casara` — it fails, or worse, silently resolves somewhere else. `public` is now intentionally empty of base tables.
+
+- `lib/schema.sql` — DDL for a clean install (creates the schema + all 8 tables)
+- `lib/migrations/001-schema-casara.sql` + `scripts/migrate-casara.mjs` — the one-time migration that moved these tables out of `public`/`geav` into `casara` (`ALTER TABLE ... SET SCHEMA`, applied 2026-07-27). Historical record; do not re-run
+
 ### Analytics & Data
 
 Two analytics systems run side by side, both driven from `utils/analytics.ts`'s `trackEvent`: Vercel Analytics (`track()`) and a self-hosted Neon Postgres store.
 
 - `lib/db.ts` — lazy-initialized Neon client (`sql` tagged template) reading `DATABASE_URL`; avoids connecting at build time
-- `lib/schema.sql` — DDL for the single `events` table (event_name, route, payload JSONB, geo/browser columns); run manually in the Neon SQL editor
+- `casara.events` — the single analytics table (event_name, route, payload JSONB, geo/browser columns)
 - `middleware.ts` — fire-and-forget inserts a `page_view` event per request (geo from Vercel headers, bot UAs filtered, skips `_next`/`api`/`_vercel`/favicon)
 - Adding a new tracked event: add a `trackX` function in `utils/analytics.ts`, call it from the component, and (optionally) add its label to `EVENT_LABELS` in `app/stats/page.tsx` for the dashboard
 
@@ -77,7 +87,7 @@ A Mentimeter-style live activity: a host creates a session in `apps/dinamicas/nu
 - `lib/session-ids.ts` — generic helpers shared by every live-session feature: `generateSessionId()` (short collision-retry id), `generateToken()` (host/results secrets), `PARTICIPANT_ID_RE`. `lib/word-cloud.ts` re-exports the first two for backwards compatibility with existing call sites
 - `lib/word-cloud.ts` — word-cloud-specific types (`SessionMode`, `SessionStatus`), validation/normalization (`normalizeWord`, `dedupeWords`, `WORD_CLOUD_LIMITS`), the font-size curve (`computeFontSizes`), and the `HOT_ACCENT_RGB`/`rgbToCss` color shared by the "texto" and "gráfico" views
 - Data model: `word_sessions` (one row per session, holds `host_token` + `results_token`), `word_submissions` (one row per participant, `UNIQUE(session_id, participant_id)` enforces one submission per device at the DB level), `word_entries` (one row per submitted word) — see `lib/schema.sql`
-- **These tables live under the `geav` Postgres schema** (`CREATE TABLE geav.word_sessions ...`) — run `lib/schema.sql` as-is in the Neon SQL editor. **The connection's `search_path` is just `"$user", public` — it does NOT include `geav`.** Every application query in `app/api/word-sessions/**` and `app/api/quiz-sessions/**` must explicitly qualify tables as `geav.word_sessions`, `geav.quiz_sessions`, etc. (confirmed by querying `SHOW search_path` directly — an earlier assumption that unqualified names resolved automatically was wrong and briefly left the app reading/writing a stray, unrelated `public.word_sessions` table instead of the real `geav` one; that duplicate may still exist and can be dropped once confirmed safe)
+- These tables live under the `casara` Postgres schema, like everything else this site owns — see "Database tenancy" above
 - Three tokens, three trust levels: `host_token` (full control, kept in the host's browser `localStorage` under the `minhas-nuvens` key), `results_token` (read-only, embedded in the `/resultados/[token]` URL so it can be opened on a separate screen/projector), `participant_id` (a `crypto.randomUUID()` a participant's browser generates once and reuses, enforcing the one-submission-per-device rule)
 - `components/WordCloud.tsx` — spiral word-packing + auto-fit-to-container scaling (canvas `measureText` for sizing, framer-motion for layout/pulse animation); `components/WordBarChart.tsx` — top-20 + "Outros" ranked bar chart. Both read from the same `GET .../results` payload
 - The results page plays a "pop" sound (see "Sound effects" below) whenever `total_participants` goes up between polls — edge-triggered off a ref, so it never fires on first load or when the poll returns an unchanged count
@@ -103,6 +113,17 @@ Unlike Nuvem de Palavras and Quiz ao Vivo, this one is **single-screen and clien
 - The animated reveal (slot-machine-style name cycling, one winner at a time) and the confetti burst are both hand-rolled with framer-motion (already a project dependency via the Quiz/Nuvem de Palavras animations) rather than pulling in a dedicated confetti library
 - The spin's tick interval is **not** a fixed `setInterval` — `spinFor()` uses a recursive `setTimeout` whose delay follows `easedTickDelay()` (a `Math.sin` curve: slow → fast → slow), so the roulette accelerates then decelerates into the landing name over a fixed `SPIN_DURATION_MS`, regardless of how many entries are in the pool. This is deliberate: with a naive fixed-speed loop, a short list "landed" almost instantly and killed the suspense — duration is now time-based, not cycle-count-based
 
+### Descubra sua Linguagem do Amor
+
+A second forced-choice personality-style test, `apps/desenvolvimento-pessoal/descubra-sua-linguagem-do-amor.tsx`, following the same lessons as the temperament test (see `docs/testes-de-personalidade.md`) but researched separately in `docs/linguagens-do-amor-pesquisa.md` — read that doc before changing the question bank or scoring.
+
+- `apps/desenvolvimento-pessoal/linguagens-do-amor.json` — 30 questions, same `{id, opcoes: [{polo, frase}]}` schema as `temperamentos.json`. **Structural difference from the temperament test**: instead of 2 orthogonal axes (quente/frio, seco/úmido), this is a 5-way category (`afirmacao`/`qualidade`/`presentes`/`servico`/`toque`) — every question pits exactly 2 of the 5 categories against each other, covering all `C(5,2) = 10` pairs × 3 repetitions, so each language appears in exactly 12 of the 30 questions (balance validated by script, not just by construction)
+- `apps/desenvolvimento-pessoal/love-language-info.ts` — `LOVE_LANGUAGE_INFO` (display name, Tailwind/hex colors, `description`, `howYouFeelLoved`, `commonMisunderstandings`, `relationshipTips`), same shape/purpose as `temperament-info.ts`
+- **No tiebreaker phase, unlike the temperament test.** The source theory itself expects mixed profiles (people commonly value more than one love language), so a close #1/#2 result isn't something to break with extra questions — `calculateResults` just flags `combined: true` when the top two percentages are within `COMBINED_RESULT_THRESHOLD` (10 points) of each other, and the results UI/PDF/Telegram message all present both languages together instead of forcing a single winner
+- `utils/love-language-pdf-generator.tsx` — `LoveLanguagePdfContent` + `generateLoveLanguagePdf`, reusing the shared `renderElementToPdf` engine now exported from `utils/pdf-generator.tsx` (the html2canvas → jsPDF assembly is identical between tests; only the content component and filename differ). If a third test-with-PDF app is ever added, extend this shared engine rather than copying it again
+- Email is intentionally **not** sent for this test (unlike temperament, which emails `fencher.aa@gmail.com`) — Telegram + in-app stats were the only notification channel requested when this app was built
+- Same `/stats` treatment as temperament: a `LINGUAGENS_DO_AMOR_ANALYSIS` panel next to `TEMPERAMENTO_ANALYSIS`, fed by the `love_languages` block in `GET /api/metrics/stats` (started/completed/conversion, per-language averages, `combined_rate`, avg duration) — see `app/stats/page.tsx`
+
 ### Sound effects
 
 Shared across all three live dynamics — `lib/sound.ts` exports `playSound(name)` (fire-and-forget, cached `HTMLAudioElement` per name) and `startLoop(name)` (returns a stop function, used only by Sorteio's spin). Every `.play()` is `.catch(() => {})`'d, same spirit as `toggleFullscreen`: a browser autoplay-policy rejection just means "no sound this time," never a thrown error. Effect files live in `public/sounds/*.mp3` — short (12-110KB) clips from [Mixkit's free SFX library](https://mixkit.co/free-sound-effects/) (no attribution required). Swapping a sound is a one-file replacement, no code change needed as long as the filename stays the same.
@@ -114,6 +135,7 @@ Required in `.env.local`:
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 TELEGRAM_THREAD_ID=
+TELEGRAM_LOVE_LANGUAGES_THREAD_ID=
 EMAIL_USER=
 EMAIL_PASS=
 DATABASE_URL=
@@ -125,7 +147,7 @@ All user interactions are tracked via `@vercel/analytics`. Tracking functions li
 
 ### PDF Generation
 
-`utils/pdf-generator.tsx` exports `PdfContent` (a hidden React component rendered off-screen) and `generatePdf` (uses html2canvas → jsPDF). Used only by the temperament test app.
+`utils/pdf-generator.tsx` exports `PdfContent` (a hidden React component rendered off-screen), `generatePdf` (temperament test), and the shared `renderElementToPdf` engine (html2canvas → jsPDF) that both tests build on. `utils/love-language-pdf-generator.tsx` reuses that engine for the love language test's own `LoveLanguagePdfContent`/`generateLoveLanguagePdf`.
 
 ### Fonts
 

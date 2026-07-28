@@ -27,7 +27,7 @@ export async function POST(
     }
 
     try {
-      // A cláusula SELECT ... FROM geav.quiz_sessions WHERE ... torna o "sessão
+      // A cláusula SELECT ... FROM casara.quiz_sessions WHERE ... torna o "sessão
       // está aceitando entrada" parte do mesmo statement atômico do INSERT.
       // O ON CONFLICT (session_id, participant_id) atualiza o nome — cobre o
       // refresh idempotente (mesmo nome) e a correção de nome (nome novo);
@@ -35,9 +35,9 @@ export async function POST(
       // uma constraint diferente e não é silenciado por essa cláusula — cai
       // no catch abaixo como 23505.
       const [row] = await sql`
-        INSERT INTO geav.quiz_participants (session_id, participant_id, name)
+        INSERT INTO casara.quiz_participants (session_id, participant_id, name)
         SELECT ${id}, ${participantId}, ${name}
-        FROM geav.quiz_sessions
+        FROM casara.quiz_sessions
         WHERE id = ${id} AND status = 'active' AND phase != 'finished'
         ON CONFLICT (session_id, participant_id) DO UPDATE SET name = EXCLUDED.name
         RETURNING name

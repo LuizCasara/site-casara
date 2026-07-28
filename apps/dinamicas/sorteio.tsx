@@ -162,7 +162,7 @@ export default function Sorteio() {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-6 items-start">
+        <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium mb-1">Quantos vencedores</label>
             <input
@@ -175,19 +175,21 @@ export default function Sorteio() {
             />
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 pt-6">
-            <input type="checkbox" checked={animated} onChange={(e) => setAnimated(e.target.checked)} />
-            Contagem regressiva com animação
-          </label>
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
+            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <input type="checkbox" checked={animated} onChange={(e) => setAnimated(e.target.checked)} />
+              Contagem regressiva com animação
+            </label>
 
-          <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 pt-6">
-            <input
-              type="checkbox"
-              checked={excludePastWinners}
-              onChange={(e) => setExcludePastWinners(e.target.checked)}
-            />
-            Excluir vencedores de sorteios anteriores
-          </label>
+            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <input
+                type="checkbox"
+                checked={excludePastWinners}
+                onChange={(e) => setExcludePastWinners(e.target.checked)}
+              />
+              Excluir vencedores de sorteios anteriores
+            </label>
+          </div>
         </div>
 
         {error && (

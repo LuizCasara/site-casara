@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
   const sql = neon(process.env.DATABASE_URL);
   // fire-and-forget: não bloqueia a resposta
   sql`
-    INSERT INTO events (event_name, route, country, city, browser)
+    INSERT INTO casara.events (event_name, route, country, city, browser)
     VALUES ('page_view', ${pathname}, ${country}, ${city}, ${browser})
   `.catch(() => {});
 

@@ -16,6 +16,12 @@ const appCategories = [
                 title: "Descubra seu Temperamento",
                 description: "Descubra qual dos quatro temperamentos humanos é predominante em você.",
                 path: "desenvolvimento-pessoal/descubra-seu-temperamento"
+            },
+            {
+                id: "descubra-sua-linguagem-do-amor",
+                title: "Descubra sua Linguagem do Amor",
+                description: "Descubra como você prefere receber carinho, com base na teoria das 5 linguagens do amor.",
+                path: "desenvolvimento-pessoal/descubra-sua-linguagem-do-amor"
             }
         ]
     },
@@ -199,6 +205,9 @@ export default function AppPage() {
                 // Desenvolvimento Pessoal apps
                 else if (foundApp.path === "desenvolvimento-pessoal/descubra-seu-temperamento") {
                     const importedModule = await import('@/apps/desenvolvimento-pessoal/descubra-seu-temperamento');
+                    Component = importedModule.default;
+                } else if (foundApp.path === "desenvolvimento-pessoal/descubra-sua-linguagem-do-amor") {
+                    const importedModule = await import('@/apps/desenvolvimento-pessoal/descubra-sua-linguagem-do-amor');
                     Component = importedModule.default;
                 }
 

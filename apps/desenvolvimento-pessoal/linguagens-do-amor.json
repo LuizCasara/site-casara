@@ -1,0 +1,212 @@
+[
+  {
+    "id": 1,
+    "opcoes": [
+      { "polo": "afirmacao", "frase": "Depois de um dia difícil, você se sente mais amado(a) ouvindo um elogio sincero sobre como lidou com tudo?" },
+      { "polo": "qualidade", "frase": "Depois de um dia difícil, você se sente mais amado(a) tendo a atenção total de alguém, sem distrações?" }
+    ]
+  },
+  {
+    "id": 2,
+    "opcoes": [
+      { "polo": "afirmacao", "frase": "Quando alguém quer demonstrar carinho, o que mais te toca é um elogio sobre algo que você fez bem?" },
+      { "polo": "qualidade", "frase": "Quando alguém quer demonstrar carinho, o que mais te toca é ganhar um tempo só seu com essa pessoa, sem pressa?" }
+    ]
+  },
+  {
+    "id": 3,
+    "opcoes": [
+      { "polo": "afirmacao", "frase": "No dia a dia, você se sente mais valorizado(a) ao escutar palavras de reconhecimento pelo seu esforço?" },
+      { "polo": "qualidade", "frase": "No dia a dia, você se sente mais valorizado(a) ao ter a companhia de alguém prestando atenção só em você?" }
+    ]
+  },
+  {
+    "id": 4,
+    "opcoes": [
+      { "polo": "afirmacao", "frase": "Pra você, um elogio genuíno sobre quem você é representa mais carinho do que qualquer outra coisa?" },
+      { "polo": "presentes", "frase": "Pra você, um presente escolhido pensando especialmente em você representa mais carinho do que qualquer outra coisa?" }
+    ]
+  },
+  {
+    "id": 5,
+    "opcoes": [
+      { "polo": "afirmacao", "frase": "Quando alguém celebra uma conquista sua, o que mais te marca são as palavras de reconhecimento que essa pessoa usa?" },
+      { "polo": "presentes", "frase": "Quando alguém celebra uma conquista sua, o que mais te marca é um mimo trazido especialmente pra comemorar com você?" }
+    ]
+  },
+  {
+    "id": 6,
+    "opcoes": [
+      { "polo": "afirmacao", "frase": "Você se sente mais lembrado(a) por alguém quando essa pessoa faz um comentário elogioso sobre você?" },
+      { "polo": "presentes", "frase": "Você se sente mais lembrado(a) por alguém quando essa pessoa te traz um pequeno presente sem motivo especial?" }
+    ]
+  },
+  {
+    "id": 7,
+    "opcoes": [
+      { "polo": "afirmacao", "frase": "Você se sente mais cuidado(a) ao ouvir que alguém reconhece o quanto você se esforça?" },
+      { "polo": "servico", "frase": "Você se sente mais cuidado(a) ao ver alguém resolvendo algo por você, sem precisar pedir?" }
+    ]
+  },
+  {
+    "id": 8,
+    "opcoes": [
+      { "polo": "afirmacao", "frase": "Num dia corrido, um elogio sincero sobre como você está se saindo faria mais diferença pra você?" },
+      { "polo": "servico", "frase": "Num dia corrido, alguém assumir uma tarefa sua pra aliviar seu dia faria mais diferença pra você?" }
+    ]
+  },
+  {
+    "id": 9,
+    "opcoes": [
+      { "polo": "afirmacao", "frase": "Você se sente mais apoiado(a) ao ouvir palavras de incentivo dizendo que você é capaz?" },
+      { "polo": "servico", "frase": "Você se sente mais apoiado(a) ao ver alguém colocando a mão na massa pra te ajudar?" }
+    ]
+  },
+  {
+    "id": 10,
+    "opcoes": [
+      { "polo": "afirmacao", "frase": "Num momento difícil, o que mais te conforta é ouvir palavras que reafirmam o quanto você é importante?" },
+      { "polo": "toque", "frase": "Num momento difícil, o que mais te conforta é um abraço apertado, sem precisar dizer nada?" }
+    ]
+  },
+  {
+    "id": 11,
+    "opcoes": [
+      { "polo": "afirmacao", "frase": "Num momento tranquilo, você se sente mais amado(a) com um elogio inesperado?" },
+      { "polo": "toque", "frase": "Num momento tranquilo, você se sente mais amado(a) ficando próximo(a), de mãos dadas ou encostado(a)?" }
+    ]
+  },
+  {
+    "id": 12,
+    "opcoes": [
+      { "polo": "afirmacao", "frase": "Quando alguém quer te mostrar carinho, o que chega mais fundo são as palavras que essa pessoa escolhe?" },
+      { "polo": "toque", "frase": "Quando alguém quer te mostrar carinho, o que chega mais fundo é o contato físico, como um abraço ou um cafuné?" }
+    ]
+  },
+  {
+    "id": 13,
+    "opcoes": [
+      { "polo": "qualidade", "frase": "Pra você, um tempo inteiro dedicado só a você, sem celular por perto, representa mais carinho?" },
+      { "polo": "presentes", "frase": "Pra você, um presente escolhido com cuidado, pensando em você, representa mais carinho?" }
+    ]
+  },
+  {
+    "id": 14,
+    "opcoes": [
+      { "polo": "qualidade", "frase": "Numa data especial, o que mais te marca é passar o dia inteiro ao lado da pessoa, sem pressa?" },
+      { "polo": "presentes", "frase": "Numa data especial, o que mais te marca é ganhar algo que mostra que a pessoa pensou em você com antecedência?" }
+    ]
+  },
+  {
+    "id": 15,
+    "opcoes": [
+      { "polo": "qualidade", "frase": "Você se sente mais prioridade na vida de alguém quando tem a atenção total dessa pessoa, mesmo que por pouco tempo?" },
+      { "polo": "presentes", "frase": "Você se sente mais prioridade na vida de alguém quando recebe um mimo que mostra que você estava nos pensamentos dela?" }
+    ]
+  },
+  {
+    "id": 16,
+    "opcoes": [
+      { "polo": "qualidade", "frase": "No cotidiano, você se sente mais amado(a) tendo alguém sentado(a) com você, de verdade presente?" },
+      { "polo": "servico", "frase": "No cotidiano, você se sente mais amado(a) tendo alguém cuidando de uma tarefa chata por você?" }
+    ]
+  },
+  {
+    "id": 17,
+    "opcoes": [
+      { "polo": "qualidade", "frase": "Num fim de semana livre, o que te deixaria mais feliz é passar o dia todo com alguém, só conversando e curtindo?" },
+      { "polo": "servico", "frase": "Num fim de semana livre, o que te deixaria mais feliz é ver essa pessoa organizando ou resolvendo algo por você?" }
+    ]
+  },
+  {
+    "id": 18,
+    "opcoes": [
+      { "polo": "qualidade", "frase": "Você se sente mais acompanhado(a) quando tem companhia de verdade, com atenção plena?" },
+      { "polo": "servico", "frase": "Você se sente mais acompanhado(a) quando alguém assume responsabilidades por você quando precisa?" }
+    ]
+  },
+  {
+    "id": 19,
+    "opcoes": [
+      { "polo": "qualidade", "frase": "Depois de um dia estressante, o que mais te acalma é ficar um tempo a sós com alguém, conversando sem pressa?" },
+      { "polo": "toque", "frase": "Depois de um dia estressante, o que mais te acalma é um abraço demorado, sem precisar de palavras?" }
+    ]
+  },
+  {
+    "id": 20,
+    "opcoes": [
+      { "polo": "qualidade", "frase": "Você se sente mais conectado(a) com alguém em momentos de atenção total, só vocês dois?" },
+      { "polo": "toque", "frase": "Você se sente mais conectado(a) com alguém através de proximidade física, como ficar de mãos dadas?" }
+    ]
+  },
+  {
+    "id": 21,
+    "opcoes": [
+      { "polo": "qualidade", "frase": "Numa noite tranquila em casa, o que te faria mais feliz é ter a atenção da pessoa inteira, sem distrações?" },
+      { "polo": "toque", "frase": "Numa noite tranquila em casa, o que te faria mais feliz é ficar encostado(a) nela, sentindo a presença física?" }
+    ]
+  },
+  {
+    "id": 22,
+    "opcoes": [
+      { "polo": "presentes", "frase": "Você se sente mais lembrado(a) ao ganhar algo escolhido especialmente pra você?" },
+      { "polo": "servico", "frase": "Você se sente mais lembrado(a) ao ver alguém resolvendo algo chato por você, sem pedir?" }
+    ]
+  },
+  {
+    "id": 23,
+    "opcoes": [
+      { "polo": "presentes", "frase": "Depois de uma semana puxada, o que te faria mais bem é um mimo trazido pra te animar?" },
+      { "polo": "servico", "frase": "Depois de uma semana puxada, o que te faria mais bem é alguém cuidando de uma tarefa que estava pesando pra você?" }
+    ]
+  },
+  {
+    "id": 24,
+    "opcoes": [
+      { "polo": "presentes", "frase": "Você se sente mais cuidado(a) por alguém quando recebe um presente que mostra que a pessoa te conhece bem?" },
+      { "polo": "servico", "frase": "Você se sente mais cuidado(a) por alguém quando recebe um gesto prático que facilita a sua vida?" }
+    ]
+  },
+  {
+    "id": 25,
+    "opcoes": [
+      { "polo": "presentes", "frase": "Quando alguém quer te agradar, o que mais te emociona é um presente pensado com carinho?" },
+      { "polo": "toque", "frase": "Quando alguém quer te agradar, o que mais te emociona é um abraço apertado e sincero?" }
+    ]
+  },
+  {
+    "id": 26,
+    "opcoes": [
+      { "polo": "presentes", "frase": "Numa data comemorativa, o que mais te marcaria é ganhar algo que mostra que pensaram em você?" },
+      { "polo": "toque", "frase": "Numa data comemorativa, o que mais te marcaria é um momento de proximidade física, tipo um abraço longo?" }
+    ]
+  },
+  {
+    "id": 27,
+    "opcoes": [
+      { "polo": "presentes", "frase": "Você se sente mais querido(a) ao receber um mimo sem motivo aparente?" },
+      { "polo": "toque", "frase": "Você se sente mais querido(a) ao receber um carinho físico espontâneo, como um cafuné?" }
+    ]
+  },
+  {
+    "id": 28,
+    "opcoes": [
+      { "polo": "servico", "frase": "Num dia ruim, você se sente mais amparado(a) quando alguém assume uma tarefa sua sem você precisar pedir?" },
+      { "polo": "toque", "frase": "Num dia ruim, você se sente mais amparado(a) com um abraço apertado, sem precisar de explicação?" }
+    ]
+  },
+  {
+    "id": 29,
+    "opcoes": [
+      { "polo": "servico", "frase": "Quando você está sobrecarregado(a), o que mais te acalma é ver alguém aliviando parte do seu trabalho?" },
+      { "polo": "toque", "frase": "Quando você está sobrecarregado(a), o que mais te acalma é sentir a proximidade física de alguém por perto?" }
+    ]
+  },
+  {
+    "id": 30,
+    "opcoes": [
+      { "polo": "servico", "frase": "Você se sente mais cuidado(a) por alguém com um gesto prático que resolve algo por você?" },
+      { "polo": "toque", "frase": "Você se sente mais cuidado(a) por alguém com um toque carinhoso, como um abraço ou mão no ombro?" }
+    ]
+  }
+]

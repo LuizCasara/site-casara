@@ -33,7 +33,7 @@ export async function PATCH(
 
     const [session] = await sql`
       SELECT mode, fixed_words, status
-      FROM geav.word_sessions
+      FROM casara.word_sessions
       WHERE id = ${id} AND host_token = ${hostToken}
     `;
     if (!session) {
@@ -72,7 +72,7 @@ export async function PATCH(
     }
 
     const [updated] = await sql`
-      UPDATE geav.word_sessions
+      UPDATE casara.word_sessions
       SET fixed_words = ${JSON.stringify(merged)}, updated_at = NOW()
       WHERE id = ${id} AND host_token = ${hostToken} AND status = 'active'
       RETURNING fixed_words

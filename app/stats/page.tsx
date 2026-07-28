@@ -19,6 +19,18 @@ type StatsData = {
     avg_duration_seconds: number;
     by_primary: { temperament: string; count: number }[];
   };
+  love_languages: {
+    total_started:        number;
+    total_completed:      number;
+    combined_rate:        number;
+    avg_afirmacao:        number;
+    avg_qualidade:        number;
+    avg_presentes:        number;
+    avg_servico:          number;
+    avg_toque:            number;
+    avg_duration_seconds: number;
+    by_primary: { language: string; count: number }[];
+  };
 };
 
 type Period = "7d" | "30d" | "all";
@@ -34,6 +46,10 @@ const EVENT_LABELS: Record<string, string> = {
   temperament_dropout:          "TEMP_DROPOUT",
   temperament_pdf_download:     "TEMP_PDF_DL",
   temperament_distribution:     "TEMP_DIST",
+  love_language_started:        "LOVELANG_STARTED",
+  love_language_completed:      "LOVELANG_COMPLETED",
+  love_language_dropout:        "LOVELANG_DROPOUT",
+  love_language_pdf_download:   "LOVELANG_PDF_DL",
   home_time_spent:              "HOME_TIME_SPENT",
   quote_click:                  "QUOTE_CLICK",
   tip_click:                    "TIP_CLICK",
@@ -63,6 +79,10 @@ const EVENT_DESCRIPTIONS: Record<string, string> = {
   temperament_dropout:          "Saiu no meio do teste",
   temperament_pdf_download:     "Baixou o PDF do resultado",
   temperament_distribution:     "Percentuais calculados ao final do teste",
+  love_language_started:        "Começou o teste de linguagens do amor",
+  love_language_completed:      "Terminou o teste e viu o resultado",
+  love_language_dropout:        "Saiu no meio do teste",
+  love_language_pdf_download:   "Baixou o PDF do resultado",
   home_time_spent:              "Tempo total na home antes de sair",
   quote_click:                  "Gerou uma nova frase na home",
   tip_click:                    "Gerou uma nova dica na home",
@@ -105,6 +125,30 @@ const TEMP_TEXT_COLOR: Record<string, string> = {
   Colerico:    "text-yellow-400",
   Melancolico: "text-blue-400",
   Fleumatico:  "text-green-400",
+};
+
+const LOVE_LANG_DISPLAY: Record<string, string> = {
+  afirmacao: "PALAVRAS DE AFIRMAÇÃO",
+  qualidade: "TEMPO DE QUALIDADE",
+  presentes: "PRESENTES",
+  servico:   "ATOS DE SERVIÇO",
+  toque:     "TOQUE FÍSICO",
+};
+
+const LOVE_LANG_BAR_COLOR: Record<string, string> = {
+  afirmacao: "bg-indigo-500",
+  qualidade: "bg-teal-400",
+  presentes: "bg-pink-500",
+  servico:   "bg-orange-400",
+  toque:     "bg-rose-500",
+};
+
+const LOVE_LANG_TEXT_COLOR: Record<string, string> = {
+  afirmacao: "text-indigo-400",
+  qualidade: "text-teal-400",
+  presentes: "text-pink-400",
+  servico:   "text-orange-400",
+  toque:     "text-rose-400",
 };
 
 const regionNames = typeof Intl !== "undefined" && "DisplayNames" in Intl
@@ -325,6 +369,10 @@ export default function StatsPage() {
     ? Math.round((data.temperament.total_completed / data.temperament.total_started) * 100)
     : 0;
 
+  const llConvRate = data && data.love_languages.total_started > 0
+    ? Math.round((data.love_languages.total_completed / data.love_languages.total_started) * 100)
+    : 0;
+
   return (
     <div className="min-h-screen bg-black text-green-400 font-mono p-4 md:p-6 selection:bg-green-900">
       {/* Scanlines */}
@@ -397,7 +445,7 @@ export default function StatsPage() {
         <div className="space-y-4">
 
           {/* KPIs */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <KpiCard label="TOTAL_EVENTOS"    value={data.overview.total_events.toLocaleString("pt-BR")} />
             <KpiCard label="PAGE_VIEWS"       value={data.overview.total_page_views.toLocaleString("pt-BR")} />
             <KpiCard label="ROTAS_ÚNICAS"     value={data.overview.unique_routes} />
@@ -406,9 +454,14 @@ export default function StatsPage() {
               value={data.temperament.total_completed.toLocaleString("pt-BR")}
               sub={`${convRate}% conversão · ${data.temperament.total_started} iniciaram`}
             />
+            <KpiCard
+              label="LOVELANG_COMPLETOS"
+              value={data.love_languages.total_completed.toLocaleString("pt-BR")}
+              sub={`${llConvRate}% conversão · ${data.love_languages.total_started} iniciaram`}
+            />
           </div>
 
-          {/* Temperamento + Eventos */}
+          {/* Temperamento + Linguagens do Amor */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
             <Panel title="TEMPERAMENTO_ANALYSIS">
@@ -476,39 +529,106 @@ export default function StatsPage() {
               </div>
             </Panel>
 
-            <Panel title="EVENTOS_BREAKDOWN">
-              <div className="space-y-3 overflow-y-auto max-h-80 pr-1">
-                {data.by_event.map(e => (
-                  <div key={e.event_name}>
-                    <button
-                      type="button"
-                      onClick={() => toggleEventGeo(e.event_name)}
-                      className="w-full text-left bg-transparent border-0 p-0 m-0 cursor-pointer"
-                    >
-                      <div className="flex justify-between items-baseline gap-2 text-xs mb-1">
-                        <span className="text-green-500 truncate shrink-0 flex items-center gap-1">
-                          <span className={`text-green-800 inline-block transition-transform ${expandedEvent === e.event_name ? "rotate-90" : ""}`}>›</span>
-                          {EVENT_LABELS[e.event_name] ?? e.event_name}
-                        </span>
-                        <span className="text-green-900 truncate italic">
-                          {EVENT_DESCRIPTIONS[e.event_name] ?? ""}
-                        </span>
-                        <span className="text-green-800 ml-2 shrink-0">{e.count}</span>
-                      </div>
-                      <HBar value={e.count} max={maxEvent} />
-                    </button>
-                    {expandedEvent === e.event_name && (
-                      <GeoBreakdownInline
-                        data={geoCache[`event:${e.event_name}`]}
-                        loading={!!geoLoading[`event:${e.event_name}`]}
-                      />
-                    )}
+            <Panel title="LINGUAGENS_DO_AMOR_ANALYSIS">
+              {/* Mini KPIs */}
+              <div className="grid grid-cols-3 gap-3 text-center">
+                {[
+                  { label: "INICIARAM",    value: data.love_languages.total_started },
+                  { label: "COMPLETARAM",  value: data.love_languages.total_completed },
+                  { label: "CONVERSÃO",    value: `${llConvRate}%` },
+                ].map(({ label, value }) => (
+                  <div key={label} className="border border-green-900/50 rounded p-2">
+                    <p className="text-green-800 text-xs">{label}</p>
+                    <p className="text-green-200 font-bold text-xl">{value}</p>
                   </div>
                 ))}
+              </div>
+
+              {/* Distribuição por linguagem principal */}
+              <div className="space-y-3">
+                {data.love_languages.by_primary.filter(l => l.language).map(l => {
+                  const pct = Math.round((l.count / data.love_languages.total_completed) * 100);
+                  return (
+                    <div key={l.language}>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className={LOVE_LANG_TEXT_COLOR[l.language] ?? "text-green-400"}>
+                          {LOVE_LANG_DISPLAY[l.language] ?? l.language}
+                        </span>
+                        <span className="text-green-800">{l.count} · {pct}%</span>
+                      </div>
+                      <div className="h-1.5 bg-green-950 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${LOVE_LANG_BAR_COLOR[l.language] ?? "bg-green-500"} rounded-full transition-all duration-700`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Médias */}
+              <div className="border-t border-green-900/50 pt-3">
+                <p className="text-green-800 text-xs mb-2 tracking-wider">MÉDIAS_GERAIS · {data.love_languages.combined_rate}% RESULTADO_COMBINADO</p>
+                <div className="grid grid-cols-5 gap-2 text-center">
+                  {[
+                    { key: "AFIRM", val: data.love_languages.avg_afirmacao, color: "text-indigo-400" },
+                    { key: "QUALI", val: data.love_languages.avg_qualidade, color: "text-teal-400" },
+                    { key: "PRES",  val: data.love_languages.avg_presentes, color: "text-pink-400" },
+                    { key: "SERV",  val: data.love_languages.avg_servico,   color: "text-orange-400" },
+                    { key: "TOQUE", val: data.love_languages.avg_toque,     color: "text-rose-400" },
+                  ].map(({ key, val, color }) => (
+                    <div key={key} className="border border-green-900/50 rounded py-1.5">
+                      <p className="text-green-900 text-xs">{key}</p>
+                      <p className={`font-bold text-sm ${color}`}>{val}%</p>
+                    </div>
+                  ))}
+                </div>
+                {data.love_languages.avg_duration_seconds > 0 && (
+                  <p className="text-green-800 text-xs mt-2 text-center">
+                    T_MÉDIO_CONCLUSÃO:{" "}
+                    <span className="text-green-500">
+                      ~{Math.round(data.love_languages.avg_duration_seconds / 60)} min
+                    </span>
+                  </p>
+                )}
               </div>
             </Panel>
 
           </div>
+
+          {/* Eventos */}
+          <Panel title="EVENTOS_BREAKDOWN">
+            <div className="space-y-3 overflow-y-auto max-h-80 pr-1">
+              {data.by_event.map(e => (
+                <div key={e.event_name}>
+                  <button
+                    type="button"
+                    onClick={() => toggleEventGeo(e.event_name)}
+                    className="w-full text-left bg-transparent border-0 p-0 m-0 cursor-pointer"
+                  >
+                    <div className="flex justify-between items-baseline gap-2 text-xs mb-1">
+                      <span className="text-green-500 truncate shrink-0 flex items-center gap-1">
+                        <span className={`text-green-800 inline-block transition-transform ${expandedEvent === e.event_name ? "rotate-90" : ""}`}>›</span>
+                        {EVENT_LABELS[e.event_name] ?? e.event_name}
+                      </span>
+                      <span className="text-green-900 truncate italic">
+                        {EVENT_DESCRIPTIONS[e.event_name] ?? ""}
+                      </span>
+                      <span className="text-green-800 ml-2 shrink-0">{e.count}</span>
+                    </div>
+                    <HBar value={e.count} max={maxEvent} />
+                  </button>
+                  {expandedEvent === e.event_name && (
+                    <GeoBreakdownInline
+                      data={geoCache[`event:${e.event_name}`]}
+                      loading={!!geoLoading[`event:${e.event_name}`]}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </Panel>
 
           {/* Rotas + Geo/Browser */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

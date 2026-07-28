@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const browser = parseBrowser(request.headers.get('user-agent') ?? '');
 
     await sql`
-      INSERT INTO events (event_name, route, payload, resolution, country, city, browser)
+      INSERT INTO casara.events (event_name, route, payload, resolution, country, city, browser)
       VALUES (
         ${event_name},
         ${route ?? null},
