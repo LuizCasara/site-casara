@@ -20,6 +20,7 @@ import {spawnSync} from 'node:child_process';
 import {writeFileSync, readFileSync as lerArquivo, unlinkSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {buscarMetadados} from '../lib/book-sources/index.mjs';
+import {buscarPorTitulo, BuscaFalhouError} from '../lib/book-sources/openlibrary-search.mjs';
 import {baixarCapa} from '../lib/book-cover.mjs';
 import {slugify, normalizeTag, tagKey} from '../lib/book-utils.mjs';
 import {CATEGORY_IDS} from '../lib/book-categories.mjs';
@@ -169,17 +170,32 @@ function resolverTags(entrada, existentes) {
     return saida;
 }
 
+/**
+ * Slugs que nunca podem ser atribuídos a um livro, mesmo que estejam livres
+ * no banco: colidiriam com uma rota estática ou com o diretório de assets.
+ * "lista" é `app/livros/lista/page.tsx` — o Next resolve a rota estática
+ * antes da dinâmica `[slug]`, então um livro com esse slug ficaria inacessível
+ * para sempre. "capas" é `public/livros/capas/`, o diretório onde as próprias
+ * imagens de capa são salvas. Tratados como "já ocupados" para caírem no
+ * mesmo mecanismo de sufixo usado para colisão real.
+ */
+const SLUGS_RESERVADOS = new Set(['lista', 'capas']);
+
 /** Slug livre de colisão: tenta o base, depois com ano, depois com sufixo numérico. */
 async function slugLivre(sql, base, ano) {
+    async function ocupado(c) {
+        if (SLUGS_RESERVADOS.has(c)) return true;
+        const [existe] = await sql`SELECT 1 FROM casara.books WHERE slug = ${c}`;
+        return Boolean(existe);
+    }
+
     const candidatos = [base, ano ? `${base}-${ano}` : null].filter(Boolean);
     for (const c of candidatos) {
-        const [existe] = await sql`SELECT 1 FROM casara.books WHERE slug = ${c}`;
-        if (!existe) return c;
+        if (!(await ocupado(c))) return c;
     }
     for (let i = 2; i < 100; i++) {
         const c = `${base}-${i}`;
-        const [existe] = await sql`SELECT 1 FROM casara.books WHERE slug = ${c}`;
-        if (!existe) return c;
+        if (!(await ocupado(c))) return c;
     }
     throw new Error(`Não consegui gerar um slug livre a partir de "${base}"`);
 }
@@ -190,6 +206,7 @@ Acervo de livros — luizcasara.com
   node scripts/livros.mjs list
   node scripts/livros.mjs add <isbn> [--dry-run]
   node scripts/livros.mjs edit <slug>
+  node scripts/livros.mjs seed [--limit N] [--apply] [--incluir-revisar]
 
 O 'add' e o 'edit' abrem seu editor para escrever a resenha em Markdown.
 Configure a variável de ambiente EDITOR — e NÃO ESQUEÇA do --wait, senão o
@@ -427,6 +444,165 @@ async function comandoEdit(sql, slug) {
     }
 }
 
+/** Pausa entre requisições — a Open Library não gosta de rajada. */
+const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Chama `buscarPorTitulo` e, se a falha for de REDE (não "não encontrado"),
+ * tenta mais uma vez depois de uma pausa maior antes de desistir. Devolve
+ * `{resultado, falhouRede}` em vez de deixar o chamador lidar com exceção,
+ * porque no `seed` uma falha de rede não deve interromper os outros 50
+ * livros da fila — só marcar aquele item para ficar claro no resumo.
+ */
+async function buscarComRetentativa(title, author) {
+    try {
+        return {resultado: await buscarPorTitulo(title, author), falhouRede: false};
+    } catch (erro) {
+        if (!(erro instanceof BuscaFalhouError)) throw erro;
+        console.log(`  ⚠ falha de rede em "${title}" — tentando de novo em 3s...`);
+        await dormir(3000);
+        try {
+            return {resultado: await buscarPorTitulo(title, author), falhouRede: false};
+        } catch (erro2) {
+            if (!(erro2 instanceof BuscaFalhouError)) throw erro2;
+            return {resultado: null, falhouRede: true};
+        }
+    }
+}
+
+async function comandoSeed(sql, {limite, apply, incluirRevisar}) {
+    const arquivo = join(ROOT, 'scripts', 'seed', 'acervo.json');
+    const {livros} = JSON.parse(lerArquivo(arquivo, 'utf8'));
+
+    // Validação antes de qualquer rede: categoria inválida no arquivo é erro
+    // de digitação, e é melhor descobrir agora do que no livro 40.
+    const invalidos = livros.filter((l) => !CATEGORY_IDS.includes(l.category));
+    if (invalidos.length) {
+        console.error('Categorias inválidas no acervo.json:');
+        for (const l of invalidos) console.error(`  ${l.title} -> "${l.category}"`);
+        console.error(`Válidas: ${CATEGORY_IDS.join(', ')}`);
+        process.exitCode = 1;
+        return;
+    }
+
+    // Comparamos por TÍTULO, não por slug. O slug de fato gravado vem de
+    // slugLivre(), que em caso de colisão devolve "<base>-<ano>" ou
+    // "<base>-2" — nunca slugify(title) puro. Se um livro foi gravado como
+    // "duna-1965", na próxima execução slugify(title) produz "duna", que não
+    // bate com nada no banco, e o livro seria importado de novo, duplicado.
+    // O título é o campo estável do qual o acervo.json é fonte da verdade.
+    const jaExistem = new Set(
+        (await sql`SELECT title FROM casara.books`).map((l) => l.title));
+
+    let fila = livros.filter((l) => !jaExistem.has(l.title));
+    if (!incluirRevisar) {
+        const pulados = fila.filter((l) => l._revisar);
+        for (const l of pulados) {
+            console.log(`⊘ pulando "${l.title}" — ${l._revisar}`);
+        }
+        fila = fila.filter((l) => !l._revisar);
+    }
+    if (limite) fila = fila.slice(0, limite);
+
+    if (!fila.length) {
+        console.log('Nada a importar. Todos os livros do acervo.json já estão no banco.');
+        return;
+    }
+
+    console.log(`\nImportando ${fila.length} livro(s)${apply ? '' : ' (DRY-RUN)'}...\n`);
+    const jaUsadas = await tagsExistentes(sql);
+    const resumo = [];
+
+    for (const livro of fila) {
+        const {resultado: encontrado, falhouRede} =
+            await buscarComRetentativa(livro.title, livro.author);
+        await dormir(400);
+
+        const slug = await slugLivre(sql, slugify(livro.title), encontrado?.year ?? null);
+        const tags = resolverTags((livro.tags ?? []).join(','), jaUsadas);
+
+        const {coverPath, spineColor, placeholder} =
+            await baixarCapa(encontrado?.coverUrl ?? null, slug, livro.category, ROOT);
+
+        const linha = {
+            slug,
+            title: livro.title,
+            author: livro.author ?? null,
+            year: encontrado?.year ?? null,
+            pages: encontrado?.pages ?? null,
+            cover_path: coverPath,
+            spine_color: spineColor,
+            rating: livro.rating ?? null,
+            category: livro.category,
+            tags,
+            status: livro.status,
+            progress_pct: livro.status === 'lendo' ? (livro.progress_pct ?? 0) : null,
+        };
+
+        resumo.push({
+            título: livro.title,
+            slug,
+            // Distinto de "sim"/"NÃO": uma falha de rede não é o mesmo que a
+            // Open Library responder e não ter o livro — ver buscarComRetentativa.
+            achou: falhouRede ? 'ERRO DE REDE' : (encontrado ? 'sim' : 'NÃO'),
+            capa: placeholder ? 'placeholder' : 'real',
+            págs: linha.pages ?? '—',
+            ano: linha.year ?? '—',
+        });
+
+        // Livro com falha de rede NÃO é gravado, mesmo com --apply — de
+        // propósito. Se ele entrasse no banco assim (com year/pages/capa
+        // vazios), a checagem de idempotência por título (acima) o
+        // consideraria "já importado" para sempre, e o aviso de "rode de
+        // novo" logo abaixo seria uma mentira: rodar de novo não faria nada.
+        // Ficando de fora do banco, ele continua elegível e a próxima
+        // execução tenta buscá-lo de novo automaticamente.
+        if (apply && !falhouRede) {
+            await sql`
+                INSERT INTO casara.books
+                    (slug, title, author, year, pages, cover_path, spine_color,
+                     rating, category, tags, status, progress_pct)
+                VALUES (${linha.slug}, ${linha.title}, ${linha.author}, ${linha.year},
+                        ${linha.pages}, ${linha.cover_path}, ${linha.spine_color},
+                        ${linha.rating}, ${linha.category}, ${linha.tags},
+                        ${linha.status}, ${linha.progress_pct})`;
+            console.log(`  ✓ ${livro.title}`);
+        } else if (apply && falhouRede) {
+            console.log(`  ✗ ${livro.title} — NÃO gravado (falha de rede), tente de novo depois`);
+        } else {
+            console.log(`  · ${livro.title}`);
+        }
+    }
+
+    console.table(resumo);
+
+    const semCapa = resumo.filter((r) => r.capa === 'placeholder');
+    if (semCapa.length) {
+        console.log(`\n⚠  ${semCapa.length} livro(s) ficaram com capa placeholder.`);
+        console.log('   Coloque o JPG certo em public/livros/capas/<slug>.jpg (mesmo nome).');
+    }
+
+    const falhasRede = resumo.filter((r) => r.achou === 'ERRO DE REDE');
+    const importados = resumo.filter((r) => r.achou !== 'ERRO DE REDE').length;
+
+    if (!apply) {
+        console.log('\nDRY-RUN: nada foi gravado NO BANCO. Rode com --apply para importar.');
+        console.log('   Atenção: as capas JÁ foram baixadas para public/livros/capas/ —');
+        console.log('   isso é intencional, é como você descobre quais ficaram placeholder');
+        console.log('   antes de gravar. O dry-run é do banco, não do disco.');
+    } else {
+        console.log(`\n✅ ${importados} livro(s) importado(s). As resenhas entram depois, com "edit".`);
+    }
+
+    if (falhasRede.length) {
+        console.log(`\n⚠  ${falhasRede.length} livro(s) falharam por ERRO DE REDE (diferente de `
+            + '"não encontrado" — a Open Library pode nem ter sido consultada de fato):');
+        for (const r of falhasRede) console.log(`   - ${r.título}`);
+        console.log('   Eles NÃO foram gravados no banco. Rode o comando de novo (mesmos');
+        console.log('   argumentos) para tentar buscá-los de novo — a fila os inclui automaticamente.');
+    }
+}
+
 async function main() {
     const [, , comando, argumento] = process.argv;
 
@@ -449,6 +625,16 @@ async function main() {
         case 'edit': {
             const sql = abrirBanco();
             await comandoEdit(sql, argumento);
+            break;
+        }
+        case 'seed': {
+            const sql = abrirBanco();
+            const i = process.argv.indexOf('--limit');
+            await comandoSeed(sql, {
+                limite: i > -1 ? Number(process.argv[i + 1]) : null,
+                apply: process.argv.includes('--apply'),
+                incluirRevisar: process.argv.includes('--incluir-revisar'),
+            });
             break;
         }
         default:
