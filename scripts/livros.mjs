@@ -20,7 +20,7 @@ import {spawnSync} from 'node:child_process';
 import {writeFileSync, readFileSync as lerArquivo, unlinkSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {buscarMetadados} from '../lib/book-sources/index.mjs';
-import {buscarPorTitulo, BuscaFalhouError} from '../lib/book-sources/openlibrary-search.mjs';
+import {buscarComRetentativa} from '../lib/book-sources/openlibrary-search.mjs';
 import {baixarCapa} from '../lib/book-cover.mjs';
 import {slugify, normalizeTag, tagKey} from '../lib/book-utils.mjs';
 import {CATEGORY_IDS} from '../lib/book-categories.mjs';
@@ -447,29 +447,6 @@ async function comandoEdit(sql, slug) {
 /** Pausa entre requisições — a Open Library não gosta de rajada. */
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/**
- * Chama `buscarPorTitulo` e, se a falha for de REDE (não "não encontrado"),
- * tenta mais uma vez depois de uma pausa maior antes de desistir. Devolve
- * `{resultado, falhouRede}` em vez de deixar o chamador lidar com exceção,
- * porque no `seed` uma falha de rede não deve interromper os outros 50
- * livros da fila — só marcar aquele item para ficar claro no resumo.
- */
-async function buscarComRetentativa(title, author) {
-    try {
-        return {resultado: await buscarPorTitulo(title, author), falhouRede: false};
-    } catch (erro) {
-        if (!(erro instanceof BuscaFalhouError)) throw erro;
-        console.log(`  ⚠ falha de rede em "${title}" — tentando de novo em 3s...`);
-        await dormir(3000);
-        try {
-            return {resultado: await buscarPorTitulo(title, author), falhouRede: false};
-        } catch (erro2) {
-            if (!(erro2 instanceof BuscaFalhouError)) throw erro2;
-            return {resultado: null, falhouRede: true};
-        }
-    }
-}
-
 async function comandoSeed(sql, {limite, apply, incluirRevisar}) {
     const arquivo = join(ROOT, 'scripts', 'seed', 'acervo.json');
     const {livros} = JSON.parse(lerArquivo(arquivo, 'utf8'));
@@ -507,6 +484,32 @@ async function comandoSeed(sql, {limite, apply, incluirRevisar}) {
     if (!fila.length) {
         console.log('Nada a importar. Todos os livros do acervo.json já estão no banco.');
         return;
+    }
+
+    // Confirmação ANTES da rodada de rede — não depois, com o resumo
+    // completo à vista como em add/edit. Para o seed, montar o resumo
+    // completo (achou/capa/págs/ano) exige buscar cada livro na Open Library
+    // e baixar cada capa, que é justamente o trabalho que uma resposta "não"
+    // deveria evitar. Título e contagem, que já temos sem rede nenhuma, são
+    // suficientes para a decisão de "gravar ou não" — é o que este bloco
+    // mostra. O readline só é aberto aqui, quando --apply está presente:
+    // um dry-run não pergunta nada, então não precisa do handle.
+    if (apply) {
+        const nomes = fila.slice(0, 20).map((l) => `  - ${l.title}`).join('\n');
+        const resto = fila.length > 20 ? `\n  ... e mais ${fila.length - 20}` : '';
+        console.log(`\nSerão importados ${fila.length} livro(s):\n${nomes}${resto}`);
+
+        const io = rl();
+        let confirmado;
+        try {
+            confirmado = await confirmar(io, `\nImportar ${fila.length} livro(s) no banco de PRODUÇÃO?`);
+        } finally {
+            io.close();
+        }
+        if (!confirmado) {
+            console.log('Cancelado. Nada foi gravado.');
+            return;
+        }
     }
 
     console.log(`\nImportando ${fila.length} livro(s)${apply ? '' : ' (DRY-RUN)'}...\n`);
@@ -628,10 +631,29 @@ async function main() {
             break;
         }
         case 'seed': {
-            const sql = abrirBanco();
+            // Validado ANTES de abrir o banco: --limit inválido (NaN, zero,
+            // negativo, ou a flag sem valor nenhum) não pode virar "sem
+            // limite" por acidente. Number('abc') e Number(undefined) são
+            // ambos falsy o bastante para escapar de um `if (limite)`
+            // ingênuo, e combinado com --apply isso gravaria o acervo
+            // inteiro na primeira vez que alguém errar a digitação.
             const i = process.argv.indexOf('--limit');
+            let limite = null;
+            if (i > -1) {
+                const bruto = process.argv[i + 1];
+                const numero = Number(bruto);
+                if (bruto === undefined || !Number.isInteger(numero) || numero <= 0) {
+                    console.error(`--limit precisa de um número inteiro positivo. `
+                        + `Recebido: ${JSON.stringify(bruto)}`);
+                    process.exitCode = 1;
+                    break;
+                }
+                limite = numero;
+            }
+
+            const sql = abrirBanco();
             await comandoSeed(sql, {
-                limite: i > -1 ? Number(process.argv[i + 1]) : null,
+                limite,
                 apply: process.argv.includes('--apply'),
                 incluirRevisar: process.argv.includes('--incluir-revisar'),
             });
