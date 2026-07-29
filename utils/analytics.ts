@@ -173,3 +173,9 @@ export const trackBookOpened = (slug: string) =>
 
 export const trackBookFilter = (campo: string, valor: string) =>
   trackEvent('book_filter', { campo, valor });
+
+export const trackRoomLoaded = (timeToInteractiveMs: number, isMobile: boolean) =>
+  trackEvent('room_loaded', { time_to_interactive_ms: timeToInteractiveMs, is_mobile: isMobile });
+
+export const trackListFallback = (motivo: string) =>
+  trackEvent('list_fallback', { motivo });
