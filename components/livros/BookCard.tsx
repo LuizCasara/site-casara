@@ -20,8 +20,8 @@ export default function BookCard({livro}: {livro: Book}) {
                 ) : (
                     <div className="flex h-full w-full items-center justify-center bg-gray-200 p-2
                                     text-center dark:bg-gray-700">
-                        <span className="line-clamp-4 text-xs font-semibold text-gray-500
-                                         dark:text-gray-400">
+                        <span className="line-clamp-4 text-xs font-semibold text-gray-700
+                                         dark:text-gray-200">
                             {livro.title}
                         </span>
                     </div>
