@@ -20,6 +20,8 @@ export async function generateMetadata({params}: {
     const descricao = livro.synopsis
         ?? `${livro.title}${livro.author ? `, de ${livro.author}` : ''} — o que achei do livro.`;
 
+    const imagens = livro.cover_path ? [livro.cover_path] : undefined;
+
     return {
         title: livro.title,
         description: descricao,
@@ -27,7 +29,17 @@ export async function generateMetadata({params}: {
             title: livro.title,
             description: descricao,
             type: 'article',
-            images: livro.cover_path ? [livro.cover_path] : undefined,
+            images: imagens,
+        },
+        // O bloco `twitter` precisa ser explícito: sem ele o Next herda o do
+        // layout raiz, e o card sai com a capa do livro mas com o título e a
+        // descrição do perfil profissional — combinação confusa justamente no
+        // canal em que a página mais é compartilhada.
+        twitter: {
+            card: 'summary_large_image',
+            title: livro.title,
+            description: descricao,
+            images: imagens,
         },
     };
 }
