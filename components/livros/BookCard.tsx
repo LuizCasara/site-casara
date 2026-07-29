@@ -27,7 +27,7 @@ export default function BookCard({livro}: {livro: Book}) {
                     </div>
                 )}
                 {livro.status === 'lendo' && (
-                    <span className="absolute left-1 top-1 rounded bg-emerald-600 px-1.5 py-0.5
+                    <span className="absolute left-1 top-1 rounded bg-emerald-700 px-1.5 py-0.5
                                      text-[10px] font-bold uppercase text-white">
                         lendo
                     </span>
