@@ -54,6 +54,16 @@ async function confirmar(io, rotulo) {
  * Abre o editor para escrever a resenha em Markdown.
  * O --wait no EDITOR é obrigatório — sem ele o spawnSync retorna antes de você
  * escrever qualquer coisa e a resenha vem vazia.
+ *
+ * Devolve { texto, alterado } em vez de só a string: `texto` sozinho não dá
+ * pra distinguir "o usuário fechou sem mexer em nada" de "o usuário escreveu
+ * algo igual ao texto inicial" — comparamos com `textoInicial` (ambos
+ * .trim()'ados) e deixamos o CHAMADOR decidir o que "não alterado" significa.
+ * Isso importa porque o texto inicial não é sempre vazio: no `add` é um
+ * cabeçalho `# Título` (não alterado = resenha vazia, vira null); no futuro
+ * `edit` (Task 7) o texto inicial é a resenha JÁ SALVA do livro (não alterado
+ * = manter como está, nunca apagar). A função em si não grava null nem
+ * decide — só relata o fato.
  */
 function abrirEditor(textoInicial = '') {
     const arquivo = join(tmpdir(), `livro-${Date.now()}.md`);
@@ -66,7 +76,7 @@ function abrirEditor(textoInicial = '') {
     } catch {
         // Arquivo temporário — falhar em apagar não é motivo para abortar.
     }
-    return texto;
+    return {texto, alterado: texto !== textoInicial.trim()};
 }
 
 /** Lê as tags já usadas, para o autocomplete sugerir reuso em vez de duplicata. */
@@ -206,9 +216,33 @@ async function comandoAdd(sql, isbn, dryRun) {
             status = await perguntar(io, 'Status precisa ser "lendo" ou "lido"', 'lido');
         }
 
-        const progress = status === 'lendo'
-            ? Number(await perguntar(io, 'Progresso (0-100)', '0')) : null;
-        const rating = await perguntar(io, 'Nota (0 a 5, pode ser 4.5)', '');
+        // Validado no cliente, com o mesmo padrão de reprompt do category/status
+        // acima — sem isso, um valor fora do CHECK do Postgres (rating 0-5,
+        // progress_pct 0-100) só falha depois de todo o resto já ter sido
+        // respondido e a capa já baixada, jogando fora todo esse trabalho.
+        let progress = null;
+        if (status === 'lendo') {
+            let progressoBruto = await perguntar(io, 'Progresso (0-100)', '0');
+            let progressoNum = Number(progressoBruto);
+            while (!Number.isInteger(progressoNum) || progressoNum < 0 || progressoNum > 100) {
+                progressoBruto = await perguntar(
+                    io, 'Progresso precisa ser um número inteiro entre 0 e 100', '0');
+                progressoNum = Number(progressoBruto);
+            }
+            progress = progressoNum;
+        }
+
+        let ratingBruto = await perguntar(io, 'Nota (0 a 5, pode ser 4.5)', '');
+        let rating = null;
+        while (ratingBruto) {
+            const n = Number(ratingBruto);
+            if (!Number.isNaN(n) && n >= 0 && n <= 5) {
+                rating = n;
+                break;
+            }
+            ratingBruto = await perguntar(io, 'Nota precisa ser um número entre 0 e 5 (ou vazio)', '');
+        }
+
         const synopsis = await perguntar(io, 'Sinopse curta (uma frase)');
 
         const slugBase = slugify(title);
@@ -226,8 +260,10 @@ async function comandoAdd(sql, isbn, dryRun) {
         }
 
         console.log('\nAbrindo o editor para a resenha (Markdown). Salve e feche para continuar.');
-        const review = abrirEditor(`# ${title}\n\n`);
-        if (!review) console.log('Resenha vazia — o livro entra sem texto. Use "edit" depois.');
+        const resenha = abrirEditor(`# ${title}\n\n`);
+        if (!resenha.alterado) {
+            console.log('Resenha vazia — o livro entra sem texto. Use "edit" depois.');
+        }
 
         const linha = {
             slug, isbn, title,
@@ -238,12 +274,12 @@ async function comandoAdd(sql, isbn, dryRun) {
             synopsis: synopsis || null,
             cover_path: coverPath,
             spine_color: spineColor,
-            rating: rating ? Number(rating) : null,
+            rating,
             category,
             tags,
             status,
             progress_pct: progress,
-            review: review || null,
+            review: resenha.alterado ? resenha.texto : null,
         };
 
         console.log('\n─── Será gravado ───');
