@@ -63,10 +63,12 @@
   - `slugify(texto: string) => string`
   - `normalizeTag(tag: string) => string`
   - `tagKey(tag: string) => string`
-  - `bookThickness(pages: number|null, medianPages: number) => number` (metros)
-  - `bookHeight(slug: string) => number` (metros)
   - `extractYear(publishDate: string|null) => number|null`
   - `CATEGORIES: Array<{id, nome, cor}>`, `getCategory(id)`, `CATEGORY_IDS: string[]`
+
+> **Não implemente `bookThickness` nem `bookHeight` aqui.** Eles derivam a
+> geometria do livro na estante 3D e não têm nenhum consumidor na fase 1 —
+> entram na fase 2, junto do código que os usa.
 
 - [ ] **Step 1: Escreva o teste que falha**
 
@@ -75,14 +77,7 @@ Create `lib/book-utils.test.mjs`:
 ```js
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {
-    slugify,
-    normalizeTag,
-    tagKey,
-    bookThickness,
-    bookHeight,
-    extractYear,
-} from './book-utils.mjs';
+import {slugify, normalizeTag, tagKey, extractYear} from './book-utils.mjs';
 
 test('slugify remove acentos e normaliza', () => {
     assert.equal(slugify('A Revolta de Atlas'), 'a-revolta-de-atlas');
@@ -104,27 +99,6 @@ test('normalizeTag preserva acento, tagKey remove', () => {
     // Três grafias diferentes precisam colidir na mesma chave.
     assert.equal(tagKey('Política'), tagKey('politica'));
     assert.equal(tagKey('POLÍTICA'), 'politica');
-});
-
-test('bookThickness deriva de páginas com clamp nas duas pontas', () => {
-    // 400 páginas * 0.055mm = 22mm = 0.022m
-    assert.equal(bookThickness(400, 300), 0.022);
-    // 90 páginas cairia em 4.95mm — clampeado no mínimo de 12mm.
-    assert.equal(bookThickness(90, 300), 0.012);
-    // 1200 páginas daria 66mm — clampeado no máximo de 60mm.
-    assert.equal(bookThickness(1200, 300), 0.06);
-    // Sem páginas, usa a mediana do acervo.
-    assert.equal(bookThickness(null, 400), 0.022);
-});
-
-test('bookHeight é determinístico e fica na faixa realista', () => {
-    const a = bookHeight('duna');
-    assert.equal(a, bookHeight('duna'), 'mesmo slug precisa dar sempre a mesma altura');
-    assert.notEqual(bookHeight('duna'), bookHeight('1984'));
-    for (const slug of ['duna', '1984', 'a-revolta-de-atlas', 'ensaio-sobre-a-cegueira']) {
-        const h = bookHeight(slug);
-        assert.ok(h >= 0.185 && h <= 0.23, `${slug} fora da faixa: ${h}`);
-    }
 });
 
 test('extractYear aceita os formatos que a Open Library devolve', () => {
@@ -160,14 +134,6 @@ Create `lib/book-utils.mjs`:
  * importado por um script Node sem etapa de build, e este projeto não tem uma.
  */
 
-/** Milímetros de lombada por página. Valor médio de papel offset comercial. */
-const MM_POR_PAGINA = 0.055;
-const ESPESSURA_MIN_M = 0.012;
-const ESPESSURA_MAX_M = 0.060;
-
-const ALTURA_MIN_M = 0.185;
-const ALTURA_MAX_M = 0.230;
-
 /** Remove acentos: decompõe em base + diacrítico e joga os diacríticos fora. */
 function semAcento(texto) {
     return texto.normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -196,39 +162,6 @@ export function tagKey(tag) {
 }
 
 /**
- * Espessura do livro em metros, a partir do número de páginas.
- *
- * O clamp existe para o 3D: sem ele um livro de 90 páginas vira uma folha
- * invisível na estante e um de 1200 vira um tijolo que domina a prateleira.
- */
-export function bookThickness(pages, medianPages) {
-    const p = Number(pages) > 0 ? Number(pages) : Number(medianPages);
-    const metros = (p * MM_POR_PAGINA) / 1000;
-    return Math.round(Math.min(Math.max(metros, ESPESSURA_MIN_M), ESPESSURA_MAX_M) * 1000) / 1000;
-}
-
-/** Hash FNV-1a — determinístico, rápido, e não precisa ser criptográfico. */
-function hashString(texto) {
-    let h = 2166136261;
-    for (let i = 0; i < texto.length; i++) {
-        h ^= texto.charCodeAt(i);
-        h = Math.imul(h, 16777619);
-    }
-    return h >>> 0;
-}
-
-/**
- * Altura do livro em metros, derivada do slug.
- *
- * Determinística de propósito: se fosse Math.random(), o livro mudaria de
- * tamanho a cada render e a estante ficaria "respirando".
- */
-export function bookHeight(slug) {
-    const t = (hashString(String(slug)) % 1000) / 1000;
-    return Math.round((ALTURA_MIN_M + t * (ALTURA_MAX_M - ALTURA_MIN_M)) * 1000) / 1000;
-}
-
-/**
  * Extrai o ano de publicação. A Open Library devolve esse campo como texto
  * livre — "2009", "March 2009", "1st ed. 1985, reprint 2001" são todos reais.
  * Pega o primeiro ano plausível encontrado.
@@ -243,7 +176,7 @@ export function extractYear(publishDate) {
 - [ ] **Step 4: Rode os testes para ver passar**
 
 Run: `npm test`
-Expected: PASS — 6 testes.
+Expected: PASS — 4 testes.
 
 - [ ] **Step 5: Crie a taxonomia de categorias**
 
@@ -626,7 +559,7 @@ export async function buscarMetadados(isbn) {
 - [ ] **Step 4: Rode os testes para ver passar**
 
 Run: `npm test`
-Expected: PASS — 11 testes no total (6 da Task 1 + 5 desta).
+Expected: PASS — 9 testes no total (4 da Task 1 + 5 desta).
 
 - [ ] **Step 5: Verifique contra a API real**
 
@@ -2152,7 +2085,7 @@ export async function buscarPorTitulo(title, author) {
 - [ ] **Step 4: Rode os testes para ver passar**
 
 Run: `npm test`
-Expected: PASS — 16 testes no total (11 anteriores + 5 desta task).
+Expected: PASS — 14 testes no total (9 anteriores + 5 desta task).
 
 - [ ] **Step 5: Implemente o comando `seed`**
 
@@ -2260,8 +2193,10 @@ async function comandoSeed(sql, {limite, apply, incluirRevisar}) {
     }
 
     if (!apply) {
-        console.log('\nDRY-RUN: nada foi gravado. Rode com --apply para importar.');
-        console.log('AVISO: as capas JÁ foram baixadas para public/livros/capas/ mesmo no dry-run.');
+        console.log('\nDRY-RUN: nada foi gravado NO BANCO. Rode com --apply para importar.');
+        console.log('   Atenção: as capas JÁ foram baixadas para public/livros/capas/ —');
+        console.log('   isso é intencional, é como você descobre quais ficaram placeholder');
+        console.log('   antes de gravar. O dry-run é do banco, não do disco.');
     } else {
         console.log(`\n✅ ${fila.length} livro(s) importado(s). As resenhas entram depois, com "edit".`);
     }
@@ -2325,7 +2260,7 @@ git commit -m "feat(livros): add bulk seed command using Open Library title+auth
 
 Ao fim da Task 12:
 
-- `npm test` passa com 16 testes de lógica pura.
+- `npm test` passa com 14 testes de lógica pura.
 - `rtk next build` completa sem erros.
 - `node scripts/livros.mjs add <isbn>` cadastra um livro de ponta a ponta, com
   capa baixada, cor extraída e resenha escrita no editor.
