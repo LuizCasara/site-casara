@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type {BookFilters as Filtros} from '@/lib/books';
+import {corDeTextoSobre} from '@/lib/contraste.mjs';
 
 type Categoria = {id: string; nome: string; cor: string};
 
@@ -17,13 +18,14 @@ function Chip({ativo, children, url, cor}: {
 }) {
     return (
         <Link href={url}
+              aria-current={ativo ? 'true' : undefined}
               className={`rounded-full px-3 py-1 text-xs font-medium transition ${
                   ativo
-                      ? 'text-white'
+                      ? ''
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200 ' +
                         'dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
               }`}
-              style={ativo && cor ? {backgroundColor: cor} : undefined}>
+              style={ativo && cor ? {backgroundColor: cor, color: corDeTextoSobre(cor)} : undefined}>
             {children}
         </Link>
     );
