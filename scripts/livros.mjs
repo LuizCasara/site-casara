@@ -4,6 +4,7 @@
  * Uso:  node scripts/livros.mjs list
  *       node scripts/livros.mjs add <isbn> [--dry-run]
  *       node scripts/livros.mjs edit <slug>
+ *       node scripts/livros.mjs seed [--limit N] [--apply] [--incluir-revisar]
  *
  * Roda APENAS na máquina do Luiz. O site não tem rota de admin nem sessão —
  * isso foi requisito explícito: zero superfície de ataque pública.
@@ -114,6 +115,23 @@ async function perguntarNota(io, padrao) {
         bruto = await perguntar(io, 'Nota precisa ser um número entre 0 e 5 (ou vazio)', '');
     }
     return rating;
+}
+
+/**
+ * Pergunta um inteiro positivo opcional (ano, páginas) e repete até ser
+ * válido. Vazio sempre significa "sem valor" -> `null`, sem entrar no loop de
+ * reprompt — mesmo padrão de `perguntarNota` acima: reprompt só acontece
+ * depois de uma entrada NÃO vazia e inválida, e usa sempre padrão vazio (não
+ * o padrão original) nas repetições.
+ */
+async function perguntarInteiroOpcional(io, rotulo, padrao) {
+    let bruto = await perguntar(io, rotulo, padrao);
+    while (bruto) {
+        const n = Number(bruto);
+        if (Number.isInteger(n) && n > 0) return n;
+        bruto = await perguntar(io, `${rotulo} precisa ser um número inteiro positivo (ou vazio)`, '');
+    }
+    return null;
 }
 
 /**
@@ -301,7 +319,7 @@ async function comandoAdd(sql, isbn, dryRun) {
 
         console.log('\nBaixando capa...');
         const {coverPath, spineColor, placeholder} =
-            await baixarCapa(meta?.coverUrl ?? null, slug, category, ROOT);
+            await baixarCapa(meta?.coverUrl ?? null, slug, category, ROOT, title);
         if (placeholder) {
             console.log('⚠  Sem capa real — gerei um placeholder. Troque depois em '
                 + `public${coverPath}`);
@@ -382,6 +400,16 @@ async function comandoEdit(sql, slug) {
         const title = await perguntar(io, 'Título', livro.title);
         const author = await perguntar(io, 'Autor', livro.author ?? '');
 
+        // Estes quatro ficam nulos na maioria dos livros vindos do `seed` (a
+        // Open Library falha para a maioria das edições brasileiras — ver
+        // CLAUDE.md), e até agora o `edit` não tinha como preenchê-los: o
+        // único jeito era SQL cru contra produção. Mesmo estilo de pergunta
+        // dos demais campos, Enter mantém o valor atual.
+        const year = await perguntarInteiroOpcional(io, 'Ano', livro.year != null ? String(livro.year) : '');
+        const publisher = await perguntar(io, 'Editora', livro.publisher ?? '');
+        const pages = await perguntarInteiroOpcional(io, 'Páginas', livro.pages != null ? String(livro.pages) : '');
+        const isbn = await perguntar(io, 'ISBN', livro.isbn ?? '');
+
         const category = await perguntarCategoria(io, livro.category);
 
         const jaUsadas = await tagsExistentes(sql);
@@ -414,7 +442,8 @@ async function comandoEdit(sql, slug) {
         }
 
         console.log('\n─── Será atualizado ───');
-        console.table([{slug, title, author, category, tags: tags.join(', '),
+        console.table([{slug, title, author, ano: year, editora: publisher,
+            páginas: pages, isbn, category, tags: tags.join(', '),
             status, progress_pct: progress, rating,
             resenha: review ? `${review.length} caracteres` : '(vazia)'}]);
 
@@ -428,6 +457,10 @@ async function comandoEdit(sql, slug) {
             UPDATE casara.books
             SET title        = ${title},
                 author       = ${author || null},
+                year         = ${year},
+                publisher    = ${publisher || null},
+                pages        = ${pages},
+                isbn         = ${isbn || null},
                 rating       = ${rating},
                 synopsis     = ${synopsis || null},
                 category     = ${category},
@@ -451,13 +484,35 @@ async function comandoSeed(sql, {limite, apply, incluirRevisar}) {
     const arquivo = join(ROOT, 'scripts', 'seed', 'acervo.json');
     const {livros} = JSON.parse(lerArquivo(arquivo, 'utf8'));
 
-    // Validação antes de qualquer rede: categoria inválida no arquivo é erro
-    // de digitação, e é melhor descobrir agora do que no livro 40.
+    // Validação antes de qualquer rede: um valor inválido no arquivo é erro
+    // de digitação, e é melhor descobrir agora do que no livro 40 — depois de
+    // 29 já terem sido gravados, o laço parar no meio (rejeição do CHECK do
+    // Postgres) e sobrar capa órfã no disco. As três validações (categoria,
+    // status, nota) seguem o mesmo formato de mensagem.
     const invalidos = livros.filter((l) => !CATEGORY_IDS.includes(l.category));
     if (invalidos.length) {
         console.error('Categorias inválidas no acervo.json:');
         for (const l of invalidos) console.error(`  ${l.title} -> "${l.category}"`);
         console.error(`Válidas: ${CATEGORY_IDS.join(', ')}`);
+        process.exitCode = 1;
+        return;
+    }
+
+    const statusInvalidos = livros.filter((l) => l.status !== 'lendo' && l.status !== 'lido');
+    if (statusInvalidos.length) {
+        console.error('Status inválidos no acervo.json:');
+        for (const l of statusInvalidos) console.error(`  ${l.title} -> ${JSON.stringify(l.status)}`);
+        console.error('Válidos: lendo, lido');
+        process.exitCode = 1;
+        return;
+    }
+
+    const ratingInvalidos = livros.filter((l) =>
+        l.rating != null && (typeof l.rating !== 'number' || l.rating < 0 || l.rating > 5));
+    if (ratingInvalidos.length) {
+        console.error('Notas inválidas no acervo.json:');
+        for (const l of ratingInvalidos) console.error(`  ${l.title} -> ${JSON.stringify(l.rating)}`);
+        console.error('Válidas: número entre 0 e 5, ou ausente (sem nota)');
         process.exitCode = 1;
         return;
     }
@@ -525,7 +580,7 @@ async function comandoSeed(sql, {limite, apply, incluirRevisar}) {
         const tags = resolverTags((livro.tags ?? []).join(','), jaUsadas);
 
         const {coverPath, spineColor, placeholder} =
-            await baixarCapa(encontrado?.coverUrl ?? null, slug, livro.category, ROOT);
+            await baixarCapa(encontrado?.coverUrl ?? null, slug, livro.category, ROOT, livro.title);
 
         const linha = {
             slug,
