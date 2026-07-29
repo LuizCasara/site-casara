@@ -165,3 +165,11 @@ export const trackQuizSessionDiscarded = (sessionId: string) =>
 
 export const trackSorteioRealizado = (entryCount: number, winnerCount: number) =>
   trackEvent('sorteio_realizado', { entry_count: entryCount, winner_count: winnerCount });
+
+// ─── Livros ───────────────────────────────────────────────────────────────────
+
+export const trackBookOpened = (slug: string) =>
+  trackEvent('book_opened', { slug });
+
+export const trackBookFilter = (campo: string, valor: string) =>
+  trackEvent('book_filter', { campo, valor });

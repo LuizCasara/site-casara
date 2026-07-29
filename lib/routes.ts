@@ -31,6 +31,9 @@ const RESULTS_TOKEN = "[0-9a-f-]{20,40}"; // lib/session-ids.ts PARTICIPANT_ID_R
 export const REAL_ROUTE_PATTERN =
   `^/$` +
   `|^/(about|projects|app|casamento|stats)$` +
+  `|^/livros$` +
+  `|^/livros/lista$` +
+  `|^/livros/[a-z0-9-]+$` +
   `|^/app/(${APP_SLUGS.join("|")})$` +
   `|^/[wq]/${SESSION_ID}$` +
   `|^/[wq]/${SESSION_ID}/resultados/${RESULTS_TOKEN}$`;

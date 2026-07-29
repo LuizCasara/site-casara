@@ -113,6 +113,40 @@ Unlike Nuvem de Palavras and Quiz ao Vivo, this one is **single-screen and clien
 - The animated reveal (slot-machine-style name cycling, one winner at a time) and the confetti burst are both hand-rolled with framer-motion (already a project dependency via the Quiz/Nuvem de Palavras animations) rather than pulling in a dedicated confetti library
 - The spin's tick interval is **not** a fixed `setInterval` — `spinFor()` uses a recursive `setTimeout` whose delay follows `easedTickDelay()` (a `Math.sin` curve: slow → fast → slow), so the roulette accelerates then decelerates into the landing name over a fixed `SPIN_DURATION_MS`, regardless of how many entries are in the pool. This is deliberate: with a naive fixed-speed loop, a short list "landed" almost instantly and killed the suspense — duration is now time-based, not cycle-count-based
 
+### Acervo de Livros
+
+`/livros` (fase 1: redireciona para `/livros/lista`; vira a sala 3D na fase 2),
+`/livros/lista` (grade com filtros por categoria/tag/status, todos via query
+param para serem compartilháveis) e `/livros/[slug]` (página do livro,
+server-rendered para SEO). Ver `docs/superpowers/specs/2026-07-28-sala-de-leitura-3d-design.md`.
+
+- **Não existe rota de admin.** O cadastro acontece só por `scripts/livros.mjs`,
+  rodando localmente — foi requisito explícito de não criar superfície de ataque
+  pública. O script lê `DATABASE_URL` de `.env.local` com o mesmo parsing manual
+  de `scripts/migrate-casara.mjs`, escreve em **produção**, e por isso sempre
+  mostra o que vai gravar e pede confirmação; tem `--dry-run`
+- **A lógica pura vive em `.mjs`, não `.ts`** (`lib/book-utils.mjs`,
+  `lib/book-categories.mjs`, `lib/book-sources/`, `lib/book-cover.mjs`): o CLI é
+  Node puro e não consegue importar `.ts` sem build. Esses arquivos são
+  importados tanto pelo CLI quanto pelo Next, e são os únicos cobertos por teste
+  (`npm test`, via `node --test`) — porque um bug ali corrompe dado permanente
+- `lib/books.ts` é o lado Next: tipo `Book` e queries. Sempre `casara.books`
+- **Um livro tem UMA `category`** (taxonomia fechada em `lib/book-categories.mjs`,
+  define a cor e, na fase 2, a posição na estante) **e N `tags` livres** (eixo
+  transversal de busca). Multi-categoria tornaria a posição na prateleira ambígua
+- **Capas são baixadas, não linkadas** (`public/livros/capas/<slug>.jpg`): a API
+  de covers da Open Library tem rate limit e linkar direto faria cada visitante
+  bater no servidor deles. `spine_color` é a cor dominante, extraída uma vez no
+  cadastro pelo `sharp` — o navegador nunca faz esse trabalho
+- **A Open Library é incompleta**, sobretudo para edições brasileiras: faltar
+  `number_of_pages` ou capa é rotina. O CLI trata isso como caminho normal
+  (pergunta no terminal, gera capa placeholder), não como erro
+- Skoob **não** é uma fonte: a API pública foi desligada em setembro de 2025 e
+  não há exportação nativa. `lib/book-sources/index.mjs` existe como gancho caso
+  isso mude
+- `/livros` é **só em português**, como os mini-apps e as dinâmicas — o
+  `LanguageProvider` cobre apenas home, about, projects e a listagem `/app`
+
 ### Descubra sua Linguagem do Amor
 
 A second forced-choice personality-style test, `apps/desenvolvimento-pessoal/descubra-sua-linguagem-do-amor.tsx`, following the same lessons as the temperament test (see `docs/testes-de-personalidade.md`) but researched separately in `docs/linguagens-do-amor-pesquisa.md` — read that doc before changing the question bank or scoring.
