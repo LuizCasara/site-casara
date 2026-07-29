@@ -51,6 +51,71 @@ async function confirmar(io, rotulo) {
 }
 
 /**
+ * Pergunta a categoria e repete até ser uma das `CATEGORY_IDS` conhecidas.
+ * Usada por `comandoAdd` e `comandoEdit` — cada um passa seu próprio padrão
+ * (a primeira categoria da lista no `add`, a categoria atual do livro no
+ * `edit`), mas o texto da pergunta e do erro é sempre o mesmo.
+ */
+async function perguntarCategoria(io, padrao) {
+    let category = await perguntar(io, 'Categoria', padrao);
+    while (!CATEGORY_IDS.includes(category)) {
+        console.log(`"${category}" não existe. Escolha uma de: ${CATEGORY_IDS.join(', ')}`);
+        category = await perguntar(io, 'Categoria', padrao);
+    }
+    return category;
+}
+
+/** Pergunta o status e repete até ser "lendo" ou "lido". */
+async function perguntarStatus(io, padrao) {
+    let status = await perguntar(io, 'Status (lendo/lido)', padrao);
+    while (status !== 'lendo' && status !== 'lido') {
+        status = await perguntar(io, 'Status precisa ser "lendo" ou "lido"', padrao);
+    }
+    return status;
+}
+
+/**
+ * Pergunta o progresso (0-100, inteiro) e repete até ser válido. Quem chama
+ * decide SE pergunta — só faz sentido quando o status é "lendo".
+ *
+ * Validado no cliente com reprompt pelo mesmo motivo do `perguntarNota`
+ * abaixo: sem isso, um valor fora do CHECK do Postgres (`progress_pct`
+ * entre 0 e 100) só falha depois de todo o resto já ter sido respondido —
+ * no `add`, depois até da capa já ter sido baixada — jogando fora todo esse
+ * trabalho com uma stack trace crua do driver.
+ */
+async function perguntarProgresso(io, padrao) {
+    let bruto = await perguntar(io, 'Progresso (0-100)', padrao);
+    let numero = Number(bruto);
+    while (!Number.isInteger(numero) || numero < 0 || numero > 100) {
+        bruto = await perguntar(io, 'Progresso precisa ser um número inteiro entre 0 e 100', padrao);
+        numero = Number(bruto);
+    }
+    return numero;
+}
+
+/**
+ * Pergunta a nota (0-5, decimal aceito, ex. 4.5) e repete até ser válida.
+ * Vazio continua significando "sem nota" — devolve `null` nesse caso, sem
+ * entrar no loop de reprompt. A repergunta usa sempre padrão vazio (não o
+ * padrão original), igual ao comportamento anterior em `comandoAdd`/
+ * `comandoEdit`.
+ */
+async function perguntarNota(io, padrao) {
+    let bruto = await perguntar(io, 'Nota (0 a 5, pode ser 4.5)', padrao);
+    let rating = null;
+    while (bruto) {
+        const n = Number(bruto);
+        if (!Number.isNaN(n) && n >= 0 && n <= 5) {
+            rating = n;
+            break;
+        }
+        bruto = await perguntar(io, 'Nota precisa ser um número entre 0 e 5 (ou vazio)', '');
+    }
+    return rating;
+}
+
+/**
  * Abre o editor para escrever a resenha em Markdown.
  * O --wait no EDITOR é obrigatório — sem ele o spawnSync retorna antes de você
  * escrever qualquer coisa e a resenha vem vazia.
@@ -201,47 +266,15 @@ async function comandoAdd(sql, isbn, dryRun) {
         const pages = await perguntar(io, 'Páginas', meta?.pages ?? '');
 
         console.log(`\nCategorias: ${CATEGORY_IDS.join(', ')}`);
-        let category = await perguntar(io, 'Categoria', CATEGORY_IDS[0]);
-        while (!CATEGORY_IDS.includes(category)) {
-            console.log(`"${category}" não existe. Escolha uma de: ${CATEGORY_IDS.join(', ')}`);
-            category = await perguntar(io, 'Categoria', CATEGORY_IDS[0]);
-        }
+        const category = await perguntarCategoria(io, CATEGORY_IDS[0]);
 
         const jaUsadas = await tagsExistentes(sql);
         if (jaUsadas.length) console.log(`Tags já usadas: ${jaUsadas.join(', ')}`);
         const tags = resolverTags(await perguntar(io, 'Tags (separadas por vírgula)'), jaUsadas);
 
-        let status = await perguntar(io, 'Status (lendo/lido)', 'lido');
-        while (status !== 'lendo' && status !== 'lido') {
-            status = await perguntar(io, 'Status precisa ser "lendo" ou "lido"', 'lido');
-        }
-
-        // Validado no cliente, com o mesmo padrão de reprompt do category/status
-        // acima — sem isso, um valor fora do CHECK do Postgres (rating 0-5,
-        // progress_pct 0-100) só falha depois de todo o resto já ter sido
-        // respondido e a capa já baixada, jogando fora todo esse trabalho.
-        let progress = null;
-        if (status === 'lendo') {
-            let progressoBruto = await perguntar(io, 'Progresso (0-100)', '0');
-            let progressoNum = Number(progressoBruto);
-            while (!Number.isInteger(progressoNum) || progressoNum < 0 || progressoNum > 100) {
-                progressoBruto = await perguntar(
-                    io, 'Progresso precisa ser um número inteiro entre 0 e 100', '0');
-                progressoNum = Number(progressoBruto);
-            }
-            progress = progressoNum;
-        }
-
-        let ratingBruto = await perguntar(io, 'Nota (0 a 5, pode ser 4.5)', '');
-        let rating = null;
-        while (ratingBruto) {
-            const n = Number(ratingBruto);
-            if (!Number.isNaN(n) && n >= 0 && n <= 5) {
-                rating = n;
-                break;
-            }
-            ratingBruto = await perguntar(io, 'Nota precisa ser um número entre 0 e 5 (ou vazio)', '');
-        }
+        const status = await perguntarStatus(io, 'lido');
+        const progress = status === 'lendo' ? await perguntarProgresso(io, '0') : null;
+        const rating = await perguntarNota(io, '');
 
         const synopsis = await perguntar(io, 'Sinopse curta (uma frase)');
 
@@ -332,49 +365,21 @@ async function comandoEdit(sql, slug) {
         const title = await perguntar(io, 'Título', livro.title);
         const author = await perguntar(io, 'Autor', livro.author ?? '');
 
-        let category = await perguntar(io, 'Categoria', livro.category);
-        while (!CATEGORY_IDS.includes(category)) {
-            console.log(`"${category}" não existe. Escolha uma de: ${CATEGORY_IDS.join(', ')}`);
-            category = await perguntar(io, 'Categoria', livro.category);
-        }
+        const category = await perguntarCategoria(io, livro.category);
 
         const jaUsadas = await tagsExistentes(sql);
         const tags = resolverTags(
             await perguntar(io, 'Tags', (livro.tags ?? []).join(', ')), jaUsadas);
 
-        let status = await perguntar(io, 'Status (lendo/lido)', livro.status);
-        while (status !== 'lendo' && status !== 'lido') {
-            status = await perguntar(io, 'Status precisa ser "lendo" ou "lido"', livro.status);
-        }
+        const status = await perguntarStatus(io, livro.status);
 
-        // Mesmo padrão de reprompt do `comandoAdd` para rating/progress: o
-        // valor default aqui é sempre o valor atual do livro (já passou pelo
+        // O padrão aqui é sempre o valor atual do livro (já passou pelo
         // CHECK do Postgres quando foi gravado), então aceitar com Enter
         // nunca cai em reprompt — só entradas novas e inválidas caem.
-        let progress = null;
-        if (status === 'lendo') {
-            const padraoProgress = String(livro.progress_pct ?? 0);
-            let progressoBruto = await perguntar(io, 'Progresso (0-100)', padraoProgress);
-            let progressoNum = Number(progressoBruto);
-            while (!Number.isInteger(progressoNum) || progressoNum < 0 || progressoNum > 100) {
-                progressoBruto = await perguntar(
-                    io, 'Progresso precisa ser um número inteiro entre 0 e 100', padraoProgress);
-                progressoNum = Number(progressoBruto);
-            }
-            progress = progressoNum;
-        }
-
-        const padraoRating = livro.rating != null ? String(livro.rating) : '';
-        let ratingBruto = await perguntar(io, 'Nota (0 a 5, pode ser 4.5)', padraoRating);
-        let rating = null;
-        while (ratingBruto) {
-            const n = Number(ratingBruto);
-            if (!Number.isNaN(n) && n >= 0 && n <= 5) {
-                rating = n;
-                break;
-            }
-            ratingBruto = await perguntar(io, 'Nota precisa ser um número entre 0 e 5 (ou vazio)', '');
-        }
+        const progress = status === 'lendo'
+            ? await perguntarProgresso(io, String(livro.progress_pct ?? 0))
+            : null;
+        const rating = await perguntarNota(io, livro.rating != null ? String(livro.rating) : '');
 
         const synopsis = await perguntar(io, 'Sinopse', livro.synopsis ?? '');
 
