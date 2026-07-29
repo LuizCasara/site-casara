@@ -11,12 +11,14 @@ const navLinks = {
     {href: '/about', label: 'Sobre'},
     {href: '/projects', label: 'Projetos'},
     {href: '/app', label: 'Aplicativos'},
+    {href: '/livros', label: 'Livros'},
   ],
   en: [
     {href: '/', label: 'Home'},
     {href: '/about', label: 'About'},
     {href: '/projects', label: 'Projects'},
     {href: '/app', label: 'Apps'},
+    {href: '/livros', label: 'Books'},
   ],
 };
 

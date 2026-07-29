@@ -124,7 +124,29 @@ server-rendered para SEO). Ver `docs/superpowers/specs/2026-07-28-sala-de-leitur
   rodando localmente — foi requisito explícito de não criar superfície de ataque
   pública. O script lê `DATABASE_URL` de `.env.local` com o mesmo parsing manual
   de `scripts/migrate-casara.mjs`, escreve em **produção**, e por isso sempre
-  mostra o que vai gravar e pede confirmação; tem `--dry-run`
+  mostra o que vai gravar e pede confirmação; tem `--dry-run`. Comandos:
+  `list`, `add <isbn>`, `edit <slug>` (um livro por vez) e `seed [--limit N]
+  [--apply] [--incluir-revisar]` (importação em lote a partir de
+  `scripts/seed/acervo.json`)
+- **`scripts/seed/acervo.json` é a fonte da verdade** para título, autor,
+  nota, categoria, tags e status — a Open Library só entra para complementar
+  **capa, páginas e ano**. Não é uma limitação temporária: a busca por
+  título+autor devolve com frequência texto de marketing dentro de
+  `author_name` e casa o livro errado com um box de 3 volumes, então usar a
+  resposta da API para título/autor/nota corromperia dado bom com dado ruim.
+  `seed` sem `--apply` é dry-run (não grava no banco, mas AINDA baixa capas
+  para o disco — é assim que se descobre quais vão ficar placeholder antes de
+  gravar); `--limit N` importa só os N primeiros da fila; `--incluir-revisar`
+  inclui livros marcados com `_revisar` no JSON (pulados por padrão).
+  **A idempotência do `seed` é por TÍTULO**, não por slug: rodar de novo só
+  importa os livros do `acervo.json` cujo título ainda não está no banco
+  — comparar por slug quebraria, porque o slug gravado pode ganhar sufixo
+  (`-<ano>` ou `-2`) em caso de colisão e nunca mais bater com `slugify(title)`
+- **Armadilha do `seed --apply`: as linhas vão para o banco de produção NA
+  HORA, mas as capas baixadas só existem no site ao vivo depois de
+  `git commit` + deploy** (`public/livros/capas/` é versionado). Entre rodar
+  `--apply` e dar push, o site fica com `/livros` mostrando imagens quebradas
+  para as capas novas. Rode e faça o push junto, no mesmo momento
 - **A lógica pura vive em `.mjs`, não `.ts`** (`lib/book-utils.mjs`,
   `lib/book-categories.mjs`, `lib/book-sources/`, `lib/book-cover.mjs`): o CLI é
   Node puro e não consegue importar `.ts` sem build. Esses arquivos são
