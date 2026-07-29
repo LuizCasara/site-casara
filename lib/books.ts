@@ -1,3 +1,4 @@
+import {cache} from 'react';
 import sql from '@/lib/db';
 
 export type BookStatus = 'lendo' | 'lido';
@@ -40,8 +41,14 @@ export type BookFilters = {
  * `casara.` é obrigatório: o search_path da conexão não inclui esse schema.
  *
  * Livros com status 'lendo' aparecem primeiro — é o destaque do acervo.
+ *
+ * Envolvida em `cache()` do React: o driver do Neon usado por `lib/db.ts` é o
+ * HTTP direto do `@neondatabase/serverless`, não o `fetch()` do Next, então a
+ * deduplicação automática de requests do framework não cobre essas queries —
+ * sem isso, `generateMetadata` e o componente da página fariam dois
+ * round-trips idênticos ao banco na mesma requisição.
  */
-export async function listarLivros(filtros: BookFilters = {}): Promise<Book[]> {
+export const listarLivros = cache(async (filtros: BookFilters = {}): Promise<Book[]> => {
     const categoria = filtros.categoria || null;
     const tag = filtros.tag || null;
     const status = filtros.status || null;
@@ -54,24 +61,32 @@ export async function listarLivros(filtros: BookFilters = {}): Promise<Book[]> {
           AND (${status}::text IS NULL OR status = ${status})
         ORDER BY (status = 'lendo') DESC, COALESCE(shelf_order, 32767), title
     `) as Book[];
-}
+});
 
-export async function buscarLivroPorSlug(slug: string): Promise<Book | null> {
+/** Ver comentário de `listarLivros` sobre por que `cache()` é necessário aqui. */
+export const buscarLivroPorSlug = cache(async (slug: string): Promise<Book | null> => {
     const linhas = (await sql`
         SELECT * FROM casara.books WHERE slug = ${slug}
     `) as Book[];
     return linhas[0] ?? null;
-}
+});
 
-/** Tags distintas do acervo, para montar os filtros. */
-export async function listarTags(): Promise<string[]> {
+/**
+ * Tags distintas do acervo, para montar os filtros.
+ * Ver comentário de `listarLivros` sobre por que `cache()` é necessário aqui.
+ */
+export const listarTags = cache(async (): Promise<string[]> => {
     const linhas = (await sql`
         SELECT DISTINCT unnest(tags) AS tag FROM casara.books ORDER BY tag
     `) as {tag: string}[];
     return linhas.map((l) => l.tag);
-}
+});
 
-/** Usado pelo generateStaticParams da página do livro. */
+/**
+ * Todos os slugs do acervo. Sem consumidor hoje — as páginas usam
+ * `force-dynamic` e não há `generateStaticParams` no projeto. Existe para uma
+ * fase futura (sitemap, ou geração estática das páginas de livro).
+ */
 export async function listarSlugs(): Promise<string[]> {
     const linhas = (await sql`SELECT slug FROM casara.books`) as {slug: string}[];
     return linhas.map((l) => l.slug);

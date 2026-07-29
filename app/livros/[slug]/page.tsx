@@ -111,7 +111,29 @@ export default async function LivroPage({params}: {params: Promise<{slug: string
 
                 {livro.review && (
                     <article className="prose prose-sm mt-10 max-w-none dark:prose-invert">
-                        <ReactMarkdown>{livro.review}</ReactMarkdown>
+                        {/*
+                          O CLI de cadastro (scripts/livros.mjs) abre a resenha já com
+                          "# <título>" — ou seja, todo review real começa com um heading nível 1.
+                          Sem remapear, isso vira um segundo <h1> na página (o primeiro é o
+                          título do livro logo acima), quebrando a hierarquia semântica. Por
+                          isso cada nível do Markdown desce um degrau (h1->h2 ... h5->h6): a
+                          resenha é uma seção da página, não um documento à parte.
+                        */}
+                        <ReactMarkdown components={{
+                            // `node` é o nó hast que o react-markdown injeta em toda prop de
+                            // componente; descartado aqui de propósito para não vazar como um
+                            // atributo `node="[object Object]"` inválido no HTML renderizado.
+                            /* eslint-disable @typescript-eslint/no-unused-vars */
+                            h1: ({node, ...props}) => <h2 {...props}/>,
+                            h2: ({node, ...props}) => <h3 {...props}/>,
+                            h3: ({node, ...props}) => <h4 {...props}/>,
+                            h4: ({node, ...props}) => <h5 {...props}/>,
+                            h5: ({node, ...props}) => <h6 {...props}/>,
+                            h6: ({node, ...props}) => <h6 {...props}/>,
+                            /* eslint-enable @typescript-eslint/no-unused-vars */
+                        }}>
+                            {livro.review}
+                        </ReactMarkdown>
                     </article>
                 )}
             </div>
