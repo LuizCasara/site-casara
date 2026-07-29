@@ -35,91 +35,97 @@ const sql = neon(url);
 
 const EXPECTED_INDEXES = ['idx_books_status', 'idx_books_category', 'idx_books_tags'];
 
-// ─── Verificação de estado ──────────────────────────────────────────────────
+// ─── Função principal ───────────────────────────────────────────────────────
 
-const [tabelaExiste] = await sql`
-  SELECT 1 FROM information_schema.tables
-  WHERE table_schema = 'casara' AND table_name = 'books' AND table_type = 'BASE TABLE'`;
+async function main() {
+    // Verificação de estado
+    const [tabelaExiste] = await sql`
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'casara' AND table_name = 'books' AND table_type = 'BASE TABLE'`;
 
-const indicesExistentes = tabelaExiste
-    ? (await sql`
-        SELECT indexname FROM pg_indexes
-        WHERE schemaname = 'casara' AND tablename = 'books'`).map((r) => r.indexname)
-    : [];
+    const indicesExistentes = tabelaExiste
+        ? (await sql`
+            SELECT indexname FROM pg_indexes
+            WHERE schemaname = 'casara' AND tablename = 'books'`).map((r) => r.indexname)
+        : [];
 
-const indicesFaltam = EXPECTED_INDEXES.filter((idx) => !indicesExistentes.includes(idx));
+    const indicesFaltam = EXPECTED_INDEXES.filter((idx) => !indicesExistentes.includes(idx));
 
-// ─── Estado e decisão ───────────────────────────────────────────────────────
+    // ─── Estado e decisão ───────────────────────────────────────────────────
 
-if (!tabelaExiste) {
-    console.log('casara.books NÃO existe (criar tabela + índices).');
+    if (!tabelaExiste) {
+        console.log('casara.books NÃO existe (criar tabela + índices).');
 
-    if (!APPLY) {
-        console.log('Dry-run. Rode com --apply para criar a tabela e seus índices.');
-        process.exit(0);
-    }
-
-    console.log('\nExecutando criação (transação única)...');
-    await sql.transaction([
-        sql`
-          CREATE TABLE casara.books (
-            id           BIGSERIAL PRIMARY KEY,
-            slug         TEXT NOT NULL UNIQUE,
-            isbn         TEXT,
-            title        TEXT NOT NULL,
-            author       TEXT,
-            year         SMALLINT,
-            publisher    TEXT,
-            pages        SMALLINT,
-            synopsis     TEXT,
-            cover_path   TEXT,
-            spine_color  TEXT,
-            rating       NUMERIC(2,1) CHECK (rating BETWEEN 0 AND 5),
-            category     TEXT NOT NULL,
-            tags         TEXT[] NOT NULL DEFAULT '{}',
-            status       TEXT NOT NULL CHECK (status IN ('lendo','lido')),
-            progress_pct SMALLINT CHECK (progress_pct BETWEEN 0 AND 100),
-            finished_at  DATE,
-            review       TEXT,
-            shelf_order  SMALLINT,
-            created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
-          )`,
-        sql`CREATE INDEX idx_books_status   ON casara.books (status)`,
-        sql`CREATE INDEX idx_books_category ON casara.books (category)`,
-        sql`CREATE INDEX idx_books_tags     ON casara.books USING GIN (tags)`,
-    ]);
-    console.log('Criação aplicada.');
-} else if (indicesFaltam.length === 0) {
-    const [{n}] = await sql`SELECT COUNT(*)::int AS n FROM casara.books`;
-    console.log(`casara.books já existe, com ${n} linha(s) e os 3 índices presentes. Nada a fazer.`);
-    process.exit(0);
-} else {
-    console.log(`casara.books existe, mas faltam ${indicesFaltam.length} índice(s):`);
-    indicesFaltam.forEach((idx) => console.log(`  - ${idx}`));
-
-    if (!APPLY) {
-        console.log('Dry-run. Rode com --apply para criar os índices faltantes.');
-        process.exit(0);
-    }
-
-    console.log('\nCriando índices faltantes...');
-    const indexStatements = indicesFaltam.map((idx) => {
-        if (idx === 'idx_books_status') {
-            return sql`CREATE INDEX IF NOT EXISTS idx_books_status ON casara.books (status)`;
-        } else if (idx === 'idx_books_category') {
-            return sql`CREATE INDEX IF NOT EXISTS idx_books_category ON casara.books (category)`;
-        } else if (idx === 'idx_books_tags') {
-            return sql`CREATE INDEX IF NOT EXISTS idx_books_tags ON casara.books USING GIN (tags)`;
+        if (!APPLY) {
+            console.log('Dry-run. Rode com --apply para criar a tabela e seus índices.');
+            // Pula direto para sanidade final
+        } else {
+            console.log('\nExecutando criação (transação única)...');
+            await sql.transaction([
+                sql`
+                  CREATE TABLE casara.books (
+                    id           BIGSERIAL PRIMARY KEY,
+                    slug         TEXT NOT NULL UNIQUE,
+                    isbn         TEXT,
+                    title        TEXT NOT NULL,
+                    author       TEXT,
+                    year         SMALLINT,
+                    publisher    TEXT,
+                    pages        SMALLINT,
+                    synopsis     TEXT,
+                    cover_path   TEXT,
+                    spine_color  TEXT,
+                    rating       NUMERIC(2,1) CHECK (rating BETWEEN 0 AND 5),
+                    category     TEXT NOT NULL,
+                    tags         TEXT[] NOT NULL DEFAULT '{}',
+                    status       TEXT NOT NULL CHECK (status IN ('lendo','lido')),
+                    progress_pct SMALLINT CHECK (progress_pct BETWEEN 0 AND 100),
+                    finished_at  DATE,
+                    review       TEXT,
+                    shelf_order  SMALLINT,
+                    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                  )`,
+                sql`CREATE INDEX idx_books_status   ON casara.books (status)`,
+                sql`CREATE INDEX idx_books_category ON casara.books (category)`,
+                sql`CREATE INDEX idx_books_tags     ON casara.books USING GIN (tags)`,
+            ]);
+            console.log('Criação aplicada.');
         }
-    });
+    } else if (indicesFaltam.length === 0) {
+        const [{n}] = await sql`SELECT COUNT(*)::int AS n FROM casara.books`;
+        console.log(`casara.books já existe, com ${n} linha(s) e os 3 índices presentes. Nada a fazer.`);
+    } else {
+        console.log(`casara.books existe, mas faltam ${indicesFaltam.length} índice(s):`);
+        indicesFaltam.forEach((idx) => console.log(`  - ${idx}`));
 
-    await sql.transaction(indexStatements);
-    console.log(`✅ ${indicesFaltam.length} índice(s) criado(s).`);
+        if (!APPLY) {
+            console.log('Dry-run. Rode com --apply para criar os índices faltantes.');
+            // Pula direto para sanidade final
+        } else {
+            console.log('\nCriando índices faltantes...');
+            const indexStatements = indicesFaltam.map((idx) => {
+                if (idx === 'idx_books_status') {
+                    return sql`CREATE INDEX IF NOT EXISTS idx_books_status ON casara.books (status)`;
+                } else if (idx === 'idx_books_category') {
+                    return sql`CREATE INDEX IF NOT EXISTS idx_books_category ON casara.books (category)`;
+                } else if (idx === 'idx_books_tags') {
+                    return sql`CREATE INDEX IF NOT EXISTS idx_books_tags ON casara.books USING GIN (tags)`;
+                }
+            });
+
+            await sql.transaction(indexStatements);
+            console.log(`✅ ${indicesFaltam.length} índice(s) criado(s).`);
+        }
+    }
+
+    // ─── Sanidade final — alcançada em todos os caminhos de sucesso ────────
+
+    const [{n: geav}] = await sql`
+      SELECT COUNT(*)::int AS n FROM information_schema.tables WHERE table_schema = 'geav'`;
+    console.log(`\n✅ Verificação: GEAV intacto com ${geav} tabelas.`);
 }
 
-// ─── Sanidade final ─────────────────────────────────────────────────────────
+// ─── Execução ────────────────────────────────────────────────────────────────
 
-const [{n: geav}] = await sql`
-  SELECT COUNT(*)::int AS n FROM information_schema.tables WHERE table_schema = 'geav'`;
-console.log(`\n✅ Verificação: GEAV intacto com ${geav} tabelas.`);
+await main();
