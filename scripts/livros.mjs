@@ -311,6 +311,117 @@ async function comandoAdd(sql, isbn, dryRun) {
     }
 }
 
+async function comandoEdit(sql, slug) {
+    if (!slug) {
+        console.error('Faltou o slug. Uso: node scripts/livros.mjs edit <slug>');
+        process.exitCode = 1;
+        return;
+    }
+
+    const [livro] = await sql`SELECT * FROM casara.books WHERE slug = ${slug}`;
+    if (!livro) {
+        console.error(`Não achei nenhum livro com slug "${slug}". Veja: livros.mjs list`);
+        process.exitCode = 1;
+        return;
+    }
+
+    const io = rl();
+    try {
+        console.log(`\nEditando "${livro.title}". Enter mantém o valor atual.`);
+
+        const title = await perguntar(io, 'Título', livro.title);
+        const author = await perguntar(io, 'Autor', livro.author ?? '');
+
+        let category = await perguntar(io, 'Categoria', livro.category);
+        while (!CATEGORY_IDS.includes(category)) {
+            console.log(`"${category}" não existe. Escolha uma de: ${CATEGORY_IDS.join(', ')}`);
+            category = await perguntar(io, 'Categoria', livro.category);
+        }
+
+        const jaUsadas = await tagsExistentes(sql);
+        const tags = resolverTags(
+            await perguntar(io, 'Tags', (livro.tags ?? []).join(', ')), jaUsadas);
+
+        let status = await perguntar(io, 'Status (lendo/lido)', livro.status);
+        while (status !== 'lendo' && status !== 'lido') {
+            status = await perguntar(io, 'Status precisa ser "lendo" ou "lido"', livro.status);
+        }
+
+        // Mesmo padrão de reprompt do `comandoAdd` para rating/progress: o
+        // valor default aqui é sempre o valor atual do livro (já passou pelo
+        // CHECK do Postgres quando foi gravado), então aceitar com Enter
+        // nunca cai em reprompt — só entradas novas e inválidas caem.
+        let progress = null;
+        if (status === 'lendo') {
+            const padraoProgress = String(livro.progress_pct ?? 0);
+            let progressoBruto = await perguntar(io, 'Progresso (0-100)', padraoProgress);
+            let progressoNum = Number(progressoBruto);
+            while (!Number.isInteger(progressoNum) || progressoNum < 0 || progressoNum > 100) {
+                progressoBruto = await perguntar(
+                    io, 'Progresso precisa ser um número inteiro entre 0 e 100', padraoProgress);
+                progressoNum = Number(progressoBruto);
+            }
+            progress = progressoNum;
+        }
+
+        const padraoRating = livro.rating != null ? String(livro.rating) : '';
+        let ratingBruto = await perguntar(io, 'Nota (0 a 5, pode ser 4.5)', padraoRating);
+        let rating = null;
+        while (ratingBruto) {
+            const n = Number(ratingBruto);
+            if (!Number.isNaN(n) && n >= 0 && n <= 5) {
+                rating = n;
+                break;
+            }
+            ratingBruto = await perguntar(io, 'Nota precisa ser um número entre 0 e 5 (ou vazio)', '');
+        }
+
+        const synopsis = await perguntar(io, 'Sinopse', livro.synopsis ?? '');
+
+        // review começa como a resenha já salva — só muda se o editor for
+        // aberto E o conteúdo for de fato alterado. "Abriu e fechou sem
+        // mexer" NUNCA apaga a resenha existente (ver comentário de
+        // abrirEditor). Vazio-intencional (o usuário apagou tudo e salvou)
+        // é a única forma de `review` virar null aqui.
+        let review = livro.review;
+        if (await confirmar(io, 'Abrir o editor para a resenha?')) {
+            const resenha = abrirEditor(livro.review ?? `# ${title}\n\n`);
+            if (resenha.alterado) {
+                review = resenha.texto || null;
+            }
+        }
+
+        console.log('\n─── Será atualizado ───');
+        console.table([{slug, title, author, category, tags: tags.join(', '),
+            status, progress_pct: progress, rating,
+            resenha: review ? `${review.length} caracteres` : '(vazia)'}]);
+
+        if (!await confirmar(io, '\nAtualizar no banco de PRODUÇÃO?')) {
+            console.log('Cancelado. Nada foi alterado.');
+            return;
+        }
+
+        // UPDATE sempre por slug — nunca por id ou posição.
+        await sql`
+            UPDATE casara.books
+            SET title        = ${title},
+                author       = ${author || null},
+                rating       = ${rating},
+                synopsis     = ${synopsis || null},
+                category     = ${category},
+                tags         = ${tags},
+                status       = ${status},
+                progress_pct = ${progress},
+                review       = ${review},
+                updated_at   = NOW()
+            WHERE slug = ${slug}`;
+
+        console.log(`✅ Atualizado. Veja em /livros/${slug}`);
+    } finally {
+        io.close();
+    }
+}
+
 async function main() {
     const [, , comando, argumento] = process.argv;
 
@@ -328,6 +439,11 @@ async function main() {
         case 'add': {
             const sql = abrirBanco();
             await comandoAdd(sql, argumento, process.argv.includes('--dry-run'));
+            break;
+        }
+        case 'edit': {
+            const sql = abrirBanco();
+            await comandoEdit(sql, argumento);
             break;
         }
         default:
