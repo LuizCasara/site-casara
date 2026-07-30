@@ -67,6 +67,7 @@ type BookProps = {
     uvRange: {u0: number; u1: number};
     isOpen: boolean;
     animate: boolean;
+    isMobile: boolean;
     restVariant?: 'lombada' | 'capa';
     restRotationY?: number;
 };
@@ -85,7 +86,7 @@ function setBoxFaceUV(geometry: THREE.BoxGeometry, faceIndex: number, u0: number
 }
 
 export default function Book({
-    book, position, atlasTexture, uvRange, isOpen, animate,
+    book, position, atlasTexture, uvRange, isOpen, animate, isMobile,
     restVariant = 'lombada', restRotationY = 0,
 }: BookProps) {
     const router = useRouter();
@@ -182,13 +183,13 @@ export default function Book({
             ref={groupRef}
             position={position}
             onPointerOver={(e) => {
-                if (isOpen) return;
+                if (isOpen || isMobile) return;
                 e.stopPropagation();
                 setHovered(true);
                 document.body.style.cursor = 'pointer';
             }}
             onPointerOut={(e) => {
-                if (isOpen) return;
+                if (isOpen || isMobile) return;
                 e.stopPropagation();
                 setHovered(false);
                 document.body.style.cursor = 'auto';
