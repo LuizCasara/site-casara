@@ -6,7 +6,14 @@ import type {SpineAtlas} from '@/lib/spine-canvas';
 
 const GAP_M = 0.003;
 
-export default function Bookshelf({shelfBooks, atlas}: {shelfBooks: ShelfBookData[]; atlas: SpineAtlas}) {
+type BookshelfProps = {
+    shelfBooks: ShelfBookData[];
+    atlas: SpineAtlas;
+    openSlug: string | null;
+    animate: boolean;
+};
+
+export default function Bookshelf({shelfBooks, atlas, openSlug, animate}: BookshelfProps) {
     const larguraTotal = shelfBooks.reduce((soma, b) => soma + b.thicknessM + GAP_M, 0) - GAP_M;
 
     let xAtual = -larguraTotal / 2;
@@ -27,6 +34,8 @@ export default function Bookshelf({shelfBooks, atlas}: {shelfBooks: ShelfBookDat
                     position={[posicoes[i], book.heightM / 2, 0]}
                     atlasTexture={atlas.texture}
                     uvRange={{u0: atlas.layout.spines[i].u0, u1: atlas.layout.spines[i].u1}}
+                    isOpen={book.slug === openSlug}
+                    animate={animate}
                 />
             ))}
         </group>
