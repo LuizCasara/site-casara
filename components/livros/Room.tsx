@@ -11,6 +11,21 @@ export const ROOM_ANCHORS = {
         position: [0, 1.3, 0.6] as [number, number, number],
         rotation: [0, 0, 0] as [number, number, number],
     },
+    // Deslocada pro lado (x=1.4) pra não brigar de espaço com a estante
+    // (z=-1.4) nem com o ponto de leitura (x=0, z=0.6). Rotação -0.35 rad
+    // angula o tampo levemente em direção ao centro da sala, então a mesa
+    // "olha" pra quem entra em vez de ficar de perfil.
+    mesa: {
+        position: [1.4, 0.75, 0.9] as [number, number, number],
+        rotation: [0, -0.35, 0] as [number, number, number],
+    },
+    // Sobre o tampo da mesa (y = mesa.y + metade da espessura do tampo),
+    // levemente fora do centro — não perfeitamente alinhada, pra parecer um
+    // objeto pousado, não um ícone de menu.
+    indice: {
+        position: [1.25, 0.775, 1.05] as [number, number, number],
+        rotation: [-Math.PI / 2, 0, 0.25] as [number, number, number],
+    },
 };
 
 const FLOOR_COLOR = '#3a2f2b';
@@ -19,11 +34,13 @@ const SHELF_BOARD_COLOR = '#1f1713';
 
 /**
  * Cenário puro — não sabe que livros existem. Publica ROOM_ANCHORS
- * (posição/rotação) para que Bookshelf.tsx e CameraRig.tsx se posicionem a
- * partir daqui, sem nenhuma lógica de livro vazar para este arquivo.
+ * (posição/rotação) para que Bookshelf.tsx, DeskBooks.tsx, IndexSheet.tsx e
+ * CameraRig.tsx se posicionem a partir daqui, sem nenhuma lógica de livro
+ * vazar para este arquivo.
  */
 export default function Room() {
     const estante = ROOM_ANCHORS.estante;
+    const mesa = ROOM_ANCHORS.mesa;
 
     return (
         <group>
@@ -41,6 +58,20 @@ export default function Room() {
             <mesh position={[estante.position[0], estante.position[1] - 0.02, estante.position[2]]}>
                 <boxGeometry args={[1.4, 0.04, 0.2]}/>
                 <meshStandardMaterial color={SHELF_BOARD_COLOR} roughness={0.6}/>
+            </mesh>
+
+            {/*
+              Mesa física — o tampo onde DeskBooks.tsx e IndexSheet.tsx
+              assentam. Uma perna central é suficiente: não é o foco visual
+              da cena, e o spec pede sala low-poly montada com primitivas.
+            */}
+            <mesh position={[mesa.position[0], mesa.position[1] - 0.02, mesa.position[2]]} rotation={mesa.rotation} receiveShadow>
+                <boxGeometry args={[0.7, 0.04, 0.45]}/>
+                <meshStandardMaterial color={SHELF_BOARD_COLOR} roughness={0.6}/>
+            </mesh>
+            <mesh position={[mesa.position[0], (mesa.position[1] - 0.02) / 2, mesa.position[2]]} rotation={mesa.rotation}>
+                <boxGeometry args={[0.08, mesa.position[1] - 0.02, 0.08]}/>
+                <meshStandardMaterial color={SHELF_BOARD_COLOR} roughness={0.8}/>
             </mesh>
 
             {/*
