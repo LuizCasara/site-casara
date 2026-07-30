@@ -39,9 +39,16 @@ export default function Room() {
                 <meshStandardMaterial color={SHELF_BOARD_COLOR} roughness={0.6}/>
             </mesh>
 
-            <pointLight position={[1.3, 1.7, 0.6]} color="#ffb877" intensity={6} distance={5} decay={2}/>
-            <pointLight position={[0, 2.1, -1.55]} color="#9fd8ff" intensity={3} distance={4} decay={2}/>
-            <ambientLight intensity={0.25}/>
+            {/*
+              Intensidades em candela — o three.js (r155+) usa luz fisicamente
+              correta por padrão, então os valores "de sensação" de versões
+              antigas (ex.: 3-6) ficam quase invisíveis. 40/25 aqui é o que
+              realmente ilumina uma sala pequena a poucos metros de distância.
+            */}
+            <pointLight position={[1.3, 1.7, 0.6]} color="#ffb877" intensity={40} distance={6} decay={2}/>
+            <pointLight position={[0, 2.1, -1.55]} color="#9fd8ff" intensity={25} distance={5} decay={2}/>
+            <hemisphereLight color="#8899aa" groundColor="#1a1410" intensity={0.6}/>
+            <ambientLight intensity={0.15}/>
 
             <Sparkles count={40} scale={[2, 2, 2]} position={[1, 1.5, 0.3]} size={2} speed={0.15} color="#ffd9a0" opacity={0.35}/>
         </group>
