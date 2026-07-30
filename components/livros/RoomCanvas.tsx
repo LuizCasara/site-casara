@@ -111,6 +111,20 @@ export default function RoomCanvas({books, mode}: RoomCanvasProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // O <Canvas> às vezes monta antes do layout do `fixed inset-0` acima
+    // estabilizar, e o ResizeObserver do R3F perde essa primeira medição —
+    // o canvas fica preso no tamanho padrão (300x150) até algo mais disparar
+    // um resize de verdade. Um `requestAnimationFrame` sozinho dispara cedo
+    // demais (o observer ainda não tinha se conectado); alguns retries com
+    // atraso crescente cobrem a janela real sem custo perceptível quando o
+    // tamanho já estava certo desde o início.
+    useEffect(() => {
+        if (!atlas) return;
+        const atrasos = [0, 100, 300, 600];
+        const ids = atrasos.map((ms) => setTimeout(() => window.dispatchEvent(new Event('resize')), ms));
+        return () => ids.forEach(clearTimeout);
+    }, [atlas]);
+
     if (degradado || !atlas) return null;
 
     const viewpoint: Viewpoint = openSlug ? 'livro' : manualViewpoint;
