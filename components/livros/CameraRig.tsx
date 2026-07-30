@@ -1,7 +1,8 @@
 'use client';
 
 import {useEffect, useRef} from 'react';
-import {CameraControls} from '@react-three/drei';
+import * as THREE from 'three';
+import {CameraControls, CameraControlsImpl} from '@react-three/drei';
 import {ROOM_ANCHORS} from '@/components/livros/Room';
 
 export type Viewpoint = 'geral' | 'estante' | 'mesa' | 'livro' | 'indice';
@@ -56,14 +57,53 @@ const VIEWPOINTS: Record<Viewpoint, ViewpointConfig> = {
     },
 };
 
-export default function CameraRig({viewpoint, animate = true}: {viewpoint: Viewpoint; animate?: boolean}) {
+// Boundary do trilho mobile: o alvo só desliza lateralmente (X) dentro da
+// largura real da estante; a folga em Y/Z é só o suficiente pra tolerar o
+// pequeno bounce da biblioteca ao soltar o arrasto perto da borda.
+const TRILHO_FOLGA_X_M = 0.1;
+const TRILHO_FOLGA_YZ_M = 0.05;
+
+type CameraRigProps = {
+    viewpoint: Viewpoint;
+    animate?: boolean;
+    isMobile?: boolean;
+    shelfWidthM?: number;
+};
+
+export default function CameraRig({viewpoint, animate = true, isMobile = false, shelfWidthM = 0}: CameraRigProps) {
     const controlsRef = useRef<CameraControls>(null);
     const v = VIEWPOINTS[viewpoint];
+    // Spec: "arrastar navega lateralmente pela estante" — só esse viewpoint
+    // vira trilho em mobile; nos outros, um dedo continua orbitando (a
+    // mesma órbita curta e travada do desktop).
+    const trilhoAtivo = isMobile && viewpoint === 'estante';
 
     useEffect(() => {
         controlsRef.current?.setLookAt(...v.camera, ...v.target, animate);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [viewpoint]);
+
+    useEffect(() => {
+        if (!controlsRef.current) return;
+        if (trilhoAtivo) {
+            const alvo = VIEWPOINTS.estante.target;
+            const caixa = new THREE.Box3(
+                new THREE.Vector3(
+                    alvo[0] - shelfWidthM / 2 - TRILHO_FOLGA_X_M,
+                    alvo[1] - TRILHO_FOLGA_YZ_M,
+                    alvo[2] - TRILHO_FOLGA_YZ_M,
+                ),
+                new THREE.Vector3(
+                    alvo[0] + shelfWidthM / 2 + TRILHO_FOLGA_X_M,
+                    alvo[1] + TRILHO_FOLGA_YZ_M,
+                    alvo[2] + TRILHO_FOLGA_YZ_M,
+                ),
+            );
+            controlsRef.current.setBoundary(caixa);
+        } else {
+            controlsRef.current.setBoundary(undefined);
+        }
+    }, [trilhoAtivo, shelfWidthM]);
 
     return (
         <CameraControls
@@ -73,7 +113,8 @@ export default function CameraRig({viewpoint, animate = true}: {viewpoint: Viewp
             minPolarAngle={v.minPolar}
             maxPolarAngle={v.maxPolar}
             dollySpeed={0}
-            truckSpeed={0}
+            truckSpeed={trilhoAtivo ? 2 : 0}
+            touches-one={trilhoAtivo ? CameraControlsImpl.ACTION.TOUCH_TRUCK : CameraControlsImpl.ACTION.TOUCH_ROTATE}
         />
     );
 }
