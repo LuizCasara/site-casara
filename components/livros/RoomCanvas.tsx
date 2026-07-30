@@ -10,7 +10,8 @@ import DeskBooks from '@/components/livros/DeskBooks';
 import IndexSheet from '@/components/livros/IndexSheet';
 import IndexPanel from '@/components/livros/IndexPanel';
 import CameraRig, {type Viewpoint} from '@/components/livros/CameraRig';
-import {toShelfBooks} from '@/lib/book-dimensions.mjs';
+import {useIsMobile} from '@/components/livros/use-is-mobile';
+import {toShelfBooks, shelfWidthM} from '@/lib/book-dimensions.mjs';
 import {sortShelfBooks, filterShelfBooks} from '@/lib/livros-shelf.mjs';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
 import {
@@ -72,6 +73,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
     const [sortCriterio, setSortCriterio] = useState('padrao');
     const [filtros, setFiltros] = useState<IndiceFiltros>({categoria: null, tag: null});
     const [indiceAberto, setIndiceAberto] = useState(false);
+    const isMobile = useIsMobile();
 
     // Base = todos os livros 'lido', na ordem que vieram do banco — o atlas
     // é gerado a partir desta lista (uma vez só, nunca refeito ao ordenar ou
@@ -82,6 +84,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
         () => sortShelfBooks(filterShelfBooks(shelfBooksBase, filtros), sortCriterio),
         [shelfBooksBase, filtros, sortCriterio],
     );
+    const larguraEstanteM = useMemo(() => shelfWidthM(shelfBooksVisiveis), [shelfBooksVisiveis]);
 
     // "animate" só nasce falso quando a página já chega com um livro aberto
     // (link direto/externo) — sem clique prévio, não há o que justificar
@@ -167,12 +170,12 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
     return (
         <>
             <div className="fixed inset-0 -z-10">
-                <Canvas shadows camera={{fov: 50}}>
+                <Canvas shadows camera={{fov: 50}} dpr={isMobile ? 1 : [1, 2]}>
                     <Room/>
-                    <Bookshelf shelfBooks={shelfBooksVisiveis} atlas={atlas} openSlug={openSlug} animate={animateTransitions}/>
-                    <DeskBooks deskBooks={deskShelfBooks} atlas={atlas} openSlug={openSlug} animate={animateTransitions}/>
+                    <Bookshelf shelfBooks={shelfBooksVisiveis} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>
+                    <DeskBooks deskBooks={deskShelfBooks} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>
                     {mode.kind === 'sala' && <IndexSheet onOpen={abrirIndice}/>}
-                    <CameraRig viewpoint={viewpoint} animate={animateTransitions}/>
+                    <CameraRig viewpoint={viewpoint} animate={animateTransitions} isMobile={isMobile} shelfWidthM={larguraEstanteM}/>
                     <EffectComposer>
                         <Bloom intensity={0.4} luminanceThreshold={0.6}/>
                     </EffectComposer>
