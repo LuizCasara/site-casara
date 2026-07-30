@@ -2,18 +2,22 @@
 
 import dynamic from 'next/dynamic';
 import {usePathname} from 'next/navigation';
-import type {RoomCanvasProps} from '@/components/livros/RoomCanvas';
+import {deriveLivrosMode} from '@/lib/livros-routing.mjs';
+import type {RoomCanvasProps, LivrosMode} from '@/components/livros/RoomCanvas';
 
 const RoomCanvas = dynamic(() => import('@/components/livros/RoomCanvas'), {ssr: false});
 
 /**
- * Só a rota exata /livros ativa a sala nesta fase — /livros/lista e
- * /livros/[slug] continuam 100% SSR, sem pagar o bundle de three/r3f/drei.
- * A checagem de pathname acontece ANTES de renderizar <RoomCanvas/>, então o
- * `dynamic()` nunca dispara o carregamento do chunk fora de /livros.
+ * Ativa a sala 3D em /livros (modo 'sala') e em /livros/<slug> (modo 'livro',
+ * livro pré-aberto) — nunca em /livros/lista. `deriveLivrosMode` decide isso
+ * ANTES de renderizar <RoomCanvas/>, então o `dynamic()` nunca carrega o
+ * chunk de three/r3f/drei fora dessas duas rotas.
  */
-export default function RoomCanvasLoader(props: RoomCanvasProps) {
+export default function RoomCanvasLoader(props: Omit<RoomCanvasProps, 'mode'>) {
     const pathname = usePathname();
-    if (pathname !== '/livros') return null;
-    return <RoomCanvas {...props}/>;
+    // deriveLivrosMode vem de um .mjs sem tipos — o TS não estreita os
+    // literais 'sala'/'livro' sozinho, daí o cast.
+    const mode = deriveLivrosMode(pathname) as LivrosMode | null;
+    if (!mode) return null;
+    return <RoomCanvas {...props} mode={mode}/>;
 }
