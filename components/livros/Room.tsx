@@ -7,6 +7,10 @@ export const ROOM_ANCHORS = {
         position: [0, 0.9, -1.4] as [number, number, number],
         rotation: [0, 0, 0] as [number, number, number],
     },
+    leitura: {
+        position: [0, 1.3, 0.6] as [number, number, number],
+        rotation: [0, 0, 0] as [number, number, number],
+    },
 };
 
 const FLOOR_COLOR = '#3a2f2b';

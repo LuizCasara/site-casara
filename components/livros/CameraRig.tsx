@@ -4,7 +4,7 @@ import {useEffect, useRef} from 'react';
 import {CameraControls} from '@react-three/drei';
 import {ROOM_ANCHORS} from '@/components/livros/Room';
 
-export type Viewpoint = 'geral' | 'estante';
+export type Viewpoint = 'geral' | 'estante' | 'livro';
 
 type ViewpointConfig = {
     camera: [number, number, number];
@@ -16,6 +16,7 @@ type ViewpointConfig = {
 };
 
 const estanteZ = ROOM_ANCHORS.estante.position[2];
+const leitura = ROOM_ANCHORS.leitura.position;
 
 const VIEWPOINTS: Record<Viewpoint, ViewpointConfig> = {
     geral: {
@@ -30,14 +31,20 @@ const VIEWPOINTS: Record<Viewpoint, ViewpointConfig> = {
         minAzimuth: -0.25, maxAzimuth: 0.25,
         minPolar: 1.3, maxPolar: 1.75,
     },
+    livro: {
+        camera: [leitura[0], leitura[1] + 0.05, leitura[2] + 0.9],
+        target: [leitura[0], leitura[1], leitura[2]],
+        minAzimuth: -0.2, maxAzimuth: 0.2,
+        minPolar: 1.35, maxPolar: 1.6,
+    },
 };
 
-export default function CameraRig({viewpoint}: {viewpoint: Viewpoint}) {
+export default function CameraRig({viewpoint, animate = true}: {viewpoint: Viewpoint; animate?: boolean}) {
     const controlsRef = useRef<CameraControls>(null);
     const v = VIEWPOINTS[viewpoint];
 
     useEffect(() => {
-        controlsRef.current?.setLookAt(...v.camera, ...v.target, true);
+        controlsRef.current?.setLookAt(...v.camera, ...v.target, animate);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [viewpoint]);
 
