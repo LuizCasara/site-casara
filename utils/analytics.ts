@@ -179,3 +179,9 @@ export const trackRoomLoaded = (timeToInteractiveMs: number, isMobile: boolean) 
 
 export const trackListFallback = (motivo: string) =>
   trackEvent('list_fallback', { motivo });
+
+export const trackShelfSorted = (criterio: string) =>
+  trackEvent('shelf_sorted', { criterio });
+
+export const trackIndexOpened = (categoria: string | null, tag: string | null) =>
+  trackEvent('index_opened', { categoria: categoria ?? '', tag: tag ?? '' });
