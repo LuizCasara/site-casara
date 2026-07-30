@@ -11,7 +11,8 @@ import {BOOK_DEPTH_M} from '@/lib/book-dimensions.mjs';
 
 // Ordem de materiais do BoxGeometry: [+x, -x, +y, -y, +z, -z].
 // A lombada (visível na estante) é a face +z; a capa frontal (visível só
-// quando o livro abre e gira 180°) é a face -z, oposta.
+// quando o livro abre e gira 180°, ou de imediato nos livros da mesa) é a
+// face -z, oposta.
 const SPINE_FACE_INDEX = 4;
 const COVER_FACE_INDEX = 5;
 const FALLBACK_SPINE_COLOR = '#4b4b4b';
@@ -23,6 +24,9 @@ const OPEN_TILT_RAD = -0.35;
 // Livro "fora do lugar" além desta distância (aberto ou voltando a fechar)
 // anima na velocidade lenta de abertura; hover puro usa a velocidade rápida.
 const DESLOCAMENTO_GRANDE_M = 0.1;
+// Quase deitado (-90° seria totalmente plano) — o suficiente pra "capa
+// virada" ficar legível em ângulo, sem virar um adesivo grudado na mesa.
+const DESK_REST_TILT_RAD = -1.3;
 
 // Área de detecção de hover/clique maior que o volume visível da lombada —
 // com poucos livros no acervo (espessura mínima de 12mm), a malha real ocupa
@@ -51,6 +55,9 @@ export type ShelfBookData = {
     heightM: number;
     spineColor: string | null;
     coverPath: string | null;
+    category: string;
+    tags: string[];
+    year: number | null;
 };
 
 type BookProps = {
@@ -60,6 +67,8 @@ type BookProps = {
     uvRange: {u0: number; u1: number};
     isOpen: boolean;
     animate: boolean;
+    restVariant?: 'lombada' | 'capa';
+    restRotationY?: number;
 };
 
 /** Remapeia as UVs padrão (0..1) de uma face do BoxGeometry para um sub-retângulo do atlas. */
@@ -75,7 +84,10 @@ function setBoxFaceUV(geometry: THREE.BoxGeometry, faceIndex: number, u0: number
     uv.needsUpdate = true;
 }
 
-export default function Book({book, position, atlasTexture, uvRange, isOpen, animate}: BookProps) {
+export default function Book({
+    book, position, atlasTexture, uvRange, isOpen, animate,
+    restVariant = 'lombada', restRotationY = 0,
+}: BookProps) {
     const router = useRouter();
     const groupRef = useRef<THREE.Group>(null);
     const [hovered, setHovered] = useState(false);
@@ -94,11 +106,15 @@ export default function Book({book, position, atlasTexture, uvRange, isOpen, ani
         BOOK_DEPTH_M + HITBOX_DEPTH_PADDING_M,
     ), [book.thicknessM, book.heightM]);
 
-    // A capa real só é baixada quando o livro é aberto — ver spec, "Atlas de
-    // lombadas": a API de covers da Open Library tem rate limit, então a
-    // estante inteira nunca carrega 51 capas de uma vez, só a que abriu.
+    // A capa real normalmente só é baixada quando o livro é aberto — ver
+    // spec, "Atlas de lombadas": a API de covers da Open Library tem rate
+    // limit, então a estante inteira nunca carrega 51 capas de uma vez.
+    // Exceção explícita do spec: os livros "lendo agora" (restVariant
+    // 'capa') mostram a capa de imediato — são no máximo 1 a 3, o custo é
+    // desprezível.
     useEffect(() => {
-        if (!isOpen || !book.coverPath || coverTexture) return;
+        const deveCarregar = isOpen || restVariant === 'capa';
+        if (!deveCarregar || !book.coverPath || coverTexture) return;
         let cancelado = false;
         new THREE.TextureLoader().load(book.coverPath, (tex) => {
             if (cancelado) return;
@@ -108,7 +124,7 @@ export default function Book({book, position, atlasTexture, uvRange, isOpen, ani
         return () => {
             cancelado = true;
         };
-    }, [isOpen, book.coverPath, coverTexture]);
+    }, [isOpen, restVariant, book.coverPath, coverTexture]);
 
     const materials = useMemo(() => {
         const corCapa = book.spineColor || FALLBACK_SPINE_COLOR;
@@ -144,11 +160,15 @@ export default function Book({book, position, atlasTexture, uvRange, isOpen, ani
         );
         const velocidade = (isOpen || distanciaDoRepouso > DESLOCAMENTO_GRANDE_M) ? OPEN_LERP_SPEED : HOVER_LERP_SPEED;
 
+        const emCapa = restVariant === 'capa';
+        const restRotX = emCapa ? DESK_REST_TILT_RAD : 0;
+        const restRotYFinal = emCapa ? Math.PI + restRotationY : 0;
+
         const alvoX = isOpen ? OPEN_LOCAL_POSITION[0] : position[0];
         const alvoY = isOpen ? OPEN_LOCAL_POSITION[1] : position[1];
-        const alvoZ = isOpen ? OPEN_LOCAL_POSITION[2] : position[2] + (hovered ? HOVER_SLIDE_M : 0);
-        const alvoRotX = isOpen ? OPEN_TILT_RAD : (hovered ? -HOVER_TILT_RAD : 0);
-        const alvoRotY = isOpen ? Math.PI : 0;
+        const alvoZ = isOpen ? OPEN_LOCAL_POSITION[2] : position[2] + (!emCapa && hovered ? HOVER_SLIDE_M : 0);
+        const alvoRotX = isOpen ? OPEN_TILT_RAD : (restRotX + (!emCapa && hovered ? -HOVER_TILT_RAD : 0));
+        const alvoRotY = isOpen ? Math.PI : restRotYFinal;
 
         groupRef.current.position.x = THREE.MathUtils.damp(groupRef.current.position.x, alvoX, velocidade, delta);
         groupRef.current.position.y = THREE.MathUtils.damp(groupRef.current.position.y, alvoY, velocidade, delta);
