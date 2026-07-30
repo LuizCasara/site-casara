@@ -14,6 +14,7 @@ type DeskBooksProps = {
     atlas: SpineAtlas;
     openSlug: string | null;
     animate: boolean;
+    isMobile: boolean;
 };
 
 /**
@@ -24,7 +25,7 @@ type DeskBooksProps = {
  * mesmo atlas da estante e um UV qualquer; nenhum atlas extra é gerado só
  * pra isto.
  */
-export default function DeskBooks({deskBooks, atlas, openSlug, animate}: DeskBooksProps) {
+export default function DeskBooks({deskBooks, atlas, openSlug, animate, isMobile}: DeskBooksProps) {
     const anchor = ROOM_ANCHORS.mesa;
     const layout = layoutDeskBooks(deskBooks.map((b) => b.slug));
 
@@ -42,6 +43,7 @@ export default function DeskBooks({deskBooks, atlas, openSlug, animate}: DeskBoo
                         uvRange={{u0: 0, u1: 1}}
                         isOpen={book.slug === openSlug}
                         animate={animate}
+                        isMobile={isMobile}
                         restVariant="capa"
                         restRotationY={slot.rotationY}
                     />
