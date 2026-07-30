@@ -118,12 +118,17 @@ export default function Book({book, position, atlasTexture, uvRange, isOpen, ani
         if (!groupRef.current) return;
         if (isOpen && !animate && snappedRef.current) return; // já encaixado, nada a animar
 
-        const distanciaAtual = groupRef.current.position.length();
-        const velocidade = (isOpen || distanciaAtual > DESLOCAMENTO_GRANDE_M) ? OPEN_LERP_SPEED : HOVER_LERP_SPEED;
+        // O repouso ("fechado") não é a origem do grupo — é a posição da prop
+        // `position`, que é diferente por livro (slot na prateleira). Usar 0
+        // aqui faria todo livro derivar pra origem da estante a cada frame.
+        const distanciaDoRepouso = groupRef.current.position.distanceTo(
+            new THREE.Vector3(position[0], position[1], position[2]),
+        );
+        const velocidade = (isOpen || distanciaDoRepouso > DESLOCAMENTO_GRANDE_M) ? OPEN_LERP_SPEED : HOVER_LERP_SPEED;
 
-        const alvoX = isOpen ? OPEN_LOCAL_POSITION[0] : 0;
-        const alvoY = isOpen ? OPEN_LOCAL_POSITION[1] : 0;
-        const alvoZ = isOpen ? OPEN_LOCAL_POSITION[2] : (hovered ? HOVER_SLIDE_M : 0);
+        const alvoX = isOpen ? OPEN_LOCAL_POSITION[0] : position[0];
+        const alvoY = isOpen ? OPEN_LOCAL_POSITION[1] : position[1];
+        const alvoZ = isOpen ? OPEN_LOCAL_POSITION[2] : position[2] + (hovered ? HOVER_SLIDE_M : 0);
         const alvoRotX = isOpen ? OPEN_TILT_RAD : (hovered ? -HOVER_TILT_RAD : 0);
         const alvoRotY = isOpen ? Math.PI : 0;
 
