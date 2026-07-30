@@ -6,10 +6,17 @@ import {Canvas} from '@react-three/fiber';
 import {EffectComposer, Bloom} from '@react-three/postprocessing';
 import Room from '@/components/livros/Room';
 import Bookshelf from '@/components/livros/Bookshelf';
+import DeskBooks from '@/components/livros/DeskBooks';
+import IndexSheet from '@/components/livros/IndexSheet';
+import IndexPanel from '@/components/livros/IndexPanel';
 import CameraRig, {type Viewpoint} from '@/components/livros/CameraRig';
 import {toShelfBooks} from '@/lib/book-dimensions.mjs';
+import {sortShelfBooks, filterShelfBooks} from '@/lib/livros-shelf.mjs';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
-import {trackRoomLoaded, trackListFallback, trackBookOpened} from '@/utils/analytics';
+import {
+    trackRoomLoaded, trackListFallback, trackBookOpened,
+    trackShelfSorted, trackIndexOpened,
+} from '@/utils/analytics';
 
 export type ShelvedBookInput = {
     slug: string;
@@ -19,14 +26,21 @@ export type ShelvedBookInput = {
     pages: number | null;
     spine_color: string | null;
     cover_path: string | null;
+    category: string;
+    tags: string[];
+    year: number | null;
 };
 
 export type LivrosMode = {kind: 'sala'} | {kind: 'livro'; slug: string};
 
 export type RoomCanvasProps = {
     books: ShelvedBookInput[];
+    deskBooks: ShelvedBookInput[];
+    tags: string[];
     mode: LivrosMode;
 };
+
+type IndiceFiltros = {categoria: string | null; tag: string | null};
 
 /**
  * Heurística deliberadamente simples: não há um jeito confiável de medir GPU
@@ -48,15 +62,26 @@ function detectaMotivoDegradacao(): 'sem-webgl' | 'reduced-motion' | 'gpu-fraca'
     return null;
 }
 
-export default function RoomCanvas({books, mode}: RoomCanvasProps) {
+export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasProps) {
     const router = useRouter();
     const openSlug = mode.kind === 'livro' ? mode.slug : null;
 
     const [manualViewpoint, setManualViewpoint] = useState<Viewpoint>('geral');
     const [atlas, setAtlas] = useState<SpineAtlas | null>(null);
     const [degradado, setDegradado] = useState(false);
+    const [sortCriterio, setSortCriterio] = useState('padrao');
+    const [filtros, setFiltros] = useState<IndiceFiltros>({categoria: null, tag: null});
+    const [indiceAberto, setIndiceAberto] = useState(false);
 
-    const shelfBooks = useMemo(() => toShelfBooks(books), [books]);
+    // Base = todos os livros 'lido', na ordem que vieram do banco — o atlas
+    // é gerado a partir desta lista (uma vez só, nunca refeito ao ordenar ou
+    // filtrar). A lista visível na estante é derivada dela.
+    const shelfBooksBase = useMemo(() => toShelfBooks(books), [books]);
+    const deskShelfBooks = useMemo(() => toShelfBooks(deskBooks), [deskBooks]);
+    const shelfBooksVisiveis = useMemo(
+        () => sortShelfBooks(filterShelfBooks(shelfBooksBase, filtros), sortCriterio),
+        [shelfBooksBase, filtros, sortCriterio],
+    );
 
     // "animate" só nasce falso quando a página já chega com um livro aberto
     // (link direto/externo) — sem clique prévio, não há o que justificar
@@ -100,7 +125,7 @@ export default function RoomCanvas({books, mode}: RoomCanvasProps) {
 
         const inicio = performance.now();
         let cancelado = false;
-        buildSpineAtlas(shelfBooks).then((resultado) => {
+        buildSpineAtlas(shelfBooksBase).then((resultado) => {
             if (cancelado) return;
             setAtlas(resultado);
             trackRoomLoaded(Math.round(performance.now() - inicio), window.innerWidth < 768);
@@ -127,35 +152,63 @@ export default function RoomCanvas({books, mode}: RoomCanvasProps) {
 
     if (degradado || !atlas) return null;
 
-    const viewpoint: Viewpoint = openSlug ? 'livro' : manualViewpoint;
+    const viewpoint: Viewpoint = openSlug ? 'livro' : (indiceAberto ? 'indice' : manualViewpoint);
+
+    const abrirIndice = () => {
+        setIndiceAberto(true);
+        trackIndexOpened(filtros.categoria, filtros.tag);
+    };
+    const fecharIndice = () => setIndiceAberto(false);
+    const mudarOrdenacao = (criterio: string) => {
+        setSortCriterio(criterio);
+        trackShelfSorted(criterio);
+    };
 
     return (
         <>
             <div className="fixed inset-0 -z-10">
                 <Canvas shadows camera={{fov: 50}}>
                     <Room/>
-                    <Bookshelf shelfBooks={shelfBooks} atlas={atlas} openSlug={openSlug} animate={animateTransitions}/>
+                    <Bookshelf shelfBooks={shelfBooksVisiveis} atlas={atlas} openSlug={openSlug} animate={animateTransitions}/>
+                    <DeskBooks deskBooks={deskShelfBooks} atlas={atlas} openSlug={openSlug} animate={animateTransitions}/>
+                    {mode.kind === 'sala' && <IndexSheet onOpen={abrirIndice}/>}
                     <CameraRig viewpoint={viewpoint} animate={animateTransitions}/>
                     <EffectComposer>
                         <Bloom intensity={0.4} luminanceThreshold={0.6}/>
                     </EffectComposer>
                 </Canvas>
             </div>
-            {mode.kind === 'sala' && (
+            {mode.kind === 'sala' && !indiceAberto && (
                 <div className="fixed bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2">
                     <button
                         onClick={() => setManualViewpoint('geral')}
-                        className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg transition ${viewpoint === 'geral' ? 'bg-white text-black' : 'bg-black/60 text-white'}`}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg transition ${manualViewpoint === 'geral' ? 'bg-white text-black' : 'bg-black/60 text-white'}`}
                     >
                         Sala
                     </button>
                     <button
                         onClick={() => setManualViewpoint('estante')}
-                        className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg transition ${viewpoint === 'estante' ? 'bg-white text-black' : 'bg-black/60 text-white'}`}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg transition ${manualViewpoint === 'estante' ? 'bg-white text-black' : 'bg-black/60 text-white'}`}
                     >
                         Estante
                     </button>
+                    <button
+                        onClick={() => setManualViewpoint('mesa')}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg transition ${manualViewpoint === 'mesa' ? 'bg-white text-black' : 'bg-black/60 text-white'}`}
+                    >
+                        Mesa
+                    </button>
                 </div>
+            )}
+            {indiceAberto && (
+                <IndexPanel
+                    tags={tags}
+                    sortCriterio={sortCriterio}
+                    onSortChange={mudarOrdenacao}
+                    filtros={filtros}
+                    onFilterChange={setFiltros}
+                    onClose={fecharIndice}
+                />
             )}
         </>
     );
