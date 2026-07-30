@@ -24,6 +24,18 @@ const OPEN_TILT_RAD = -0.35;
 // anima na velocidade lenta de abertura; hover puro usa a velocidade rápida.
 const DESLOCAMENTO_GRANDE_M = 0.1;
 
+// Área de detecção de hover/clique maior que o volume visível da lombada —
+// com poucos livros no acervo (espessura mínima de 12mm), a malha real ocupa
+// poucos pixels na tela e fica quase impossível de acertar com um mouse de
+// verdade (confirmado testando manualmente). Uma malha invisível maior por
+// trás resolve isso sem mudar a espessura visual.
+// Contrapartida aceita: com um acervo bem mais denso (~51+ livros lado a
+// lado), esse mínimo de largura pode fazer hitboxes de vizinhos se
+// sobreporem um pouco perto da borda — revisitar então se virar problema.
+const HITBOX_MIN_THICKNESS_M = 0.05;
+const HITBOX_HEIGHT_PADDING_M = 0.06;
+const HITBOX_DEPTH_PADDING_M = 0.08;
+
 const OPEN_LOCAL_POSITION: [number, number, number] = [
     ROOM_ANCHORS.leitura.position[0] - ROOM_ANCHORS.estante.position[0],
     ROOM_ANCHORS.leitura.position[1] - ROOM_ANCHORS.estante.position[1],
@@ -75,6 +87,12 @@ export default function Book({book, position, atlasTexture, uvRange, isOpen, ani
         setBoxFaceUV(geo, SPINE_FACE_INDEX, uvRange.u0, uvRange.u1, 0, 1);
         return geo;
     }, [book.thicknessM, book.heightM, uvRange.u0, uvRange.u1]);
+
+    const hitboxGeometry = useMemo(() => new THREE.BoxGeometry(
+        Math.max(book.thicknessM, HITBOX_MIN_THICKNESS_M),
+        book.heightM + HITBOX_HEIGHT_PADDING_M,
+        BOOK_DEPTH_M + HITBOX_DEPTH_PADDING_M,
+    ), [book.thicknessM, book.heightM]);
 
     // A capa real só é baixada quando o livro é aberto — ver spec, "Atlas de
     // lombadas": a API de covers da Open Library tem rate limit, então a
@@ -162,6 +180,9 @@ export default function Book({book, position, atlasTexture, uvRange, isOpen, ani
             }}
         >
             <mesh geometry={geometry} material={materials}/>
+            <mesh geometry={hitboxGeometry}>
+                <meshBasicMaterial transparent opacity={0} depthWrite={false}/>
+            </mesh>
             {hovered && !isOpen && (
                 <Html position={[0, book.heightM / 2 + 0.08, 0]} center distanceFactor={6} occlude>
                     <div className="pointer-events-none whitespace-nowrap rounded-lg bg-black/80 px-3 py-2 text-center text-white shadow-lg backdrop-blur-sm">
