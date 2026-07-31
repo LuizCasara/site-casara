@@ -578,6 +578,14 @@ async function comandoSeed(sql, {limite, apply, incluirRevisar}) {
 
         const slug = await slugLivre(sql, slugify(livro.title), encontrado?.year ?? null);
         const tags = resolverTags((livro.tags ?? []).join(','), jaUsadas);
+        // jaUsadas precisa crescer dentro do próprio loop: se dois livros do
+        // mesmo lote introduzem a mesma tag nova com grafia diferente, o
+        // segundo só a casa com a canônica do primeiro se ela já estiver
+        // aqui — buscar isso do banco de novo a cada iteração seria uma
+        // query por livro só pra isso, então só empilha localmente.
+        for (const tag of tags) {
+            if (!jaUsadas.includes(tag)) jaUsadas.push(tag);
+        }
 
         const {coverPath, spineColor, placeholder} =
             await baixarCapa(encontrado?.coverUrl ?? null, slug, livro.category, ROOT, livro.title);
