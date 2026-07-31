@@ -18,9 +18,9 @@ const NIVEIS = 4;
 
 /**
  * Estante amarela aberta — o acento de cor do escritório real, e a única peça
- * de mobília da sala que não é marrom/madeira. Fica encostada na parede de
- * fundo, ao lado da estante de livros, exatamente como no escritório de onde
- * ela veio.
+ * de mobília da sala que não é marrom/madeira. Vive na parede lateral
+ * esquerda (ver o porquê em Room.tsx), de lado para a câmera; por ter
+ * profundidade de verdade ela continua lendo como estante nesse ângulo.
  *
  * Não confundir com a estante do acervo (`Bookshelf.tsx`): esta é cenário
  * puro, não tem livro nenhum dentro nem sabe que livros existem — só uns
