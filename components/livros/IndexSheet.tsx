@@ -12,7 +12,7 @@ const SHEET_HOVER_LIFT_M = 0.01;
  * viewpoint pra 'indice' e mostrar o IndexPanel). Este componente não sabe
  * nada sobre filtros/ordenação — só é a superfície clicável.
  */
-export default function IndexSheet({onOpen}: {onOpen: () => void}) {
+export default function IndexSheet({onOpen, isMobile}: {onOpen: () => void; isMobile: boolean}) {
     const anchor = ROOM_ANCHORS.indice;
     const [hovered, setHovered] = useState(false);
     const y = anchor.position[1] + (hovered ? SHEET_HOVER_LIFT_M : 0);
@@ -22,11 +22,16 @@ export default function IndexSheet({onOpen}: {onOpen: () => void}) {
             position={[anchor.position[0], y, anchor.position[2]]}
             rotation={anchor.rotation}
             onPointerOver={(e) => {
+                // Mesmo motivo do guard em Book.tsx: toque sintetiza
+                // pointerover sem um pointerout correspondente, deixando a
+                // folha presa "levantada" pra sempre num aparelho touch.
+                if (isMobile) return;
                 e.stopPropagation();
                 setHovered(true);
                 document.body.style.cursor = 'pointer';
             }}
             onPointerOut={(e) => {
+                if (isMobile) return;
                 e.stopPropagation();
                 setHovered(false);
                 document.body.style.cursor = 'auto';

@@ -111,6 +111,13 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
         previousOpenSlugRef.current = openSlug;
     }, [openSlug]);
 
+    // Abrir um livro enquanto o índice está aberto não deveria deixar os
+    // dois empilhados — nem deixar indiceAberto "verdadeiro" escondido no
+    // estado depois que o livro fecha e mode volta a ser 'sala'.
+    useEffect(() => {
+        if (openSlug) setIndiceAberto(false);
+    }, [openSlug]);
+
     useEffect(() => {
         const motivo = detectaMotivoDegradacao();
         if (motivo) {
@@ -174,7 +181,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                     <Room/>
                     <Bookshelf shelfBooks={shelfBooksVisiveis} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>
                     <DeskBooks deskBooks={deskShelfBooks} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>
-                    {mode.kind === 'sala' && <IndexSheet onOpen={abrirIndice}/>}
+                    {mode.kind === 'sala' && <IndexSheet onOpen={abrirIndice} isMobile={isMobile}/>}
                     <CameraRig viewpoint={viewpoint} animate={animateTransitions} isMobile={isMobile} shelfWidthM={larguraEstanteM}/>
                     <EffectComposer>
                         <Bloom intensity={0.4} luminanceThreshold={0.6}/>
@@ -203,7 +210,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                     </button>
                 </div>
             )}
-            {indiceAberto && (
+            {mode.kind === 'sala' && indiceAberto && (
                 <IndexPanel
                     tags={tags}
                     sortCriterio={sortCriterio}
