@@ -1,6 +1,8 @@
 'use client';
 
+import {Suspense} from 'react';
 import {Sparkles} from '@react-three/drei';
+import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
 import PcDesk from '@/components/livros/decor/PcDesk';
 import CafeCorner from '@/components/livros/decor/CafeCorner';
 import Poltrona from '@/components/livros/decor/Poltrona';
@@ -100,14 +102,26 @@ export default function Room() {
             */}
 
             {/*
-              Tapete sob o canto de leitura. y=0.008 e não 0: no mesmo plano
-              do piso os dois disputariam cada pixel (z-fighting) e o tapete
-              apareceria tremendo em faixas.
+              Suspense com fallback null: os .glb são carregados por
+              `useGLTF`, que suspende enquanto baixa. Sem esta fronteira a
+              suspensão sobe até fora do <Canvas> e a sala INTEIRA — estante
+              de livros incluída — some até o último móvel chegar. Com ela, a
+              sala aparece na hora e a mobília materializa em cima.
             */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-1.4, 0.008, -0.15]}>
-                <planeGeometry args={[2.0, 2.1]}/>
-                <meshStandardMaterial color={RUG_COLOR} roughness={1}/>
-            </mesh>
+            <Suspense fallback={null}>
+            {/*
+              Tapete sob o canto de leitura. y=0.004 e não 0: o modelo tem
+              1cm de espessura, mas a face de baixo dele fica no mesmo plano
+              do piso e os dois disputariam cada pixel (z-fighting),
+              aparecendo em faixas tremidas.
+            */}
+            <KenneyModel
+                url={MODELOS.tapete}
+                position={[-1.4, 0.004, -0.15]}
+                rotation={[0, Math.PI / 2, 0]}
+                larguraAlvo={2.1}
+                cores={{carpet: RUG_COLOR, carpetDarker: '#8a7565'}}
+            />
 
             {/* Canto tech, à direita da estante */}
             <PcDesk position={[2.0, 0, -1.25]}/>
@@ -122,7 +136,11 @@ export default function Room() {
               de ângulo, enquanto mochila/lenços/faca são placas planas que
               somem se não encararem a câmera.
             */}
-            <YellowShelf position={[-2.45, 0, -0.5]} rotationY={Math.PI / 2}/>
+            {/* 1.15 rad e não Math.PI/2: encostada de esquadro na parede
+                lateral, a estante ficava exatamente de perfil pra câmera e
+                lia como uma escada. Angulada, mostra a frente sem deixar de
+                pertencer àquela parede. */}
+            <YellowShelf position={[-2.4, 0, -0.5]} rotationY={1.15}/>
             <JogoDeTabuleiro position={[-2.2, 0.02, 0.1]}/>
             <Vinil position={[-2.15, 0.1, -0.95]}/>
 
@@ -136,10 +154,13 @@ export default function Room() {
               poltrona parar em -0.55, não mais fundo.
             */}
             <Poltrona position={[-1.45, 0, -0.55]} rotationY={0.7}/>
-            <CafeCorner position={[-0.8, 0, 0.35]}/>
-            <Planta position={[-0.92, 0.425, 0.42]}/>
+            <CafeCorner position={[-0.78, 0, -0.02]}/>
+            {/* y = a altura da mesinha (0.55): KenneyModel assenta a base da
+                planta em Y=0, então basta erguer o grupo até o tampo. */}
+            <Planta position={[-0.9, 0.55, 0.05]}/>
 
             <CampingWall/>
+            </Suspense>
 
             {/*
               Intensidades em candela — o three.js (r155+) usa luz fisicamente
