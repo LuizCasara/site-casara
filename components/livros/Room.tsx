@@ -1,6 +1,12 @@
 'use client';
 
 import {Sparkles} from '@react-three/drei';
+import PcDesk from '@/components/livros/decor/PcDesk';
+import CafeCorner from '@/components/livros/decor/CafeCorner';
+import Poltrona from '@/components/livros/decor/Poltrona';
+import CampingWall from '@/components/livros/decor/CampingWall';
+import YellowShelf from '@/components/livros/decor/YellowShelf';
+import {Planta, JogoDeTabuleiro, ControleDeVideogame, FoneDeOuvido, Vinil} from '@/components/livros/decor/PersonalProps';
 
 export const ROOM_ANCHORS = {
     estante: {
@@ -31,6 +37,7 @@ export const ROOM_ANCHORS = {
 const FLOOR_COLOR = '#3a2f2b';
 const WALL_COLOR = '#2b2320';
 const SHELF_BOARD_COLOR = '#1f1713';
+const RUG_COLOR = '#a89584';
 
 /**
  * Cenário puro — não sabe que livros existem. Publica ROOM_ANCHORS
@@ -79,6 +86,45 @@ export default function Room() {
                 <boxGeometry args={[0.08, mesa.position[1] - 0.02, 0.08]}/>
                 <meshStandardMaterial color={SHELF_BOARD_COLOR} roughness={0.8}/>
             </mesh>
+
+            {/*
+              Decoração da fase 6 — o lado "tech" (mesa de trabalho com PC e 4
+              telas) fica na direita, contra a parede de fundo; o lado
+              "campismo/leitura" (parede nova, poltrona, mesinha de café) fica
+              na esquerda. A estante de livros continua no centro, entre os
+              dois, porque ela é o motivo da sala existir.
+
+              Números de posição são um primeiro rascunho, calibrados só o
+              suficiente pra nada atravessar parede nem tapar a estante —
+              ajustar olhando é o esperado nesta fase, não uma regressão.
+            */}
+
+            {/*
+              Tapete sob o canto de leitura. y=0.008 e não 0: no mesmo plano
+              do piso os dois disputariam cada pixel (z-fighting) e o tapete
+              apareceria tremendo em faixas.
+            */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-1.3, 0.008, 0.7]}>
+                <planeGeometry args={[2.4, 2.0]}/>
+                <meshStandardMaterial color={RUG_COLOR} roughness={1}/>
+            </mesh>
+
+            {/* Canto tech, à direita da estante */}
+            <PcDesk position={[2.0, 0, -1.25]}/>
+            <FoneDeOuvido position={[1.55, 0.735, -1.05]}/>
+            <ControleDeVideogame position={[2.35, 0.75, -1.05]}/>
+
+            {/* Estante amarela, encostada na parede de fundo à esquerda */}
+            <YellowShelf position={[-2.0, 0, -1.4]}/>
+            <JogoDeTabuleiro position={[-1.75, 0.02, -1.05]}/>
+            <Vinil position={[-1.45, 0.1, -1.15]}/>
+
+            {/* Canto de leitura */}
+            <Poltrona position={[-1.4, 0, 0.3]} rotationY={0.6}/>
+            <CafeCorner position={[-0.9, 0, 1.25]}/>
+            <Planta position={[-1.02, 0.425, 1.32]}/>
+
+            <CampingWall/>
 
             {/*
               Intensidades em candela — o three.js (r155+) usa luz fisicamente
