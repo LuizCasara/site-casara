@@ -12,6 +12,7 @@ import IndexPanel from '@/components/livros/IndexPanel';
 import CameraRig, {type Viewpoint} from '@/components/livros/CameraRig';
 import {useIsMobile} from '@/components/livros/use-is-mobile';
 import {useFecharLivro} from '@/components/livros/use-fechar-livro';
+import {useAlturaRodape} from '@/components/livros/use-altura-rodape';
 import {toShelfBooks, shelfWidthM} from '@/lib/book-dimensions.mjs';
 import {sortShelfBooks, filterShelfBooks, vizinhosDe} from '@/lib/livros-shelf.mjs';
 import {CENAS, cenaVizinha} from '@/lib/livros-cenas.mjs';
@@ -90,6 +91,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
     const [indiceAberto, setIndiceAberto] = useState(false);
     const isMobile = useIsMobile();
     const fecharLivro = useFecharLivro();
+    const alturaRodape = useAlturaRodape();
     const canvasWrapperRef = useRef<HTMLDivElement>(null);
 
     // Base = todos os livros 'lido', na ordem que vieram do banco — o atlas
@@ -324,12 +326,18 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                 </Canvas>
             </div>
             {mode.kind === 'sala' && !indiceAberto && (
-                // `bottom-36` levanta os botões acima do rodapé (≈123px de
-                // altura), que antes ficava por cima deles; `z-20` os coloca
-                // acima do rodapé no empilhamento (ambos estavam em z-10, e
-                // no empate quem vem depois no DOM — o rodapé — vencia,
-                // deixando os botões visíveis mas não clicáveis).
-                <div className="fixed bottom-36 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+                // `bottom` medido a partir da altura real do rodapé, não um
+                // valor fixo: o rodapé tem ~123px no desktop e quase o dobro
+                // no celular (o texto quebra em mais linhas), então um
+                // `bottom-36` calibrado no desktop volta a ficar por baixo
+                // dele em tela estreita. `z-20` os coloca acima do rodapé no
+                // empilhamento (ambos estavam em z-10, e no empate quem vem
+                // depois no DOM — o rodapé — vencia, deixando os botões
+                // visíveis mas não clicáveis).
+                <div
+                    style={{bottom: `${alturaRodape + 24}px`}}
+                    className="fixed left-1/2 z-20 flex -translate-x-1/2 gap-2"
+                >
                     {CENAS.map((cena: {id: Viewpoint; rotulo: string}) => (
                         <button
                             key={cena.id}
@@ -344,10 +352,24 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
             )}
             {/*
               Folhear o acervo com o livro aberto. z-40 para ficar acima do
-              overlay do livro (z-30), e colados nas bordas laterais para não
-              cobrir a ficha técnica no meio da tela. Cada seta some quando
-              não há vizinho daquele lado — assim dá pra sentir onde o acervo
-              começa e termina, em vez de dar a volta silenciosamente.
+              overlay do livro (z-30). Cada seta some quando não há vizinho
+              daquele lado — assim dá pra sentir onde o acervo começa e
+              termina, em vez de dar a volta silenciosamente.
+
+              Posição muda por LARGURA DE TELA, não por `isMobile`: o problema
+              aqui é o card ocupar quase toda a largura, o que acontece
+              igualmente numa janela de desktop estreita, onde `pointer:
+              coarse` é falso.
+
+              O corte é `lg` (1024px) e não `sm` por conta de uma continha: o
+              card é `max-w-3xl` (768px) com 16px de respiro, e cada seta
+              precisa de ~68px (16 de margem + 44 de largura + folga). Só sobra
+              faixa livre nas laterais a partir de ~904px de viewport — em
+              657px, por exemplo, a seta ainda cairia em cima do card.
+              Abaixo disso elas descem para os cantos de baixo, na faixa que
+              sobra sob o card (que é `max-h-[85vh]`). O rodapé não é
+              atropelado aí porque o overlay `inset-0` já cobre a tela inteira
+              enquanto o livro está aberto.
             */}
             {mode.kind === 'livro' && (vizinhos.anterior || vizinhos.proximo) && (
                 <>
@@ -355,9 +377,10 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                         <button
                             onClick={() => folhear(vizinhos.anterior)}
                             aria-label="Livro anterior"
-                            className="fixed left-4 top-1/2 z-40 flex h-11 w-11 -translate-y-1/2
-                                       items-center justify-center rounded-full bg-black/60 text-xl
-                                       text-white shadow-lg transition hover:bg-black/80"
+                            className="fixed bottom-4 left-4 z-40 flex h-11 w-11 items-center
+                                       justify-center rounded-full bg-black/60 text-xl text-white
+                                       shadow-lg transition hover:bg-black/80
+                                       lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2"
                         >
                             ‹
                         </button>
@@ -366,9 +389,10 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                         <button
                             onClick={() => folhear(vizinhos.proximo)}
                             aria-label="Próximo livro"
-                            className="fixed right-4 top-1/2 z-40 flex h-11 w-11 -translate-y-1/2
-                                       items-center justify-center rounded-full bg-black/60 text-xl
-                                       text-white shadow-lg transition hover:bg-black/80"
+                            className="fixed bottom-4 right-4 z-40 flex h-11 w-11 items-center
+                                       justify-center rounded-full bg-black/60 text-xl text-white
+                                       shadow-lg transition hover:bg-black/80
+                                       lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2"
                         >
                             ›
                         </button>
