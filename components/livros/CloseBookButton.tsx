@@ -14,9 +14,22 @@ import {useRouter} from 'next/navigation';
 export default function CloseBookButton() {
     const router = useRouter();
 
+    const fechar = () => {
+        // Sem histórico dentro da aba (ex.: chegou direto em /livros/<slug>
+        // por um link externo — busca, rede social), router.back() ou não
+        // faz nada ou navega pra fora do site inteiro. history.length <= 1
+        // é o sinal de "esta aba não tem pra onde voltar" — cai pra /livros
+        // em vez disso.
+        if (window.history.length <= 1) {
+            router.push('/livros');
+        } else {
+            router.back();
+        }
+    };
+
     return (
         <button
-            onClick={() => router.back()}
+            onClick={fechar}
             className="absolute right-4 top-4 text-sm text-white/60 hover:text-white"
             aria-label="Fechar"
         >
