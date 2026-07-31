@@ -3,7 +3,7 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {Canvas} from '@react-three/fiber';
-import {EffectComposer, Bloom} from '@react-three/postprocessing';
+import {EffectComposer, Bloom, N8AO, Vignette} from '@react-three/postprocessing';
 import Room from '@/components/livros/Room';
 import Bookshelf from '@/components/livros/Bookshelf';
 import DeskBooks from '@/components/livros/DeskBooks';
@@ -320,8 +320,44 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                     <DeskBooks deskBooks={deskShelfBooks} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>
                     {mode.kind === 'sala' && <IndexSheet onOpen={abrirIndice} isMobile={isMobile}/>}
                     <CameraRig viewpoint={viewpoint} animate={animateTransitions} isMobile={isMobile} shelfWidthM={larguraEstanteM}/>
+                    {/*
+                      Ordem importa: N8AO primeiro, Bloom depois, Vignette por
+                      último. O AO precisa rodar sobre a cena ainda "crua" —
+                      se viesse depois do Bloom, ele leria o halo da luz como
+                      geometria e escureceria em volta do brilho.
+
+                      N8AO é oclusão de ambiente em espaço de tela: escurece
+                      as frestas onde duas superfícies se encontram (perna de
+                      mesa com o chão, livro com a prancha). É o que faz um
+                      objeto parecer APOIADO em vez de colado por cima — sem
+                      ele, uma cena de primitivas lê como adesivos flutuando,
+                      por mais correta que a geometria esteja. `halfRes` roda
+                      o efeito em meia resolução: o AO é um sinal suave e de
+                      baixa frequência, então a perda é invisível e o custo
+                      cai perto da metade.
+                    */}
                     <EffectComposer>
+                        {/*
+                          aoRadius em METROS de mundo, não em pixels: 0.16 é
+                          escolhido pra escala desta sala (livro de ~3cm de
+                          lombada, mesa de 70cm). Em 0.45 o efeito existia mas
+                          lia como um escurecimento geral e sujo, não como
+                          contato — a fresta entre dois objetos e o meio de
+                          uma parede vazia recebiam quase a mesma coisa.
+                          `halfRes` fica só no mobile: com raio apertado, meia
+                          resolução borra justamente a marca fina que a gente
+                          quer.
+                        */}
+                        <N8AO
+                            aoRadius={0.16}
+                            distanceFalloff={0.6}
+                            intensity={6}
+                            quality={isMobile ? 'performance' : 'high'}
+                            halfRes={isMobile}
+                            color="#140c06"
+                        />
                         <Bloom intensity={0.4} luminanceThreshold={0.6}/>
+                        <Vignette darkness={0.45} offset={0.35}/>
                     </EffectComposer>
                 </Canvas>
             </div>
