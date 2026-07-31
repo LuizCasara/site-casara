@@ -10,15 +10,15 @@ O pedido original era "adicionar 2 campos novos: data em que o livro foi lido, e
 - `casara.books.finished_at` (DATE) já existe na tabela e no tipo `Book` (`lib/books.ts`), mas nunca é perguntado no CLI, nunca aparece em nenhuma tela, e não entra no `ORDER BY` da listagem.
 - `casara.books.synopsis` (sinopse curta) e `casara.books.review` (resenha pessoal, Markdown) já existem e **já estão divididos** em `/livros/[slug]/page.tsx` — sinopse em itálico/citação acima, resenha como artigo abaixo. O que falta é: (a) a sinopse é hoje digitada manualmente pelo Luiz, uma frase, no CLI — não gerada por IA; (b) esse mesmo split não existe em `BookOverlay.tsx` (o popup da sala 3D), que só mostra `review`.
 
-Este spec cobre: ligar `finished_at` de ponta a ponta (CLI → ordenação → exibição), trocar a sinopse manual por gerada via IA no cadastro, replicar o layout sinopse+resenha no overlay da sala 3D, e popular retroativamente a sinopse dos 51 livros já cadastrados.
+Este spec cobre: ligar `finished_at` de ponta a ponta (CLI → ordenação → exibição), passar a preencher a sinopse com ajuda de IA no cadastro (via chat, não API), replicar o layout sinopse+resenha no overlay da sala 3D, e popular retroativamente a sinopse dos 51 livros já cadastrados.
 
 **Fora de escopo:** `shelf_order` (posição física na estante 3D) continua dormente — é um problema de layout espacial, não de ordenação de listagem, e não foi pedido. Reordenar a estante 3D por data de leitura não faz parte deste spec.
 
 ## Decisões (via brainstorming, 2026-07-31)
 
-1. **Geração da sinopse:** chamada de API automática dentro do fluxo do CLI (não depende de uma sessão do Claude Code aberta).
-2. **Provedor de IA:** Vercel AI Gateway (`AI_GATEWAY_API_KEY`), não uma chave direta de provedor — segue a convenção que o resto do ecossistema Vercel deste projeto usa.
-3. **Backfill dos 51 livros existentes:** só sinopse em lote. `finished_at` fica `null` nesses — não há como reconstruir a data retroativamente com precisão, e não foi pedido.
+1. **Geração da sinopse:** interativa via chat, não API. Decisão revista durante a revisão da spec — a proposta original era uma chamada de API automática (Vercel AI Gateway) dentro do CLI, mas o CLI só é operado com uma sessão do Claude Code do lado (nunca sozinho), então a automação não tinha uso real e só adicionava dependência nova, chave nova e um modo de falha (rede/chave ausente) pra uma tarefa de baixa frequência. Ver seção 3.
+2. ~~Provedor de IA~~ — descartado junto com a decisão 1; nenhuma dependência ou variável de ambiente nova é necessária.
+3. **Backfill dos 51 livros existentes:** só sinopse, escrita nesta própria conversa (ver seção 4). `finished_at` fica `null` nesses — não há como reconstruir a data retroativamente com precisão, e não foi pedido.
 4. **Ordenação padrão de `/livros/lista`:** livros com status `lendo` continuam no topo (comportamento atual), depois os `lido` do mais recente pro mais antigo por `finished_at`. Livros sem `finished_at` caem no fim, ordenados por título.
 5. **Layout do painel direito (confirmado no companion visual):** sinopse discreta (itálico, borda esquerda cinza, estilo citação) em cima; resenha pessoal com barra lateral âmbar de destaque e label "Minha resenha" abaixo — validado com mockup usando "A Revolta de Atlas" como exemplo real.
 6. **Onde a data aparece:** na página de detalhe (`/livros/[slug]` e `BookOverlay.tsx`, formato "Lido em julho de 2026") e também como selo compacto no `BookCard.tsx` da grade (ex: "jul/2026").
@@ -31,22 +31,18 @@ Este spec cobre: ligar `finished_at` de ponta a ponta (CLI → ordenação → e
 
 ### 2. CLI (`scripts/livros.mjs`)
 
-- **`add`**: quando `status === 'lido'`, novo prompt "Data de leitura" com padrão = hoje (`AAAA-MM-DD`; Enter aceita o padrão). Quando `status === 'lendo'`, fica `null`. O prompt manual "Sinopse curta (uma frase)" é removido; no lugar, depois que título/autor/tags estão confirmados, o CLI chama `lib/book-synopsis.mjs` (seção 3) e mostra o resultado na mesma tela de resumo "Será gravado" que já existe hoje — a sinopse gerada passa pela mesma confirmação manual de qualquer outro campo antes de ir pro banco. Se a chamada de IA falhar (rede, chave ausente, etc.), o campo fica vazio e o cadastro segue normalmente — mesmo espírito de "campo faltante é caminho normal" que já rege capa/páginas/ano nesse fluxo.
-- **`edit`**: ganha o mesmo prompt de data (padrão = valor atual do livro) e uma pergunta opcional "Regerar sinopse por IA?" (padrão não). A resenha pessoal (`review`, aberta no `$EDITOR`) continua inteiramente manual — a IA nunca escreve nela.
+- **`add`**: quando `status === 'lido'`, novo prompt "Data de leitura" com padrão = hoje (`AAAA-MM-DD`; Enter aceita o padrão). Quando `status === 'lendo'`, fica `null`. O prompt "Sinopse curta" continua existindo tal como hoje — nenhuma mudança de código aqui. O que muda é o fluxo de trabalho: numa sessão do Claude Code, Luiz pede a sinopse ali no chat (com título/autor/assuntos como contexto) antes de responder ao prompt, e cola a frase.
+- **`edit`**: ganha o mesmo prompt de data (padrão = valor atual do livro). O prompt de sinopse já existe (seção "edit" do CLI) e não muda. A resenha pessoal (`review`, aberta no `$EDITOR`) continua inteiramente manual, como já é hoje.
 
-### 3. Geração da sinopse — `lib/book-synopsis.mjs`
+### 3. Geração da sinopse — interativa, sem API nova
 
-Módulo novo, `.mjs` puro (mesma convenção de `lib/book-utils.mjs`, `lib/book-cover.mjs` — importável tanto pelo CLI quanto por um teste `node --test`, sem depender de build do Next). Chamado **só pelo CLI**, nunca por uma rota do Next — mantém o princípio "zero rota de admin pública" do projeto.
+Sem módulo novo, sem dependência nova, sem variável de ambiente nova. Quando um livro é cadastrado dentro de uma sessão do Claude Code (é como o CLI sempre roda — `scripts/livros.mjs` não tem uso fora dessas sessões hoje), Claude escreve a sinopse ali no chat a partir de título/autor/assuntos sugeridos pela Open Library, e Luiz cola no prompt "Sinopse curta" que já existe no `add`/`edit`. Instrução implícita de qualidade (seguida por Claude, não codificada em lugar nenhum): português, 2-3 frases, sem spoiler do desfecho, tom neutro — a opinião pessoal é papel do `review`, não da sinopse.
 
-- Usa a lib `ai` (AI SDK) apontando pro Vercel AI Gateway via string no formato `"anthropic/claude-haiku-4-5-<versão>"` — modelo rápido/barato, adequado pra uma tarefa de 2-3 frases. Confirmar o identificador exato disponível no Gateway no momento da implementação.
-- Prompt recebe `title`, `author` e os "assuntos sugeridos" que a Open Library já retorna hoje em `meta.subjects` (já buscado no `add`, hoje só exibido no console, nunca usado como insumo) — isso ancora a sinopse em dados reais do livro e reduz alucinação, no mesmo espírito da nota do projeto sobre a Open Library "devolver lixo" pra autor/título quando não tem contexto suficiente.
-- Instrução explícita: português, 2-3 frases, sem spoiler do desfecho, tom neutro (não é a opinião do Luiz — isso é papel do `review`).
-- Nova variável em `.env.local`: `AI_GATEWAY_API_KEY`.
-- Nova dependência: `ai` (não instalada hoje no projeto).
+Se um dia o cadastro precisar rodar sem uma sessão do Claude Code por perto, a sinopse fica em branco (mesmo tratamento de "campo faltante é caminho normal" que já rege capa/páginas/ano) e pode ser preenchida depois via `edit`.
 
 ### 4. Backfill dos 51 livros existentes
 
-Novo comando `node scripts/livros.mjs backfill-sinopses [--apply]`: seleciona os livros com `synopsis IS NULL`, gera cada sinopse via `lib/book-synopsis.mjs` usando `title`/`author`/`tags` já salvos no banco como contexto (não há `subjects` da Open Library guardado pra esses — os `tags` do `acervo.json` fazem esse papel), mostra a lista completa pra revisão e pede confirmação em lote antes de gravar — mesmo padrão dry-run/`--apply` do comando `seed`.
+Sem comando novo no CLI. Claude escreve as 51 sinopses nesta própria conversa (a partir de título/autor/tags já salvos no banco), e aplica em lote com um script pontual — mesmo padrão usado pro backfill de capas (`scripts/_tmp-apply-covers.mjs`, já executado e removido nesta sessão): um `UPDATE casara.books SET synopsis = ... WHERE slug = ...` por livro, dentro de um script descartável, com a lista completa mostrada pra revisão antes de rodar.
 
 ### 5. UI
 
@@ -58,11 +54,9 @@ Novo comando `node scripts/livros.mjs backfill-sinopses [--apply]`: seleciona os
 
 ### 6. Testes
 
-`lib/book-synopsis.mjs` é coberto por `node --test`, mockando a chamada de IA (nenhum teste bate na API de verdade). As mudanças de UI são verificadas rodando `npm run dev` e conferindo visualmente no navegador antes de considerar a tarefa concluída — mesmo processo usado no fix do tamanho de fonte da lombada (ver commit relacionado).
+Não há lógica nova de IA pra testar (seção 3 é um fluxo de trabalho, não código). As mudanças de UI e o `ORDER BY` novo são verificados rodando `npm run dev` e conferindo visualmente no navegador antes de considerar a tarefa concluída — mesmo processo usado no fix do tamanho de fonte da lombada (ver commit relacionado).
 
 ## Erros e casos de borda
 
-- **Chamada de IA falha no `add`**: sinopse fica vazia, cadastro segue (não bloqueia). Mensagem de aviso no console, mesmo padrão de "capa não encontrada".
-- **`AI_GATEWAY_API_KEY` ausente**: mesmo comportamento — falha tratada como "sem sinopse", não como erro fatal do comando.
-- **Livro com `status: 'lendo'` que já tem `finished_at` de uma edição anterior** (usuário voltou a ler um livro já marcado como lido): o campo não é limpo automaticamter pelo `edit` — fica como está até o usuário atualizar manualmente, mesmo espírito de "Enter mantém o valor atual" que já rege o resto do `edit`.
-- **`backfill-sinopses` rodado de novo**: idempotente por `synopsis IS NULL`, mesmo princípio do `seed` ser idempotente por título — livros que já ganharam sinopse não entram na fila de novo.
+- **Livro com `status: 'lendo'` que já tem `finished_at` de uma edição anterior** (usuário voltou a ler um livro já marcado como lido): o campo não é limpo automaticamente pelo `edit` — fica como está até o usuário atualizar manualmente, mesmo espírito de "Enter mantém o valor atual" que já rege o resto do `edit`.
+- **Backfill de sinopses rodado de novo**: o script pontual da seção 4 é descartável e roda uma vez; se algum dia precisar rodar de novo pra livros novos sem sinopse, a checagem natural é `WHERE synopsis IS NULL`, mesmo princípio do `seed` ser idempotente por título.
