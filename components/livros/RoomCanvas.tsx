@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {Canvas} from '@react-three/fiber';
 import {EffectComposer, Bloom} from '@react-three/postprocessing';
@@ -12,7 +12,7 @@ import IndexPanel from '@/components/livros/IndexPanel';
 import CameraRig, {type Viewpoint} from '@/components/livros/CameraRig';
 import {useIsMobile} from '@/components/livros/use-is-mobile';
 import {toShelfBooks, shelfWidthM} from '@/lib/book-dimensions.mjs';
-import {sortShelfBooks, filterShelfBooks} from '@/lib/livros-shelf.mjs';
+import {sortShelfBooks, filterShelfBooks, vizinhosDe} from '@/lib/livros-shelf.mjs';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
 import {
     trackRoomLoaded, trackListFallback, trackBookOpened,
@@ -131,6 +131,36 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
     useEffect(() => {
         if (openSlug) setIndiceAberto(false);
     }, [openSlug]);
+
+    // Folhear (← →) anda dentro do MESMO grupo em que o livro aberto está:
+    // quem abriu um livro da estante percorre a estante na ordem que está
+    // vendo (já ordenada e filtrada), quem abriu um da mesa percorre a mesa.
+    // Misturar os dois faria a seta pular de um móvel pro outro sem que nada
+    // na tela explicasse o salto.
+    const vizinhos = useMemo(() => {
+        if (!openSlug) return {anterior: null, proximo: null};
+        const daMesa = deskShelfBooks.some((b: {slug: string}) => b.slug === openSlug);
+        return vizinhosDe(daMesa ? deskShelfBooks : shelfBooksVisiveis, openSlug);
+    }, [openSlug, deskShelfBooks, shelfBooksVisiveis]);
+
+    // `replace`, não `push`: cada livro folheado viraria uma entrada no
+    // histórico, e aí o "✕ fechar" (que é router.back()) passaria a voltar
+    // pro livro anterior em vez de pra sala — depois de folhear cinco livros
+    // seriam cinco "voltar" pra sair. Com replace o histórico continua com
+    // uma entrada só e fechar significa sempre "voltar pra sala".
+    const folhear = useCallback((slug: string | null) => {
+        if (slug) router.replace(`/livros/${slug}`);
+    }, [router]);
+
+    useEffect(() => {
+        if (!openSlug) return;
+        const aoTeclar = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowLeft') folhear(vizinhos.anterior);
+            else if (e.key === 'ArrowRight') folhear(vizinhos.proximo);
+        };
+        window.addEventListener('keydown', aoTeclar);
+        return () => window.removeEventListener('keydown', aoTeclar);
+    }, [openSlug, vizinhos, folhear]);
 
     useEffect(() => {
         const motivo = detectaMotivoDegradacao();
@@ -301,6 +331,39 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                         Mesa
                     </button>
                 </div>
+            )}
+            {/*
+              Folhear o acervo com o livro aberto. z-40 para ficar acima do
+              overlay do livro (z-30), e colados nas bordas laterais para não
+              cobrir a ficha técnica no meio da tela. Cada seta some quando
+              não há vizinho daquele lado — assim dá pra sentir onde o acervo
+              começa e termina, em vez de dar a volta silenciosamente.
+            */}
+            {mode.kind === 'livro' && (vizinhos.anterior || vizinhos.proximo) && (
+                <>
+                    {vizinhos.anterior && (
+                        <button
+                            onClick={() => folhear(vizinhos.anterior)}
+                            aria-label="Livro anterior"
+                            className="fixed left-4 top-1/2 z-40 flex h-11 w-11 -translate-y-1/2
+                                       items-center justify-center rounded-full bg-black/60 text-xl
+                                       text-white shadow-lg transition hover:bg-black/80"
+                        >
+                            ‹
+                        </button>
+                    )}
+                    {vizinhos.proximo && (
+                        <button
+                            onClick={() => folhear(vizinhos.proximo)}
+                            aria-label="Próximo livro"
+                            className="fixed right-4 top-1/2 z-40 flex h-11 w-11 -translate-y-1/2
+                                       items-center justify-center rounded-full bg-black/60 text-xl
+                                       text-white shadow-lg transition hover:bg-black/80"
+                        >
+                            ›
+                        </button>
+                    )}
+                </>
             )}
             {mode.kind === 'sala' && indiceAberto && (
                 <IndexPanel
