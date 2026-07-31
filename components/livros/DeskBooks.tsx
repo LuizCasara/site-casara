@@ -44,6 +44,7 @@ export default function DeskBooks({deskBooks, atlas, openSlug, animate, isMobile
                         isOpen={book.slug === openSlug}
                         animate={animate}
                         isMobile={isMobile}
+                        anchor={anchor}
                         restVariant="capa"
                         restRotationY={slot.rotationY}
                     />

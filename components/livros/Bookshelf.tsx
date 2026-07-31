@@ -46,6 +46,7 @@ export default function Bookshelf({shelfBooks, atlas, openSlug, animate, isMobil
                         isOpen={book.slug === openSlug}
                         animate={animate}
                         isMobile={isMobile}
+                        anchor={anchor}
                     />
                 );
             })}

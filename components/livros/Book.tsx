@@ -40,11 +40,31 @@ const HITBOX_MIN_THICKNESS_M = 0.05;
 const HITBOX_HEIGHT_PADDING_M = 0.06;
 const HITBOX_DEPTH_PADDING_M = 0.08;
 
-const OPEN_LOCAL_POSITION: [number, number, number] = [
-    ROOM_ANCHORS.leitura.position[0] - ROOM_ANCHORS.estante.position[0],
-    ROOM_ANCHORS.leitura.position[1] - ROOM_ANCHORS.estante.position[1],
-    ROOM_ANCHORS.leitura.position[2] - ROOM_ANCHORS.estante.position[2],
-];
+/**
+ * Converte o alvo de abertura (a âncora `leitura`, em coordenadas do mundo)
+ * pro espaço local do grupo que envolve este livro — Bookshelf.tsx ancora em
+ * `estante` (sem rotação), DeskBooks.tsx ancora em `mesa` (rotacionada em Y).
+ * Usar o deslocamento calculado pra um dos dois em código pensado pro outro
+ * abre o livro na posição/ângulo errados sempre que o grupo pai tiver
+ * rotação diferente de zero — por isso este cálculo depende do `anchor` do
+ * grupo pai, não de uma constante fixa.
+ */
+function calcularAberturaLocal(anchor: {position: [number, number, number]; rotation: [number, number, number]}) {
+    const leitura = ROOM_ANCHORS.leitura.position;
+    const dx = leitura[0] - anchor.position[0];
+    const dy = leitura[1] - anchor.position[1];
+    const dz = leitura[2] - anchor.position[2];
+    const theta = anchor.rotation[1];
+    const cos = Math.cos(theta);
+    const sin = Math.sin(theta);
+    return {
+        position: [dx * cos - dz * sin, dy, dx * sin + dz * cos] as [number, number, number],
+        // Rotação Y mundial alvo é sempre Math.PI (livro de frente pra
+        // câmera); como o grupo pai já contribui com `theta`, a rotação
+        // local precisa compensar isso pra a soma continuar dando Math.PI.
+        rotationY: Math.PI - theta,
+    };
+}
 
 export type ShelfBookData = {
     slug: string;
@@ -68,6 +88,7 @@ type BookProps = {
     isOpen: boolean;
     animate: boolean;
     isMobile: boolean;
+    anchor: {position: [number, number, number]; rotation: [number, number, number]};
     restVariant?: 'lombada' | 'capa';
     restRotationY?: number;
 };
@@ -86,7 +107,7 @@ function setBoxFaceUV(geometry: THREE.BoxGeometry, faceIndex: number, u0: number
 }
 
 export default function Book({
-    book, position, atlasTexture, uvRange, isOpen, animate, isMobile,
+    book, position, atlasTexture, uvRange, isOpen, animate, isMobile, anchor,
     restVariant = 'lombada', restRotationY = 0,
 }: BookProps) {
     const router = useRouter();
@@ -94,18 +115,25 @@ export default function Book({
     const [hovered, setHovered] = useState(false);
     const [coverTexture, setCoverTexture] = useState<THREE.Texture | null>(null);
     const snappedRef = useRef(false);
+    const abertura = useMemo(() => calcularAberturaLocal(anchor), [anchor]);
 
     const geometry = useMemo(() => {
         const geo = new THREE.BoxGeometry(book.thicknessM, book.heightM, BOOK_DEPTH_M);
         setBoxFaceUV(geo, SPINE_FACE_INDEX, uvRange.u0, uvRange.u1, 0, 1);
         return geo;
     }, [book.thicknessM, book.heightM, uvRange.u0, uvRange.u1]);
+    // Geometrias/materiais criados via `new THREE.X()` em código (em vez de
+    // JSX) não são descartados automaticamente pelo R3F ao desmontar ou
+    // recalcular — sem isso, filtrar livros no índice ou trocar de capa
+    // vaza memória de GPU ao longo de uma sessão.
+    useEffect(() => () => geometry.dispose(), [geometry]);
 
     const hitboxGeometry = useMemo(() => new THREE.BoxGeometry(
         Math.max(book.thicknessM, HITBOX_MIN_THICKNESS_M),
         book.heightM + HITBOX_HEIGHT_PADDING_M,
         BOOK_DEPTH_M + HITBOX_DEPTH_PADDING_M,
     ), [book.thicknessM, book.heightM]);
+    useEffect(() => () => hitboxGeometry.dispose(), [hitboxGeometry]);
 
     // A capa real normalmente só é baixada quando o livro é aberto — ver
     // spec, "Atlas de lombadas": a API de covers da Open Library tem rate
@@ -126,6 +154,7 @@ export default function Book({
             cancelado = true;
         };
     }, [isOpen, restVariant, book.coverPath, coverTexture]);
+    useEffect(() => () => coverTexture?.dispose(), [coverTexture]);
 
     const materials = useMemo(() => {
         const corCapa = book.spineColor || FALLBACK_SPINE_COLOR;
@@ -138,16 +167,21 @@ export default function Book({
         lista[COVER_FACE_INDEX] = materialCapaFrontal;
         return lista;
     }, [book.spineColor, atlasTexture, coverTexture]);
+    // `materialLombada` referencia `atlasTexture` (prop compartilhada entre
+    // todos os livros — não descartar) mas os outros materiais desta lista
+    // são exclusivos deste Book; dispose() duas vezes na mesma instância
+    // (materialCapa aparece 5x na lista) não tem efeito colateral.
+    useEffect(() => () => materials.forEach((m) => m.dispose()), [materials]);
 
     // Nav direta a /livros/<slug> (link externo): o livro já nasce aberto,
     // sem animação — não houve clique prévio que a justifique (ver spec).
     useEffect(() => {
         if (isOpen && !animate && !snappedRef.current && groupRef.current) {
-            groupRef.current.position.set(...OPEN_LOCAL_POSITION);
-            groupRef.current.rotation.set(OPEN_TILT_RAD, Math.PI, 0);
+            groupRef.current.position.set(...abertura.position);
+            groupRef.current.rotation.set(OPEN_TILT_RAD, abertura.rotationY, 0);
             snappedRef.current = true;
         }
-    }, [isOpen, animate]);
+    }, [isOpen, animate, abertura]);
 
     useFrame((_, delta) => {
         if (!groupRef.current) return;
@@ -165,11 +199,11 @@ export default function Book({
         const restRotX = emCapa ? DESK_REST_TILT_RAD : 0;
         const restRotYFinal = emCapa ? Math.PI + restRotationY : 0;
 
-        const alvoX = isOpen ? OPEN_LOCAL_POSITION[0] : position[0];
-        const alvoY = isOpen ? OPEN_LOCAL_POSITION[1] : position[1];
-        const alvoZ = isOpen ? OPEN_LOCAL_POSITION[2] : position[2] + (!emCapa && hovered ? HOVER_SLIDE_M : 0);
+        const alvoX = isOpen ? abertura.position[0] : position[0];
+        const alvoY = isOpen ? abertura.position[1] : position[1];
+        const alvoZ = isOpen ? abertura.position[2] : position[2] + (!emCapa && hovered ? HOVER_SLIDE_M : 0);
         const alvoRotX = isOpen ? OPEN_TILT_RAD : (restRotX + (!emCapa && hovered ? -HOVER_TILT_RAD : 0));
-        const alvoRotY = isOpen ? Math.PI : restRotYFinal;
+        const alvoRotY = isOpen ? abertura.rotationY : restRotYFinal;
 
         groupRef.current.position.x = THREE.MathUtils.damp(groupRef.current.position.x, alvoX, velocidade, delta);
         groupRef.current.position.y = THREE.MathUtils.damp(groupRef.current.position.y, alvoY, velocidade, delta);
