@@ -11,8 +11,10 @@ import IndexSheet from '@/components/livros/IndexSheet';
 import IndexPanel from '@/components/livros/IndexPanel';
 import CameraRig, {type Viewpoint} from '@/components/livros/CameraRig';
 import {useIsMobile} from '@/components/livros/use-is-mobile';
+import {useFecharLivro} from '@/components/livros/use-fechar-livro';
 import {toShelfBooks, shelfWidthM} from '@/lib/book-dimensions.mjs';
 import {sortShelfBooks, filterShelfBooks, vizinhosDe} from '@/lib/livros-shelf.mjs';
+import {CENAS, cenaVizinha} from '@/lib/livros-cenas.mjs';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
 import {
     trackRoomLoaded, trackListFallback, trackBookOpened,
@@ -87,6 +89,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
     const [filtros, setFiltros] = useState<IndiceFiltros>({categoria: null, tag: null});
     const [indiceAberto, setIndiceAberto] = useState(false);
     const isMobile = useIsMobile();
+    const fecharLivro = useFecharLivro();
     const canvasWrapperRef = useRef<HTMLDivElement>(null);
 
     // Base = todos os livros 'lido', na ordem que vieram do banco — o atlas
@@ -152,15 +155,30 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
         if (slug) router.replace(`/livros/${slug}`);
     }, [router]);
 
+    // Um único listener para os três contextos, na ordem em que as camadas
+    // aparecem na tela: livro aberto > índice aberto > sala. Sem esse
+    // escalonamento, a seta trocaria a cena por baixo de um livro aberto.
     useEffect(() => {
-        if (!openSlug) return;
         const aoTeclar = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowLeft') folhear(vizinhos.anterior);
-            else if (e.key === 'ArrowRight') folhear(vizinhos.proximo);
+            if (openSlug) {
+                if (e.key === 'Escape') fecharLivro();
+                else if (e.key === 'ArrowLeft') folhear(vizinhos.anterior);
+                else if (e.key === 'ArrowRight') folhear(vizinhos.proximo);
+                return;
+            }
+            if (indiceAberto) {
+                if (e.key === 'Escape') setIndiceAberto(false);
+                return;
+            }
+            // cenaVizinha vem de um .mjs sem tipos — o TS não estreita os
+            // literais do union Viewpoint sozinho, daí o cast (mesmo caso de
+            // deriveLivrosMode em RoomCanvasLoader).
+            if (e.key === 'ArrowLeft') setManualViewpoint(cenaVizinha(manualViewpoint, -1) as Viewpoint);
+            else if (e.key === 'ArrowRight') setManualViewpoint(cenaVizinha(manualViewpoint, 1) as Viewpoint);
         };
         window.addEventListener('keydown', aoTeclar);
         return () => window.removeEventListener('keydown', aoTeclar);
-    }, [openSlug, vizinhos, folhear]);
+    }, [openSlug, indiceAberto, manualViewpoint, vizinhos, folhear, fecharLivro]);
 
     useEffect(() => {
         const motivo = detectaMotivoDegradacao();
@@ -312,24 +330,16 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                 // no empate quem vem depois no DOM — o rodapé — vencia,
                 // deixando os botões visíveis mas não clicáveis).
                 <div className="fixed bottom-36 left-1/2 z-20 flex -translate-x-1/2 gap-2">
-                    <button
-                        onClick={() => setManualViewpoint('geral')}
-                        className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg transition ${manualViewpoint === 'geral' ? 'bg-white text-black' : 'bg-black/60 text-white'}`}
-                    >
-                        Sala
-                    </button>
-                    <button
-                        onClick={() => setManualViewpoint('estante')}
-                        className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg transition ${manualViewpoint === 'estante' ? 'bg-white text-black' : 'bg-black/60 text-white'}`}
-                    >
-                        Estante
-                    </button>
-                    <button
-                        onClick={() => setManualViewpoint('mesa')}
-                        className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg transition ${manualViewpoint === 'mesa' ? 'bg-white text-black' : 'bg-black/60 text-white'}`}
-                    >
-                        Mesa
-                    </button>
+                    {CENAS.map((cena: {id: Viewpoint; rotulo: string}) => (
+                        <button
+                            key={cena.id}
+                            onClick={() => setManualViewpoint(cena.id)}
+                            aria-current={manualViewpoint === cena.id ? 'true' : undefined}
+                            className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg transition ${manualViewpoint === cena.id ? 'bg-white text-black' : 'bg-black/60 text-white'}`}
+                        >
+                            {cena.rotulo}
+                        </button>
+                    ))}
                 </div>
             )}
             {/*
