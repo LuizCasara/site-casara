@@ -43,6 +43,19 @@ export type RoomCanvasProps = {
 
 type IndiceFiltros = {categoria: string | null; tag: string | null};
 
+// Cache em módulo (sobrevive a desmontar/remontar RoomCanvas dentro da
+// mesma sessão — ex.: ir e voltar entre /livros e /livros/lista via
+// RoomCanvasLoader — mas reseta num reload de página, que é o esperado já
+// que os dados vêm de novo do servidor a cada carga). buildSpineAtlas
+// espera fonte carregar e desenha em canvas por livro; refazer isso do
+// zero toda vez que o usuário alterna pra lista e volta é desperdício —
+// o acervo 'lido' não muda entre essas duas trocas.
+let atlasCache: {chave: string; atlas: SpineAtlas} | null = null;
+
+function chaveAtlas(shelfBooks: {slug: string; thicknessM: number}[]): string {
+    return shelfBooks.map((b) => `${b.slug}:${b.thicknessM}`).join('|');
+}
+
 /**
  * Heurística deliberadamente simples: não há um jeito confiável de medir GPU
  * pelo browser sem WebGL já ativo, então poucos núcleos de CPU é o sinal mais
@@ -74,6 +87,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
     const [filtros, setFiltros] = useState<IndiceFiltros>({categoria: null, tag: null});
     const [indiceAberto, setIndiceAberto] = useState(false);
     const isMobile = useIsMobile();
+    const canvasWrapperRef = useRef<HTMLDivElement>(null);
 
     // Base = todos os livros 'lido', na ordem que vieram do banco — o atlas
     // é gerado a partir desta lista (uma vez só, nunca refeito ao ordenar ou
@@ -133,10 +147,18 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
             return;
         }
 
+        const chave = chaveAtlas(shelfBooksBase);
+        if (atlasCache && atlasCache.chave === chave) {
+            setAtlas(atlasCache.atlas);
+            trackRoomLoaded(0, window.innerWidth < 768);
+            return;
+        }
+
         const inicio = performance.now();
         let cancelado = false;
         buildSpineAtlas(shelfBooksBase).then((resultado) => {
             if (cancelado) return;
+            atlasCache = {chave, atlas: resultado};
             setAtlas(resultado);
             trackRoomLoaded(Math.round(performance.now() - inicio), window.innerWidth < 768);
         });
@@ -149,15 +171,35 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
     // O <Canvas> às vezes monta antes do layout do `fixed inset-0` acima
     // estabilizar, e o ResizeObserver do R3F perde essa primeira medição —
     // o canvas fica preso no tamanho padrão (300x150) até algo mais disparar
-    // um resize de verdade. Um `requestAnimationFrame` sozinho dispara cedo
-    // demais (o observer ainda não tinha se conectado); alguns retries com
-    // atraso crescente cobrem a janela real sem custo perceptível quando o
-    // tamanho já estava certo desde o início.
+    // um resize de verdade. Em vez de uma janela de atrasos adivinhados,
+    // mede o próprio container a cada frame e só dispara o resize quando a
+    // largura ficar estável (não-zero, igual por 2 frames seguidos) — real
+    // "contêiner medido", não um palpite de tempo. `MAX_TENTATIVAS` é só
+    // uma rede de segurança contra um layout que nunca estabiliza.
     useEffect(() => {
-        if (!atlas) return;
-        const atrasos = [0, 100, 300, 600];
-        const ids = atrasos.map((ms) => setTimeout(() => window.dispatchEvent(new Event('resize')), ms));
-        return () => ids.forEach(clearTimeout);
+        if (!atlas || !canvasWrapperRef.current) return;
+        const elemento = canvasWrapperRef.current;
+        const MAX_TENTATIVAS = 120; // ~2s a 60fps
+        let frameId: number;
+        let larguraAnterior = -1;
+        let ticksEstavel = 0;
+        let tentativas = 0;
+
+        const verificar = () => {
+            tentativas++;
+            const {width} = elemento.getBoundingClientRect();
+            const estabilizou = width > 0 && width === larguraAnterior;
+            ticksEstavel = estabilizou ? ticksEstavel + 1 : 0;
+            larguraAnterior = width;
+
+            if ((estabilizou && ticksEstavel >= 2) || tentativas >= MAX_TENTATIVAS) {
+                window.dispatchEvent(new Event('resize'));
+                return;
+            }
+            frameId = requestAnimationFrame(verificar);
+        };
+        frameId = requestAnimationFrame(verificar);
+        return () => cancelAnimationFrame(frameId);
     }, [atlas]);
 
     if (degradado || !atlas) return null;
@@ -176,7 +218,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
 
     return (
         <>
-            <div className="fixed inset-0 -z-10">
+            <div ref={canvasWrapperRef} className="fixed inset-0 -z-10">
                 <Canvas shadows camera={{fov: 50}} dpr={isMobile ? 1 : [1, 2]}>
                     <Room/>
                     <Bookshelf shelfBooks={shelfBooksVisiveis} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>
