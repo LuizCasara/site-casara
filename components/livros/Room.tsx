@@ -104,8 +104,8 @@ export default function Room() {
               do piso os dois disputariam cada pixel (z-fighting) e o tapete
               apareceria tremendo em faixas.
             */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-1.3, 0.008, 0.7]}>
-                <planeGeometry args={[2.4, 2.0]}/>
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-1.4, 0.008, -0.15]}>
+                <planeGeometry args={[2.0, 2.1]}/>
                 <meshStandardMaterial color={RUG_COLOR} roughness={1}/>
             </mesh>
 
@@ -114,15 +114,30 @@ export default function Room() {
             <FoneDeOuvido position={[1.55, 0.735, -1.05]}/>
             <ControleDeVideogame position={[2.35, 0.75, -1.05]}/>
 
-            {/* Estante amarela, encostada na parede de fundo à esquerda */}
-            <YellowShelf position={[-2.0, 0, -1.4]}/>
-            <JogoDeTabuleiro position={[-1.75, 0.02, -1.05]}/>
-            <Vinil position={[-1.45, 0.1, -1.15]}/>
+            {/*
+              Estante amarela na parede LATERAL, não na de fundo: a faixa de
+              parede de fundo à esquerda da estante de livros tem ~1,15m
+              úteis, e ela e o canto de campismo não cabem juntas ali. Quem
+              cede é a estante — ela tem profundidade e continua legível vista
+              de ângulo, enquanto mochila/lenços/faca são placas planas que
+              somem se não encararem a câmera.
+            */}
+            <YellowShelf position={[-2.45, 0, -0.5]} rotationY={Math.PI / 2}/>
+            <JogoDeTabuleiro position={[-2.2, 0.02, 0.1]}/>
+            <Vinil position={[-2.15, 0.1, -0.95]}/>
 
-            {/* Canto de leitura */}
-            <Poltrona position={[-1.4, 0, 0.3]} rotationY={0.6}/>
-            <CafeCorner position={[-0.9, 0, 1.25]}/>
-            <Planta position={[-1.02, 0.425, 1.32]}/>
+            {/*
+              Canto de leitura, empurrado pro fundo da sala (z≈-0.5). A câmera
+              "geral" fica em z=2.6 e olha levemente pra baixo, então tudo com
+              z acima de ~0 cai na faixa inferior do quadro e é cortado pela
+              borda de baixo. Em z=0.3 a poltrona virava um borrão de primeiro
+              plano tomando um quarto da tela, e a mesinha nem aparecia.
+              O limite pelo outro lado é a estante amarela (z=-1.26): daí a
+              poltrona parar em -0.55, não mais fundo.
+            */}
+            <Poltrona position={[-1.45, 0, -0.55]} rotationY={0.7}/>
+            <CafeCorner position={[-0.8, 0, 0.35]}/>
+            <Planta position={[-0.92, 0.425, 0.42]}/>
 
             <CampingWall/>
 

@@ -2,7 +2,10 @@
 
 import {DoubleSide} from 'three';
 
-const POLTRONA_COLOR = '#c9b9a3';
+// Creme puxado pro escuro, não o bege claro da foto: sob a luz quente do
+// abajur a 0,7m, um creme claro satura em branco e a poltrona vira um bloco
+// chapado sem volume. Este tom chega no bege da foto DEPOIS de iluminado.
+const POLTRONA_COLOR = '#b5a48d';
 const LEG_COLOR = '#5c4326';
 const ALMOFADA_A_COLOR = '#d9724c';
 const ALMOFADA_B_COLOR = '#2f3e57';
@@ -93,9 +96,12 @@ export default function Poltrona({position, rotationY = 0}: {position: [number, 
                     <coneGeometry args={[0.16, 0.2, 16, 1, true]}/>
                     {/* DoubleSide: o cone é aberto (`openEnded`), então sem
                         isso a cúpula some quando vista de baixo. */}
-                    <meshStandardMaterial color={LAMP_SHADE_COLOR} emissive={LAMP_LIGHT_COLOR} emissiveIntensity={0.4} side={DoubleSide}/>
+                    <meshStandardMaterial color={LAMP_SHADE_COLOR} emissive={LAMP_LIGHT_COLOR} emissiveIntensity={0.15} side={DoubleSide}/>
                 </mesh>
-                <pointLight position={[0, 1.15, 0]} color={LAMP_LIGHT_COLOR} intensity={12} distance={3} decay={2}/>
+                {/* 6, não 12: a poltrona fica a ~0,7m daqui e com decay 2 a
+                    intensidade dobrada estourava o tecido creme em branco
+                    puro — ela lia como um bloco chapado, não como estofado. */}
+                <pointLight position={[0, 1.15, 0]} color={LAMP_LIGHT_COLOR} intensity={6} distance={3} decay={2}/>
             </group>
         </group>
     );
