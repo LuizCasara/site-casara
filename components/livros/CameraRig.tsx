@@ -28,9 +28,13 @@ const VIEWPOINTS: Record<Viewpoint, ViewpointConfig> = {
         minAzimuth: -0.5, maxAzimuth: 0.5,
         minPolar: 1.1, maxPolar: 1.6,
     },
+    // Bem mais perto que os outros pontos de vista (≈0,75m do prumo, contra
+    // 1,7m antes): o título da lombada é escrito na vertical, então sua
+    // altura na tela é limitada pela espessura do livro. Só aumentar o livro
+    // não bastava — a esta distância o texto passa de ~4px para ~18px.
     estante: {
-        camera: [0, 1.1, 0.3],
-        target: [0, 1.0, estanteZ],
+        camera: [0, 1.12, -0.65],
+        target: [0, 1.08, estanteZ],
         minAzimuth: -0.25, maxAzimuth: 0.25,
         minPolar: 1.3, maxPolar: 1.75,
     },

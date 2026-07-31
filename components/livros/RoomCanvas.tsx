@@ -276,7 +276,12 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                 </Canvas>
             </div>
             {mode.kind === 'sala' && !indiceAberto && (
-                <div className="fixed bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+                // `bottom-36` levanta os botões acima do rodapé (≈123px de
+                // altura), que antes ficava por cima deles; `z-20` os coloca
+                // acima do rodapé no empilhamento (ambos estavam em z-10, e
+                // no empate quem vem depois no DOM — o rodapé — vencia,
+                // deixando os botões visíveis mas não clicáveis).
+                <div className="fixed bottom-36 left-1/2 z-20 flex -translate-x-1/2 gap-2">
                     <button
                         onClick={() => setManualViewpoint('geral')}
                         className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg transition ${manualViewpoint === 'geral' ? 'bg-white text-black' : 'bg-black/60 text-white'}`}

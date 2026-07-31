@@ -54,9 +54,15 @@ export default function Room() {
                 <meshStandardMaterial color={WALL_COLOR} roughness={1}/>
             </mesh>
 
-            {/* Prancha física da prateleira — os livros assentam no topo dela. */}
+            {/*
+              Prancha física da prateleira — os livros assentam no topo dela.
+              Largura e profundidade acompanham a escala maior dos livros
+              (lombadas de 30-110mm e 20cm de profundidade): com 1,4m x 0,2m
+              a fileira transbordava a prancha já com algumas dezenas de
+              livros, e eles ficavam com a "bunda" pra fora.
+            */}
             <mesh position={[estante.position[0], estante.position[1] - 0.02, estante.position[2]]}>
-                <boxGeometry args={[1.4, 0.04, 0.2]}/>
+                <boxGeometry args={[2.6, 0.04, 0.26]}/>
                 <meshStandardMaterial color={SHELF_BOARD_COLOR} roughness={0.6}/>
             </mesh>
 

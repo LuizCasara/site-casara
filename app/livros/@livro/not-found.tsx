@@ -11,7 +11,7 @@ import CloseBookButton from '@/components/livros/CloseBookButton';
  */
 export default function LivroNaoEncontrado() {
     return (
-        <div className="fixed inset-0 z-20 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-30 flex items-center justify-center p-4">
             <div className="relative max-w-sm rounded-2xl bg-black/70 p-8 text-center
                             shadow-2xl backdrop-blur-md">
                 <CloseBookButton/>

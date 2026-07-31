@@ -45,14 +45,29 @@ function desenharLombada(
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
 
+    // Depois do rotate(-90°), o eixo `y` local corre na LARGURA da lombada:
+    // um deslocamento em y aqui é um deslocamento horizontal dentro da fatia
+    // deste livro no atlas, e a fatia vai de -widthPx/2 a +widthPx/2 a
+    // partir daqui. O código antigo colocava o autor em `tamanhoTitulo + 10`,
+    // que estoura essa metade em lombadas finas e ia desenhar por cima da
+    // fatia do livro VIZINHO. Por isso os tamanhos e as posições abaixo são
+    // todos frações de widthPx, e a soma delas cabe dentro de 1.
     const maxLargura = heightPx - 48;
-    const tamanhoTitulo = Math.min(28, Math.max(14, widthPx * 0.45));
+    const temAutor = Boolean(book.author);
+
+    const tamanhoTitulo = Math.max(16, widthPx * 0.40);
+    const tamanhoAutor = tamanhoTitulo * 0.6;
+    const respiro = tamanhoTitulo * 0.15;
+    const alturaBloco = temAutor ? tamanhoTitulo + respiro + tamanhoAutor : tamanhoTitulo;
+
+    const centroTitulo = -alturaBloco / 2 + tamanhoTitulo / 2;
     ctx.font = `700 ${tamanhoTitulo}px Quicksand, sans-serif`;
-    ctx.fillText(truncarParaLargura(ctx, book.title, maxLargura), 0, 0);
+    ctx.fillText(truncarParaLargura(ctx, book.title, maxLargura), 0, centroTitulo);
 
     if (book.author) {
-        ctx.font = `400 ${tamanhoTitulo * 0.7}px Quicksand, sans-serif`;
-        ctx.fillText(truncarParaLargura(ctx, book.author, maxLargura), 0, tamanhoTitulo + 10);
+        const centroAutor = centroTitulo + tamanhoTitulo / 2 + respiro + tamanhoAutor / 2;
+        ctx.font = `400 ${tamanhoAutor}px Quicksand, sans-serif`;
+        ctx.fillText(truncarParaLargura(ctx, book.author, maxLargura), 0, centroAutor);
     }
     ctx.restore();
 }

@@ -9,7 +9,7 @@ export default async function LivroInterceptado({params}: {params: Promise<{slug
     if (!livro) notFound();
 
     return (
-        <div className="fixed inset-0 z-20 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-30 flex items-center justify-center p-4">
             <div className="relative max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-2xl
                             bg-black/70 p-8 shadow-2xl backdrop-blur-md">
                 <CloseBookButton/>
