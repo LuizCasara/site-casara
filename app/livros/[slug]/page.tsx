@@ -53,8 +53,14 @@ export default async function LivroPage({params}: {params: Promise<{slug: string
 
     return (
         <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-3xl rounded-2xl bg-white/90 p-6 shadow-xl
-                            backdrop-blur-sm dark:bg-black/70 sm:p-10">
+            {/*
+              `relative z-10` põe o card acima da sala 3D (canvas
+              `fixed inset-0 z-0`), que materializa atrás quando esta página
+              é aberta por link direto. Sem isso o conteúdo ficaria escondido
+              atrás da cena.
+            */}
+            <div className="relative z-10 mx-auto max-w-3xl rounded-2xl bg-white/90 p-6
+                            shadow-xl backdrop-blur-sm dark:bg-black/70 sm:p-10">
                 <Link href="/livros/lista"
                       className="mb-8 inline-block text-sm text-gray-500 underline
                                  hover:text-gray-800 dark:hover:text-gray-200">

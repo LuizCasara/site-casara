@@ -168,38 +168,72 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // O <Canvas> às vezes monta antes do layout do `fixed inset-0` acima
-    // estabilizar, e o ResizeObserver do R3F perde essa primeira medição —
-    // o canvas fica preso no tamanho padrão (300x150) até algo mais disparar
-    // um resize de verdade. Em vez de uma janela de atrasos adivinhados,
-    // mede o próprio container a cada frame e só dispara o resize quando a
-    // largura ficar estável (não-zero, igual por 2 frames seguidos) — real
-    // "contêiner medido", não um palpite de tempo. `MAX_TENTATIVAS` é só
-    // uma rede de segurança contra um layout que nunca estabiliza.
+    // O ResizeObserver do R3F às vezes perde a primeira medição do container
+    // e o canvas fica preso no tamanho padrão (300x150). Isso não é só
+    // cosmético: o R3F só cria o renderer quando o container mede > 0
+    // (`containerRect.width > 0 && containerRect.height > 0` no Canvas dele),
+    // então um canvas não medido significa cena preta E nenhum evento de
+    // ponteiro — sem hover, sem clique.
+    //
+    // A condição observada aqui é a real ("o canvas já tem a largura do
+    // container?"), não um proxy: medir o wrapper não serve, porque ele é
+    // `fixed inset-0` e já nasce estável, o que faria a checagem passar
+    // enquanto o canvas continua errado. Sai assim que a condição vira
+    // verdadeira (normalmente 1-2 frames); o limite de tempo é só rede de
+    // segurança pra não girar pra sempre.
     useEffect(() => {
-        if (!atlas || !canvasWrapperRef.current) return;
-        const elemento = canvasWrapperRef.current;
-        const MAX_TENTATIVAS = 120; // ~2s a 60fps
-        let frameId: number;
-        let larguraAnterior = -1;
-        let ticksEstavel = 0;
-        let tentativas = 0;
+        if (!atlas) return;
+        const wrapper = canvasWrapperRef.current;
+        if (!wrapper) return;
 
-        const verificar = () => {
-            tentativas++;
-            const {width} = elemento.getBoundingClientRect();
-            const estabilizou = width > 0 && width === larguraAnterior;
-            ticksEstavel = estabilizou ? ticksEstavel + 1 : 0;
-            larguraAnterior = width;
+        const LIMITE_MS = 5000;
+        const INTERVALO_MS = 100;
+        let timeoutId: ReturnType<typeof setTimeout>;
+        let cancelado = false;
+        let inicio = Date.now();
 
-            if ((estabilizou && ticksEstavel >= 2) || tentativas >= MAX_TENTATIVAS) {
-                window.dispatchEvent(new Event('resize'));
-                return;
-            }
-            frameId = requestAnimationFrame(verificar);
+        // A condição real: o canvas já tem a largura do container? Medir o
+        // wrapper não serve como proxy — ele é `fixed inset-0` e já nasce
+        // com o tamanho certo, então a checagem passaria enquanto o canvas
+        // continua em 300x150.
+        const jaMedido = () => {
+            const canvas = wrapper.querySelector('canvas');
+            if (!canvas) return false;
+            const alvo = wrapper.getBoundingClientRect();
+            const atual = canvas.getBoundingClientRect();
+            return atual.width > 0 && Math.abs(atual.width - alvo.width) < 1;
         };
-        frameId = requestAnimationFrame(verificar);
-        return () => cancelAnimationFrame(frameId);
+
+        const tentar = () => {
+            if (cancelado || jaMedido()) return;
+            window.dispatchEvent(new Event('resize'));
+            if (Date.now() - inicio < LIMITE_MS) timeoutId = setTimeout(tentar, INTERVALO_MS);
+        };
+
+        // setTimeout, NÃO requestAnimationFrame: rAF fica suspenso enquanto
+        // o documento está oculto, e o ResizeObserver do R3F também não
+        // entrega nada nesse estado. Quem abre /livros numa aba em segundo
+        // plano ficaria com o canvas preso em 300x150 — e, como o R3F só cria
+        // o renderer quando o container mede > 0, isso significa sala preta
+        // e sem nenhum evento de ponteiro, não só um canvas do tamanho
+        // errado. Timers continuam rodando com a aba oculta; o
+        // visibilitychange abaixo cobre o caso de a aba voltar depois do
+        // limite de tempo ter estourado.
+        tentar();
+
+        const aoMudarVisibilidade = () => {
+            if (document.visibilityState !== 'visible' || jaMedido()) return;
+            inicio = Date.now();
+            clearTimeout(timeoutId);
+            tentar();
+        };
+        document.addEventListener('visibilitychange', aoMudarVisibilidade);
+
+        return () => {
+            cancelado = true;
+            clearTimeout(timeoutId);
+            document.removeEventListener('visibilitychange', aoMudarVisibilidade);
+        };
     }, [atlas]);
 
     if (degradado || !atlas) return null;
@@ -218,7 +252,18 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
 
     return (
         <>
-            <div ref={canvasWrapperRef} className="fixed inset-0 -z-10">
+            {/*
+              z-0, NÃO -z-10: com z-index negativo o canvas é pintado atrás do
+              conteúdo in-flow do documento, e o `<main className="flex-grow">`
+              do layout raiz — transparente, mas ocupando a viewport inteira —
+              vira o alvo de todo hit-test. A cena aparecia normalmente (o
+              main não tem fundo) mas o R3F nunca recebia pointer event
+              nenhum: sem hover, sem clique em livro, sem clique na folha do
+              índice. Quem precisa ficar acima da sala declara isso
+              explicitamente (Footer, o card de /livros/[slug], os botões de
+              viewpoint em z-10, os overlays em z-20).
+            */}
+            <div ref={canvasWrapperRef} className="fixed inset-0 z-0">
                 <Canvas shadows camera={{fov: 50}} dpr={isMobile ? 1 : [1, 2]}>
                     <Room/>
                     <Bookshelf shelfBooks={shelfBooksVisiveis} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>

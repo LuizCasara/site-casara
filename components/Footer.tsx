@@ -8,7 +8,10 @@ const Footer = () => {
   if (pathname.startsWith('/casamento') || pathname.startsWith('/w/') || pathname.startsWith('/q/')) return null;
 
   return (
-    <footer className="border-t border-gray-100 dark:border-gray-800/60">
+    // `relative z-10`: em /livros a sala 3D é um canvas `fixed inset-0 z-0`,
+    // que fica acima de todo elemento estático in-flow. Sem posicionamento
+    // explícito aqui, o rodapé sumiria atrás da cena nessas rotas.
+    <footer className="relative z-10 border-t border-gray-100 dark:border-gray-800/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
 
