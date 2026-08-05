@@ -4,6 +4,7 @@ import {useEffect, useRef} from 'react';
 import * as THREE from 'three';
 import {CameraControls, CameraControlsImpl} from '@react-three/drei';
 import {ROOM_ANCHORS} from '@/components/livros/Room';
+import {SHELF_ROWS, SHELF_ROW_SPACING_M, BOOK_HEIGHT_BASE_M} from '@/lib/book-dimensions.mjs';
 
 export type Viewpoint = 'geral' | 'estante' | 'mesa' | 'livro' | 'indice';
 
@@ -21,20 +22,33 @@ const leitura = ROOM_ANCHORS.leitura.position;
 const mesaPos = ROOM_ANCHORS.mesa.position;
 const indicePos = ROOM_ANCHORS.indice.position;
 
+// Meio da altura ocupada pelos livros: a fileira de baixo assenta na âncora da
+// estante e a de cima, um SHELF_ROW_SPACING_M acima — mirar na âncora deixaria
+// o andar de cima fora de quadro.
+const estanteMeioY = ROOM_ANCHORS.estante.position[1]
+    + (SHELF_ROWS - 1) * SHELF_ROW_SPACING_M / 2
+    + BOOK_HEIGHT_BASE_M / 2;
+
 const VIEWPOINTS: Record<Viewpoint, ViewpointConfig> = {
     geral: {
-        camera: [0, 1.6, 2.6],
-        target: [0, 1.1, estanteZ],
+        camera: [0, 1.75, 2.6],
+        target: [0, estanteMeioY, estanteZ],
         minAzimuth: -0.5, maxAzimuth: 0.5,
         minPolar: 1.1, maxPolar: 1.6,
     },
-    // Bem mais perto que os outros pontos de vista (≈0,75m do prumo, contra
+    // Bem mais perto que os outros pontos de vista (≈0,95m do prumo, contra
     // 1,7m antes): o título da lombada é escrito na vertical, então sua
     // altura na tela é limitada pela espessura do livro. Só aumentar o livro
-    // não bastava — a esta distância o texto passa de ~4px para ~18px.
+    // não bastava — a esta distância o texto passa de ~4px para ~14px.
+    //
+    // Era 0,75m enquanto a estante tinha uma fileira só. Com duas, ~0,72m de
+    // altura de acervo não cabem no campo vertical a essa distância e o andar
+    // de cima fica cortado. 1,25m é o que enquadra os dois com folga — a
+    // conta pelo fov sozinha (0,95m) fica curta na prática porque o header e
+    // o rodapé cobrem as bordas do canvas, que é `fixed inset-0`.
     estante: {
-        camera: [0, 1.12, -0.65],
-        target: [0, 1.08, estanteZ],
+        camera: [0, estanteMeioY, estanteZ + 1.25],
+        target: [0, estanteMeioY, estanteZ],
         minAzimuth: -0.25, maxAzimuth: 0.25,
         minPolar: 1.3, maxPolar: 1.75,
     },

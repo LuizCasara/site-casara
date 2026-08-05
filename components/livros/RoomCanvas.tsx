@@ -13,7 +13,8 @@ import CameraRig, {type Viewpoint} from '@/components/livros/CameraRig';
 import {useIsMobile} from '@/components/livros/use-is-mobile';
 import {useFecharLivro} from '@/components/livros/use-fechar-livro';
 import {useAlturaRodape} from '@/components/livros/use-altura-rodape';
-import {toShelfBooks, shelfWidthM} from '@/lib/book-dimensions.mjs';
+import {toShelfBooks, shelfWidthM, splitShelfRows} from '@/lib/book-dimensions.mjs';
+import type {ShelfBookData} from '@/components/livros/Book';
 import {sortShelfBooks, filterShelfBooks, vizinhosDe} from '@/lib/livros-shelf.mjs';
 import {CENAS, cenaVizinha} from '@/lib/livros-cenas.mjs';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
@@ -103,7 +104,15 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
         () => sortShelfBooks(filterShelfBooks(shelfBooksBase, filtros), sortCriterio),
         [shelfBooksBase, filtros, sortCriterio],
     );
-    const larguraEstanteM = useMemo(() => shelfWidthM(shelfBooksVisiveis), [shelfBooksVisiveis]);
+    // Largura da fileira MAIS LARGA, não do acervo inteiro: os livros estão
+    // distribuídos em SHELF_ROWS fileiras centradas, então é essa a extensão
+    // lateral que o trilho de arrasto no mobile precisa cobrir. Usar a soma
+    // total daria um trilho ~2x maior que a estante e deixaria metade do
+    // arrasto passeando pelo vazio.
+    const larguraEstanteM = useMemo(
+        () => Math.max(...splitShelfRows(shelfBooksVisiveis).map((fileira: ShelfBookData[]) => shelfWidthM(fileira)), 0),
+        [shelfBooksVisiveis],
+    );
 
     // "animate" só nasce falso quando a página já chega com um livro aberto
     // (link direto/externo) — sem clique prévio, não há o que justificar
@@ -315,7 +324,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
             */}
             <div ref={canvasWrapperRef} className="fixed inset-0 z-0">
                 <Canvas shadows camera={{fov: 50}} dpr={isMobile ? 1 : [1, 2]}>
-                    <Room/>
+                    <Room larguraEstanteM={larguraEstanteM}/>
                     <Bookshelf shelfBooks={shelfBooksVisiveis} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>
                     <DeskBooks deskBooks={deskShelfBooks} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>
                     {mode.kind === 'sala' && <IndexSheet onOpen={abrirIndice} isMobile={isMobile}/>}

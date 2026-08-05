@@ -55,7 +55,11 @@ function desenharLombada(
     const maxLargura = heightPx - 48;
     const temAutor = Boolean(book.author);
 
-    const tamanhoTitulo = Math.max(16, widthPx * 0.40);
+    // Sem teto, uma lombada grossa (ex.: 1232 páginas) gerava uma fonte tão
+    // grande que o título estourava `maxLargura` em poucos caracteres — "A
+    // Revolta de Atlas" virava "A revo…". O piso de 16 continua evitando
+    // texto ilegível em lombadas finas; o teto agora evita o oposto.
+    const tamanhoTitulo = Math.min(40, Math.max(16, widthPx * 0.40));
     const tamanhoAutor = tamanhoTitulo * 0.6;
     const respiro = tamanhoTitulo * 0.15;
     const alturaBloco = temAutor ? tamanhoTitulo + respiro + tamanhoAutor : tamanhoTitulo;
