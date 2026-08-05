@@ -15,6 +15,10 @@ import {BOOK_DEPTH_M} from '@/lib/book-dimensions.mjs';
 // face -z, oposta.
 const SPINE_FACE_INDEX = 4;
 const COVER_FACE_INDEX = 5;
+// Face -x — a que fica virada pra cima quando o livro deita sobre a mesa (ver
+// DESK_REST_ROT_Z_RAD). É a face grande do volume (altura x profundidade), a
+// única com proporção de capa de verdade.
+const TOP_FACE_INDEX = 1;
 const FALLBACK_SPINE_COLOR = '#4b4b4b';
 const HOVER_SLIDE_M = 0.035;
 const HOVER_TILT_RAD = 0.12;
@@ -24,9 +28,19 @@ const OPEN_TILT_RAD = -0.35;
 // Livro "fora do lugar" além desta distância (aberto ou voltando a fechar)
 // anima na velocidade lenta de abertura; hover puro usa a velocidade rápida.
 const DESLOCAMENTO_GRANDE_M = 0.1;
-// Quase deitado (-90° seria totalmente plano) — o suficiente pra "capa
-// virada" ficar legível em ângulo, sem virar um adesivo grudado na mesa.
-const DESK_REST_TILT_RAD = -1.3;
+// Livro deitado sobre a mesa: rotação de 90° em torno de Z, não de X.
+//
+// A geometria é BoxGeometry(thicknessM, heightM, BOOK_DEPTH_M) — x é a
+// espessura, y a altura, z a profundidade. Girando em X, o que ia parar na
+// vertical era a PROFUNDIDADE (20cm): o livro ficava de pé, tombado pra trás,
+// atravessando o tampo. Girando em Z é a espessura que sobe, que é o que
+// "deitado" quer dizer — e é essa mesma suposição que layoutDeskBooks usa pra
+// empilhar um livro sobre o outro somando espessuras.
+//
+// Negativo, e não positivo: os dois deitam o livro, mas +90° põe o topo das
+// letras da lombada apontando pra -x, e o título fica de cabeça pra baixo pra
+// quem olha a mesa. -90° põe pra +x, que é o sentido de leitura.
+const DESK_REST_ROT_Z_RAD = -Math.PI / 2;
 
 // Área de detecção de hover/clique maior que o volume visível da lombada —
 // com poucos livros no acervo (espessura mínima de 12mm), a malha real ocupa
@@ -120,8 +134,19 @@ export default function Book({
     const geometry = useMemo(() => {
         const geo = new THREE.BoxGeometry(book.thicknessM, book.heightM, BOOK_DEPTH_M);
         setBoxFaceUV(geo, SPINE_FACE_INDEX, uvRange.u0, uvRange.u1, 0, 1);
+        // Face de topo com U E V invertidos nos livros da mesa — ou seja, a
+        // textura girada 180°. As UVs de fábrica da face -x são orientadas pra
+        // ser vista DE FORA do volume, olhando na direção +x; deitado, o
+        // observador passa a olhar essa mesma face de cima pra baixo, e a capa
+        // aparecia de ponta-cabeça.
+        //
+        // Os dois eixos, não um: invertendo só o U a capa ficava girada, e só
+        // o V ficava espelhada — as duas assinaturas de um defeito de origem
+        // que é rotação de 180°, não espelhamento. Não afeta a lombada nem as
+        // outras faces.
+        if (restVariant === 'capa') setBoxFaceUV(geo, TOP_FACE_INDEX, 1, 0, 1, 0);
         return geo;
-    }, [book.thicknessM, book.heightM, uvRange.u0, uvRange.u1]);
+    }, [book.thicknessM, book.heightM, uvRange.u0, uvRange.u1, restVariant]);
     // Geometrias/materiais criados via `new THREE.X()` em código (em vez de
     // JSX) não são descartados automaticamente pelo R3F ao desmontar ou
     // recalcular — sem isso, filtrar livros no índice ou trocar de capa
@@ -165,8 +190,12 @@ export default function Book({
             : materialCapa;
         const lista = [materialCapa, materialCapa, materialCapa, materialCapa, materialLombada, materialCapa];
         lista[COVER_FACE_INDEX] = materialCapaFrontal;
+        // Deitado na mesa, quem aparece é o topo — sem isto, os livros "lendo
+        // agora" mostrariam um retângulo de cor lisa e a capa que já foi
+        // baixada pra eles ficaria escondida contra o tampo.
+        if (restVariant === 'capa') lista[TOP_FACE_INDEX] = materialCapaFrontal;
         return lista;
-    }, [book.spineColor, atlasTexture, coverTexture]);
+    }, [book.spineColor, atlasTexture, coverTexture, restVariant]);
     // `materialLombada` referencia `atlasTexture` (prop compartilhada entre
     // todos os livros — não descartar) mas os outros materiais desta lista
     // são exclusivos deste Book; dispose() duas vezes na mesma instância
@@ -196,20 +225,30 @@ export default function Book({
         const velocidade = (isOpen || distanciaDoRepouso > DESLOCAMENTO_GRANDE_M) ? OPEN_LERP_SPEED : HOVER_LERP_SPEED;
 
         const emCapa = restVariant === 'capa';
-        const restRotX = emCapa ? DESK_REST_TILT_RAD : 0;
-        const restRotYFinal = emCapa ? Math.PI + restRotationY : 0;
+        // Sem o `Math.PI` que existia aqui: ele girava o livro de costas pra
+        // mostrar a face -z (a "capa" antiga, esticada numa tira do tamanho da
+        // lombada) e deixava esse borrão virado pra câmera. Agora a capa fica
+        // na face de cima e o que sobra pro lado é a lombada de verdade, com o
+        // título deitado e legível — um livro largado na mesa, não um de
+        // costas. `restRotationY` continua, é o desalinho da pilha.
+        const restRotYFinal = emCapa ? restRotationY : 0;
 
         const alvoX = isOpen ? abertura.position[0] : position[0];
         const alvoY = isOpen ? abertura.position[1] : position[1];
         const alvoZ = isOpen ? abertura.position[2] : position[2] + (!emCapa && hovered ? HOVER_SLIDE_M : 0);
-        const alvoRotX = isOpen ? OPEN_TILT_RAD : (restRotX + (!emCapa && hovered ? -HOVER_TILT_RAD : 0));
+        const alvoRotX = isOpen ? OPEN_TILT_RAD : (!emCapa && hovered ? -HOVER_TILT_RAD : 0);
         const alvoRotY = isOpen ? abertura.rotationY : restRotYFinal;
+        // Abrir sempre põe o livro em pé, venha ele da estante ou da pilha da
+        // mesa — por isso o alvo de Z é 0 quando aberto, e não a rotação de
+        // repouso da variante.
+        const alvoRotZ = (emCapa && !isOpen) ? DESK_REST_ROT_Z_RAD : 0;
 
         groupRef.current.position.x = THREE.MathUtils.damp(groupRef.current.position.x, alvoX, velocidade, delta);
         groupRef.current.position.y = THREE.MathUtils.damp(groupRef.current.position.y, alvoY, velocidade, delta);
         groupRef.current.position.z = THREE.MathUtils.damp(groupRef.current.position.z, alvoZ, velocidade, delta);
         groupRef.current.rotation.x = THREE.MathUtils.damp(groupRef.current.rotation.x, alvoRotX, velocidade, delta);
         groupRef.current.rotation.y = THREE.MathUtils.damp(groupRef.current.rotation.y, alvoRotY, velocidade, delta);
+        groupRef.current.rotation.z = THREE.MathUtils.damp(groupRef.current.rotation.z, alvoRotZ, velocidade, delta);
     });
 
     return (

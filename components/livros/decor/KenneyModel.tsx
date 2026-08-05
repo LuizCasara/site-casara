@@ -103,8 +103,6 @@ export default function KenneyModel({url, cores, position, rotation, alturaAlvo,
 // sala aparece mobiliando-se em cascata na frente de quem abriu a página.
 export const MODELOS = {
     poltrona: '/livros/modelos/lounge-chair.glb',
-    mesaTrabalho: '/livros/modelos/desk.glb',
-    cadeiraEscritorio: '/livros/modelos/desk-chair.glb',
     estanteAmarela: '/livros/modelos/bookcase-open.glb',
     mesinha: '/livros/modelos/side-table.glb',
     tapete: '/livros/modelos/rug-rectangle.glb',

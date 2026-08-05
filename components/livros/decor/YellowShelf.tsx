@@ -10,8 +10,12 @@ import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
  */
 const SHELF_COLOR = '#d9a441';
 
-// Estante de pé, não de mesa.
-const ALTURA = 1.7;
+// Estante de pé, não de mesa. Baixada de 1.7 pra 1.45 ao vir da parede
+// lateral pra de fundo: de perfil e na borda do quadro ela era um detalhe,
+// mas de frente e no meio da cena 1,7m fazia dela o objeto mais alto e mais
+// saturado da sala — competindo com a estante do acervo, que é o motivo da
+// sala existir.
+const ALTURA = 1.45;
 
 /**
  * Estante amarela aberta — o acento de cor do escritório real, e a única peça

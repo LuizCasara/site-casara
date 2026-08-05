@@ -4,8 +4,6 @@ import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
 
 const BOARD_GAME_COLOR = '#8a3b2e';
 const BOARD_GAME_LID_COLOR = '#c9a24a';
-const CONTROLLER_COLOR = '#2b2b2b';
-const HEADPHONE_COLOR = '#1a1a1a';
 const VINYL_COLOR = '#111111';
 const VINYL_LABEL_COLOR = '#c9432e';
 
@@ -38,40 +36,6 @@ export function JogoDeTabuleiro({position}: PropPosition) {
                 <boxGeometry args={[0.16, 0.002, 0.22]}/>
                 <meshStandardMaterial color={BOARD_GAME_LID_COLOR} roughness={0.6}/>
             </mesh>
-        </group>
-    );
-}
-
-export function ControleDeVideogame({position}: PropPosition) {
-    return (
-        <group position={position}>
-            <mesh>
-                <boxGeometry args={[0.14, 0.03, 0.08]}/>
-                <meshStandardMaterial color={CONTROLLER_COLOR} roughness={0.5}/>
-            </mesh>
-            {[-0.04, 0.04].map((x) => (
-                <mesh key={x} position={[x, 0, 0.03]}>
-                    <cylinderGeometry args={[0.012, 0.012, 0.02, 8]}/>
-                    <meshStandardMaterial color="#555555"/>
-                </mesh>
-            ))}
-        </group>
-    );
-}
-
-export function FoneDeOuvido({position}: PropPosition) {
-    return (
-        <group position={position}>
-            <mesh position={[0, 0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[0.07, 0.008, 8, 16, Math.PI]}/>
-                <meshStandardMaterial color={HEADPHONE_COLOR}/>
-            </mesh>
-            {[-0.07, 0.07].map((x) => (
-                <mesh key={x} position={[x, 0.05, 0]}>
-                    <cylinderGeometry args={[0.025, 0.025, 0.03, 12]}/>
-                    <meshStandardMaterial color={HEADPHONE_COLOR}/>
-                </mesh>
-            ))}
         </group>
     );
 }
