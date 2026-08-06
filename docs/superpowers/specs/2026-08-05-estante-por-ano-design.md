@@ -120,19 +120,23 @@ O ponto de vista `estante` deixa de ser único e vira uma família:
   dentro da estante.
 - **Voltar**: clicar no ano já ativo, clicar em "Estante", ou `Esc`.
 
-### D5 — Dois controles para a mesma ação
+### D5 — Um controle: a etiqueta no próprio nicho
 
-Ambos entram, e ambos disparam exatamente a mesma ação:
+**Decidido em 06/08/2026, depois de rodar os dois.** Foram implementadas as
+duas alternativas — uma segunda linha de botões na barra inferior e as
+etiquetas 3D nos nichos — justamente para escolher com as duas no ar. A barra
+saiu.
 
-1. **Segunda linha de botões** na barra existente (`2020-21`, `2022`, `2023`,
-   `2024`, `2025-26`), visível só quando a cena é a estante.
-2. **Etiquetas 3D** por nicho, no mesmo `<Html>` do drei que já desenha a
-   etiqueta de hover do livro, ancoradas na borda frontal da prateleira, com a
-   do ano ativo destacada.
+O que sobra: **etiqueta por nicho**, no mesmo `<Html>` do drei que desenha a
+etiqueta de hover do livro, ancorada na borda frontal da prateleira, visível só
+na cena da estante, com a do ano ativo destacada. Ela acumula as duas funções
+que a barra dividia: diz que ano é aquela prateleira **e** é o botão que dá
+zoom nele. A linha na barra repetia essa informação longe do objeto que ela
+descreve.
 
-Manter os dois é deliberado: o dono do acervo quer comparar no uso antes de
-escolher, e como disparam a mesma ação, remover um depois é apagar código de
-apresentação, não desmontar lógica.
+Com filtro ativo, a etiqueta vira contador (`2023 · 4`) e o ano que zerou fica
+apagado e sem clique — comportamento que morava nos botões da barra e migrou
+para cá quando ela saiu.
 
 ### D6 — O ano manda; o Índice atua dentro dele
 

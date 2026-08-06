@@ -58,6 +58,14 @@ export default function Bookshelf({
                 const largura = shelfWidthM(livros);
                 let xAtual = -largura / 2;
 
+                // Com filtro ativo a etiqueta vira contador ("2023 · 4") e o
+                // ano que zerou fica apagado e sem clique — não faria sentido
+                // dar zoom num nicho vazio. Isto vivia nos botões da barra,
+                // que saíram: a etiqueta é agora o único controle dos anos.
+                const totalDoGrupo = livrosDoGrupo(grupo, todosOsLivros).length;
+                const filtrado = livros.length !== totalDoGrupo;
+                const vazio = livros.length === 0;
+
                 return (
                     <group key={grupo.rotulo}>
                         {/*
@@ -90,14 +98,17 @@ export default function Bookshelf({
                                         e.stopPropagation();
                                         onSelecionarGrupo(iGrupo);
                                     }}
+                                    disabled={vazio}
+                                    aria-current={grupoFocado === iGrupo ? 'true' : undefined}
                                     className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[11px]
-                                                font-semibold shadow transition ${
+                                                font-semibold shadow transition
+                                                disabled:cursor-not-allowed disabled:opacity-40 ${
                                         grupoFocado === iGrupo
                                             ? 'bg-white text-black'
                                             : 'bg-black/70 text-white/90 hover:bg-black/90'
                                     }`}
                                 >
-                                    {grupo.rotulo}
+                                    {grupo.rotulo}{filtrado && ` · ${livros.length}`}
                                 </button>
                             </Html>
                         )}

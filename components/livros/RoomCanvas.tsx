@@ -15,7 +15,7 @@ import {useFecharLivro} from '@/components/livros/use-fechar-livro';
 import {useAlturaRodape, useAlturaDoElemento} from '@/components/livros/use-altura-rodape';
 import {toShelfBooks} from '@/lib/book-dimensions.mjs';
 import {NICHO_CAPACIDADE_M} from '@/lib/bookshelf-model.mjs';
-import {agruparPorAnoDeLeitura, livrosDoGrupo} from '@/lib/shelf-years.mjs';
+import {agruparPorAnoDeLeitura} from '@/lib/shelf-years.mjs';
 import {sortShelfBooks, filterShelfBooks, vizinhosDe} from '@/lib/livros-shelf.mjs';
 import {CENAS, cenaVizinha} from '@/lib/livros-cenas.mjs';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
@@ -431,34 +431,14 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                     className="fixed left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-2"
                 >
                     {/*
-                      Sub-nível: só existe na cena da estante. Fica ACIMA da
-                      linha de cenas porque é um nível abaixo dela na
-                      navegação — a linha de baixo é onde você está, a de cima
-                      é dentro de onde você está.
+                      Os anos NÃO aparecem aqui. Chegaram a existir como uma
+                      segunda linha acima desta, junto com as etiquetas na
+                      própria estante; com os dois no ar ficou claro que a
+                      etiqueta no nicho basta — ela diz que ano é aquela
+                      prateleira E serve de botão, enquanto a linha aqui
+                      embaixo repetia a informação longe do objeto. Ver spec,
+                      D5, decidido depois de rodar.
                     */}
-                    {manualViewpoint === 'estante' && (
-                        <div className="flex flex-wrap justify-center gap-2 px-4">
-                            {grupos.map((grupo: {rotulo: string}, i: number) => {
-                                const visiveis = livrosDoGrupo(grupo, shelfBooksVisiveis).length;
-                                const total = livrosDoGrupo(grupo, shelfBooksBase).length;
-                                const filtrado = visiveis !== total;
-                                return (
-                                    <button
-                                        key={grupo.rotulo}
-                                        onClick={() => selecionarGrupo(i)}
-                                        disabled={visiveis === 0}
-                                        aria-current={grupoFocado === i ? 'true' : undefined}
-                                        className={`rounded-full px-3 py-1 text-xs font-semibold shadow-lg transition
-                                                    disabled:cursor-not-allowed disabled:opacity-40 ${
-                                            grupoFocado === i ? 'bg-white text-black' : 'bg-black/60 text-white'
-                                        }`}
-                                    >
-                                        {grupo.rotulo}{filtrado && ` · ${visiveis}`}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
                     <div className="flex gap-2">
                         {CENAS.map((cena: {id: Viewpoint; rotulo: string}) => (
                             <button
