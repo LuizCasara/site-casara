@@ -1,8 +1,11 @@
 'use client';
 
+import Link from 'next/link';
+import {useEffect, useState} from 'react';
 import {CATEGORIES} from '@/lib/book-categories.mjs';
 import {SORT_CRITERIA} from '@/lib/livros-shelf.mjs';
 import {corDeTextoSobre} from '@/lib/contraste.mjs';
+import {useDebounce} from '@/components/livros/use-debounce';
 
 const SORT_LABELS: Record<string, string> = {
     padrao: 'Padrão',
@@ -11,7 +14,7 @@ const SORT_LABELS: Record<string, string> = {
     categoria: 'Categoria',
 };
 
-type IndiceFiltros = {categoria: string | null; tag: string | null};
+type IndiceFiltros = {categoria: string | null; tag: string | null; busca: string};
 
 type IndexPanelProps = {
     tags: string[];
@@ -20,9 +23,25 @@ type IndexPanelProps = {
     filtros: IndiceFiltros;
     onFilterChange: (filtros: IndiceFiltros) => void;
     onClose: () => void;
+    /** Quantos livros sobraram na estante com os filtros de agora. */
+    visiveis: number;
+    total: number;
 };
 
-export default function IndexPanel({tags, sortCriterio, onSortChange, filtros, onFilterChange, onClose}: IndexPanelProps) {
+export default function IndexPanel({
+    tags, sortCriterio, onSortChange, filtros, onFilterChange, onClose, visiveis, total,
+}: IndexPanelProps) {
+    // O campo é controlado localmente e só o valor ATRASADO sobe para quem
+    // filtra a estante: digitar precisa responder na hora, mas reposicionar
+    // cinquenta livros no 3D a cada tecla é trabalho jogado fora.
+    const [termo, setTermo] = useState(filtros.busca);
+    const termoAtrasado = useDebounce(termo, 300);
+
+    useEffect(() => {
+        if (termoAtrasado !== filtros.busca) onFilterChange({...filtros, busca: termoAtrasado});
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [termoAtrasado]);
+
     return (
         // Encostado num canto, NÃO centralizado: a estante fica no meio da
         // tela, e o painel por cima dela escondia justamente o que muda quando
@@ -48,6 +67,23 @@ export default function IndexPanel({tags, sortCriterio, onSortChange, filtros, o
                 </button>
 
                 <h2 className="mb-4 text-lg font-bold text-white">Índice</h2>
+
+                <div className="mb-5">
+                    <input
+                        type="search"
+                        value={termo}
+                        onChange={(e) => setTermo(e.target.value)}
+                        placeholder="Buscar por título ou autor"
+                        aria-label="Buscar por título ou autor"
+                        className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm text-white
+                                   placeholder:text-white/40 focus:bg-white/15 focus:outline-none"
+                    />
+                    <p className="mt-2 text-xs text-white/50" aria-live="polite">
+                        {visiveis === total
+                            ? `${total} livros na estante`
+                            : `${visiveis} de ${total} livros`}
+                    </p>
+                </div>
 
                 <div className="mb-5">
                     <p className="mb-2 text-xs font-bold uppercase text-white/50">Ordenar por</p>
@@ -77,8 +113,8 @@ export default function IndexPanel({tags, sortCriterio, onSortChange, filtros, o
                                 <button
                                     key={c.id}
                                     onClick={() => onFilterChange({
+                                        ...filtros,
                                         categoria: ativo ? null : c.id,
-                                        tag: filtros.tag,
                                     })}
                                     className="rounded-full px-3 py-1 text-xs font-medium transition"
                                     style={ativo
@@ -92,6 +128,26 @@ export default function IndexPanel({tags, sortCriterio, onSortChange, filtros, o
                     </div>
                 </div>
 
+                <div className="mb-5">
+                    {/* A mesma coisa vista de outro jeito: a estante mostra o
+                        acervo em 3D, a listagem mostra em grade, com as capas.
+                        Leva os filtros junto para a troca não perder o
+                        contexto de quem já filtrou aqui. */}
+                    <Link
+                        href={{pathname: '/livros/lista', query: Object.fromEntries(
+                            Object.entries({
+                                categoria: filtros.categoria,
+                                tag: filtros.tag,
+                                busca: filtros.busca || null,
+                            }).filter(([, v]) => v),
+                        )}}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-white/70
+                                   underline underline-offset-2 hover:text-white"
+                    >
+                        Ver todos os livros em lista →
+                    </Link>
+                </div>
+
                 {tags.length > 0 && (
                     <div>
                         <p className="mb-2 text-xs font-bold uppercase text-white/50">Tags</p>
@@ -100,7 +156,7 @@ export default function IndexPanel({tags, sortCriterio, onSortChange, filtros, o
                                 <button
                                     key={t}
                                     onClick={() => onFilterChange({
-                                        categoria: filtros.categoria,
+                                        ...filtros,
                                         tag: filtros.tag === t ? null : t,
                                     })}
                                     className={`rounded-full px-3 py-1 text-xs font-medium transition ${

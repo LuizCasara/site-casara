@@ -53,7 +53,7 @@ export type RoomCanvasProps = {
     mode: LivrosMode;
 };
 
-type IndiceFiltros = {categoria: string | null; tag: string | null};
+type IndiceFiltros = {categoria: string | null; tag: string | null; busca: string};
 
 // Cache em módulo: sobrevive a desmontar/remontar o RoomCanvas dentro da mesma
 // sessão (ir e voltar entre /livros e /livros/lista) e reseta num reload, que é
@@ -92,7 +92,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     const [atlas, setAtlas] = useState<SpineAtlas | null>(null);
     const [degradado, setDegradado] = useState(false);
     const [sortCriterio, setSortCriterio] = useState('padrao');
-    const [filtros, setFiltros] = useState<IndiceFiltros>({categoria: null, tag: null});
+    const [filtros, setFiltros] = useState<IndiceFiltros>({categoria: null, tag: null, busca: ''});
     const [indiceAberto, setIndiceAberto] = useState(false);
     /** Close no porta-retratos da mesa do PC — ver o viewpoint 'retrato'. */
     const [retratoAberto, setRetratoAberto] = useState(false);
@@ -424,6 +424,9 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     const mudarFiltros = (novos: IndiceFiltros) => {
         if (novos.categoria !== filtros.categoria) trackBookFilter('categoria', novos.categoria ?? '');
         if (novos.tag !== filtros.tag) trackBookFilter('tag', novos.tag ?? '');
+        // A busca já chega com debounce do IndexPanel, então isto é um evento
+        // por termo procurado, não por tecla digitada.
+        if (novos.busca !== filtros.busca && novos.busca) trackBookFilter('busca', novos.busca);
         setFiltros(novos);
     };
 
@@ -605,6 +608,8 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                     filtros={filtros}
                     onFilterChange={mudarFiltros}
                     onClose={fecharIndice}
+                    visiveis={shelfBooksVisiveis.length}
+                    total={shelfBooksBase.length}
                 />
             )}
         </>

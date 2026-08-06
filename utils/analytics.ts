@@ -232,6 +232,14 @@ export const trackBookBackToList = (slug: string) =>
   trackEvent('book_back_to_list', { slug });
 
 /**
+ * Voltar do livro para a SALA, não para a listagem. Evento separado de
+ * propósito: os dois botões ficam lado a lado na página, e qual deles as
+ * pessoas escolhem diz se a sala 3D é procurada por quem chega de fora.
+ */
+export const trackBookBackToRoom = (slug: string) =>
+  trackEvent('book_back_to_room', { slug });
+
+/**
  * `origem` responde à pergunta que motivou o trilho único: a roda do mouse
  * está sendo descoberta, ou todo mundo usa os botões?
  */

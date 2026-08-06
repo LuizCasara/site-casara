@@ -8,7 +8,7 @@ import {corDeTextoSobre} from '@/lib/contraste.mjs';
 import StarRating from '@/components/livros/StarRating';
 import BotaoComentario from '@/components/livros/BotaoComentario';
 import BotaoCompartilhar from '@/components/livros/BotaoCompartilhar';
-import {TagDoLivro, VoltarParaLista} from '@/components/livros/LinksDoLivro';
+import {TagDoLivro, VoltarDoLivro} from '@/components/livros/LinksDoLivro';
 import {REMAP_HEADINGS} from '@/components/livros/markdown-headings';
 
 export const dynamic = 'force-dynamic';
@@ -64,11 +64,7 @@ export default async function LivroPage({params}: {params: Promise<{slug: string
             */}
             <div className="relative z-10 mx-auto max-w-3xl rounded-2xl bg-white/90 p-6
                             shadow-xl backdrop-blur-sm dark:bg-black/70 sm:p-10">
-                <VoltarParaLista
-                    slug={livro.slug}
-                    className="mb-8 inline-block text-sm text-gray-500 underline
-                               hover:text-gray-800 dark:hover:text-gray-200"
-                />
+                <VoltarDoLivro slug={livro.slug}/>
 
                 <div className="flex flex-col gap-8 sm:flex-row">
                     {livro.cover_path && (
