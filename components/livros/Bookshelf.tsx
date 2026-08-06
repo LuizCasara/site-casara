@@ -1,9 +1,10 @@
 'use client';
 
+import {Html} from '@react-three/drei';
 import Book, {type ShelfBookData} from '@/components/livros/Book';
 import {ROOM_ANCHORS, posicaoDaEstante} from '@/components/livros/Room';
 import {shelfWidthM, SHELF_GAP_M} from '@/lib/book-dimensions.mjs';
-import {NICHOS, NICHOS_POR_ESTANTE, NICHO_CAPACIDADE_M} from '@/lib/bookshelf-model.mjs';
+import {NICHOS, NICHOS_POR_ESTANTE, NICHO_CAPACIDADE_M, BOOKSHELF_SIZE_M} from '@/lib/bookshelf-model.mjs';
 import {agruparPorAnoDeLeitura, livrosDoGrupo, contarEstantes} from '@/lib/shelf-years.mjs';
 import type {SpineAtlas} from '@/lib/spine-canvas';
 
@@ -16,9 +17,21 @@ type BookshelfProps = {
     openSlug: string | null;
     animate: boolean;
     isMobile: boolean;
+    /** Índice do grupo em foco, ou null na visão da estante inteira. */
+    grupoFocado: number | null;
+    onSelecionarGrupo: (indice: number) => void;
+    /**
+     * As etiquetas de ano só aparecem na cena da estante. Como elas têm
+     * tamanho fixo em pixels, deixá-las ligadas na visão "Sala" encheria de
+     * balões um móvel que ali é do tamanho de um selo.
+     */
+    mostrarEtiquetas: boolean;
 };
 
-export default function Bookshelf({todosOsLivros, shelfBooks, atlas, openSlug, animate, isMobile}: BookshelfProps) {
+export default function Bookshelf({
+    todosOsLivros, shelfBooks, atlas, openSlug, animate, isMobile,
+    grupoFocado, onSelecionarGrupo, mostrarEtiquetas,
+}: BookshelfProps) {
     // O agrupamento sai do acervo COMPLETO: filtrar esconde livros, nunca
     // muda de que ano é cada nicho (ver spec, D6).
     const grupos = agruparPorAnoDeLeitura(todosOsLivros, NICHO_CAPACIDADE_M);
@@ -47,6 +60,47 @@ export default function Bookshelf({todosOsLivros, shelfBooks, atlas, openSlug, a
 
                 return (
                     <group key={grupo.rotulo}>
+                        {/*
+                          Etiqueta do ano, na borda frontal da prateleira.
+
+                          SEM `distanceFactor`, ao contrário da etiqueta de
+                          hover do livro: o fator escala o conteúdo por
+                          fator/distância, e esta etiqueta é vista tanto de
+                          2,7m (estante inteira) quanto de 0,6m (zoom no ano)
+                          — com ele, ou some de longe ou vira uma placa
+                          cobrindo o nicho de perto. Sem ele o tamanho é
+                          constante em pixels, que é o que se espera de um
+                          controle de navegação.
+
+                          Sem `occlude` também de propósito: sumir atrás da
+                          poltrona faria o ano do nicho de baixo desaparecer
+                          em certos ângulos.
+                        */}
+                        {mostrarEtiquetas && (
+                            <Html
+                                position={[
+                                    base[0] + nicho.offsetX,
+                                    base[1] + nicho.pisoY - 0.035,
+                                    base[2] + BOOKSHELF_SIZE_M.profundidadeM / 2,
+                                ]}
+                                center
+                            >
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onSelecionarGrupo(iGrupo);
+                                    }}
+                                    className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[11px]
+                                                font-semibold shadow transition ${
+                                        grupoFocado === iGrupo
+                                            ? 'bg-white text-black'
+                                            : 'bg-black/70 text-white/90 hover:bg-black/90'
+                                    }`}
+                                >
+                                    {grupo.rotulo}
+                                </button>
+                            </Html>
+                        )}
                         {livros.map((book) => {
                             const spine = spineBySlug.get(book.slug);
                             if (!spine) return null; // não deveria acontecer — o atlas cobre todo livro 'lido'
