@@ -13,8 +13,9 @@ import CameraRig, {type Viewpoint} from '@/components/livros/CameraRig';
 import {useIsMobile} from '@/components/livros/use-is-mobile';
 import {useFecharLivro} from '@/components/livros/use-fechar-livro';
 import {useAlturaRodape} from '@/components/livros/use-altura-rodape';
-import {toShelfBooks, shelfWidthM, splitShelfRows} from '@/lib/book-dimensions.mjs';
-import type {ShelfBookData} from '@/components/livros/Book';
+import {toShelfBooks} from '@/lib/book-dimensions.mjs';
+import {NICHO_CAPACIDADE_M} from '@/lib/bookshelf-model.mjs';
+import {agruparPorAnoDeLeitura, livrosDoGrupo} from '@/lib/shelf-years.mjs';
 import {sortShelfBooks, filterShelfBooks, vizinhosDe} from '@/lib/livros-shelf.mjs';
 import {CENAS, cenaVizinha} from '@/lib/livros-cenas.mjs';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
@@ -91,6 +92,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
     const [sortCriterio, setSortCriterio] = useState('padrao');
     const [filtros, setFiltros] = useState<IndiceFiltros>({categoria: null, tag: null});
     const [indiceAberto, setIndiceAberto] = useState(false);
+    const [grupoFocado, setGrupoFocado] = useState<number | null>(null);
     const isMobile = useIsMobile();
     const fecharLivro = useFecharLivro();
     const alturaRodape = useAlturaRodape();
@@ -105,14 +107,12 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
         () => sortShelfBooks(filterShelfBooks(shelfBooksBase, filtros), sortCriterio),
         [shelfBooksBase, filtros, sortCriterio],
     );
-    // Largura da fileira MAIS LARGA, não do acervo inteiro: os livros estão
-    // distribuídos em SHELF_ROWS fileiras centradas, então é essa a extensão
-    // lateral que o trilho de arrasto no mobile precisa cobrir. Usar a soma
-    // total daria um trilho ~2x maior que a estante e deixaria metade do
-    // arrasto passeando pelo vazio.
-    const larguraEstanteM = useMemo(
-        () => Math.max(...splitShelfRows(shelfBooksVisiveis).map((fileira: ShelfBookData[]) => shelfWidthM(fileira)), 0),
-        [shelfBooksVisiveis],
+    // Os grupos de ano saem do acervo INTEIRO (não da lista filtrada), pelo
+    // mesmo motivo que Bookshelf.tsx: filtrar esconde livros, nunca muda de
+    // que ano é cada nicho.
+    const grupos = useMemo(
+        () => agruparPorAnoDeLeitura(shelfBooksBase, NICHO_CAPACIDADE_M),
+        [shelfBooksBase],
     );
 
     // "animate" só nasce falso quando a página já chega com um livro aberto
@@ -139,6 +139,19 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
         if (openSlug && previousOpenSlugRef.current !== openSlug) trackBookOpened(openSlug);
         previousOpenSlugRef.current = openSlug;
     }, [openSlug]);
+
+    // Sair da cena da estante larga o foco do ano: voltar depois pela cena
+    // "Estante" tem que começar do nível 1 de novo, não no zoom em que a
+    // pessoa estava três cliques atrás.
+    useEffect(() => {
+        if (manualViewpoint !== 'estante') setGrupoFocado(null);
+    }, [manualViewpoint]);
+
+    // Clicar no ano já ativo sobe um nível (spec, D4) — é o mesmo gesto do
+    // botão da barra e da etiqueta 3D, que disparam esta função.
+    const selecionarGrupo = useCallback((indice: number) => {
+        setGrupoFocado((atual) => (atual === indice ? null : indice));
+    }, []);
 
     // Abrir um livro enquanto o índice está aberto não deveria deixar os
     // dois empilhados — nem deixar indiceAberto "verdadeiro" escondido no
@@ -182,6 +195,13 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                 if (e.key === 'Escape') setIndiceAberto(false);
                 return;
             }
+            // Esc na estante sobe um nível antes de qualquer outra coisa:
+            // quem está com um ano em foco espera sair do zoom, não trocar de
+            // cena.
+            if (e.key === 'Escape' && grupoFocado !== null) {
+                setGrupoFocado(null);
+                return;
+            }
             // cenaVizinha vem de um .mjs sem tipos — o TS não estreita os
             // literais do union Viewpoint sozinho, daí o cast (mesmo caso de
             // deriveLivrosMode em RoomCanvasLoader).
@@ -190,7 +210,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
         };
         window.addEventListener('keydown', aoTeclar);
         return () => window.removeEventListener('keydown', aoTeclar);
-    }, [openSlug, indiceAberto, manualViewpoint, vizinhos, folhear, fecharLivro]);
+    }, [openSlug, indiceAberto, manualViewpoint, grupoFocado, vizinhos, folhear, fecharLivro]);
 
     useEffect(() => {
         const motivo = detectaMotivoDegradacao();
@@ -325,11 +345,27 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
             */}
             <div ref={canvasWrapperRef} className="fixed inset-0 z-0">
                 <Canvas shadows camera={{fov: 50}} dpr={isMobile ? 1 : [1, 2]}>
-                    <Room/>
-                    <Bookshelf todosOsLivros={shelfBooksBase} shelfBooks={shelfBooksVisiveis} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>
+                    <Room gruposDeAno={grupos.length}/>
+                    <Bookshelf
+                        todosOsLivros={shelfBooksBase}
+                        shelfBooks={shelfBooksVisiveis}
+                        atlas={atlas}
+                        openSlug={openSlug}
+                        animate={animateTransitions}
+                        isMobile={isMobile}
+                        grupoFocado={grupoFocado}
+                        onSelecionarGrupo={selecionarGrupo}
+                        mostrarEtiquetas={viewpoint === 'estante'}
+                    />
                     <DeskBooks deskBooks={deskShelfBooks} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>
                     {mode.kind === 'sala' && <IndexSheet onOpen={abrirIndice} isMobile={isMobile}/>}
-                    <CameraRig viewpoint={viewpoint} animate={animateTransitions} isMobile={isMobile} shelfWidthM={larguraEstanteM}/>
+                    <CameraRig
+                        viewpoint={viewpoint}
+                        animate={animateTransitions}
+                        grupoFocado={grupoFocado}
+                        totalGrupos={grupos.length}
+                        alturaRodapePx={alturaRodape}
+                    />
                     {/*
                       Ordem importa: N8AO primeiro, Bloom depois, Vignette por
                       último. O AO precisa rodar sobre a cena ainda "crua" —
@@ -382,18 +418,49 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                 // visíveis mas não clicáveis).
                 <div
                     style={{bottom: `${alturaRodape + 24}px`}}
-                    className="fixed left-1/2 z-20 flex -translate-x-1/2 gap-2"
+                    className="fixed left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-2"
                 >
-                    {CENAS.map((cena: {id: Viewpoint; rotulo: string}) => (
-                        <button
-                            key={cena.id}
-                            onClick={() => setManualViewpoint(cena.id)}
-                            aria-current={manualViewpoint === cena.id ? 'true' : undefined}
-                            className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg transition ${manualViewpoint === cena.id ? 'bg-white text-black' : 'bg-black/60 text-white'}`}
-                        >
-                            {cena.rotulo}
-                        </button>
-                    ))}
+                    {/*
+                      Sub-nível: só existe na cena da estante. Fica ACIMA da
+                      linha de cenas porque é um nível abaixo dela na
+                      navegação — a linha de baixo é onde você está, a de cima
+                      é dentro de onde você está.
+                    */}
+                    {manualViewpoint === 'estante' && (
+                        <div className="flex flex-wrap justify-center gap-2 px-4">
+                            {grupos.map((grupo: {rotulo: string}, i: number) => {
+                                const visiveis = livrosDoGrupo(grupo, shelfBooksVisiveis).length;
+                                const total = livrosDoGrupo(grupo, shelfBooksBase).length;
+                                const filtrado = visiveis !== total;
+                                return (
+                                    <button
+                                        key={grupo.rotulo}
+                                        onClick={() => selecionarGrupo(i)}
+                                        disabled={visiveis === 0}
+                                        aria-current={grupoFocado === i ? 'true' : undefined}
+                                        className={`rounded-full px-3 py-1 text-xs font-semibold shadow-lg transition
+                                                    disabled:cursor-not-allowed disabled:opacity-40 ${
+                                            grupoFocado === i ? 'bg-white text-black' : 'bg-black/60 text-white'
+                                        }`}
+                                    >
+                                        {grupo.rotulo}{filtrado && ` · ${visiveis}`}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                    <div className="flex gap-2">
+                        {CENAS.map((cena: {id: Viewpoint; rotulo: string}) => (
+                            <button
+                                key={cena.id}
+                                onClick={() => setManualViewpoint(cena.id)}
+                                aria-current={manualViewpoint === cena.id ? 'true' : undefined}
+                                className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg transition ${manualViewpoint === cena.id ? 'bg-white text-black' : 'bg-black/60 text-white'}`}
+                            >
+                                {cena.rotulo}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
             {/*
