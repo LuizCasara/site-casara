@@ -31,9 +31,9 @@ const MEIA_LARGURA = 0.28;
  * o porquê em Room.tsx), de lado para a câmera.
  *
  * Guarda trecos de sobrevivência e acampamento, escolhidos um a um pelo dono do
- * acervo: corda e primeiros socorros embaixo, lampião e lanterna no meio,
- * walkie-talkie e isqueiro em cima, mochila no topo e saco de dormir no chão ao
- * lado. Quase todos são CC BY e exigem crédito — ver LICENSE.md.
+ * acervo: corda e primeiros socorros embaixo, lampião e lanterna no meio, rádio
+ * e isqueiro em cima, mochila no topo e saco de dormir no chão ao lado. Vários
+ * são CC BY e exigem crédito — ver LICENSE.md.
  *
  * Não confundir com a estante do acervo (Bookshelf.tsx): esta é cenário puro,
  * sem livro nenhum do banco dentro nem nada clicável.
@@ -79,12 +79,17 @@ export default function YellowShelf({position, rotationY = 0}: {position: [numbe
                 larguraAlvo={0.20}
             />
 
-            {/* PRATELEIRA DE CIMA — o que é pequeno e some se ficar embaixo. */}
+            {/* PRATELEIRA DE CIMA — o que é pequeno e some se ficar embaixo.
+                O rádio substituiu um walkie-talkie que sozinho tinha 2,4MB e
+                111 mil vértices, quase dois terços do peso de todos os modelos
+                da sala. Este tem 48KB e é do mesmo Furniture Kit da mobília,
+                então recolore por nome de material como o resto. */}
             <KenneyModel
-                url={MODELOS.walkieTalkie}
+                url={MODELOS.radio}
                 position={[-0.13, PRATELEIRAS[2], 0]}
                 rotation={[0, 0.2, 0]}
                 larguraAlvo={0.20}
+                cores={{wood: '#4a3323', metal: '#59626b', metalMedium: '#2b3036'}}
             />
             <KenneyModel
                 url={MODELOS.isqueiro}

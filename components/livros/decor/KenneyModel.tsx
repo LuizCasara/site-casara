@@ -236,7 +236,7 @@ export const MODELOS = {
     lampiao: '/livros/modelos/lampiao.glb',
     isqueiro: '/livros/modelos/isqueiro.glb',
     sacoDeDormir: '/livros/modelos/saco-de-dormir.glb',
-    walkieTalkie: '/livros/modelos/walkie-talkie.glb',
+    radio: '/livros/modelos/radio.glb',
     mochila: '/livros/modelos/mochila.glb',
     xicara: '/livros/modelos/xicara.glb',
     kettlebell: '/livros/modelos/kettlebell.glb',

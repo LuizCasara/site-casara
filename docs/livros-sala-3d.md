@@ -201,10 +201,40 @@ importa TypeScript sem build.
 
 ---
 
+## Falar com quem visita: WhatsApp, não banco de dados
+
+Recomendar um livro (o quadro branco na parede) e comentar sobre um livro (o
+botão no card) abrem o WhatsApp com uma mensagem pronta — `lib/whatsapp-livros.mjs`.
+
+A alternativa era gravar isso numa tabela e exibir no site, e ela foi descartada
+de propósito: **conteúdo público de terceiros traz moderação e spam**, problema
+que este site não tem hoje e que custaria muito mais do que a feature vale. O
+link entrega o mesmo resultado — quem realmente quer falar, fala — sem nenhuma
+superfície nova. Mantém também a regra da sala de que toda função tem um objeto
+físico: o recado sai do quadro de recados.
+
+## Cache de navegação
+
+`staleTimes: {dynamic: 60}` no `next.config.ts` mais `router.prefetch` dos dois
+livros vizinhos em `RoomCanvas.tsx`.
+
+O padrão do Next 15 é não reaproveitar nada: cada navegação client-side para uma
+rota dinâmica refaz o request, então folhear o acervo disparava um GET por livro
+e ir e voltar entre dois disparava dois GETs iguais. As duas peças só funcionam
+juntas — sem o `staleTimes`, a resposta pré-carregada é descartada antes de ser
+usada e o prefetch vira request desperdiçado.
+
+Para o que sobra (primeiro livro da sessão, conexão ruim), o esqueleto em
+`@livro/(.)[slug]/loading.tsx` segura o layout no lugar.
+
+## Créditos dos modelos
+
+Dez modelos da sala são CC BY 3.0, e essa licença **exige atribuição no lugar
+onde a obra é exibida** — o `LICENSE.md` do repositório não cumpre isso para
+quem visita o site. `components/livros/CreditosModelos.tsx` põe a linha no
+rodapé, e o `Footer` a monta só em `/livros`. Mexeu no `LICENSE.md`, mexa lá.
+
 ## Fora de escopo, por decisão
 
-- **Comentários de visitantes** e **"me recomende um livro"**: trazem um
-  problema que o site ainda não tem — conteúdo público de terceiros, ou seja,
-  moderação e spam.
 - **Adapter de Skoob**: a API pública foi desligada em setembro de 2025 e não há
   exportação nativa. O gancho existe em `lib/book-sources/`.

@@ -12,6 +12,8 @@ import EscudoEscoteiro from '@/components/livros/decor/EscudoEscoteiro';
 import {Planta} from '@/components/livros/decor/PersonalProps';
 import {NICHOS, NICHOS_POR_ESTANTE} from '@/lib/bookshelf-model.mjs';
 import {contarEstantes} from '@/lib/shelf-years.mjs';
+import {linkDeSugestao} from '@/lib/whatsapp-livros.mjs';
+import {trackBookSuggestion} from '@/utils/analytics';
 
 export const ROOM_ANCHORS = {
     // Referências, não cópias: a estante e o canto de leitura são território
@@ -169,8 +171,10 @@ export default function Room({gruposDeAno = 1, onAbrirRetrato, isMobile = false}
               moldura é geometria — com bandeja de canetão, que é o detalhe que
               faz um retângulo branco na parede ler como quadro.
 
-              Clicável de propósito, e sem fazer nada ainda: o gesto está
-              reservado para o que este quadro vier a ser.
+              Clicar abre o WhatsApp com uma mensagem pronta de sugestão de
+              livro. É o quadro de recados da sala, e o recado sai por onde ele
+              sairia mesmo — ver lib/whatsapp-livros.mjs para o porquê de não
+              ser um formulário que grava no banco.
             */}
             <Quadro
                 position={[0.68, 1.36, -1.58]}
@@ -180,8 +184,11 @@ export default function Room({gruposDeAno = 1, onAbrirRetrato, isMobile = false}
                 rotationY={-0.03}
                 corMoldura="#b9c2cc"
                 comBandeja
-                onClick={() => {}}
-                rotulo="Recomendações"
+                onClick={() => {
+                    trackBookSuggestion();
+                    window.open(linkDeSugestao(), '_blank', 'noopener,noreferrer');
+                }}
+                rotulo="Sugerir um livro ↗"
                 isMobile={isMobile}
             />
 

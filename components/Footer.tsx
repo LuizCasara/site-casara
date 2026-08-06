@@ -2,10 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import CreditosModelos from '@/components/livros/CreditosModelos';
 
 const Footer = () => {
   const pathname = usePathname();
   if (pathname.startsWith('/casamento') || pathname.startsWith('/w/') || pathname.startsWith('/q/')) return null;
+
+  // Os modelos 3D da sala são CC BY: a licença exige crédito onde a obra é
+  // exibida, então ele acompanha a rota que os exibe, não o site inteiro.
+  const emLivros = pathname.startsWith('/livros');
 
   return (
     // `relative z-10`: em /livros a sala 3D é um canvas `fixed inset-0 z-0`,
@@ -33,6 +38,8 @@ const Footer = () => {
           </p>
 
         </div>
+
+        {emLivros && <CreditosModelos/>}
       </div>
     </footer>
   );

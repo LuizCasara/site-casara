@@ -8,41 +8,6 @@ O que já está decidido e implementado vive em [livros-sala-3d.md](livros-sala-
 
 ---
 
-## Pendências de verdade (não são "ideias")
-
-### Créditos CC BY visíveis na sala
-
-Onze modelos da sala são CC BY 3.0 e **exigem atribuição no lugar onde a obra é
-exibida** — não basta o `LICENSE.md` do repositório. Falta uma linha discreta de
-créditos em `/livros`.
-
-Já foi conversado e aprovado ("dá pra dar crédito sim"), só nunca foi construído.
-Forma provável: um link "créditos" junto aos botões de cena, abrindo um painel
-como o do Índice. Lista em `public/livros/modelos/LICENSE.md`.
-
-### `walkie-talkie.glb` pesa 2,4 MB
-
-111.564 vértices, quase dois terços do peso de `public/livros/modelos/`. É um
-enfeite de 20cm numa prateleira lateral. Primeiro candidato a substituição se a
-carga da sala começar a incomodar — trocar por um modelo mais simples ou
-decimar a malha.
-
-### A torre "quero ler" está vazia
-
-O status existe, o layout existe, o componente existe — mas nenhum livro está
-marcado assim no banco. Enquanto isso, `TorreQueroLer` renderiza `null` e o
-canto à esquerda da estante fica vazio. Marcar com
-`node scripts/livros.mjs edit <slug>`.
-
-### O quadro branco não faz nada
-
-`Quadro` com `onClick={() => {}}` em `Room.tsx`. O gesto foi deixado reservado
-de propósito, mas hoje ele promete uma interação que não existe: o cursor vira
-pointer e a etiqueta "Recomendações" aparece. Ou vira alguma coisa, ou perde o
-clique.
-
----
-
 ## Sala
 
 ### Som ambiente lo-fi
@@ -114,21 +79,6 @@ o desempate manual dentro de um nicho, ou sai do schema.
 `listarSlugs()` existiu para isso e foi removida por não ter consumidor. As
 páginas usam `force-dynamic` e não há `generateStaticParams`. Se um dia a
 indexação importar, é aqui que se mexe.
-
----
-
-## Interação com visitantes
-
-Os dois itens que sempre foram "spec próprio", nunca escrito, pelo mesmo motivo:
-trazem um problema que o site inteiro ainda não tem — **conteúdo público de
-terceiros, ou seja, moderação e spam.**
-
-- **Comentários por livro.**
-- **"Me recomende um livro"**, que na visão original era uma pilha de cartas
-  sobre a mesa — mantendo a regra da sala de que toda função tem um objeto
-  físico.
-
-Nenhum dos dois muda a tabela `casara.books`.
 
 ---
 

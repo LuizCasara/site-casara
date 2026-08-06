@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import {getCategory} from '@/lib/book-categories.mjs';
 import {corDeTextoSobre} from '@/lib/contraste.mjs';
 import StarRating from '@/components/livros/StarRating';
+import BotaoComentario from '@/components/livros/BotaoComentario';
 import {REMAP_HEADINGS} from '@/components/livros/markdown-headings';
 import type {Book} from '@/lib/books';
 
@@ -40,6 +41,8 @@ export default function BookOverlay({livro}: {livro: Book}) {
                         </span>
                     ))}
                 </div>
+
+                <BotaoComentario slug={livro.slug} titulo={livro.title} autor={livro.author}/>
             </div>
 
             <div className="prose prose-sm prose-invert max-h-[60vh] max-w-none overflow-y-auto pr-2">

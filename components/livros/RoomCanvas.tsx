@@ -204,6 +204,21 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
         if (slug) router.replace(`/livros/${slug}`);
     }, [router]);
 
+    // Os dois vizinhos do livro aberto entram no Router Cache antes de alguém
+    // pedir por eles, então a seta troca de livro sem esperar rede. Só os dois
+    // adjacentes: pré-carregar o acervo inteiro seria dezenas de requests para
+    // servir um ou dois.
+    //
+    // O ganho só existe junto com `staleTimes.dynamic` no next.config — com o
+    // padrão zero, a resposta pré-carregada é descartada antes de ser usada e o
+    // prefetch vira request desperdiçado.
+    useEffect(() => {
+        if (!openSlug) return;
+        for (const vizinho of [vizinhos.anterior, vizinhos.proximo]) {
+            if (vizinho) router.prefetch(`/livros/${vizinho}`);
+        }
+    }, [openSlug, vizinhos.anterior, vizinhos.proximo, router]);
+
     // Um único listener para os três contextos, na ordem em que as camadas
     // aparecem na tela: livro aberto > índice aberto > sala. Sem esse
     // escalonamento, a seta trocaria a cena por baixo de um livro aberto.

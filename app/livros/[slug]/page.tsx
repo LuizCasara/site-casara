@@ -7,6 +7,7 @@ import {buscarLivroPorSlug} from '@/lib/books';
 import {getCategory} from '@/lib/book-categories.mjs';
 import {corDeTextoSobre} from '@/lib/contraste.mjs';
 import StarRating from '@/components/livros/StarRating';
+import BotaoComentario from '@/components/livros/BotaoComentario';
 import {REMAP_HEADINGS} from '@/components/livros/markdown-headings';
 
 export const dynamic = 'force-dynamic';
@@ -119,6 +120,11 @@ export default async function LivroPage({params}: {params: Promise<{slug: string
                                 Lendo agora — {livro.progress_pct}%
                             </p>
                         )}
+
+                        <div className="mt-3">
+                            <BotaoComentario slug={livro.slug} titulo={livro.title}
+                                             autor={livro.author} tom="escuro"/>
+                        </div>
                     </div>
                 </div>
 

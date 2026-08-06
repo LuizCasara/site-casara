@@ -185,3 +185,11 @@ export const trackShelfSorted = (criterio: string) =>
 
 export const trackIndexOpened = (categoria: string | null, tag: string | null) =>
   trackEvent('index_opened', { categoria: categoria ?? '', tag: tag ?? '' });
+
+// Os dois cliques que levam para fora do site, pro WhatsApp. Disparados ANTES
+// do window.open — depois dele a aba pode já ter perdido o foco.
+export const trackBookSuggestion = () =>
+  trackEvent('book_suggestion_whatsapp', {});
+
+export const trackBookComment = (slug: string) =>
+  trackEvent('book_comment_whatsapp', { slug });
