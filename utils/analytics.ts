@@ -193,3 +193,8 @@ export const trackBookSuggestion = () =>
 
 export const trackBookComment = (slug: string) =>
   trackEvent('book_comment_whatsapp', { slug });
+
+// `metodo` separa a folha de compartilhamento do sistema (celular) do
+// copiar-link (desktop) — são gestos diferentes com intenções diferentes.
+export const trackBookShared = (slug: string, metodo: 'share' | 'clipboard') =>
+  trackEvent('book_shared', { slug, metodo });
