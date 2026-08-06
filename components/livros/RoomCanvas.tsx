@@ -326,7 +326,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
             <div ref={canvasWrapperRef} className="fixed inset-0 z-0">
                 <Canvas shadows camera={{fov: 50}} dpr={isMobile ? 1 : [1, 2]}>
                     <Room/>
-                    <Bookshelf shelfBooks={shelfBooksVisiveis} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>
+                    <Bookshelf todosOsLivros={shelfBooksBase} shelfBooks={shelfBooksVisiveis} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>
                     <DeskBooks deskBooks={deskShelfBooks} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>
                     {mode.kind === 'sala' && <IndexSheet onOpen={abrirIndice} isMobile={isMobile}/>}
                     <CameraRig viewpoint={viewpoint} animate={animateTransitions} isMobile={isMobile} shelfWidthM={larguraEstanteM}/>

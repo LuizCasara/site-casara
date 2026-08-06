@@ -1,11 +1,16 @@
 'use client';
 
 import Book, {type ShelfBookData} from '@/components/livros/Book';
-import {ROOM_ANCHORS} from '@/components/livros/Room';
-import {shelfWidthM, splitShelfRows, SHELF_GAP_M, SHELF_ROW_SPACING_M} from '@/lib/book-dimensions.mjs';
+import {ROOM_ANCHORS, posicaoDaEstante} from '@/components/livros/Room';
+import {shelfWidthM, SHELF_GAP_M} from '@/lib/book-dimensions.mjs';
+import {NICHOS, NICHOS_POR_ESTANTE, NICHO_CAPACIDADE_M} from '@/lib/bookshelf-model.mjs';
+import {agruparPorAnoDeLeitura, livrosDoGrupo, contarEstantes} from '@/lib/shelf-years.mjs';
 import type {SpineAtlas} from '@/lib/spine-canvas';
 
 type BookshelfProps = {
+    /** Acervo INTEIRO — define o agrupamento, que não pode mudar ao filtrar. */
+    todosOsLivros: ShelfBookData[];
+    /** O que está visível agora (já ordenado e filtrado pelo Índice). */
     shelfBooks: ShelfBookData[];
     atlas: SpineAtlas;
     openSlug: string | null;
@@ -13,14 +18,12 @@ type BookshelfProps = {
     isMobile: boolean;
 };
 
-export default function Bookshelf({shelfBooks, atlas, openSlug, animate, isMobile}: BookshelfProps) {
-    // Duas fileiras, não uma: com o acervo inteiro em fila única a estante
-    // passava de 2,5m de largura, e o enquadramento que deixa a lombada
-    // legível (câmera a ~1m) só alcançava o miolo — os livros das pontas
-    // ficavam fora de quadro. Partindo ao meio, cada fileira cabe na tela.
-    const fileiras: ShelfBookData[][] = splitShelfRows(shelfBooks);
+export default function Bookshelf({todosOsLivros, shelfBooks, atlas, openSlug, animate, isMobile}: BookshelfProps) {
+    // O agrupamento sai do acervo COMPLETO: filtrar esconde livros, nunca
+    // muda de que ano é cada nicho (ver spec, D6).
+    const grupos = agruparPorAnoDeLeitura(todosOsLivros, NICHO_CAPACIDADE_M);
+    const totalEstantes = contarEstantes(grupos.length, NICHOS_POR_ESTANTE);
 
-    const anchor = ROOM_ANCHORS.estante;
     // Casar por slug, não por índice: shelfBooks pode chegar reordenado
     // (ordenação) ou como subconjunto (filtro), mas o atlas é gerado uma vez
     // só, na ordem original.
@@ -29,40 +32,47 @@ export default function Bookshelf({shelfBooks, atlas, openSlug, animate, isMobil
     );
 
     return (
-        <group position={anchor.position} rotation={anchor.rotation}>
-            {fileiras.map((fileira, indiceFileira) => {
-                // A âncora da estante é o topo da prancha de BAIXO, então a
-                // fileira 0 (a de cima) é a que sobe. Deriva de
-                // `fileiras.length` e não de SHELF_ROWS pra continuar certo se
-                // splitShelfRows devolver uma fileira só (acervo vazio).
-                const y = (fileiras.length - 1 - indiceFileira) * SHELF_ROW_SPACING_M;
+        <>
+            {grupos.map((grupo: {anos: number[]; rotulo: string; temSemData: boolean}, iGrupo: number) => {
+                const iEstante = Math.floor(iGrupo / NICHOS_POR_ESTANTE);
+                const nicho = NICHOS[iGrupo % NICHOS_POR_ESTANTE];
+                const base = posicaoDaEstante(iEstante, totalEstantes);
 
-                const larguraFileira = shelfWidthM(fileira);
-                let xAtual = -larguraFileira / 2;
-                const posicoes = fileira.map((b) => {
-                    const x = xAtual + b.thicknessM / 2;
-                    xAtual += b.thicknessM + SHELF_GAP_M;
-                    return x;
-                });
+                const livros: ShelfBookData[] = livrosDoGrupo(grupo, shelfBooks);
+                // Fila centrada dentro do nicho, não colada à esquerda: um ano
+                // com poucos livros num nicho largo lê melhor centralizado do
+                // que empurrado pra um canto.
+                const largura = shelfWidthM(livros);
+                let xAtual = -largura / 2;
 
-                return fileira.map((book, i) => {
-                    const spine = spineBySlug.get(book.slug);
-                    if (!spine) return null; // não deveria acontecer — o atlas cobre todo livro 'lido'
-                    return (
-                        <Book
-                            key={book.slug}
-                            book={book}
-                            position={[posicoes[i], y + book.heightM / 2, 0]}
-                            atlasTexture={atlas.texture}
-                            uvRange={{u0: spine.u0, u1: spine.u1}}
-                            isOpen={book.slug === openSlug}
-                            animate={animate}
-                            isMobile={isMobile}
-                            anchor={anchor}
-                        />
-                    );
-                });
+                return (
+                    <group key={grupo.rotulo}>
+                        {livros.map((book) => {
+                            const spine = spineBySlug.get(book.slug);
+                            if (!spine) return null; // não deveria acontecer — o atlas cobre todo livro 'lido'
+                            const x = xAtual + book.thicknessM / 2;
+                            xAtual += book.thicknessM + SHELF_GAP_M;
+                            return (
+                                <Book
+                                    key={book.slug}
+                                    book={book}
+                                    position={[
+                                        base[0] + nicho.offsetX + x,
+                                        base[1] + nicho.pisoY + book.heightM / 2,
+                                        base[2],
+                                    ]}
+                                    atlasTexture={atlas.texture}
+                                    uvRange={{u0: spine.u0, u1: spine.u1}}
+                                    isOpen={book.slug === openSlug}
+                                    animate={animate}
+                                    isMobile={isMobile}
+                                    anchor={ROOM_ANCHORS.estante}
+                                />
+                            );
+                        })}
+                    </group>
+                );
             })}
-        </group>
+        </>
     );
 }
