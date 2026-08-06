@@ -7,7 +7,8 @@ import Poltrona from '@/components/livros/decor/Poltrona';
 import CampingWall from '@/components/livros/decor/CampingWall';
 import YellowShelf from '@/components/livros/decor/YellowShelf';
 import {Planta, JogoDeTabuleiro, Vinil} from '@/components/livros/decor/PersonalProps';
-import {SHELF_ROWS, SHELF_ROW_SPACING_M} from '@/lib/book-dimensions.mjs';
+import {BOOKSHELF_SIZE_M, NICHOS_POR_ESTANTE} from '@/lib/bookshelf-model.mjs';
+import {contarEstantes} from '@/lib/shelf-years.mjs';
 
 // Mesa de leitura. Ficava em [1.4, ·, 0.9], quase 2,7m da estante — longe o
 // bastante pra ler como um segundo cômodo, e a transição de câmera entre os
@@ -34,8 +35,12 @@ function pontoNoTampo(lx: number, lz: number): [number, number, number] {
 }
 
 export const ROOM_ANCHORS = {
+    // Ponto do CHÃO sob o centro da primeira estante (o contrato de
+    // posicionamento do KenneyModel), não mais o topo de uma prancha
+    // flutuante: o móvel agora assenta no piso e encosta na parede de fundo
+    // (-1.6 mais metade da profundidade dele).
     estante: {
-        position: [0, 0.9, -1.4] as [number, number, number],
+        position: [0, 0, -1.6 + BOOKSHELF_SIZE_M.profundidadeM / 2] as [number, number, number],
         rotation: [0, 0, 0] as [number, number, number],
     },
     leitura: {
@@ -60,37 +65,43 @@ const WALL_COLOR = '#2b2320';
 const SHELF_BOARD_COLOR = '#1f1713';
 const RUG_COLOR = '#a89584';
 
-// Sobra de prancha de cada lado da fileira de livros. Zero deixaria o livro
-// da ponta com a lateral no ar; muito mais que isto e a prateleira lê como
-// uma tábua solta na parede, com os livros apertados no meio.
-const SHELF_BOARD_MARGIN_M = 0.12;
-// Prancha mínima, pra estante de acervo pequeno (ou filtrado até sobrar um
-// livro) não virar um toco de madeira.
-const SHELF_BOARD_MIN_WIDTH_M = 0.8;
+/**
+ * Folga entre duas estantes vizinhas. Pequena de propósito: elas leem como um
+ * conjunto, não como dois móveis que por acaso estão na mesma parede.
+ */
+const ESTANTE_GAP_M = 0.06;
+
+/**
+ * Ponto do chão sob o centro da estante `indice`, com o conjunto todo
+ * centralizado na parede. Com uma estante só devolve a âncora; com duas, uma
+ * vai pra esquerda e outra pra direita.
+ */
+export function posicaoDaEstante(indice: number, total: number): [number, number, number] {
+    const passo = BOOKSHELF_SIZE_M.larguraM + ESTANTE_GAP_M;
+    const x = (indice - (total - 1) / 2) * passo;
+    const base = ROOM_ANCHORS.estante.position;
+    return [base[0] + x, base[1], base[2]];
+}
 
 type RoomProps = {
     /**
-     * Largura da fileira mais larga de livros, em metros. A prancha acompanha
-     * esse número em vez de ter largura fixa: com 2,6m fixos e o acervo
-     * dividido em duas fileiras, sobrava quase um metro de madeira vazia de
-     * cada lado e a estante parecia grande demais pro que guarda.
+     * Quantos grupos de ano a estante precisa acomodar. É só isso que o
+     * cenário sabe sobre o acervo — quantas estantes montar. Quais livros
+     * existem continua sendo assunto de Bookshelf.tsx.
      */
-    larguraEstanteM?: number;
+    gruposDeAno?: number;
 };
 
 /**
- * Cenário puro — não sabe QUE livros existem, só quanto espaço eles ocupam
- * (`larguraEstanteM`). Publica ROOM_ANCHORS (posição/rotação) para que
- * Bookshelf.tsx, DeskBooks.tsx, IndexSheet.tsx e CameraRig.tsx se posicionem
- * a partir daqui, sem nenhuma lógica de livro vazar para este arquivo.
+ * Cenário puro — não sabe QUE livros existem, só quantos grupos de ano
+ * precisam de nicho (`gruposDeAno`). Publica ROOM_ANCHORS (posição/rotação)
+ * para que Bookshelf.tsx, DeskBooks.tsx, IndexSheet.tsx e CameraRig.tsx se
+ * posicionem a partir daqui, sem nenhuma lógica de livro vazar para este
+ * arquivo.
  */
-export default function Room({larguraEstanteM = 0}: RoomProps) {
-    const larguraPrancha = Math.max(
-        SHELF_BOARD_MIN_WIDTH_M,
-        larguraEstanteM + 2 * SHELF_BOARD_MARGIN_M,
-    );
+export default function Room({gruposDeAno = 1}: RoomProps) {
+    const totalEstantes = contarEstantes(gruposDeAno, NICHOS_POR_ESTANTE);
 
-    const estante = ROOM_ANCHORS.estante;
     const mesa = ROOM_ANCHORS.mesa;
 
     return (
@@ -106,31 +117,25 @@ export default function Room({larguraEstanteM = 0}: RoomProps) {
             </mesh>
 
             {/*
-              Pranchas físicas da prateleira — os livros assentam no topo
-              delas. A profundidade acompanha a escala maior dos livros
-              (20cm): com 0,2m eles ficavam com a "bunda" pra fora. A largura
-              vem de `larguraEstanteM`, calculado por quem conhece o acervo.
+              A estante do acervo — modelo GLB (CC0), não mais pranchas
+              geradas em código. Tem o SEU PRÓPRIO <Suspense>, separado do que
+              embrulha a mobília lá embaixo: ela é o motivo da sala existir, e
+              compartilhar a fronteira faria a chegada de uma poltrona
+              qualquer segurar a aparição do acervo.
 
-              São SHELF_ROWS pranchas, empilhadas pelo mesmo espaçamento que
-              Bookshelf.tsx usa pra distribuir os livros — a âncora `estante` é
-              o topo da prancha de baixo, e as de cima sobem a partir dela.
-              Este é o único acoplamento entre o cenário e o módulo de
-              dimensões: o resto do arquivo continua sem saber que livros
-              existem.
+              Uma segunda estante só é montada quando os grupos de ano não
+              cabem na primeira — ver contarEstantes.
             */}
-            {Array.from({length: SHELF_ROWS}, (_, fileira) => (
-                <mesh
-                    key={fileira}
-                    position={[
-                        estante.position[0],
-                        estante.position[1] - 0.02 + fileira * SHELF_ROW_SPACING_M,
-                        estante.position[2],
-                    ]}
-                >
-                    <boxGeometry args={[larguraPrancha, 0.04, 0.26]}/>
-                    <meshStandardMaterial color={SHELF_BOARD_COLOR} roughness={0.6}/>
-                </mesh>
-            ))}
+            <Suspense fallback={null}>
+                {Array.from({length: totalEstantes}, (_, i) => (
+                    <KenneyModel
+                        key={i}
+                        url={MODELOS.estanteLivros}
+                        position={posicaoDaEstante(i, totalEstantes)}
+                        alturaAlvo={BOOKSHELF_SIZE_M.alturaM}
+                    />
+                ))}
+            </Suspense>
 
             {/*
               Mesa física — o tampo onde DeskBooks.tsx e IndexSheet.tsx

@@ -102,6 +102,11 @@ export default function KenneyModel({url, cores, position, rotation, alturaAlvo,
 // Sem isto, cada modelo só começa a baixar quando seu componente monta, e a
 // sala aparece mobiliando-se em cascata na frente de quem abriu a página.
 export const MODELOS = {
+    // Não é do Furniture Kit do Kenney como os vizinhos — é o modelo do
+    // poly.pizza escolhido pelo dono do acervo (CC0, textura embutida, por
+    // isso não aparece em nenhum mapa de `cores`). Mora aqui mesmo assim
+    // porque o carregamento é idêntico e ter dois mapas de URL seria pior.
+    estanteLivros: '/livros/modelos/bookshelf-tall.glb',
     poltrona: '/livros/modelos/lounge-chair.glb',
     estanteAmarela: '/livros/modelos/bookcase-open.glb',
     mesinha: '/livros/modelos/side-table.glb',
