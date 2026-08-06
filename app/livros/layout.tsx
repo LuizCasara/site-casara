@@ -1,5 +1,6 @@
 import {listarLivros, listarTags, type Book} from '@/lib/books';
 import RoomCanvasLoader from '@/components/livros/RoomCanvasLoader';
+import ProvedorDaSala from '@/components/livros/ContextoDaSala';
 
 function mapShelved(l: Book) {
     return {
@@ -32,7 +33,10 @@ export default async function LivrosLayout({children, livro}: {
     ]);
 
     return (
-        <>
+        // O provedor embrulha os três porque a resposta "a sala está atrás?" é a
+        // mesma para quem monta a cena e para quem desenha o card do livro —
+        // ver ContextoDaSala.
+        <ProvedorDaSala>
             <RoomCanvasLoader
                 books={livrosLidos.map(mapShelved)}
                 deskBooks={livrosLendo.map(mapShelved)}
@@ -41,6 +45,6 @@ export default async function LivrosLayout({children, livro}: {
             />
             {children}
             {livro}
-        </>
+        </ProvedorDaSala>
     );
 }

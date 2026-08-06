@@ -252,7 +252,9 @@ export const trackShelfYearFocused = (rotulo: string, indice: number) =>
 export const trackBookPaged = (de: string, para: string, direcao: 'anterior' | 'proximo') =>
   trackEvent('book_paged', { de, para, direcao });
 
-export const trackBookClosed = (slug: string, via: 'botao' | 'esc') =>
+/** `fora` só existe no modal aberto pela listagem: sobre a sala 3D, clicar fora
+ *  do card é girar a câmera, não fechar. */
+export const trackBookClosed = (slug: string, via: 'botao' | 'esc' | 'fora') =>
   trackEvent('book_closed', { slug, via });
 
 /**

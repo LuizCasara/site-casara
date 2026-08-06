@@ -146,7 +146,7 @@ const EVENT_DESCRIPTIONS: Record<string, string> = {
   index_opened:                 "Abriu o Índice pela lava lamp",
   book_filter:                  "Filtrou o acervo por categoria ou tag",
   book_opened:                  "Abriu a ficha de um livro",
-  book_closed:                  "Fechou a ficha do livro",
+  book_closed:                  "Fechou a ficha do livro (botão, Esc ou clique fora)",
   book_paged:                   "Folheou para o livro vizinho",
   book_card_click:              "Abriu um livro pela grade da listagem",
   book_tag_click:               "Seguiu uma tag a partir da página do livro",
