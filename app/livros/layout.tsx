@@ -13,6 +13,7 @@ function mapShelved(l: Book) {
         category: l.category,
         tags: l.tags,
         year: l.year,
+        finished_at: l.finished_at,
     };
 }
 

@@ -92,6 +92,12 @@ export type ShelfBookData = {
     category: string;
     tags: string[];
     year: number | null;
+    /**
+     * Data de leitura. `Book` não usa — quem usa é o agrupamento por nicho em
+     * Bookshelf.tsx —, mas o campo mora aqui porque é este o tipo que
+     * atravessa a estante inteira.
+     */
+    finishedAt: Date | string | null;
 };
 
 type BookProps = {

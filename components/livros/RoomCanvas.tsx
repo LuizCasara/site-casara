@@ -34,6 +34,7 @@ export type ShelvedBookInput = {
     category: string;
     tags: string[];
     year: number | null;
+    finished_at: Date | string | null;
 };
 
 export type LivrosMode = {kind: 'sala'} | {kind: 'livro'; slug: string};
