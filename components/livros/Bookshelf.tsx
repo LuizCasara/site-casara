@@ -2,7 +2,7 @@
 
 import {Html} from '@react-three/drei';
 import Book, {type ShelfBookData} from '@/components/livros/Book';
-import {ROOM_ANCHORS, posicaoDaEstante} from '@/components/livros/Room';
+import {ESTANTE_ANCHOR, posicaoDaEstante} from '@/components/livros/decor/EstanteDoAcervo';
 import {shelfWidthM, SHELF_GAP_M} from '@/lib/book-dimensions.mjs';
 import {NICHOS, NICHOS_POR_ESTANTE, NICHO_CAPACIDADE_M, BOOKSHELF_SIZE_M} from '@/lib/bookshelf-model.mjs';
 import {agruparPorAnoDeLeitura, livrosDoGrupo, contarEstantes} from '@/lib/shelf-years.mjs';
@@ -32,8 +32,9 @@ export default function Bookshelf({
     todosOsLivros, shelfBooks, atlas, openSlug, animate, isMobile,
     grupoFocado, onSelecionarGrupo, mostrarEtiquetas,
 }: BookshelfProps) {
-    // O agrupamento sai do acervo COMPLETO: filtrar esconde livros, nunca
-    // muda de que ano é cada nicho (ver spec, D6).
+    // O agrupamento sai do acervo COMPLETO: filtrar esconde livros, nunca muda
+    // de que ano é cada nicho — senão os anos trocariam de prateleira debaixo do
+    // dedo de quem está filtrando.
     const grupos = agruparPorAnoDeLeitura(todosOsLivros, NICHO_CAPACIDADE_M);
     const totalEstantes = contarEstantes(grupos.length, NICHOS_POR_ESTANTE);
 
@@ -58,10 +59,9 @@ export default function Bookshelf({
                 const largura = shelfWidthM(livros);
                 let xAtual = -largura / 2;
 
-                // Com filtro ativo a etiqueta vira contador ("2023 · 4") e o
-                // ano que zerou fica apagado e sem clique — não faria sentido
-                // dar zoom num nicho vazio. Isto vivia nos botões da barra,
-                // que saíram: a etiqueta é agora o único controle dos anos.
+                // Com filtro ativo a etiqueta vira contador ("2023 · 4") e o ano
+                // que zerou fica apagado e sem clique — não faria sentido dar
+                // zoom num nicho vazio.
                 const totalDoGrupo = livrosDoGrupo(grupo, todosOsLivros).length;
                 const filtrado = livros.length !== totalDoGrupo;
                 const vazio = livros.length === 0;
@@ -69,20 +69,14 @@ export default function Bookshelf({
                 return (
                     <group key={grupo.rotulo}>
                         {/*
-                          Etiqueta do ano, na borda frontal da prateleira.
+                          Etiqueta do ano, na borda frontal da prateleira. Ela
+                          acumula as duas funções: diz que ano é aquela
+                          prateleira E é o botão que dá zoom nele.
 
-                          SEM `distanceFactor`, ao contrário da etiqueta de
-                          hover do livro: o fator escala o conteúdo por
-                          fator/distância, e esta etiqueta é vista tanto de
-                          2,7m (estante inteira) quanto de 0,6m (zoom no ano)
-                          — com ele, ou some de longe ou vira uma placa
-                          cobrindo o nicho de perto. Sem ele o tamanho é
-                          constante em pixels, que é o que se espera de um
-                          controle de navegação.
-
-                          Sem `occlude` também de propósito: sumir atrás da
-                          poltrona faria o ano do nicho de baixo desaparecer
-                          em certos ângulos.
+                          Sem `distanceFactor` nem `occlude`, pelos mesmos
+                          motivos do balão de hover do livro (ver Book.tsx): ela
+                          é vista tanto de 2,7m quanto de 0,6m, e sumir atrás da
+                          poltrona faria o ano do nicho de baixo desaparecer.
                         */}
                         {mostrarEtiquetas && (
                             <Html
@@ -131,7 +125,7 @@ export default function Bookshelf({
                                     isOpen={book.slug === openSlug}
                                     animate={animate}
                                     isMobile={isMobile}
-                                    anchor={ROOM_ANCHORS.estante}
+                                    anchor={ESTANTE_ANCHOR}
                                 />
                             );
                         })}

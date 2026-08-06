@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {layoutSpineAtlas} from '@/lib/book-dimensions.mjs';
 import {corDeTextoSobre} from '@/lib/contraste.mjs';
+import {corDeLombada} from '@/lib/cor-lombada.mjs';
 
 export type SpineSourceBook = {
     slug: string;
@@ -33,7 +34,11 @@ function desenharLombada(
     widthPx: number,
     heightPx: number,
 ) {
-    const cor = book.spineColor || FALLBACK_SPINE_COLOR;
+    // A cor crua da capa passa pela paleta da sala antes de virar tinta —
+    // pastel e quente, com teto de brilho (ver lib/cor-lombada.mjs). O texto é
+    // calculado sobre a cor JÁ corrigida, senão o contraste seria decidido
+    // contra uma cor que ninguém vai ver.
+    const cor = corDeLombada(book.spineColor || FALLBACK_SPINE_COLOR);
     ctx.fillStyle = cor;
     ctx.fillRect(xPx, 0, widthPx, heightPx);
 

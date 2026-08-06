@@ -2,108 +2,78 @@
 
 import {Suspense} from 'react';
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
-import CafeCorner from '@/components/livros/decor/CafeCorner';
-import Poltrona from '@/components/livros/decor/Poltrona';
-import CampingWall from '@/components/livros/decor/CampingWall';
+import EstanteDoAcervo, {ESTANTE_ANCHOR, posicaoDaEstante} from '@/components/livros/decor/EstanteDoAcervo';
+import CantoDeLeitura, {MESA_ANCHOR, pontoNoTampo} from '@/components/livros/decor/CantoDeLeitura';
+import Quadro from '@/components/livros/decor/Quadro';
+import CantoDeTrabalho from '@/components/livros/decor/CantoDeTrabalho';
+import ParedeLateral, {PAREDE_LATERAL_X} from '@/components/livros/decor/ParedeLateral';
 import YellowShelf from '@/components/livros/decor/YellowShelf';
-import {Planta, JogoDeTabuleiro, Vinil} from '@/components/livros/decor/PersonalProps';
-import {BOOKSHELF_SIZE_M, NICHOS_POR_ESTANTE} from '@/lib/bookshelf-model.mjs';
+import EscudoEscoteiro from '@/components/livros/decor/EscudoEscoteiro';
+import {Planta} from '@/components/livros/decor/PersonalProps';
+import {NICHOS, NICHOS_POR_ESTANTE} from '@/lib/bookshelf-model.mjs';
 import {contarEstantes} from '@/lib/shelf-years.mjs';
 
-// Mesa de leitura. Ficava em [1.4, ·, 0.9], quase 2,7m da estante — longe o
-// bastante pra ler como um segundo cômodo, e a transição de câmera entre os
-// dois pontos de vista atravessava a sala inteira. Agora fica ao lado da
-// estante, no espaço que a mesa de trabalho removida deixou livre.
-const MESA_POSITION: [number, number, number] = [1.3, 0.75, 0.0];
-// Angula o tampo em direção ao centro da sala: a mesa "olha" pra quem entra
-// em vez de ficar de perfil.
-const MESA_ROT_Y = -0.5;
-// Desalinho da folha do índice em relação à borda do tampo. Zero deixaria ela
-// perfeitamente paralela à mesa, o que lê como ícone de menu; este resto faz
-// parecer uma folha que alguém largou ali.
-const INDICE_GIRO_RAD = 0.25;
-
-/** Ponto sobre o tampo, dado um deslocamento no espaço local da mesa (já rotacionado). */
-function pontoNoTampo(lx: number, lz: number): [number, number, number] {
-    const cos = Math.cos(MESA_ROT_Y);
-    const sin = Math.sin(MESA_ROT_Y);
-    return [
-        MESA_POSITION[0] + lx * cos + lz * sin,
-        MESA_POSITION[1] + 0.025,
-        MESA_POSITION[2] - lx * sin + lz * cos,
-    ];
-}
-
 export const ROOM_ANCHORS = {
-    // Ponto do CHÃO sob o centro da primeira estante (o contrato de
-    // posicionamento do KenneyModel), não mais o topo de uma prancha
-    // flutuante: o móvel agora assenta no piso e encosta na parede de fundo
-    // (-1.6 mais metade da profundidade dele).
-    estante: {
-        position: [0, 0, -1.6 + BOOKSHELF_SIZE_M.profundidadeM / 2] as [number, number, number],
-        rotation: [0, 0, 0] as [number, number, number],
-    },
-    leitura: {
-        position: [0, 1.3, 0.6] as [number, number, number],
-        rotation: [0, 0, 0] as [number, number, number],
-    },
-    mesa: {
-        position: MESA_POSITION,
-        rotation: [0, MESA_ROT_Y, 0] as [number, number, number],
-    },
-    // Sobre o tampo, à direita da pilha de livros que ocupa o lado esquerdo.
-    // Derivada de MESA_POSITION em vez de escrita à mão: mover a mesa sem
-    // mover a folha junto deixava o índice flutuando no ar.
-    indice: {
-        position: pontoNoTampo(0.17, 0.05),
-        rotation: [-Math.PI / 2, 0, MESA_ROT_Y + INDICE_GIRO_RAD] as [number, number, number],
-    },
+    // Referências, não cópias: a estante e o canto de leitura são território
+    // congelado e moram em decor/EstanteDoAcervo.tsx e decor/CantoDeLeitura.tsx.
+    // Ficam listadas aqui só para este arquivo continuar sendo o mapa da sala.
+    estante: ESTANTE_ANCHOR,
+    mesa: MESA_ANCHOR,
 };
 
 const FLOOR_COLOR = '#3a2f2b';
 const WALL_COLOR = '#2b2320';
-const SHELF_BOARD_COLOR = '#1f1713';
 const RUG_COLOR = '#a89584';
 
-/**
- * Folga entre duas estantes vizinhas. Pequena de propósito: elas leem como um
- * conjunto, não como dois móveis que por acaso estão na mesma parede.
- */
-const ESTANTE_GAP_M = 0.06;
+/** Nicho onde a lava lamp mora: o quarto de baixo pra cima (base = 0). */
+const NICHO_DA_LAVA = 3;
 
 /**
- * Ponto do chão sob o centro da estante `indice`, com o conjunto todo
- * centralizado na parede. Com uma estante só devolve a âncora; com duas, uma
- * vai pra esquerda e outra pra direita.
+ * A lava lamp NÃO fica no vão dos livros: ela fica na vitrine ao lado — o
+ * compartimento estreito que o zigue-zague deixa livre naquele andar, do lado
+ * oposto ao vão (ver `vitrineOffsetXM` em lib/bookshelf-model.mjs).
+ *
+ * Calculada a partir da geometria da estante em vez de escrita à mão: uma
+ * coordenada fixa aqui descolaria do móvel no dia em que um segundo aparecesse
+ * ao lado e deslocasse o primeiro.
+ *
+ * Exportada porque quem MONTA a lâmpada é RoomCanvas.tsx: ela é o botão do
+ * Índice, e a sala é cenário — não conhece filtro nem estado de UI.
  */
-export function posicaoDaEstante(indice: number, total: number): [number, number, number] {
-    const passo = BOOKSHELF_SIZE_M.larguraM + ESTANTE_GAP_M;
-    const x = (indice - (total - 1) / 2) * passo;
-    const base = ROOM_ANCHORS.estante.position;
-    return [base[0] + x, base[1], base[2]];
+export function posicaoDaLavaLamp(gruposDeAno: number): [number, number, number] {
+    const nicho = NICHOS[NICHO_DA_LAVA];
+    const base = posicaoDaEstante(0, contarEstantes(gruposDeAno, NICHOS_POR_ESTANTE));
+    return [
+        base[0] + nicho.vitrineOffsetX,
+        base[1] + nicho.pisoY,
+        // Um pouco à frente do centro da estante (onde as lombadas ficam): a
+        // lâmpada é fina, e no meio da profundidade pareceria enfiada no fundo.
+        base[2] + 0.04,
+    ];
 }
 
 type RoomProps = {
     /**
-     * Quantos grupos de ano a estante precisa acomodar. É só isso que o
-     * cenário sabe sobre o acervo — quantas estantes montar. Quais livros
-     * existem continua sendo assunto de Bookshelf.tsx.
+     * Quantos grupos de ano a estante precisa acomodar. É só isso que o cenário
+     * sabe sobre o acervo — quais livros existem é assunto de Bookshelf.tsx.
      */
     gruposDeAno?: number;
+    /**
+     * Clique no porta-retratos da mesa do PC. É a única coisa daqui que devolve
+     * controle para fora: o escudo escoteiro abre um site sozinho e a bíblia
+     * navega sozinha, mas dar zoom é decisão de quem manda na câmera.
+     */
+    onAbrirRetrato?: () => void;
+    isMobile?: boolean;
 };
 
 /**
- * Cenário puro — não sabe QUE livros existem, só quantos grupos de ano
- * precisam de nicho (`gruposDeAno`). Publica ROOM_ANCHORS (posição/rotação)
- * para que Bookshelf.tsx, DeskBooks.tsx, IndexSheet.tsx e CameraRig.tsx se
- * posicionem a partir daqui, sem nenhuma lógica de livro vazar para este
- * arquivo.
+ * Cenário puro — não sabe QUE livros existem, só quantos grupos de ano precisam
+ * de nicho. Publica ROOM_ANCHORS (posição/rotação) para que Bookshelf.tsx,
+ * DeskBooks.tsx e CameraRig.tsx se posicionem a partir daqui, sem nenhuma lógica
+ * de livro vazar para este arquivo.
  */
-export default function Room({gruposDeAno = 1}: RoomProps) {
-    const totalEstantes = contarEstantes(gruposDeAno, NICHOS_POR_ESTANTE);
-
-    const mesa = ROOM_ANCHORS.mesa;
-
+export default function Room({gruposDeAno = 1, onAbrirRetrato, isMobile = false}: RoomProps) {
     return (
         <group>
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
@@ -116,63 +86,20 @@ export default function Room({gruposDeAno = 1}: RoomProps) {
                 <meshStandardMaterial color={WALL_COLOR} roughness={1}/>
             </mesh>
 
-            {/*
-              A estante do acervo — modelo GLB (CC0), não mais pranchas
-              geradas em código. Tem o SEU PRÓPRIO <Suspense>, separado do que
-              embrulha a mobília lá embaixo: ela é o motivo da sala existir, e
-              compartilhar a fronteira faria a chegada de uma poltrona
-              qualquer segurar a aparição do acervo.
+            {/* Território congelado — ver o cabeçalho de EstanteDoAcervo.tsx. */}
+            <EstanteDoAcervo gruposDeAno={gruposDeAno}/>
 
-              Uma segunda estante só é montada quando os grupos de ano não
-              cabem na primeira — ver contarEstantes.
+            {/*
+              Suspense com fallback null: os .glb são carregados por `useGLTF`,
+              que suspende enquanto baixa. Sem esta fronteira a suspensão sobe
+              até fora do <Canvas> e a sala INTEIRA some até o último móvel
+              chegar. Com ela, a sala aparece na hora e a mobília materializa em
+              cima.
             */}
             <Suspense fallback={null}>
-                {Array.from({length: totalEstantes}, (_, i) => (
-                    <KenneyModel
-                        key={i}
-                        url={MODELOS.estanteLivros}
-                        position={posicaoDaEstante(i, totalEstantes)}
-                        alturaAlvo={BOOKSHELF_SIZE_M.alturaM}
-                    />
-                ))}
-            </Suspense>
-
-            {/*
-              Mesa física — o tampo onde DeskBooks.tsx e IndexSheet.tsx
-              assentam. Uma perna central é suficiente: não é o foco visual
-              da cena, e o spec pede sala low-poly montada com primitivas.
-            */}
-            <mesh position={[mesa.position[0], mesa.position[1] - 0.02, mesa.position[2]]} rotation={mesa.rotation} receiveShadow>
-                <boxGeometry args={[0.7, 0.04, 0.45]}/>
-                <meshStandardMaterial color={SHELF_BOARD_COLOR} roughness={0.6}/>
-            </mesh>
-            <mesh position={[mesa.position[0], (mesa.position[1] - 0.02) / 2, mesa.position[2]]} rotation={mesa.rotation}>
-                <boxGeometry args={[0.08, mesa.position[1] - 0.02, 0.08]}/>
-                <meshStandardMaterial color={SHELF_BOARD_COLOR} roughness={0.8}/>
-            </mesh>
-
-            {/*
-              Decoração da fase 6 — um canto só, à esquerda: poltrona,
-              mesinha de café e a estante amarela. A estante de livros fica no
-              centro, sozinha na parede de fundo, porque ela é o motivo da
-              sala existir e qualquer coisa competindo com ela ali rouba
-              atenção do acervo.
-            */}
-
-            {/*
-              Suspense com fallback null: os .glb são carregados por
-              `useGLTF`, que suspende enquanto baixa. Sem esta fronteira a
-              suspensão sobe até fora do <Canvas> e a sala INTEIRA — estante
-              de livros incluída — some até o último móvel chegar. Com ela, a
-              sala aparece na hora e a mobília materializa em cima.
-            */}
-            <Suspense fallback={null}>
-            {/*
-              Tapete sob o canto de leitura. y=0.004 e não 0: o modelo tem
-              1cm de espessura, mas a face de baixo dele fica no mesmo plano
-              do piso e os dois disputariam cada pixel (z-fighting),
-              aparecendo em faixas tremidas.
-            */}
+            {/* Tapete sob o canto de leitura. y=0.004 e não 0: a face de baixo
+                do modelo fica no mesmo plano do piso e os dois disputariam cada
+                pixel (z-fighting). Mesma correção no tapete do canto de PC. */}
             <KenneyModel
                 url={MODELOS.tapete}
                 position={[-1.4, 0.004, -0.15]}
@@ -182,39 +109,89 @@ export default function Room({gruposDeAno = 1}: RoomProps) {
             />
 
             {/*
-              Estante amarela na parede DE FUNDO, ao lado da de livros. Ela
-              morou na parede lateral enquanto o canto de campismo disputava
-              esse espaço; com o campismo removido a faixa à esquerda ficou
-              livre, e em x=-2.4 ela caía quase toda fora do quadro da câmera
-              "geral" — aparecia um pedaço de madeira amarela na borda, sem
-              ler como móvel.
+              Estante amarela rente à parede LATERAL, de perfil pra câmera e
+              longe da quina do fundo: o papel dela é ser o acento de cor na
+              borda do quadro, não um segundo móvel central disputando atenção
+              com o acervo.
 
-              rotationY pequeno (0.25) em vez de 0: quase de frente pra
-              câmera, mas fora do esquadro perfeito com a parede — o mesmo
-              motivo da folha do índice não ficar paralela ao tampo.
+              Quase π/2 (encarando o centro da sala), mas não exatamente: os
+              -0.12 tiram o móvel do esquadro perfeito com a parede. Girada
+              assim ela ocupa só ~0,49m em X e cabe sem ser cortada.
             */}
-            <YellowShelf position={[-2.05, 0, -1.35]} rotationY={0.25}/>
-            <JogoDeTabuleiro position={[-2.35, 0.02, -0.75]}/>
-            <Vinil position={[-2.3, 0.1, -1.2]}/>
+            <YellowShelf position={[-2.35, 0, -0.45]} rotationY={Math.PI / 2 - 0.12}/>
+            {/* Escudo escoteiro na faixa de parede livre à frente da estante
+                amarela. `normal` +1 porque esta é a parede da ESQUERDA, cuja
+                face olha para +x. A 1,15m ele conversa com o móvel ao lado, em
+                vez de ficar sozinho acima do topo dele. */}
+            <EscudoEscoteiro position={[-PAREDE_LATERAL_X, 1.15, 0.35]} normal={1} isMobile={isMobile}/>
+            {/* A planta é "atrás da poltrona", não do conjunto da estante
+                amarela — inclusive o tamanho foi pedido assim. */}
+            <Planta position={[-2.2, 0, -1.4]} alturaM={0.94}/>
+
+            {/* Território congelado — ver o cabeçalho de CantoDeLeitura.tsx. */}
+            <CantoDeLeitura/>
+            {/*
+              Xícara na mesa de centro, ao lado da pilha de "lendo agora" — o
+              móvel está congelado, o que se apoia nele não. Posicionada por
+              `pontoNoTampo`, então acompanha a mesa se ela girar; o tampo tem
+              0,78m e a pilha ocupa o meio, sobrando a faixa da direita.
+            */}
+            <KenneyModel
+                url={MODELOS.xicara}
+                position={pontoNoTampo(0.27, 0.02)}
+                rotation={[0, MESA_ANCHOR.rotation[1] - 0.6, 0]}
+                alturaAlvo={0.075}
+                cores={{_defaultMat: '#e8e2d5', brownDarkest: '#3b2318'}}
+            />
+
+            {/* Quadro na parede de fundo, atrás da poltrona (x=-1.45 é o eixo
+                dela). Quadrado porque a arte é uma capa de disco — o formato do
+                quadro acompanha a imagem, não o contrário. */}
+            <Quadro
+                position={[-1.45, 1.6, -1.58]}
+                imagem="/livros/poster-gorillaz.jpg"
+                larguraM={0.5}
+                alturaM={0.5}
+                rotationY={0.04}
+            />
 
             {/*
-              Canto de leitura, empurrado pro fundo da sala (z≈-0.5). A câmera
-              "geral" fica em z=2.6 e olha levemente pra baixo, então tudo com
-              z acima de ~0 cai na faixa inferior do quadro e é cortado pela
-              borda de baixo. Em z=0.3 a poltrona virava um borrão de primeiro
-              plano tomando um quarto da tela, e a mesinha nem aparecia.
-              O limite pelo outro lado é a estante amarela (z=-1.26): daí a
-              poltrona parar em -0.55, não mais fundo.
-            */}
-            {/* +Math.PI: com só `0.7` a poltrona ficava de costas pra câmera —
-                quem entrava na sala via o encosto, não o assento. */}
-            <Poltrona position={[-1.45, 0, -0.55]} rotationY={0.7 + Math.PI}/>
-            <CafeCorner position={[-0.78, 0, -0.02]}/>
-            {/* y = a altura da mesinha (0.55): KenneyModel assenta a base da
-                planta em Y=0, então basta erguer o grupo até o tampo. */}
-            <Planta position={[-0.9, 0.55, 0.05]}/>
+              Quadro branco de canetão, na faixa de parede entre a estante do
+              acervo (que termina em x=0.42) e a prateleira aérea (que começa em
+              x=0.95, com a mão-francesa descendo em 1.07). É um vão estreito, de
+              53cm, e o quadro tem 44 — daí ele estar centrado nele em vez de
+              numa coordenada redonda. Mais para a direita e o topo dele, que
+              fica a 1,58m, passa por baixo da prateleira e cruza com o suporte.
 
-            <CampingWall/>
+              A textura é a foto RECORTADA: a original inclui a moldura de
+              alumínio e a parede da sala de verdade, e usá-la inteira seria pôr
+              um quadro dentro do outro. Aqui entra só o miolo branco, e a
+              moldura é geometria — com bandeja de canetão, que é o detalhe que
+              faz um retângulo branco na parede ler como quadro.
+
+              Clicável de propósito, e sem fazer nada ainda: o gesto está
+              reservado para o que este quadro vier a ser.
+            */}
+            <Quadro
+                position={[0.68, 1.36, -1.58]}
+                imagem="/livros/quadro-recomendacoes.jpg"
+                larguraM={0.44}
+                alturaM={0.43}
+                rotationY={-0.03}
+                corMoldura="#b9c2cc"
+                comBandeja
+                onClick={() => {}}
+                rotulo="Recomendações"
+                isMobile={isMobile}
+            />
+
+            {/* O canto de trabalho, encaixado na quina do fundo com a parede
+                direita. Deliberadamente NÃO congelado, ao contrário da estante e
+                do canto de leitura: é o pedaço em que ainda se mexe. */}
+            <CantoDeTrabalho quina={[PAREDE_LATERAL_X, -1.6]} onAbrirRetrato={onAbrirRetrato} isMobile={isMobile}/>
+
+            <ParedeLateral lado="esquerda"/>
+            <ParedeLateral lado="direita"/>
             </Suspense>
 
             {/*
@@ -222,22 +199,24 @@ export default function Room({gruposDeAno = 1}: RoomProps) {
               correta por padrão, então os valores "de sensação" de versões
               antigas (ex.: 3-6) ficam quase invisíveis.
 
-              As duas pontuais ficam na altura do TETO (y=2.75, contra os
-              2,1 de antes). Antes elas moravam na altura dos móveis e cada
-              uma cozinhava o que estivesse logo abaixo: a quente estourava
-              em branco a capa dos livros deitados na mesa, e a fria — a
-              0,05m da parede de fundo — virava uma bola de luz visível
-              atrás da estante, porque o Bloom transforma qualquer pixel
-              muito claro num halo. Do teto, com `decay={2}`, a mesma luz
-              chega a ~40% da irradiância e cai como iluminação de ambiente
-              em vez de holofote. O que a sala perde em brilho direto volta
-              pelo hemisphere/ambient logo abaixo, que são difusos e não
-              estouram superfície nenhuma.
+              As duas pontuais ficam na altura do TETO. Na altura dos móveis cada
+              uma cozinhava o que estivesse logo abaixo: a quente estourava em
+              branco a capa dos livros da mesa, e a fria virava uma bola de luz
+              visível atrás da estante (o Bloom transforma qualquer pixel muito
+              claro num halo). Do teto, com `decay={2}`, a mesma luz chega a ~40%
+              da irradiância e cai como ambiente em vez de holofote.
+
+              A fria é fraca (8) e afastada da parede do fundo por causa da
+              LOMBADA: o título é textura clara com letras escuras, e luz forte
+              de cima lava o contraste e apaga o texto — o zoom não ajuda, porque
+              a lavagem acontece no pixel, não no tamanho. O hemisphere e o
+              ambient compensam: são difusos, clareiam sem criar realce
+              especular em cima de nada.
             */}
             <pointLight position={[1.3, 2.75, 0.6]} color="#ffb877" intensity={22} distance={7} decay={2}/>
-            <pointLight position={[0, 2.75, -1.0]} color="#9fd8ff" intensity={20} distance={6} decay={2}/>
-            <hemisphereLight color="#8899aa" groundColor="#1a1410" intensity={0.7}/>
-            <ambientLight intensity={0.18}/>
+            <pointLight position={[0, 2.75, -0.35]} color="#9fd8ff" intensity={8} distance={6} decay={2}/>
+            <hemisphereLight color="#8899aa" groundColor="#1a1410" intensity={0.95}/>
+            <ambientLight intensity={0.26}/>
         </group>
     );
 }

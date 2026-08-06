@@ -9,8 +9,8 @@ import {useRouter} from 'next/navigation';
  * Volta no histórico (`router.back()`) em vez de navegar pra frente com um
  * `<Link href="/livros">`: rotas paralelas/interceptadas do Next só resetam o
  * slot `@livro` de forma confiável em navegação "pra trás" — um `<Link>` "pra
- * frente" pro mesmo pai deixa o conteúdo antigo do slot preso na tela mesmo
- * com a URL já em `/livros` (confirmado na verificação manual da fase 3).
+ * frente" pro mesmo pai deixa o conteúdo antigo do slot preso na tela mesmo com
+ * a URL já em `/livros`.
  *
  * Sem histórico dentro da aba (chegou direto em /livros/<slug> por um link
  * externo), `router.back()` ou não faz nada ou joga a pessoa pra fora do site

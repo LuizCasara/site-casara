@@ -67,11 +67,19 @@ async function perguntarCategoria(io, padrao) {
     return category;
 }
 
-/** Pergunta o status e repete até ser "lendo" ou "lido". */
+/**
+ * Os quatro status possíveis, e o que cada um significa na sala 3D. A mesma
+ * lista está no CHECK da coluna (lib/schema.sql) — se divergirem, o banco
+ * recusa a linha na hora do INSERT, que é o comportamento certo.
+ */
+const STATUS_VALIDOS = ['lendo', 'lido', 'quero-ler', 'referencia'];
+
+/** Pergunta o status e repete até ser um dos válidos. */
 async function perguntarStatus(io, padrao) {
-    let status = await perguntar(io, 'Status (lendo/lido)', padrao);
-    while (status !== 'lendo' && status !== 'lido') {
-        status = await perguntar(io, 'Status precisa ser "lendo" ou "lido"', padrao);
+    const lista = STATUS_VALIDOS.join('/');
+    let status = await perguntar(io, `Status (${lista})`, padrao);
+    while (!STATUS_VALIDOS.includes(status)) {
+        status = await perguntar(io, `Status precisa ser um de: ${lista}`, padrao);
     }
     return status;
 }

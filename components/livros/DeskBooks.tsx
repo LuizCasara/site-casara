@@ -9,9 +9,8 @@ import type {SpineAtlas} from '@/lib/spine-canvas';
 // apoio — layoutDeskBooks devolve a altura de cada livro a partir dali.
 // Uma folga mínima evita z-fighting entre a capa de baixo e a madeira.
 const DESK_STACK_LIFT_M = 0.002;
-// Pilha encostada à esquerda do tampo: o lado direito é da folha do índice
-// (ver ROOM_ANCHORS.indice). Com as duas no centro, uma cobria a outra.
-const DESK_STACK_OFFSET_X_M = -0.13;
+/** Pilha no CENTRO do tampo — a xícara ocupa a faixa da direita (ver Room.tsx). */
+const DESK_STACK_OFFSET_X_M = 0;
 
 type DeskBooksProps = {
     deskBooks: ShelfBookData[];

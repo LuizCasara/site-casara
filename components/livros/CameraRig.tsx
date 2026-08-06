@@ -2,11 +2,12 @@
 
 import {useEffect, useRef} from 'react';
 import {CameraControls, CameraControlsImpl} from '@react-three/drei';
-import {ROOM_ANCHORS, posicaoDaEstante} from '@/components/livros/Room';
+import {ROOM_ANCHORS} from '@/components/livros/Room';
+import {ESTANTE_ANCHOR, posicaoDaEstante} from '@/components/livros/decor/EstanteDoAcervo';
 import {NICHOS, NICHOS_POR_ESTANTE, BOOKSHELF_SIZE_M} from '@/lib/bookshelf-model.mjs';
 import {contarEstantes} from '@/lib/shelf-years.mjs';
 
-export type Viewpoint = 'geral' | 'estante' | 'mesa' | 'livro' | 'indice';
+export type Viewpoint = 'geral' | 'estante' | 'mesa' | 'pc' | 'retrato';
 
 type ViewpointConfig = {
     camera: [number, number, number];
@@ -17,10 +18,8 @@ type ViewpointConfig = {
     maxPolar: number;
 };
 
-const estanteZ = ROOM_ANCHORS.estante.position[2];
-const leitura = ROOM_ANCHORS.leitura.position;
+const estanteZ = ESTANTE_ANCHOR.position[2];
 const mesaPos = ROOM_ANCHORS.mesa.position;
-const indicePos = ROOM_ANCHORS.indice.position;
 
 const FOV_GRAUS = 50;
 /** Respiro em volta do que está sendo enquadrado, para não ficar espremido. */
@@ -30,42 +29,74 @@ const HEADER_PX = 65;
 
 /**
  * Onde pôr a câmera para caber `alturaM` **na faixa do canvas que não está
- * coberta**, e quanto o alvo precisa subir para essa faixa ficar centrada
- * nela.
+ * coberta**, e quanto o alvo precisa subir para essa faixa ficar centrada nela.
  *
  * O canvas é `fixed inset-0`, então header, rodapé e botões ficam POR CIMA
  * dele: enquadrar pela altura da tela inteira corta o que está nas pontas, e
- * como o rodapé é bem mais alto que o header, o corte é assimétrico — o nicho
- * de baixo desaparecia atrás dos botões. Era isso que a antiga "folga de
- * 1,25m contra os 0,95m da conta" remendava com um número calibrado à mão;
- * aqui a faixa é medida, então o enquadramento se ajusta sozinho ao rodapé
- * mais alto do celular.
+ * como o rodapé é bem mais alto que o header, o corte é assimétrico. A faixa é
+ * medida em vez de calibrada à mão, então o enquadramento se ajusta sozinho ao
+ * rodapé mais alto do celular.
  */
-function enquadrar(alturaM: number, cobertoEmbaixoPx: number) {
+function faixaLivre(cobertoEmbaixoPx: number) {
     const viewportPx = typeof window === 'undefined' ? 900 : window.innerHeight;
     const faixaPx = Math.max(120, viewportPx - HEADER_PX - cobertoEmbaixoPx);
+    const centroFaixaPx = HEADER_PX + faixaPx / 2;
+
+    return {
+        /** Quanto da tela sobra livre, de 0 a 1. */
+        fracaoVisivel: faixaPx / viewportPx,
+        /**
+         * O quanto o quadro precisa escorregar, em frações da altura visível,
+         * para o que interessa ficar centrado na faixa livre em vez de na tela.
+         *
+         * O sinal é contra-intuitivo: a faixa livre fica ACIMA do meio da tela
+         * (o rodapé come mais que o header), então este número é NEGATIVO — para
+         * a cena subir na tela, a câmera precisa mirar mais baixo.
+         */
+        deslocamento: (centroFaixaPx - viewportPx / 2) / viewportPx,
+    };
+}
+
+function enquadrar(alturaM: number, cobertoEmbaixoPx: number) {
+    const {fracaoVisivel, deslocamento} = faixaLivre(cobertoEmbaixoPx);
 
     // Se a faixa visível é 60% da tela, a câmera precisa enquadrar a altura
     // desejada dividida por 0,6 para que ela caiba inteira lá dentro.
-    const alturaEnquadradaM = (alturaM / (faixaPx / viewportPx)) * RESPIRO;
+    const alturaEnquadradaM = (alturaM / fracaoVisivel) * RESPIRO;
     const distancia = alturaEnquadradaM / 2 / Math.tan((FOV_GRAUS * Math.PI) / 360);
 
-    // Centro da faixa livre contra o centro da tela, convertido de px para
-    // metros pela mesma régua do enquadramento.
-    //
-    // O sinal importa e é contra-intuitivo: a faixa livre fica ACIMA do meio
-    // da tela (o rodapé come mais que o header), e para o objeto subir na
-    // tela a câmera precisa mirar mais BAIXO, não mais alto. Mirar alto
-    // empurra a cena para baixo — foi o que aconteceu na primeira tentativa,
-    // que enterrou ainda mais o nicho de baixo atrás dos botões.
-    const centroFaixaPx = HEADER_PX + faixaPx / 2;
-    const alvoDeslocadoM = ((centroFaixaPx - viewportPx / 2) / viewportPx) * alturaEnquadradaM;
+    return {distancia, alvoDeslocadoM: deslocamento * alturaEnquadradaM};
+}
 
-    return {distancia, alvoDeslocadoM};
+/**
+ * Desce a cena inteira (câmera e alvo juntos) até ela ficar centrada na faixa
+ * livre da tela. Serve às cenas de composição fixa — 'geral' e 'mesa' —, onde
+ * a distância e o ângulo já são o que se quer e só a altura estava errada: o
+ * rodapé do site é `fixed` por cima do canvas, e o que estivesse na parte de
+ * baixo do quadro (a mesa de centro, o tapete) ficava atrás dele.
+ *
+ * Move os dois pontos pelo mesmo tanto de propósito. Baixar só o alvo também
+ * subiria a cena, mas inclinando a câmera — a sala ganharia chão e perderia
+ * parede. Assim o enquadramento é o mesmo, um pouco mais abaixo.
+ */
+function subirParaFaixaLivre(v: ViewpointConfig, cobertoEmbaixoPx: number): ViewpointConfig {
+    const distancia = Math.hypot(
+        v.camera[0] - v.target[0],
+        v.camera[1] - v.target[1],
+        v.camera[2] - v.target[2],
+    );
+    const alturaVisivelM = 2 * distancia * Math.tan((FOV_GRAUS * Math.PI) / 360);
+    const dy = faixaLivre(cobertoEmbaixoPx).deslocamento * alturaVisivelM;
+
+    return {
+        ...v,
+        camera: [v.camera[0], v.camera[1] + dy, v.camera[2]],
+        target: [v.target[0], v.target[1] + dy, v.target[2]],
+    };
 }
 
 /** Centro geométrico da estante — usado por quem só precisa olhar na direção dela. */
-const estanteCentroY = ROOM_ANCHORS.estante.position[1] + BOOKSHELF_SIZE_M.alturaM / 2;
+const estanteCentroY = ESTANTE_ANCHOR.position[1] + BOOKSHELF_SIZE_M.alturaM / 2;
 
 /**
  * Os pontos de vista que não dependem do tamanho da janela. `estante` não
@@ -85,20 +116,36 @@ const VIEWPOINTS: Record<Exclude<Viewpoint, 'estante'>, ViewpointConfig> = {
         minAzimuth: -0.4, maxAzimuth: 0.4,
         minPolar: 1.1, maxPolar: 1.6,
     },
-    livro: {
-        camera: [leitura[0], leitura[1] + 0.05, leitura[2] + 0.9],
-        target: [leitura[0], leitura[1], leitura[2]],
-        minAzimuth: -0.2, maxAzimuth: 0.2,
-        minPolar: 1.35, maxPolar: 1.6,
+    /*
+      O canto de trabalho, visto de três quartos: de frente ele viraria uma
+      parede de monitores, e o que faz o canto ser um canto são as duas asas do
+      L — a das telas e a da bíblia aberta. Daqui as duas aparecem.
+
+      A câmera fica dentro da sala (a parede direita está em x=2.6) e um pouco
+      acima da linha do tampo, para o que está SOBRE a mesa não sumir atrás da
+      borda dela.
+    */
+    pc: {
+        camera: [0.75, 1.65, 1.25],
+        target: [1.75, 0.95, -0.75],
+        minAzimuth: -0.75, maxAzimuth: -0.15,
+        minPolar: 1.05, maxPolar: 1.55,
     },
-    // Câmera mais "de cima" que as outras (minPolar/maxPolar menores) porque
-    // a folha está deitada no tampo — olhar quase reto pra baixo é o único
-    // jeito de ler algo escrito nela.
-    indice: {
-        camera: [indicePos[0], indicePos[1] + 0.35, indicePos[2] + 0.3],
-        target: [indicePos[0], indicePos[1], indicePos[2]],
-        minAzimuth: -0.15, maxAzimuth: 0.15,
-        minPolar: 0.9, maxPolar: 1.2,
+    /*
+      Close no porta-retratos da mesa do PC. NÃO é uma parada do trilho: só se
+      chega aqui clicando no objeto, e sai-se com Esc ou clicando de novo — do
+      mesmo jeito que o índice.
+
+      As coordenadas seguem o retrato, que fica sobre o tampo (0,74m) no braço do
+      fundo da mesa. A câmera para a 35cm dele, na altura dos olhos de quem
+      estivesse sentado, e o giro é apertado para não haver como perder a foto de
+      vista enquanto se olha.
+    */
+    retrato: {
+        camera: [2.124, 0.944, -1.018],
+        target: [2.34, 0.83, -1.27],
+        minAzimuth: -1.1, maxAzimuth: -0.4,
+        minPolar: 1.25, maxPolar: 1.7,
     },
 };
 
@@ -121,8 +168,9 @@ function viewpointDaEstante(cobertoEmbaixoPx: number): ViewpointConfig {
 
 /**
  * Nível 2: um nicho preenchendo o quadro, com as bordas dos vizinhos ainda
- * aparecendo — só a câmera se move, nada escurece nem muda de cor (spec, D4).
- * A margem somada à altura do vão é justamente o que deixa o vizinho espiando.
+ * aparecendo — só a câmera se move, nada escurece nem muda de cor. A margem
+ * somada à altura do vão é justamente o que deixa o vizinho espiando, que é o
+ * que mantém a noção de onde aquele ano fica dentro da estante.
  */
 const MARGEM_VIZINHOS_M = 0.16;
 
@@ -169,7 +217,10 @@ export default function CameraRig({
             ? viewpointDoGrupo(grupoFocado, totalGrupos, cobertoEmbaixoPx)
             : viewpointDaEstante(cobertoEmbaixoPx);
     } else {
-        v = VIEWPOINTS[viewpoint];
+        // Toda cena de composição fixa passa pela correção do rodapé — ele é
+        // `fixed` por cima do canvas e come a base do quadro em qualquer uma
+        // delas.
+        v = subirParaFaixaLivre(VIEWPOINTS[viewpoint], cobertoEmbaixoPx);
     }
 
     useEffect(() => {
@@ -177,10 +228,9 @@ export default function CameraRig({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [viewpoint, grupoFocado, cobertoEmbaixoPx]);
 
-    // Sem trilho de arrasto: ele existia porque a fila de livros era mais
-    // larga que a tela. A estante agora é vertical e cabe inteira no quadro,
-    // e navegar é escolher um ano — mais preciso no toque do que arrastar até
-    // achar (spec, D9).
+    // Sem trilho de arrasto (`truckSpeed={0}`): a estante é vertical e cabe
+    // inteira no quadro, e navegar é escolher um ano — mais preciso no toque do
+    // que arrastar até achar.
     return (
         <CameraControls
             ref={controlsRef}

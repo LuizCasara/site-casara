@@ -146,7 +146,13 @@ CREATE TABLE IF NOT EXISTS casara.books (
   rating       NUMERIC(2,1) CHECK (rating BETWEEN 0 AND 5),
   category     TEXT NOT NULL,
   tags         TEXT[] NOT NULL DEFAULT '{}',
-  status       TEXT NOT NULL CHECK (status IN ('lendo','lido')),
+  -- 'lendo'      pilha sobre a mesa de centro, na sala 3D
+  -- 'lido'       estante do acervo, agrupado por ano de leitura
+  -- 'quero-ler'  torre no chão ao lado da estante — a fila de leitura
+  -- 'referencia' só a página própria; fora da estante, da lista e dos filtros
+  --              (hoje: a Bíblia aberta na mesa do PC)
+  -- Ver lib/migrations/002-status-livros.sql.
+  status       TEXT NOT NULL CHECK (status IN ('lendo','lido','referencia','quero-ler')),
   progress_pct SMALLINT CHECK (progress_pct BETWEEN 0 AND 100),
   finished_at  DATE,
   review       TEXT,

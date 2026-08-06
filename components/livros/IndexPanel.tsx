@@ -24,9 +24,21 @@ type IndexPanelProps = {
 
 export default function IndexPanel({tags, sortCriterio, onSortChange, filtros, onFilterChange, onClose}: IndexPanelProps) {
     return (
-        <div className="fixed inset-0 z-30 flex items-center justify-center p-4">
-            <div className="relative max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl
-                            bg-black/70 p-6 shadow-2xl backdrop-blur-md">
+        // Encostado num canto, NÃO centralizado: a estante fica no meio da
+        // tela, e o painel por cima dela escondia justamente o que muda quando
+        // se filtra ou reordena. Em tela larga ele vai pra esquerda (onde fica
+        // o canto de leitura); em tela estreita, pro rodapé, que é o único
+        // lugar que sobra sem cobrir os livros.
+        //
+        // `pointer-events-none` no envelope: ele cobre a viewport inteira e,
+        // opaco a cliques, engoliria o clique nos livros e nas etiquetas de
+        // ano que continuam à vista atrás dele. O card devolve os eventos pra
+        // si.
+        <div className="pointer-events-none fixed inset-0 z-30 flex items-end justify-center p-4
+                        md:items-center md:justify-start md:p-8">
+            <div className="pointer-events-auto relative max-h-[70vh] w-full max-w-md overflow-y-auto
+                            rounded-2xl bg-black/70 p-6 shadow-2xl backdrop-blur-md
+                            md:max-h-[85vh]">
                 <button
                     onClick={onClose}
                     className="absolute right-4 top-4 text-sm text-white/60 hover:text-white"

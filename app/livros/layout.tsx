@@ -21,9 +21,13 @@ export default async function LivrosLayout({children, livro}: {
     children: React.ReactNode;
     livro: React.ReactNode;
 }) {
-    const [livrosLidos, livrosLendo, tags] = await Promise.all([
+    // Um status por lugar da sala: estante, mesa de centro e a torre no chão.
+    // 'referencia' não aparece aqui — aquele livro é alcançado pelo objeto 3D
+    // que o representa, e a página dele carrega sozinha.
+    const [livrosLidos, livrosLendo, livrosQueroLer, tags] = await Promise.all([
         listarLivros({status: 'lido'}),
         listarLivros({status: 'lendo'}),
+        listarLivros({status: 'quero-ler'}),
         listarTags(),
     ]);
 
@@ -32,6 +36,7 @@ export default async function LivrosLayout({children, livro}: {
             <RoomCanvasLoader
                 books={livrosLidos.map(mapShelved)}
                 deskBooks={livrosLendo.map(mapShelved)}
+                queroLer={livrosQueroLer.map(mapShelved)}
                 tags={tags}
             />
             {children}

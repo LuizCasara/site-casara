@@ -23,3 +23,29 @@ body {
 code, pre, kbd, samp {
   font-family: var(--font-space-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
+
+/*
+ * Entrada do card de um livro aberto na sala 3D (a rota interceptada
+ * app/livros/@livro/(.)[slug]).
+ *
+ * O atraso é o ponto, não a transição: o card é um modal grande e centralizado
+ * que aparecia no mesmo instante do clique, ou seja, EM CIMA da animação do
+ * livro saindo da prateleira e virando a capa. Ele espera essa animação
+ * (~0,95s em Book.tsx) chegar perto do fim e só então entra.
+ *
+ * Vale só para a rota interceptada. Quem chega por link direto em
+ * /livros/<slug> cai na página cheia, que não usa esta classe e continua
+ * aparecendo na hora — não houve clique nenhum ali para se esperar.
+ */
+@keyframes surgir-do-livro {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+.entrada-do-livro {
+  animation: surgir-do-livro 380ms ease-out 700ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entrada-do-livro { animation: none; }
+}

@@ -4,10 +4,12 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {Canvas} from '@react-three/fiber';
 import {EffectComposer, Bloom, N8AO, Vignette} from '@react-three/postprocessing';
-import Room from '@/components/livros/Room';
+import {Suspense} from 'react';
+import Room, {posicaoDaLavaLamp} from '@/components/livros/Room';
 import Bookshelf from '@/components/livros/Bookshelf';
 import DeskBooks from '@/components/livros/DeskBooks';
-import IndexSheet from '@/components/livros/IndexSheet';
+import TorreQueroLer from '@/components/livros/TorreQueroLer';
+import LavaLamp from '@/components/livros/decor/LavaLamp';
 import IndexPanel from '@/components/livros/IndexPanel';
 import CameraRig, {type Viewpoint} from '@/components/livros/CameraRig';
 import {useIsMobile} from '@/components/livros/use-is-mobile';
@@ -17,7 +19,7 @@ import {toShelfBooks} from '@/lib/book-dimensions.mjs';
 import {NICHO_CAPACIDADE_M} from '@/lib/bookshelf-model.mjs';
 import {agruparPorAnoDeLeitura} from '@/lib/shelf-years.mjs';
 import {sortShelfBooks, filterShelfBooks, vizinhosDe} from '@/lib/livros-shelf.mjs';
-import {CENAS, cenaVizinha} from '@/lib/livros-cenas.mjs';
+import {CENAS, anoVizinho, paradaVizinha} from '@/lib/livros-cenas.mjs';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
 import {
     trackRoomLoaded, trackListFallback, trackBookOpened,
@@ -43,19 +45,18 @@ export type LivrosMode = {kind: 'sala'} | {kind: 'livro'; slug: string};
 export type RoomCanvasProps = {
     books: ShelvedBookInput[];
     deskBooks: ShelvedBookInput[];
+    /** Status 'quero-ler': a torre no chão ao lado da estante. */
+    queroLer: ShelvedBookInput[];
     tags: string[];
     mode: LivrosMode;
 };
 
 type IndiceFiltros = {categoria: string | null; tag: string | null};
 
-// Cache em módulo (sobrevive a desmontar/remontar RoomCanvas dentro da
-// mesma sessão — ex.: ir e voltar entre /livros e /livros/lista via
-// RoomCanvasLoader — mas reseta num reload de página, que é o esperado já
-// que os dados vêm de novo do servidor a cada carga). buildSpineAtlas
-// espera fonte carregar e desenha em canvas por livro; refazer isso do
-// zero toda vez que o usuário alterna pra lista e volta é desperdício —
-// o acervo 'lido' não muda entre essas duas trocas.
+// Cache em módulo: sobrevive a desmontar/remontar o RoomCanvas dentro da mesma
+// sessão (ir e voltar entre /livros e /livros/lista) e reseta num reload, que é
+// quando os dados vêm de novo do servidor. buildSpineAtlas espera fonte carregar
+// e desenha um canvas por livro — refazer isso a cada ida e volta é desperdício.
 let atlasCache: {chave: string; atlas: SpineAtlas} | null = null;
 
 function chaveAtlas(shelfBooks: {slug: string; thicknessM: number}[]): string {
@@ -63,10 +64,9 @@ function chaveAtlas(shelfBooks: {slug: string; thicknessM: number}[]): string {
 }
 
 /**
- * Heurística deliberadamente simples: não há um jeito confiável de medir GPU
- * pelo browser sem WebGL já ativo, então poucos núcleos de CPU é o sinal mais
- * barato de aparelho fraco. Pode ser refinada depois sem mudar o contrato
- * (o resto da sala só depende de receber um motivo string ou `null`).
+ * Heurística deliberadamente simples: não há jeito confiável de medir GPU pelo
+ * browser sem WebGL já ativo, então poucos núcleos de CPU é o sinal mais barato
+ * de aparelho fraco. O resto da sala só depende de receber um motivo ou `null`.
  */
 function detectaMotivoDegradacao(): 'sem-webgl' | 'reduced-motion' | 'gpu-fraca' | null {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return 'reduced-motion';
@@ -82,7 +82,7 @@ function detectaMotivoDegradacao(): 'sem-webgl' | 'reduced-motion' | 'gpu-fraca'
     return null;
 }
 
-export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasProps) {
+export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: RoomCanvasProps) {
     const router = useRouter();
     const openSlug = mode.kind === 'livro' ? mode.slug : null;
 
@@ -92,6 +92,8 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
     const [sortCriterio, setSortCriterio] = useState('padrao');
     const [filtros, setFiltros] = useState<IndiceFiltros>({categoria: null, tag: null});
     const [indiceAberto, setIndiceAberto] = useState(false);
+    /** Close no porta-retratos da mesa do PC — ver o viewpoint 'retrato'. */
+    const [retratoAberto, setRetratoAberto] = useState(false);
     const [grupoFocado, setGrupoFocado] = useState<number | null>(null);
     const isMobile = useIsMobile();
     const fecharLivro = useFecharLivro();
@@ -99,42 +101,43 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
     const canvasWrapperRef = useRef<HTMLDivElement>(null);
     const barraRef = useRef<HTMLDivElement>(null);
 
-    // Base = todos os livros 'lido', na ordem que vieram do banco — o atlas
-    // é gerado a partir desta lista (uma vez só, nunca refeito ao ordenar ou
-    // filtrar). A lista visível na estante é derivada dela.
+    // Base = todos os livros 'lido', na ordem que vieram do banco. O atlas é
+    // gerado a partir dela uma vez só, nunca refeito ao ordenar ou filtrar.
     const shelfBooksBase = useMemo(() => toShelfBooks(books), [books]);
     const deskShelfBooks = useMemo(() => toShelfBooks(deskBooks), [deskBooks]);
+    const torreBooks = useMemo(() => toShelfBooks(queroLer), [queroLer]);
+    // Os livros da torre entram no MESMO atlas de lombadas da estante: ficam
+    // deitados, com a lombada virada para o lado e bem visível, ao contrário dos
+    // da mesa (que mostram a capa e recebem um UV qualquer).
+    const livrosDoAtlas = useMemo(
+        () => [...shelfBooksBase, ...torreBooks],
+        [shelfBooksBase, torreBooks],
+    );
     const shelfBooksVisiveis = useMemo(
         () => sortShelfBooks(filterShelfBooks(shelfBooksBase, filtros), sortCriterio),
         [shelfBooksBase, filtros, sortCriterio],
     );
-    // Os grupos de ano saem do acervo INTEIRO (não da lista filtrada), pelo
-    // mesmo motivo que Bookshelf.tsx: filtrar esconde livros, nunca muda de
-    // que ano é cada nicho.
+    // Os grupos de ano saem do acervo INTEIRO, não da lista filtrada: filtrar
+    // esconde livros, nunca muda de que ano é cada nicho.
     const grupos = useMemo(
         () => agruparPorAnoDeLeitura(shelfBooksBase, NICHO_CAPACIDADE_M),
         [shelfBooksBase],
     );
 
-    // Quanto da base do canvas está tapado. Medido, não estimado: a barra
-    // cresce de uma para duas linhas quando os anos não cabem lado a lado, o
-    // que acontece no celular — e é justamente aí que um valor fixo deixava o
-    // nicho mais baixo escondido atrás dos botões. `manualViewpoint` entra nas
-    // dependências porque a linha dos anos só existe na cena da estante.
+    // Quanto da base do canvas está tapado. Medido, não estimado: a barra cresce
+    // de uma para duas linhas quando os anos não cabem lado a lado, e é aí que um
+    // valor fixo esconde o nicho mais baixo atrás dos botões.
     const alturaBarra = useAlturaDoElemento(barraRef, [manualViewpoint, grupos.length, alturaRodape]);
     const cobertoEmbaixoPx = alturaRodape + alturaBarra + 24;
 
     // "animate" só nasce falso quando a página já chega com um livro aberto
-    // (link direto/externo) — sem clique prévio, não há o que justificar
-    // animar (ver spec, decisão "Link externo entrega conteúdo primeiro").
-    // Nas trocas seguintes (fechar, abrir outro) sempre anima.
+    // (link direto/externo): sem clique prévio, não há o que justificar animar.
     //
     // Cuidado com a ordem: como o Canvas só renderiza depois que `atlas` fica
     // pronto (`if (!atlas) return null` abaixo), "primeira renderização do
-    // componente" NÃO é o mesmo momento que "primeira renderização da cena
-    // 3D" — `buildSpineAtlas` é assíncrono e só resolve depois do primeiro
-    // commit. Por isso o ref abaixo só vira `true` quando `atlas` de fato
-    // aparece, não no mount do componente.
+    // componente" NÃO é o mesmo momento que "primeira renderização da cena 3D" —
+    // buildSpineAtlas é assíncrono e só resolve depois do primeiro commit. Por
+    // isso o ref abaixo só vira `true` quando `atlas` de fato aparece.
     const [instantOpen] = useState(() => openSlug !== null);
     const hasShownSceneRef = useRef(false);
     const isFirstSceneRender = !hasShownSceneRef.current;
@@ -150,41 +153,53 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
     }, [openSlug]);
 
     // Sair da cena da estante larga o foco do ano: voltar depois pela cena
-    // "Estante" tem que começar do nível 1 de novo, não no zoom em que a
-    // pessoa estava três cliques atrás.
+    // "Estante" começa do nível 1, não no zoom de três cliques atrás.
     useEffect(() => {
         if (manualViewpoint !== 'estante') setGrupoFocado(null);
     }, [manualViewpoint]);
 
-    // Clicar no ano já ativo sobe um nível (spec, D4) — é o mesmo gesto do
-    // botão da barra e da etiqueta 3D, que disparam esta função.
+    /** Clicar no ano já ativo sobe um nível — o mesmo gesto da etiqueta 3D. */
     const selecionarGrupo = useCallback((indice: number) => {
         setGrupoFocado((atual) => (atual === indice ? null : indice));
     }, []);
 
-    // Abrir um livro enquanto o índice está aberto não deveria deixar os
-    // dois empilhados — nem deixar indiceAberto "verdadeiro" escondido no
-    // estado depois que o livro fecha e mode volta a ser 'sala'.
+    /**
+     * Um passo no trilho da sala — cenas e anos no mesmo caminho, em loop (ver
+     * `trilhoDeCenas`). Uma parada carrega os dois estados de uma vez: a cena
+     * define o enquadramento, e o ano (quando existe) o nicho em foco.
+     */
+    const andarNoTrilho = useCallback((direcao: 1 | -1) => {
+        const destino = paradaVizinha(
+            {cena: manualViewpoint, ano: grupoFocado},
+            direcao,
+            grupos.length,
+        ) as {cena: Viewpoint; ano: number | null};
+        setManualViewpoint(destino.cena);
+        setGrupoFocado(destino.ano);
+    }, [manualViewpoint, grupoFocado, grupos.length]);
+
+    // Abrir um livro com o índice aberto não deixa os dois empilhados, nem
+    // `indiceAberto` verdadeiro escondido no estado depois que o livro fecha.
     useEffect(() => {
         if (openSlug) setIndiceAberto(false);
     }, [openSlug]);
 
-    // Folhear (← →) anda dentro do MESMO grupo em que o livro aberto está:
-    // quem abriu um livro da estante percorre a estante na ordem que está
-    // vendo (já ordenada e filtrada), quem abriu um da mesa percorre a mesa.
-    // Misturar os dois faria a seta pular de um móvel pro outro sem que nada
-    // na tela explicasse o salto.
+    // Cada lugar da sala é uma lista fechada para folhear (← →): quem abriu um
+    // livro da mesa percorre a mesa, quem abriu um da torre percorre a fila de
+    // leitura, e o resto percorre a estante como ela está sendo vista (ordenada
+    // e filtrada). Misturar faria a seta saltar de um móvel para outro sem que
+    // nada na tela explicasse o salto.
     const vizinhos = useMemo(() => {
         if (!openSlug) return {anterior: null, proximo: null};
         const daMesa = deskShelfBooks.some((b: {slug: string}) => b.slug === openSlug);
-        return vizinhosDe(daMesa ? deskShelfBooks : shelfBooksVisiveis, openSlug);
-    }, [openSlug, deskShelfBooks, shelfBooksVisiveis]);
+        const daTorre = torreBooks.some((b: {slug: string}) => b.slug === openSlug);
+        const lista = daMesa ? deskShelfBooks : (daTorre ? torreBooks : shelfBooksVisiveis);
+        return vizinhosDe(lista, openSlug);
+    }, [openSlug, deskShelfBooks, torreBooks, shelfBooksVisiveis]);
 
     // `replace`, não `push`: cada livro folheado viraria uma entrada no
-    // histórico, e aí o "✕ fechar" (que é router.back()) passaria a voltar
-    // pro livro anterior em vez de pra sala — depois de folhear cinco livros
-    // seriam cinco "voltar" pra sair. Com replace o histórico continua com
-    // uma entrada só e fechar significa sempre "voltar pra sala".
+    // histórico, e o "✕ fechar" (que é router.back()) passaria a voltar pro livro
+    // anterior em vez de pra sala.
     const folhear = useCallback((slug: string | null) => {
         if (slug) router.replace(`/livros/${slug}`);
     }, [router]);
@@ -200,26 +215,66 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                 else if (e.key === 'ArrowRight') folhear(vizinhos.proximo);
                 return;
             }
+            if (retratoAberto) {
+                if (e.key === 'Escape') setRetratoAberto(false);
+                return;
+            }
             if (indiceAberto) {
                 if (e.key === 'Escape') setIndiceAberto(false);
                 return;
             }
-            // Esc na estante sobe um nível antes de qualquer outra coisa:
-            // quem está com um ano em foco espera sair do zoom, não trocar de
-            // cena.
+            // Esc na estante sobe um nível antes de qualquer outra coisa: quem
+            // está com um ano em foco espera sair do zoom, não trocar de cena.
             if (e.key === 'Escape' && grupoFocado !== null) {
                 setGrupoFocado(null);
                 return;
             }
-            // cenaVizinha vem de um .mjs sem tipos — o TS não estreita os
-            // literais do union Viewpoint sozinho, daí o cast (mesmo caso de
-            // deriveLivrosMode em RoomCanvasLoader).
-            if (e.key === 'ArrowLeft') setManualViewpoint(cenaVizinha(manualViewpoint, -1) as Viewpoint);
-            else if (e.key === 'ArrowRight') setManualViewpoint(cenaVizinha(manualViewpoint, 1) as Viewpoint);
+            // Segundo eixo de navegação, só na estante: as setas verticais andam
+            // pelos ANOS. preventDefault porque ↑/↓ rolam a página por padrão.
+            if (manualViewpoint === 'estante' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                e.preventDefault();
+                setGrupoFocado((atual) => anoVizinho(atual, e.key === 'ArrowUp' ? 1 : -1, grupos.length));
+                return;
+            }
+            if (e.key === 'ArrowLeft') andarNoTrilho(-1);
+            else if (e.key === 'ArrowRight') andarNoTrilho(1);
         };
         window.addEventListener('keydown', aoTeclar);
         return () => window.removeEventListener('keydown', aoTeclar);
-    }, [openSlug, indiceAberto, manualViewpoint, grupoFocado, vizinhos, folhear, fecharLivro]);
+    }, [openSlug, indiceAberto, retratoAberto, manualViewpoint, grupoFocado, grupos.length, vizinhos, folhear, fecharLivro, andarNoTrilho]);
+
+    /**
+     * A roda do mouse percorre o MESMO trilho das setas laterais: sala, mesa,
+     * estante, cada ano do acervo, o canto do PC, e de volta ao começo. Quem
+     * chega na página e gira a roda vê a sala se apresentar sem precisar
+     * descobrir botão nenhum e sem ficar preso em lugar nenhum.
+     *
+     * Dois amortecedores, porque um gesto de trackpad dispara dezenas de
+     * eventos: um limiar por evento, que ignora o arrastar de dedo fino, e um
+     * intervalo mínimo entre passos, que impede pular três paradas num gesto só.
+     *
+     * `passive: true` e sem preventDefault de propósito: nada aqui bloqueia a
+     * rolagem da página. Fica de fora quando há livro ou índice abertos — ali a
+     * roda é do conteúdo do painel, não da sala.
+     */
+    useEffect(() => {
+        if (mode.kind !== 'sala' || indiceAberto || retratoAberto) return;
+
+        const LIMIAR_PX = 24;
+        const INTERVALO_MS = 550;
+        let ultimaTroca = 0;
+
+        const aoRolar = (e: WheelEvent) => {
+            if (Math.abs(e.deltaY) < LIMIAR_PX) return;
+            const agora = Date.now();
+            if (agora - ultimaTroca < INTERVALO_MS) return;
+            ultimaTroca = agora;
+            andarNoTrilho(e.deltaY > 0 ? 1 : -1);
+        };
+
+        window.addEventListener('wheel', aoRolar, {passive: true});
+        return () => window.removeEventListener('wheel', aoRolar);
+    }, [mode.kind, indiceAberto, retratoAberto, andarNoTrilho]);
 
     useEffect(() => {
         const motivo = detectaMotivoDegradacao();
@@ -229,14 +284,14 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                 router.replace('/livros/lista');
             } else {
                 // Em /livros/<slug> a página SSR já é um fallback completo —
-                // degradar aqui é só "não mostrar o 3D", nunca redirecionar
-                // pra longe de um conteúdo que já funciona sozinho.
+                // degradar aqui é só "não mostrar o 3D", nunca redirecionar pra
+                // longe de um conteúdo que já funciona sozinho.
                 setDegradado(true);
             }
             return;
         }
 
-        const chave = chaveAtlas(shelfBooksBase);
+        const chave = chaveAtlas(livrosDoAtlas);
         if (atlasCache && atlasCache.chave === chave) {
             setAtlas(atlasCache.atlas);
             trackRoomLoaded(0, window.innerWidth < 768);
@@ -245,7 +300,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
 
         const inicio = performance.now();
         let cancelado = false;
-        buildSpineAtlas(shelfBooksBase).then((resultado) => {
+        buildSpineAtlas(livrosDoAtlas).then((resultado) => {
             if (cancelado) return;
             atlasCache = {chave, atlas: resultado};
             setAtlas(resultado);
@@ -257,19 +312,11 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // O ResizeObserver do R3F às vezes perde a primeira medição do container
-    // e o canvas fica preso no tamanho padrão (300x150). Isso não é só
-    // cosmético: o R3F só cria o renderer quando o container mede > 0
-    // (`containerRect.width > 0 && containerRect.height > 0` no Canvas dele),
-    // então um canvas não medido significa cena preta E nenhum evento de
-    // ponteiro — sem hover, sem clique.
-    //
-    // A condição observada aqui é a real ("o canvas já tem a largura do
-    // container?"), não um proxy: medir o wrapper não serve, porque ele é
-    // `fixed inset-0` e já nasce estável, o que faria a checagem passar
-    // enquanto o canvas continua errado. Sai assim que a condição vira
-    // verdadeira (normalmente 1-2 frames); o limite de tempo é só rede de
-    // segurança pra não girar pra sempre.
+    // O ResizeObserver do R3F às vezes perde a primeira medição do container e o
+    // canvas fica preso no tamanho padrão (300x150). Isso não é só cosmético: o
+    // R3F só cria o renderer quando o container mede > 0, então canvas não
+    // medido significa cena preta E nenhum evento de ponteiro — sem hover, sem
+    // clique.
     useEffect(() => {
         if (!atlas) return;
         const wrapper = canvasWrapperRef.current;
@@ -281,10 +328,9 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
         let cancelado = false;
         let inicio = Date.now();
 
-        // A condição real: o canvas já tem a largura do container? Medir o
-        // wrapper não serve como proxy — ele é `fixed inset-0` e já nasce
-        // com o tamanho certo, então a checagem passaria enquanto o canvas
-        // continua em 300x150.
+        // A condição real, não um proxy: o canvas já tem a largura do container?
+        // Medir o wrapper não serve — ele é `fixed inset-0` e já nasce com o
+        // tamanho certo, então a checagem passaria com o canvas ainda em 300x150.
         const jaMedido = () => {
             const canvas = wrapper.querySelector('canvas');
             if (!canvas) return false;
@@ -299,15 +345,11 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
             if (Date.now() - inicio < LIMITE_MS) timeoutId = setTimeout(tentar, INTERVALO_MS);
         };
 
-        // setTimeout, NÃO requestAnimationFrame: rAF fica suspenso enquanto
-        // o documento está oculto, e o ResizeObserver do R3F também não
-        // entrega nada nesse estado. Quem abre /livros numa aba em segundo
-        // plano ficaria com o canvas preso em 300x150 — e, como o R3F só cria
-        // o renderer quando o container mede > 0, isso significa sala preta
-        // e sem nenhum evento de ponteiro, não só um canvas do tamanho
-        // errado. Timers continuam rodando com a aba oculta; o
-        // visibilitychange abaixo cobre o caso de a aba voltar depois do
-        // limite de tempo ter estourado.
+        // setTimeout, NÃO requestAnimationFrame: rAF fica suspenso enquanto o
+        // documento está oculto, e o ResizeObserver do R3F também não entrega
+        // nada nesse estado — quem abre /livros numa aba em segundo plano ficaria
+        // com a sala preta e sem eventos. Timers continuam rodando; o
+        // visibilitychange abaixo cobre a aba que volta depois do limite.
         tentar();
 
         const aoMudarVisibilidade = () => {
@@ -327,7 +369,15 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
 
     if (degradado || !atlas) return null;
 
-    const viewpoint: Viewpoint = openSlug ? 'livro' : (indiceAberto ? 'indice' : manualViewpoint);
+    // Abrir o índice leva a câmera para a ESTANTE: a lâmpada é o botão, e
+    // filtrar acontece olhando os livros sumirem e aparecerem, com as etiquetas
+    // de ano à vista. Abrir um LIVRO, ao contrário, não mexe na câmera — ele se
+    // apresenta onde está, e quem escolheu o enquadramento continua nele.
+    //
+    // Precedência, de dentro para fora: o close no retrato ganha do índice, que
+    // ganha da cena escolhida na barra. São estados que só se alcançam clicando
+    // num objeto, então quem clicou por último manda.
+    const viewpoint: Viewpoint = retratoAberto ? 'retrato' : (indiceAberto ? 'estante' : manualViewpoint);
 
     const abrirIndice = () => {
         setIndiceAberto(true);
@@ -345,16 +395,18 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
               z-0, NÃO -z-10: com z-index negativo o canvas é pintado atrás do
               conteúdo in-flow do documento, e o `<main className="flex-grow">`
               do layout raiz — transparente, mas ocupando a viewport inteira —
-              vira o alvo de todo hit-test. A cena aparecia normalmente (o
-              main não tem fundo) mas o R3F nunca recebia pointer event
-              nenhum: sem hover, sem clique em livro, sem clique na folha do
-              índice. Quem precisa ficar acima da sala declara isso
-              explicitamente (Footer, o card de /livros/[slug], os botões de
-              viewpoint em z-10, os overlays em z-20).
+              vira o alvo de todo hit-test. A cena aparece normalmente e o R3F
+              não recebe pointer event nenhum. Quem precisa ficar acima da sala
+              declara isso explicitamente (Footer, o card de /livros/[slug], os
+              botões de viewpoint em z-10, os overlays em z-20).
             */}
             <div ref={canvasWrapperRef} className="fixed inset-0 z-0">
                 <Canvas shadows camera={{fov: 50}} dpr={isMobile ? 1 : [1, 2]}>
-                    <Room gruposDeAno={grupos.length}/>
+                    <Room
+                        gruposDeAno={grupos.length}
+                        onAbrirRetrato={mode.kind === 'sala' ? () => setRetratoAberto((v) => !v) : undefined}
+                        isMobile={isMobile}
+                    />
                     <Bookshelf
                         todosOsLivros={shelfBooksBase}
                         shelfBooks={shelfBooksVisiveis}
@@ -367,7 +419,22 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                         mostrarEtiquetas={viewpoint === 'estante'}
                     />
                     <DeskBooks deskBooks={deskShelfBooks} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile}/>
-                    {mode.kind === 'sala' && <IndexSheet onOpen={abrirIndice} isMobile={isMobile}/>}
+                    <TorreQueroLer livros={torreBooks} atlas={atlas} openSlug={openSlug} animate={animateTransitions} isMobile={isMobile} gruposDeAno={grupos.length}/>
+                    {/*
+                      A lava lamp é o Índice. Ela é montada AQUI, e não em
+                      Room.tsx, porque virou controle: a sala é cenário e não
+                      conhece filtro nem estado de UI — Room só publica onde ela
+                      fica. Com um livro aberto ela continua na cena, mas sem
+                      `onOpen`: vira enfeite aceso, sem etiqueta nem clique.
+                    */}
+                    <Suspense fallback={null}>
+                        <LavaLamp
+                            position={posicaoDaLavaLamp(grupos.length)}
+                            onOpen={mode.kind === 'sala' && !indiceAberto ? abrirIndice : undefined}
+                            isMobile={isMobile}
+                            mostrarEtiqueta={viewpoint === 'estante'}
+                        />
+                    </Suspense>
                     <CameraRig
                         viewpoint={viewpoint}
                         animate={animateTransitions}
@@ -377,31 +444,22 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                     />
                     {/*
                       Ordem importa: N8AO primeiro, Bloom depois, Vignette por
-                      último. O AO precisa rodar sobre a cena ainda "crua" —
-                      se viesse depois do Bloom, ele leria o halo da luz como
-                      geometria e escureceria em volta do brilho.
-
-                      N8AO é oclusão de ambiente em espaço de tela: escurece
-                      as frestas onde duas superfícies se encontram (perna de
-                      mesa com o chão, livro com a prancha). É o que faz um
-                      objeto parecer APOIADO em vez de colado por cima — sem
-                      ele, uma cena de primitivas lê como adesivos flutuando,
-                      por mais correta que a geometria esteja. `halfRes` roda
-                      o efeito em meia resolução: o AO é um sinal suave e de
-                      baixa frequência, então a perda é invisível e o custo
-                      cai perto da metade.
+                      último. O AO precisa rodar sobre a cena ainda "crua" — se
+                      viesse depois do Bloom, leria o halo da luz como geometria
+                      e escureceria em volta do brilho.
                     */}
                     <EffectComposer>
                         {/*
-                          aoRadius em METROS de mundo, não em pixels: 0.16 é
-                          escolhido pra escala desta sala (livro de ~3cm de
-                          lombada, mesa de 70cm). Em 0.45 o efeito existia mas
-                          lia como um escurecimento geral e sujo, não como
-                          contato — a fresta entre dois objetos e o meio de
-                          uma parede vazia recebiam quase a mesma coisa.
+                          N8AO escurece as frestas onde duas superfícies se
+                          encontram (perna de mesa com o chão, livro com a
+                          prancha) — é o que faz um objeto parecer APOIADO em vez
+                          de colado por cima.
+
+                          aoRadius em METROS de mundo, não em pixels: 0.16 é a
+                          escala desta sala (lombada de ~3cm, mesa de 70cm). Em
+                          0.45 o efeito lia como sujeira geral, não como contato.
                           `halfRes` fica só no mobile: com raio apertado, meia
-                          resolução borra justamente a marca fina que a gente
-                          quer.
+                          resolução borra justamente a marca fina que se quer.
                         */}
                         <N8AO
                             aoRadius={0.16}
@@ -411,33 +469,34 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                             halfRes={isMobile}
                             color="#140c06"
                         />
-                        <Bloom intensity={0.4} luminanceThreshold={0.6}/>
+                        {/*
+                          `luminanceThreshold` alto de propósito. O Bloom vira
+                          halo qualquer pixel acima do limite, e as lombadas do
+                          acervo são claras (a cor sai do fundo da capa). No
+                          limite padrão elas cruzavam e o título sumia dentro do
+                          próprio brilho, mesmo com a câmera colada. Em 0.78 só o
+                          que é de fato luz — telas, lava lamp, abajur — brilha.
+                        */}
+                        <Bloom intensity={0.3} luminanceThreshold={0.78}/>
                         <Vignette darkness={0.45} offset={0.35}/>
                     </EffectComposer>
                 </Canvas>
             </div>
             {mode.kind === 'sala' && !indiceAberto && (
-                // `bottom` medido a partir da altura real do rodapé, não um
-                // valor fixo: o rodapé tem ~123px no desktop e quase o dobro
-                // no celular (o texto quebra em mais linhas), então um
-                // `bottom-36` calibrado no desktop volta a ficar por baixo
-                // dele em tela estreita. `z-20` os coloca acima do rodapé no
-                // empilhamento (ambos estavam em z-10, e no empate quem vem
-                // depois no DOM — o rodapé — vencia, deixando os botões
-                // visíveis mas não clicáveis).
+                // `bottom` medido a partir da altura real do rodapé, não um valor
+                // fixo: ele tem ~123px no desktop e quase o dobro no celular. E
+                // `z-20` para ficar acima dele no empilhamento — com ambos em
+                // z-10, quem vem depois no DOM (o rodapé) vencia, deixando os
+                // botões visíveis mas não clicáveis.
                 <div
                     ref={barraRef}
                     style={{bottom: `${alturaRodape + 24}px`}}
                     className="fixed left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-2"
                 >
                     {/*
-                      Os anos NÃO aparecem aqui. Chegaram a existir como uma
-                      segunda linha acima desta, junto com as etiquetas na
-                      própria estante; com os dois no ar ficou claro que a
-                      etiqueta no nicho basta — ela diz que ano é aquela
-                      prateleira E serve de botão, enquanto a linha aqui
-                      embaixo repetia a informação longe do objeto. Ver spec,
-                      D5, decidido depois de rodar.
+                      Os anos NÃO aparecem aqui: a etiqueta no próprio nicho diz
+                      que ano é aquela prateleira E serve de botão, enquanto uma
+                      linha aqui embaixo repetia a informação longe do objeto.
                     */}
                     <div className="flex gap-2">
                         {CENAS.map((cena: {id: Viewpoint; rotulo: string}) => (
@@ -456,23 +515,15 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
             {/*
               Folhear o acervo com o livro aberto. z-40 para ficar acima do
               overlay do livro (z-30). Cada seta some quando não há vizinho
-              daquele lado — assim dá pra sentir onde o acervo começa e
-              termina, em vez de dar a volta silenciosamente.
+              daquele lado — assim dá pra sentir onde o acervo começa e termina.
 
-              Posição muda por LARGURA DE TELA, não por `isMobile`: o problema
-              aqui é o card ocupar quase toda a largura, o que acontece
-              igualmente numa janela de desktop estreita, onde `pointer:
-              coarse` é falso.
-
-              O corte é `lg` (1024px) e não `sm` por conta de uma continha: o
-              card é `max-w-3xl` (768px) com 16px de respiro, e cada seta
-              precisa de ~68px (16 de margem + 44 de largura + folga). Só sobra
-              faixa livre nas laterais a partir de ~904px de viewport — em
-              657px, por exemplo, a seta ainda cairia em cima do card.
-              Abaixo disso elas descem para os cantos de baixo, na faixa que
-              sobra sob o card (que é `max-h-[85vh]`). O rodapé não é
-              atropelado aí porque o overlay `inset-0` já cobre a tela inteira
-              enquanto o livro está aberto.
+              Posição muda por LARGURA DE TELA, não por `isMobile`: o problema é
+              o card ocupar quase toda a largura, o que acontece igualmente numa
+              janela de desktop estreita, onde `pointer: coarse` é falso. O corte
+              é `lg` (1024px) por conta de uma continha: o card é `max-w-3xl`
+              (768px) com 16px de respiro, e cada seta precisa de ~68px — só sobra
+              faixa livre nas laterais a partir de ~904px de viewport. Abaixo
+              disso elas descem para os cantos de baixo.
             */}
             {mode.kind === 'livro' && (vizinhos.anterior || vizinhos.proximo) && (
                 <>

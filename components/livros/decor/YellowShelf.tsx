@@ -1,31 +1,42 @@
 'use client';
 
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
+import DeitadoNoTampo from '@/components/livros/decor/DeitadoNoTampo';
 
 /**
- * Amarelo deliberadamente abafado, não o amarelo saturado de tinta que
- * aparece na foto: a sala é iluminada como fim de tarde e passa por um
- * `<Bloom luminanceThreshold={0.6}>`, então um amarelo puro estouraria em
- * halo. Este tom lê como a mesma estante sob luz quente de abajur.
+ * Amarelo deliberadamente abafado, não o saturado de tinta que aparece na foto:
+ * a sala é iluminada como fim de tarde e passa por um <Bloom>, então um amarelo
+ * puro estouraria em halo. Este tom lê como a mesma estante sob luz de abajur.
  */
 const SHELF_COLOR = '#d9a441';
 
-// Estante de pé, não de mesa. Baixada de 1.7 pra 1.45 ao vir da parede
-// lateral pra de fundo: de perfil e na borda do quadro ela era um detalhe,
-// mas de frente e no meio da cena 1,7m fazia dela o objeto mais alto e mais
-// saturado da sala — competindo com a estante do acervo, que é o motivo da
-// sala existir.
+/** Estante de pé, não de mesa — mas sem disputar altura com a do acervo: o papel
+ *  dela é ser detalhe de borda. */
 const ALTURA = 1.45;
 
 /**
- * Estante amarela aberta — o acento de cor do escritório real, e a única peça
- * de mobília da sala que não é marrom/madeira. Vive na parede lateral
- * esquerda (ver o porquê em Room.tsx), de lado para a câmera; por ter
- * profundidade de verdade ela continua lendo como estante nesse ângulo.
+ * Altura do TOPO de cada prateleira, medida no .glb e já escalada para os 1,45m
+ * do móvel — é sobre elas que os trecos assentam. Chutar esses números põe as
+ * peças flutuando no vão, que foi o que aconteceu com os enfeites anteriores.
+ */
+const PRATELEIRAS = [0.214, 0.610, 1.005, 1.401];
+/** Espessura sobre comprimento da mochila, medida no .glb: 1,746 de 3,119. */
+const RAZAO_ESPESSURA_MOCHILA = 0.56;
+/** Meia largura útil entre as laterais — o móvel tem 0,66m de fora a fora. */
+const MEIA_LARGURA = 0.28;
+
+/**
+ * Estante amarela aberta — o acento de cor do escritório real, e a única peça de
+ * mobília da sala que não é marrom/madeira. Vive na parede lateral esquerda (ver
+ * o porquê em Room.tsx), de lado para a câmera.
  *
- * Não confundir com a estante do acervo (`Bookshelf.tsx`): esta é cenário
- * puro, não tem livro nenhum do banco dentro. Os livros aqui são um modelo
- * decorativo, sem título nem clique.
+ * Guarda trecos de sobrevivência e acampamento, escolhidos um a um pelo dono do
+ * acervo: corda e primeiros socorros embaixo, lampião e lanterna no meio,
+ * walkie-talkie e isqueiro em cima, mochila no topo e saco de dormir no chão ao
+ * lado. Quase todos são CC BY e exigem crédito — ver LICENSE.md.
+ *
+ * Não confundir com a estante do acervo (Bookshelf.tsx): esta é cenário puro,
+ * sem livro nenhum do banco dentro nem nada clicável.
  */
 export default function YellowShelf({position, rotationY = 0}: {position: [number, number, number]; rotationY?: number}) {
     return (
@@ -33,19 +44,78 @@ export default function YellowShelf({position, rotationY = 0}: {position: [numbe
             {/* O modelo tem um material só (`wood`) — recolorir é uma linha */}
             <KenneyModel url={MODELOS.estanteAmarela} alturaAlvo={ALTURA} cores={{wood: SHELF_COLOR}}/>
 
-            {/* Trecos guardados, em duas prateleiras diferentes */}
+            {/* PRATELEIRA DE BAIXO — o que se pega com mais frequência. */}
             <KenneyModel
-                url={MODELOS.livrosDecorativos}
-                position={[-0.12, 0.52, 0.02]}
-                alturaAlvo={0.16}
-                cores={{carpetDarker: '#3f5f8a', carpetWhite: '#e8dcc8', plant: '#4a6b45', metal: '#8a3b3b'}}
+                url={MODELOS.kitPrimeirosSocorros}
+                position={[-0.16, PRATELEIRAS[0], 0]}
+                rotation={[0, 0.15, 0]}
+                alturaAlvo={0.17}
+                cores={{Red: '#b53b3b', White: '#e8e2d5'}}
+            />
+            {/* Rolo de corda deitado: a maior dimensão dele é a largura, então
+                é por ela que se pede o tamanho, não pela altura. */}
+            <KenneyModel
+                url={MODELOS.corda}
+                position={[0.13, PRATELEIRAS[0], 0.01]}
+                rotation={[0, -0.3, 0]}
+                larguraAlvo={0.22}
+                cores={{Rope: '#b09a6a'}}
+            />
+
+            {/* PRATELEIRA DO MEIO — a luz. */}
+            <KenneyModel
+                url={MODELOS.lampiao}
+                position={[-0.15, PRATELEIRAS[1], 0]}
+                rotation={[0, 0.4, 0]}
+                alturaAlvo={0.24}
+            />
+            {/* Lanterna deitada. O modelo é um tubo cujo comprimento corre em Z,
+                apontado para o fundo da prateleira; o quarto de volta em Y deita
+                o comprimento ao longo dela. */}
+            <KenneyModel
+                url={MODELOS.lanterna}
+                position={[0.13, PRATELEIRAS[1], 0.02]}
+                rotation={[0, Math.PI / 2 + 0.25, 0]}
+                larguraAlvo={0.20}
+            />
+
+            {/* PRATELEIRA DE CIMA — o que é pequeno e some se ficar embaixo. */}
+            <KenneyModel
+                url={MODELOS.walkieTalkie}
+                position={[-0.13, PRATELEIRAS[2], 0]}
+                rotation={[0, 0.2, 0]}
+                larguraAlvo={0.20}
             />
             <KenneyModel
-                url={MODELOS.livrosDecorativos}
-                position={[0.1, 1.08, 0.02]}
-                rotation={[0, 0.4, 0]}
-                alturaAlvo={0.16}
-                cores={{carpetDarker: '#7a5a8a', carpetWhite: '#d9c9a8', plant: '#8a6a3b', metal: '#3b5f5a'}}
+                url={MODELOS.isqueiro}
+                position={[0.13, PRATELEIRAS[2], 0.01]}
+                rotation={[0, -0.5, 0]}
+                alturaAlvo={0.075}
+            />
+
+            {/* Mochila deitada na quarta prateleira. Deitada e não em pé: uma
+                mochila em pé numa prateleira lê como manequim de vitrine. */}
+            <DeitadoNoTampo
+                url={MODELOS.mochila}
+                position={[-0.02, PRATELEIRAS[3], -0.02]}
+                comprimento={0.34}
+                razaoEspessura={RAZAO_ESPESSURA_MOCHILA}
+                giro={0.25}
+            />
+
+            {/*
+              Saco de dormir no CHÃO, encostado na lateral: ele tem 55cm enrolado
+              e ocuparia um vão inteiro sozinho.
+
+              Posicionado no espaço local da estante, e não no da sala, de
+              propósito: assim acompanha o móvel se ele girar ou mudar de parede,
+              em vez de ficar para trás no meio do cômodo.
+            */}
+            <KenneyModel
+                url={MODELOS.sacoDeDormir}
+                position={[-MEIA_LARGURA - 0.16, 0, 0.04]}
+                rotation={[0, 0.12, 0]}
+                larguraAlvo={0.55}
             />
         </group>
     );

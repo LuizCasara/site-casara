@@ -3,18 +3,8 @@ import ReactMarkdown from 'react-markdown';
 import {getCategory} from '@/lib/book-categories.mjs';
 import {corDeTextoSobre} from '@/lib/contraste.mjs';
 import StarRating from '@/components/livros/StarRating';
+import {REMAP_HEADINGS} from '@/components/livros/markdown-headings';
 import type {Book} from '@/lib/books';
-
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
-const REMAP_HEADINGS = {
-    h1: ({node, ...props}: any) => <h2 {...props}/>,
-    h2: ({node, ...props}: any) => <h3 {...props}/>,
-    h3: ({node, ...props}: any) => <h4 {...props}/>,
-    h4: ({node, ...props}: any) => <h5 {...props}/>,
-    h5: ({node, ...props}: any) => <h6 {...props}/>,
-    h6: ({node, ...props}: any) => <h6 {...props}/>,
-};
-/* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 
 export default function BookOverlay({livro}: {livro: Book}) {
     const categoria = getCategory(livro.category);

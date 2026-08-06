@@ -1,7 +1,18 @@
 import {cache} from 'react';
 import sql from '@/lib/db';
 
-export type BookStatus = 'lendo' | 'lido';
+/**
+ * Onde o livro aparece na sala 3D — e, no caso de 'referencia', onde ele NÃO
+ * aparece. Ver o CHECK em lib/schema.sql.
+ */
+export type BookStatus = 'lendo' | 'lido' | 'referencia' | 'quero-ler';
+
+/**
+ * Status que ficam de fora de toda listagem pública: a página existe e é
+ * alcançável por link direto ou pelo objeto 3D correspondente, mas o livro não
+ * entra na lista, nos filtros nem nas contagens do acervo.
+ */
+const STATUS_OCULTOS = ['referencia'];
 
 export type Book = {
     id: string;
@@ -59,6 +70,10 @@ export const listarLivros = cache(async (filtros: BookFilters = {}): Promise<Boo
         WHERE (${categoria}::text IS NULL OR category = ${categoria})
           AND (${tag}::text IS NULL OR ${tag} = ANY (tags))
           AND (${status}::text IS NULL OR status = ${status})
+          -- Os ocultos só saem quando alguém PEDE aquele status pelo nome.
+          -- Sem isto, a Bíblia entraria na listagem, nos filtros e nas
+          -- contagens do acervo, que é justamente o que 'referencia' evita.
+          AND (${status}::text IS NOT NULL OR status <> ALL (${STATUS_OCULTOS}::text[]))
         ORDER BY (status = 'lendo') DESC, COALESCE(shelf_order, 32767), title
     `) as Book[];
 });
@@ -77,17 +92,10 @@ export const buscarLivroPorSlug = cache(async (slug: string): Promise<Book | nul
  */
 export const listarTags = cache(async (): Promise<string[]> => {
     const linhas = (await sql`
-        SELECT DISTINCT unnest(tags) AS tag FROM casara.books ORDER BY tag
+        SELECT DISTINCT unnest(tags) AS tag
+        FROM casara.books
+        WHERE status <> ALL (${STATUS_OCULTOS}::text[])
+        ORDER BY tag
     `) as {tag: string}[];
     return linhas.map((l) => l.tag);
 });
-
-/**
- * Todos os slugs do acervo. Sem consumidor hoje — as páginas usam
- * `force-dynamic` e não há `generateStaticParams` no projeto. Existe para uma
- * fase futura (sitemap, ou geração estática das páginas de livro).
- */
-export async function listarSlugs(): Promise<string[]> {
-    const linhas = (await sql`SELECT slug FROM casara.books`) as {slug: string}[];
-    return linhas.map((l) => l.slug);
-}

@@ -115,10 +115,14 @@ Unlike Nuvem de Palavras and Quiz ao Vivo, this one is **single-screen and clien
 
 ### Acervo de Livros
 
-`/livros` (fase 1: redireciona para `/livros/lista`; vira a sala 3D na fase 2),
+`/livros` (a sala de leitura 3D — o `<Canvas>` mora em `app/livros/layout.tsx`,
+nunca numa page, e clicar num livro é uma intercepting route `@livro/(.)[slug]`),
 `/livros/lista` (grade com filtros por categoria/tag/status, todos via query
 param para serem compartilháveis) e `/livros/[slug]` (página do livro,
-server-rendered para SEO). Ver `docs/superpowers/specs/2026-07-28-sala-de-leitura-3d-design.md`.
+server-rendered para SEO). **As decisões da sala 3D — estante por ano, trilho de
+navegação, territórios congelados, contrato do `KenneyModel` — estão em
+`docs/livros-sala-3d.md`; leia antes de mexer em `components/livros/`.** O que
+ficou de fora do V1 está em `docs/livros-proximos-passos.md`.
 
 - **Não existe rota de admin.** O cadastro acontece só por `scripts/livros.mjs`,
   rodando localmente — foi requisito explícito de não criar superfície de ataque
@@ -154,8 +158,14 @@ server-rendered para SEO). Ver `docs/superpowers/specs/2026-07-28-sala-de-leitur
   (`npm test`, via `node --test`) — porque um bug ali corrompe dado permanente
 - `lib/books.ts` é o lado Next: tipo `Book` e queries. Sempre `casara.books`
 - **Um livro tem UMA `category`** (taxonomia fechada em `lib/book-categories.mjs`,
-  define a cor e, na fase 2, a posição na estante) **e N `tags` livres** (eixo
-  transversal de busca). Multi-categoria tornaria a posição na prateleira ambígua
+  define a cor) **e N `tags` livres** (eixo transversal de busca). Multi-categoria
+  tornaria a posição na prateleira ambígua
+- **`status` tem quatro valores** (CHECK em `lib/schema.sql`), e cada um é um
+  lugar da sala: `lido` na estante, `lendo` na pilha da mesa de centro,
+  `quero-ler` na torre no chão e `referencia` em lugar nenhum — este último tem
+  página própria e é alcançado só por link direto ou pelo objeto 3D que o
+  representa (a Bíblia aberta na mesa do PC), ficando fora de toda listagem,
+  filtro e contagem via `STATUS_OCULTOS` em `lib/books.ts`
 - **Capas são baixadas, não linkadas** (`public/livros/capas/<slug>.jpg`): a API
   de covers da Open Library tem rate limit e linkar direto faria cada visitante
   bater no servidor deles. `spine_color` é a cor dominante, extraída uma vez no

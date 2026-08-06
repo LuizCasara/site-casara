@@ -6,78 +6,84 @@ import {useRouter} from 'next/navigation';
 import {Html} from '@react-three/drei';
 import * as THREE from 'three';
 import StarRating from '@/components/livros/StarRating';
-import {ROOM_ANCHORS} from '@/components/livros/Room';
 import {BOOK_DEPTH_M} from '@/lib/book-dimensions.mjs';
+import {corDeLombada} from '@/lib/cor-lombada.mjs';
 
 // Ordem de materiais do BoxGeometry: [+x, -x, +y, -y, +z, -z].
-// A lombada (visível na estante) é a face +z; a capa frontal (visível só
-// quando o livro abre e gira 180°, ou de imediato nos livros da mesa) é a
-// face -z, oposta.
+//
+// A lombada é a face +z. A capa é a face **-x**, e só ela: a geometria é
+// (espessura, altura, profundidade), então -x é a única face grande do volume —
+// profundidade x altura, a proporção de um livro de verdade. A face -z, oposta à
+// lombada, tem a LARGURA DA LOMBADA: usá-la como capa esmaga a imagem numa tira
+// de 3cm.
+//
+// É a mesma face nas duas situações em que a capa aparece: virada para a câmera
+// quando o livro abre e virada para cima quando ele está deitado na pilha.
 const SPINE_FACE_INDEX = 4;
-const COVER_FACE_INDEX = 5;
-// Face -x — a que fica virada pra cima quando o livro deita sobre a mesa (ver
-// DESK_REST_ROT_Z_RAD). É a face grande do volume (altura x profundidade), a
-// única com proporção de capa de verdade.
-const TOP_FACE_INDEX = 1;
+const COVER_FACE_INDEX = 1;
 const FALLBACK_SPINE_COLOR = '#4b4b4b';
 const HOVER_SLIDE_M = 0.035;
 const HOVER_TILT_RAD = 0.12;
 const HOVER_LERP_SPEED = 8;
-const OPEN_LERP_SPEED = 3;
 const OPEN_TILT_RAD = -0.35;
-// Livro "fora do lugar" além desta distância (aberto ou voltando a fechar)
-// anima na velocidade lenta de abertura; hover puro usa a velocidade rápida.
-const DESLOCAMENTO_GRANDE_M = 0.1;
+
+/**
+ * A abertura é uma animação com DURAÇÃO, não um amortecimento.
+ *
+ * Com `damp` tudo — sair da prateleira, subir, girar — acontecia junto, e o
+ * formato da curva (rápido no começo, arrastando no fim) fazia o essencial
+ * passar em poucos frames. Com um progresso 0→1 dá para escalonar os gestos.
+ */
+const ABERTURA_S = 0.95;
+/** Fechar é mais rápido que abrir: ninguém quer esperar para sair. */
+const FECHAMENTO_S = 0.45;
+/** Fração do progresso em que o livro termina de sair da prateleira. */
+const FASE_SAIDA = 0.4;
+/** Fração em que o giro começa — antes de a saída terminar, para se encavalarem. */
+const FASE_GIRO_INICIO = 0.25;
+/** O quanto o livro avança para fora do móvel ao abrir. */
+const AVANCO_ABERTURA_M = 0.32;
+const SUBIDA_ABERTURA_M = 0.14;
+/** Deitado na mesa, ele sobe mais: sai de uma pilha, não de uma fila. */
+const SUBIDA_ABERTURA_MESA_M = 0.26;
+
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+/** Sai rápido e freia — o gesto de puxar algo de uma prateleira. */
+const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+/** Começa e termina devagar — o giro, que é o que se quer ver. */
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 // Livro deitado sobre a mesa: rotação de 90° em torno de Z, não de X.
 //
-// A geometria é BoxGeometry(thicknessM, heightM, BOOK_DEPTH_M) — x é a
-// espessura, y a altura, z a profundidade. Girando em X, o que ia parar na
-// vertical era a PROFUNDIDADE (20cm): o livro ficava de pé, tombado pra trás,
-// atravessando o tampo. Girando em Z é a espessura que sobe, que é o que
-// "deitado" quer dizer — e é essa mesma suposição que layoutDeskBooks usa pra
-// empilhar um livro sobre o outro somando espessuras.
+// A geometria é BoxGeometry(thicknessM, heightM, BOOK_DEPTH_M). Girando em X, o
+// que ia parar na vertical era a PROFUNDIDADE (20cm) e o livro atravessava o
+// tampo. Girando em Z é a espessura que sobe, que é o que "deitado" quer dizer —
+// e é a mesma suposição que layoutDeskBooks usa para empilhar somando espessuras.
 //
-// Negativo, e não positivo: os dois deitam o livro, mas +90° põe o topo das
-// letras da lombada apontando pra -x, e o título fica de cabeça pra baixo pra
-// quem olha a mesa. -90° põe pra +x, que é o sentido de leitura.
+// Negativo, e não positivo: +90° põe o topo das letras da lombada apontando pra
+// -x, e o título fica de cabeça pra baixo para quem olha a mesa.
 const DESK_REST_ROT_Z_RAD = -Math.PI / 2;
 
-// Área de detecção de hover/clique maior que o volume visível da lombada —
-// com poucos livros no acervo (espessura mínima de 12mm), a malha real ocupa
-// poucos pixels na tela e fica quase impossível de acertar com um mouse de
-// verdade (confirmado testando manualmente). Uma malha invisível maior por
-// trás resolve isso sem mudar a espessura visual.
-// Contrapartida aceita: com um acervo bem mais denso (~51+ livros lado a
-// lado), esse mínimo de largura pode fazer hitboxes de vizinhos se
-// sobreporem um pouco perto da borda — revisitar então se virar problema.
+// Área de detecção maior que o volume visível da lombada: com espessura mínima
+// de 12mm, a malha real ocupa poucos pixels e fica quase impossível de acertar
+// com o mouse. Contrapartida aceita: com um acervo bem mais denso, as hitboxes
+// de vizinhos podem se sobrepor um pouco perto da borda.
+/** Distância entre o livro e o balão de hover. */
+const BALAO_FOLGA_M = 0.06;
 const HITBOX_MIN_THICKNESS_M = 0.05;
 const HITBOX_HEIGHT_PADDING_M = 0.06;
 const HITBOX_DEPTH_PADDING_M = 0.08;
 
 /**
- * Converte o alvo de abertura (a âncora `leitura`, em coordenadas do mundo)
- * pro espaço local do grupo que envolve este livro — Bookshelf.tsx ancora em
- * `estante` (sem rotação), DeskBooks.tsx ancora em `mesa` (rotacionada em Y).
- * Usar o deslocamento calculado pra um dos dois em código pensado pro outro
- * abre o livro na posição/ângulo errados sempre que o grupo pai tiver
- * rotação diferente de zero — por isso este cálculo depende do `anchor` do
- * grupo pai, não de uma constante fixa.
+ * Rotação Y local que deixa a capa de frente pra câmera.
+ *
+ * Um QUARTO de volta no mundo, não meia: em repouso o livro mostra a lombada
+ * (+z) e a capa está na face -x — meia volta traria a face -z, que é a estreita
+ * (ver COVER_FACE_INDEX). Como o grupo pai já contribui com a rotação dele
+ * (Bookshelf ancora em `estante`, sem rotação; DeskBooks em `mesa`, girada em
+ * Y), a rotação local desconta isso.
  */
-function calcularAberturaLocal(anchor: {position: [number, number, number]; rotation: [number, number, number]}) {
-    const leitura = ROOM_ANCHORS.leitura.position;
-    const dx = leitura[0] - anchor.position[0];
-    const dy = leitura[1] - anchor.position[1];
-    const dz = leitura[2] - anchor.position[2];
-    const theta = anchor.rotation[1];
-    const cos = Math.cos(theta);
-    const sin = Math.sin(theta);
-    return {
-        position: [dx * cos - dz * sin, dy, dx * sin + dz * cos] as [number, number, number],
-        // Rotação Y mundial alvo é sempre Math.PI (livro de frente pra
-        // câmera); como o grupo pai já contribui com `theta`, a rotação
-        // local precisa compensar isso pra a soma continuar dando Math.PI.
-        rotationY: Math.PI - theta,
-    };
+function rotacaoDeFrente(anchor: {rotation: [number, number, number]}) {
+    return Math.PI / 2 - anchor.rotation[1];
 }
 
 export type ShelfBookData = {
@@ -94,8 +100,8 @@ export type ShelfBookData = {
     year: number | null;
     /**
      * Data de leitura. `Book` não usa — quem usa é o agrupamento por nicho em
-     * Bookshelf.tsx —, mas o campo mora aqui porque é este o tipo que
-     * atravessa a estante inteira.
+     * Bookshelf.tsx —, mas o campo mora aqui porque é este o tipo que atravessa
+     * a estante inteira.
      */
     finishedAt: Date | string | null;
 };
@@ -134,29 +140,44 @@ export default function Book({
     const groupRef = useRef<THREE.Group>(null);
     const [hovered, setHovered] = useState(false);
     const [coverTexture, setCoverTexture] = useState<THREE.Texture | null>(null);
-    const snappedRef = useRef(false);
-    const abertura = useMemo(() => calcularAberturaLocal(anchor), [anchor]);
+    /** 0 = na prateleira, 1 = aberto e de frente. Avança/recua com o tempo. */
+    const progressoRef = useRef(isOpen && !animate ? 1 : 0);
+    const rotacaoAberta = rotacaoDeFrente(anchor);
+
+    /**
+     * Onde o balão de hover nasce, no espaço LOCAL deste grupo — que para os
+     * livros da mesa está girado 90° em Z (ver DESK_REST_ROT_Z_RAD).
+     *
+     * De pé é o óbvio: um tanto acima do topo. Deitado, +Y local aponta para +X
+     * do mundo, então o mesmo offset jogaria o balão para o LADO do livro,
+     * dentro da mesa. Com a rotação de -90° em Z, o local que vira "para cima" no
+     * mundo é -X, e a altura a vencer é a ESPESSURA, não a altura do livro.
+     */
+    const posicaoDoBalao: [number, number, number] = restVariant === 'capa'
+        ? [-(book.thicknessM / 2 + BALAO_FOLGA_M), 0, 0]
+        : [0, book.heightM / 2 + BALAO_FOLGA_M, 0];
 
     const geometry = useMemo(() => {
         const geo = new THREE.BoxGeometry(book.thicknessM, book.heightM, BOOK_DEPTH_M);
         setBoxFaceUV(geo, SPINE_FACE_INDEX, uvRange.u0, uvRange.u1, 0, 1);
-        // Face de topo com U E V invertidos nos livros da mesa — ou seja, a
-        // textura girada 180°. As UVs de fábrica da face -x são orientadas pra
-        // ser vista DE FORA do volume, olhando na direção +x; deitado, o
-        // observador passa a olhar essa mesma face de cima pra baixo, e a capa
-        // aparecia de ponta-cabeça.
+        // Capa com U E V invertidos — a textura girada 180° — enquanto o livro
+        // está DEITADO na mesa. As UVs de fábrica da face -x são orientadas para
+        // ser vista de fora do volume, olhando na direção +x, que é o ponto de
+        // vista de quem olha a capa do livro aberto e em pé; deitado, o
+        // observador olha essa mesma face de cima para baixo.
         //
-        // Os dois eixos, não um: invertendo só o U a capa ficava girada, e só
-        // o V ficava espelhada — as duas assinaturas de um defeito de origem
-        // que é rotação de 180°, não espelhamento. Não afeta a lombada nem as
-        // outras faces.
-        if (restVariant === 'capa') setBoxFaceUV(geo, TOP_FACE_INDEX, 1, 0, 1, 0);
+        // Os dois eixos, não um: invertendo só o U a capa fica girada, e só o V
+        // fica espelhada — as duas assinaturas de um defeito que é rotação de
+        // 180°, não espelhamento.
+        //
+        // Depende de `isOpen` porque um livro da mesa passa pelos dois estados:
+        // deitado na pilha e, ao abrir, levantado de frente.
+        if (restVariant === 'capa' && !isOpen) setBoxFaceUV(geo, COVER_FACE_INDEX, 1, 0, 1, 0);
         return geo;
-    }, [book.thicknessM, book.heightM, uvRange.u0, uvRange.u1, restVariant]);
-    // Geometrias/materiais criados via `new THREE.X()` em código (em vez de
-    // JSX) não são descartados automaticamente pelo R3F ao desmontar ou
-    // recalcular — sem isso, filtrar livros no índice ou trocar de capa
-    // vaza memória de GPU ao longo de uma sessão.
+    }, [book.thicknessM, book.heightM, uvRange.u0, uvRange.u1, restVariant, isOpen]);
+    // Geometrias/materiais criados via `new THREE.X()` em código (em vez de JSX)
+    // não são descartados automaticamente pelo R3F ao desmontar ou recalcular —
+    // sem isso, filtrar livros no índice vaza memória de GPU ao longo da sessão.
     useEffect(() => () => geometry.dispose(), [geometry]);
 
     const hitboxGeometry = useMemo(() => new THREE.BoxGeometry(
@@ -166,12 +187,10 @@ export default function Book({
     ), [book.thicknessM, book.heightM]);
     useEffect(() => () => hitboxGeometry.dispose(), [hitboxGeometry]);
 
-    // A capa real normalmente só é baixada quando o livro é aberto — ver
-    // spec, "Atlas de lombadas": a API de covers da Open Library tem rate
-    // limit, então a estante inteira nunca carrega 51 capas de uma vez.
-    // Exceção explícita do spec: os livros "lendo agora" (restVariant
-    // 'capa') mostram a capa de imediato — são no máximo 1 a 3, o custo é
-    // desprezível.
+    // A capa real só é baixada quando o livro é aberto: a API de covers da Open
+    // Library tem rate limit, então a estante inteira nunca carrega 50 capas de
+    // uma vez. Exceção: os livros "lendo agora" (restVariant 'capa') mostram a
+    // capa de imediato — são no máximo 1 a 3, o custo é desprezível.
     useEffect(() => {
         const deveCarregar = isOpen || restVariant === 'capa';
         if (!deveCarregar || !book.coverPath || coverTexture) return;
@@ -188,7 +207,10 @@ export default function Book({
     useEffect(() => () => coverTexture?.dispose(), [coverTexture]);
 
     const materials = useMemo(() => {
-        const corCapa = book.spineColor || FALLBACK_SPINE_COLOR;
+        // Mesma paleta da lombada (lib/cor-lombada.mjs): as faces laterais são
+        // pintadas com a cor da capa, e sem a correção elas brilhariam pelos
+        // mesmos motivos — só que em área muito maior.
+        const corCapa = corDeLombada(book.spineColor || FALLBACK_SPINE_COLOR);
         const materialCapa = new THREE.MeshStandardMaterial({color: corCapa, roughness: 0.8});
         const materialLombada = new THREE.MeshStandardMaterial({map: atlasTexture, roughness: 0.7});
         const materialCapaFrontal = coverTexture
@@ -196,65 +218,65 @@ export default function Book({
             : materialCapa;
         const lista = [materialCapa, materialCapa, materialCapa, materialCapa, materialLombada, materialCapa];
         lista[COVER_FACE_INDEX] = materialCapaFrontal;
-        // Deitado na mesa, quem aparece é o topo — sem isto, os livros "lendo
-        // agora" mostrariam um retângulo de cor lisa e a capa que já foi
-        // baixada pra eles ficaria escondida contra o tampo.
-        if (restVariant === 'capa') lista[TOP_FACE_INDEX] = materialCapaFrontal;
         return lista;
-    }, [book.spineColor, atlasTexture, coverTexture, restVariant]);
-    // `materialLombada` referencia `atlasTexture` (prop compartilhada entre
-    // todos os livros — não descartar) mas os outros materiais desta lista
-    // são exclusivos deste Book; dispose() duas vezes na mesma instância
-    // (materialCapa aparece 5x na lista) não tem efeito colateral.
+    }, [book.spineColor, atlasTexture, coverTexture]);
+    // `materialLombada` referencia `atlasTexture` (prop compartilhada entre todos
+    // os livros — não descartar) mas os outros materiais desta lista são
+    // exclusivos deste Book; dispose() repetido na mesma instância é inócuo.
     useEffect(() => () => materials.forEach((m) => m.dispose()), [materials]);
 
-    // Nav direta a /livros/<slug> (link externo): o livro já nasce aberto,
-    // sem animação — não houve clique prévio que a justifique (ver spec).
-    useEffect(() => {
-        if (isOpen && !animate && !snappedRef.current && groupRef.current) {
-            groupRef.current.position.set(...abertura.position);
-            groupRef.current.rotation.set(OPEN_TILT_RAD, abertura.rotationY, 0);
-            snappedRef.current = true;
-        }
-    }, [isOpen, animate, abertura]);
-
     useFrame((_, delta) => {
-        if (!groupRef.current) return;
-        if (isOpen && !animate && snappedRef.current) return; // já encaixado, nada a animar
-
-        // O repouso ("fechado") não é a origem do grupo — é a posição da prop
-        // `position`, que é diferente por livro (slot na prateleira). Usar 0
-        // aqui faria todo livro derivar pra origem da estante a cada frame.
-        const distanciaDoRepouso = groupRef.current.position.distanceTo(
-            new THREE.Vector3(position[0], position[1], position[2]),
-        );
-        const velocidade = (isOpen || distanciaDoRepouso > DESLOCAMENTO_GRANDE_M) ? OPEN_LERP_SPEED : HOVER_LERP_SPEED;
+        const grupo = groupRef.current;
+        if (!grupo) return;
 
         const emCapa = restVariant === 'capa';
-        // Sem o `Math.PI` que existia aqui: ele girava o livro de costas pra
-        // mostrar a face -z (a "capa" antiga, esticada numa tira do tamanho da
-        // lombada) e deixava esse borrão virado pra câmera. Agora a capa fica
-        // na face de cima e o que sobra pro lado é a lombada de verdade, com o
-        // título deitado e legível — um livro largado na mesa, não um de
-        // costas. `restRotationY` continua, é o desalinho da pilha.
-        const restRotYFinal = emCapa ? restRotationY : 0;
+        const restRotY = emCapa ? restRotationY : 0;
+        const restRotZ = emCapa ? DESK_REST_ROT_Z_RAD : 0;
 
-        const alvoX = isOpen ? abertura.position[0] : position[0];
-        const alvoY = isOpen ? abertura.position[1] : position[1];
-        const alvoZ = isOpen ? abertura.position[2] : position[2] + (!emCapa && hovered ? HOVER_SLIDE_M : 0);
-        const alvoRotX = isOpen ? OPEN_TILT_RAD : (!emCapa && hovered ? -HOVER_TILT_RAD : 0);
-        const alvoRotY = isOpen ? abertura.rotationY : restRotYFinal;
-        // Abrir sempre põe o livro em pé, venha ele da estante ou da pilha da
-        // mesa — por isso o alvo de Z é 0 quando aberto, e não a rotação de
-        // repouso da variante.
-        const alvoRotZ = (emCapa && !isOpen) ? DESK_REST_ROT_Z_RAD : 0;
+        // Progresso da abertura, em segundos de verdade — `delta` dividido pela
+        // duração desejada. Chega a 0 ou 1 e para.
+        const alvo = isOpen ? 1 : 0;
+        const passo = delta / (isOpen ? ABERTURA_S : FECHAMENTO_S);
+        progressoRef.current = alvo > progressoRef.current
+            ? Math.min(alvo, progressoRef.current + passo)
+            : Math.max(alvo, progressoRef.current - passo);
+        const p = progressoRef.current;
 
-        groupRef.current.position.x = THREE.MathUtils.damp(groupRef.current.position.x, alvoX, velocidade, delta);
-        groupRef.current.position.y = THREE.MathUtils.damp(groupRef.current.position.y, alvoY, velocidade, delta);
-        groupRef.current.position.z = THREE.MathUtils.damp(groupRef.current.position.z, alvoZ, velocidade, delta);
-        groupRef.current.rotation.x = THREE.MathUtils.damp(groupRef.current.rotation.x, alvoRotX, velocidade, delta);
-        groupRef.current.rotation.y = THREE.MathUtils.damp(groupRef.current.rotation.y, alvoRotY, velocidade, delta);
-        groupRef.current.rotation.z = THREE.MathUtils.damp(groupRef.current.rotation.z, alvoRotZ, velocidade, delta);
+        if (p > 0) {
+            // Dois gestos encavalados: o livro primeiro DESLIZA para fora da fila
+            // (curva que freia no fim, como puxar algo de uma prateleira) e,
+            // quando já está saindo, começa a subir e a girar a capa (curva lenta
+            // nas duas pontas — é o movimento que a pessoa clicou para ver).
+            const saida = easeOut(clamp01(p / FASE_SAIDA));
+            const giro = easeInOut(clamp01((p - FASE_GIRO_INICIO) / (1 - FASE_GIRO_INICIO)));
+            const subida = emCapa ? SUBIDA_ABERTURA_MESA_M : SUBIDA_ABERTURA_M;
+
+            grupo.position.set(
+                position[0],
+                position[1] + subida * giro,
+                position[2] + AVANCO_ABERTURA_M * saida,
+            );
+            grupo.rotation.set(
+                OPEN_TILT_RAD * giro,
+                restRotY + (rotacaoAberta - restRotY) * giro,
+                // Deitado, o livro se levanta enquanto gira: a rotação de repouso
+                // em Z volta a zero no mesmo compasso.
+                restRotZ * (1 - giro),
+            );
+            return;
+        }
+
+        // Fechado: só o hover mexe, e aí sim um amortecimento é o certo — não há
+        // começo nem fim definidos, o mouse pode sair no meio.
+        const alvoZ = position[2] + (!emCapa && hovered ? HOVER_SLIDE_M : 0);
+        const alvoRotX = !emCapa && hovered ? -HOVER_TILT_RAD : 0;
+
+        grupo.position.x = THREE.MathUtils.damp(grupo.position.x, position[0], HOVER_LERP_SPEED, delta);
+        grupo.position.y = THREE.MathUtils.damp(grupo.position.y, position[1], HOVER_LERP_SPEED, delta);
+        grupo.position.z = THREE.MathUtils.damp(grupo.position.z, alvoZ, HOVER_LERP_SPEED, delta);
+        grupo.rotation.x = THREE.MathUtils.damp(grupo.rotation.x, alvoRotX, HOVER_LERP_SPEED, delta);
+        grupo.rotation.y = THREE.MathUtils.damp(grupo.rotation.y, restRotY, HOVER_LERP_SPEED, delta);
+        grupo.rotation.z = THREE.MathUtils.damp(grupo.rotation.z, restRotZ, HOVER_LERP_SPEED, delta);
     });
 
     return (
@@ -284,12 +306,25 @@ export default function Book({
                 <meshBasicMaterial transparent opacity={0} depthWrite={false}/>
             </mesh>
             {hovered && !isOpen && (
-                <Html position={[0, book.heightM / 2 + 0.08, 0]} center distanceFactor={6} occlude>
-                    <div className="pointer-events-none whitespace-nowrap rounded-lg bg-black/80 px-3 py-2 text-center text-white shadow-lg backdrop-blur-sm">
-                        <p className="text-sm font-bold">{book.title}</p>
-                        {book.author && <p className="text-xs opacity-80">{book.author}</p>}
-                        <StarRating nota={book.rating} tamanho="justify-center text-xs"/>
-                    </div>
+                /*
+                  SEM `distanceFactor` e SEM `occlude`, os dois de propósito.
+
+                  O fator escala o conteúdo por fator/distância: o balão que
+                  parecia certo na cena "Sala" (a ~4m) virava uma placa cobrindo a
+                  prateleira inteira no zoom de um ano (a ~0,6m). Sem ele o
+                  tamanho é constante em pixels, como nas etiquetas de ano.
+
+                  `occlude` esconde o HTML quando qualquer geometria fica entre
+                  ele e a câmera — e o balão nasce logo acima do livro, ou seja,
+                  atrás da prateleira de cima em quase todo ângulo. Era essa a
+                  razão de ele aparecer em alguns livros e não em outros.
+                */
+                <Html position={posicaoDoBalao} center style={{pointerEvents: 'none'}}>
+                    <span className="flex items-center gap-1.5 whitespace-nowrap rounded-full
+                                     bg-black/80 px-2 py-0.5 text-[11px] text-white shadow-lg backdrop-blur-sm">
+                        <span className="max-w-[180px] truncate font-semibold">{book.title}</span>
+                        <StarRating nota={book.rating} tamanho="text-[9px]"/>
+                    </span>
                 </Html>
             )}
         </group>
