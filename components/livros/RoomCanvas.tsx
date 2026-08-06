@@ -12,7 +12,7 @@ import IndexPanel from '@/components/livros/IndexPanel';
 import CameraRig, {type Viewpoint} from '@/components/livros/CameraRig';
 import {useIsMobile} from '@/components/livros/use-is-mobile';
 import {useFecharLivro} from '@/components/livros/use-fechar-livro';
-import {useAlturaRodape} from '@/components/livros/use-altura-rodape';
+import {useAlturaRodape, useAlturaDoElemento} from '@/components/livros/use-altura-rodape';
 import {toShelfBooks} from '@/lib/book-dimensions.mjs';
 import {NICHO_CAPACIDADE_M} from '@/lib/bookshelf-model.mjs';
 import {agruparPorAnoDeLeitura, livrosDoGrupo} from '@/lib/shelf-years.mjs';
@@ -97,6 +97,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
     const fecharLivro = useFecharLivro();
     const alturaRodape = useAlturaRodape();
     const canvasWrapperRef = useRef<HTMLDivElement>(null);
+    const barraRef = useRef<HTMLDivElement>(null);
 
     // Base = todos os livros 'lido', na ordem que vieram do banco — o atlas
     // é gerado a partir desta lista (uma vez só, nunca refeito ao ordenar ou
@@ -114,6 +115,14 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
         () => agruparPorAnoDeLeitura(shelfBooksBase, NICHO_CAPACIDADE_M),
         [shelfBooksBase],
     );
+
+    // Quanto da base do canvas está tapado. Medido, não estimado: a barra
+    // cresce de uma para duas linhas quando os anos não cabem lado a lado, o
+    // que acontece no celular — e é justamente aí que um valor fixo deixava o
+    // nicho mais baixo escondido atrás dos botões. `manualViewpoint` entra nas
+    // dependências porque a linha dos anos só existe na cena da estante.
+    const alturaBarra = useAlturaDoElemento(barraRef, [manualViewpoint, grupos.length, alturaRodape]);
+    const cobertoEmbaixoPx = alturaRodape + alturaBarra + 24;
 
     // "animate" só nasce falso quando a página já chega com um livro aberto
     // (link direto/externo) — sem clique prévio, não há o que justificar
@@ -364,7 +373,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                         animate={animateTransitions}
                         grupoFocado={grupoFocado}
                         totalGrupos={grupos.length}
-                        alturaRodapePx={alturaRodape}
+                        cobertoEmbaixoPx={cobertoEmbaixoPx}
                     />
                     {/*
                       Ordem importa: N8AO primeiro, Bloom depois, Vignette por
@@ -417,6 +426,7 @@ export default function RoomCanvas({books, deskBooks, tags, mode}: RoomCanvasPro
                 // depois no DOM — o rodapé — vencia, deixando os botões
                 // visíveis mas não clicáveis).
                 <div
+                    ref={barraRef}
                     style={{bottom: `${alturaRodape + 24}px`}}
                     className="fixed left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-2"
                 >

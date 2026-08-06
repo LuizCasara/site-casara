@@ -27,11 +27,6 @@ const FOV_GRAUS = 50;
 const RESPIRO = 1.08;
 /** Altura do header, fixa pelo layout raiz. */
 const HEADER_PX = 65;
-/**
- * O que os botões de cena ocupam acima do rodapé: as duas linhas (anos +
- * cenas) mais o afastamento de 24px que RoomCanvas aplica.
- */
-const BOTOES_PX = 96;
 
 /**
  * Onde pôr a câmera para caber `alturaM` **na faixa do canvas que não está
@@ -46,10 +41,9 @@ const BOTOES_PX = 96;
  * aqui a faixa é medida, então o enquadramento se ajusta sozinho ao rodapé
  * mais alto do celular.
  */
-function enquadrar(alturaM: number, alturaRodapePx: number) {
+function enquadrar(alturaM: number, cobertoEmbaixoPx: number) {
     const viewportPx = typeof window === 'undefined' ? 900 : window.innerHeight;
-    const cobertoEmbaixo = alturaRodapePx + BOTOES_PX;
-    const faixaPx = Math.max(120, viewportPx - HEADER_PX - cobertoEmbaixo);
+    const faixaPx = Math.max(120, viewportPx - HEADER_PX - cobertoEmbaixoPx);
 
     // Se a faixa visível é 60% da tela, a câmera precisa enquadrar a altura
     // desejada dividida por 0,6 para que ela caiba inteira lá dentro.
@@ -114,8 +108,8 @@ const VIEWPOINTS: Record<Exclude<Viewpoint, 'estante'>, ViewpointConfig> = {
  * outro, ou abrir num celular de rodapé alto, reenquadra sozinho. Quem quer
  * ler lombada não para aqui: escolhe um ano e desce para o nível 2.
  */
-function viewpointDaEstante(alturaRodapePx: number): ViewpointConfig {
-    const {distancia, alvoDeslocadoM} = enquadrar(BOOKSHELF_SIZE_M.alturaM, alturaRodapePx);
+function viewpointDaEstante(cobertoEmbaixoPx: number): ViewpointConfig {
+    const {distancia, alvoDeslocadoM} = enquadrar(BOOKSHELF_SIZE_M.alturaM, cobertoEmbaixoPx);
     const alvoY = estanteCentroY + alvoDeslocadoM;
     return {
         camera: [0, alvoY, estanteZ + distancia],
@@ -132,12 +126,12 @@ function viewpointDaEstante(alturaRodapePx: number): ViewpointConfig {
  */
 const MARGEM_VIZINHOS_M = 0.16;
 
-function viewpointDoGrupo(indiceGrupo: number, totalGrupos: number, alturaRodapePx: number): ViewpointConfig {
+function viewpointDoGrupo(indiceGrupo: number, totalGrupos: number, cobertoEmbaixoPx: number): ViewpointConfig {
     const totalEstantes = contarEstantes(totalGrupos, NICHOS_POR_ESTANTE);
     const nicho = NICHOS[indiceGrupo % NICHOS_POR_ESTANTE];
     const base = posicaoDaEstante(Math.floor(indiceGrupo / NICHOS_POR_ESTANTE), totalEstantes);
 
-    const {distancia, alvoDeslocadoM} = enquadrar(nicho.alturaUtilM + MARGEM_VIZINHOS_M, alturaRodapePx);
+    const {distancia, alvoDeslocadoM} = enquadrar(nicho.alturaUtilM + MARGEM_VIZINHOS_M, cobertoEmbaixoPx);
     const alvoX = base[0] + nicho.offsetX;
     const alvoY = base[1] + nicho.pisoY + nicho.alturaUtilM / 2 + alvoDeslocadoM;
 
@@ -156,23 +150,24 @@ type CameraRigProps = {
     grupoFocado?: number | null;
     totalGrupos?: number;
     /**
-     * Altura do rodapé em px, medida por quem renderiza. Entra no
-     * enquadramento da estante: é a maior parte do canvas que fica coberta, e
-     * ela quase dobra no celular.
+     * Quantos pixels da base do canvas estão cobertos (rodapé + a barra de
+     * botões), medidos por quem renderiza. Entra no enquadramento da estante:
+     * no celular o rodapé quase dobra de altura E os anos quebram em duas
+     * linhas, e um valor fixo aqui enterra o nicho de baixo atrás dos botões.
      */
-    alturaRodapePx?: number;
+    cobertoEmbaixoPx?: number;
 };
 
 export default function CameraRig({
-    viewpoint, animate = true, grupoFocado = null, totalGrupos = 0, alturaRodapePx = 0,
+    viewpoint, animate = true, grupoFocado = null, totalGrupos = 0, cobertoEmbaixoPx = 0,
 }: CameraRigProps) {
     const controlsRef = useRef<CameraControls>(null);
 
     let v: ViewpointConfig;
     if (viewpoint === 'estante') {
         v = grupoFocado !== null
-            ? viewpointDoGrupo(grupoFocado, totalGrupos, alturaRodapePx)
-            : viewpointDaEstante(alturaRodapePx);
+            ? viewpointDoGrupo(grupoFocado, totalGrupos, cobertoEmbaixoPx)
+            : viewpointDaEstante(cobertoEmbaixoPx);
     } else {
         v = VIEWPOINTS[viewpoint];
     }
@@ -180,7 +175,7 @@ export default function CameraRig({
     useEffect(() => {
         controlsRef.current?.setLookAt(...v.camera, ...v.target, animate);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [viewpoint, grupoFocado, alturaRodapePx]);
+    }, [viewpoint, grupoFocado, cobertoEmbaixoPx]);
 
     // Sem trilho de arrasto: ele existia porque a fila de livros era mais
     // larga que a tela. A estante agora é vertical e cabe inteira no quadro,
