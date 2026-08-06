@@ -21,6 +21,27 @@ const trackEvent = (
   }).catch(() => {});
 };
 
+// ─── Navegação geral ──────────────────────────────────────────────────────────
+//
+// O acesso em si já é coberto pelo `page_view` que o middleware.ts grava por
+// request. O que está aqui é a INTENÇÃO — por onde a pessoa escolheu andar.
+
+export const trackNavClick = (destino: string, origem: 'header' | 'menu_mobile') =>
+  trackEvent('nav_click', { destino, origem });
+
+export const trackMobileMenuOpened = () => trackEvent('mobile_menu_opened');
+
+export const trackLanguageToggled = (para: string) =>
+  trackEvent('language_toggled', { para });
+
+/**
+ * Todo clique que tira a pessoa do site. Um evento só com `destino`, e não um
+ * por link: assim o próximo link externo que aparecer já entra na conta sem
+ * precisar de código novo no dashboard.
+ */
+export const trackOutboundClick = (destino: string) =>
+  trackEvent('outbound_click', { destino });
+
 // ─── Home ─────────────────────────────────────────────────────────────────────
 
 export const trackQuickAccessLink = (linkName: string) =>
@@ -115,9 +136,27 @@ export const trackProjectClick = (projectName: string) =>
 export const trackAppClick = (appId: string, appTitle: string) =>
   trackEvent('app_click', { app_id: appId, app_title: appTitle });
 
+/**
+ * Uma ação DENTRO de um mini-app — calcular, converter, gerar. Um evento só
+ * para os nove apps, com `app_id` distinguindo: nomes separados por app
+ * multiplicariam o dashboard por nove para responder a mesma pergunta ("este
+ * app é usado depois de aberto, ou só espiado?").
+ */
+export const trackAppAction = (appId: string, acao: string) =>
+  trackEvent('app_action', { app_id: appId, acao });
+
+/** O resultado saiu do app: download, cópia, compartilhamento. */
+export const trackAppOutput = (appId: string, formato: string) =>
+  trackEvent('app_output', { app_id: appId, formato });
+
 // ─── CV ───────────────────────────────────────────────────────────────────────
 
 export const trackCvDownload = () => trackEvent('cv_download');
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+
+export const trackStatsPeriodChanged = (periodo: string) =>
+  trackEvent('stats_period_changed', { periodo });
 
 // ─── Casamento ────────────────────────────────────────────────────────────────
 
@@ -171,8 +210,53 @@ export const trackSorteioRealizado = (entryCount: number, winnerCount: number) =
 export const trackBookOpened = (slug: string) =>
   trackEvent('book_opened', { slug });
 
+/**
+ * `campo` é 'categoria' ou 'tag'. Disparado pelos dois filtros que existem — o
+ * Índice da sala 3D e os chips de `/livros/lista` —, de propósito com o mesmo
+ * nome: a pergunta ("o que as pessoas procuram no acervo?") é a mesma nos dois,
+ * e `route` já vem no evento para separá-los quando importar.
+ *
+ * Só a ATIVAÇÃO de um filtro conta. Desmarcar dispara com `valor` vazio, que é
+ * o que distingue "procurei ficção" de "desisti do filtro".
+ */
 export const trackBookFilter = (campo: string, valor: string) =>
   trackEvent('book_filter', { campo, valor });
+
+export const trackBookCardClick = (slug: string, posicao: number) =>
+  trackEvent('book_card_click', { slug, posicao });
+
+export const trackBookTagClick = (slug: string, tag: string) =>
+  trackEvent('book_tag_click', { slug, tag });
+
+export const trackBookBackToList = (slug: string) =>
+  trackEvent('book_back_to_list', { slug });
+
+/**
+ * `origem` responde à pergunta que motivou o trilho único: a roda do mouse
+ * está sendo descoberta, ou todo mundo usa os botões?
+ */
+export const trackRoomSceneChanged = (cena: string, origem: 'botao' | 'seta' | 'scroll') =>
+  trackEvent('room_scene_changed', { cena, origem });
+
+export const trackShelfYearFocused = (rotulo: string, indice: number) =>
+  trackEvent('shelf_year_focused', { rotulo, indice });
+
+export const trackBookPaged = (de: string, para: string, direcao: 'anterior' | 'proximo') =>
+  trackEvent('book_paged', { de, para, direcao });
+
+export const trackBookClosed = (slug: string, via: 'botao' | 'esc') =>
+  trackEvent('book_closed', { slug, via });
+
+/**
+ * Clique num objeto da sala que não é livro — retrato, monitor, bíblia. Um
+ * evento com `objeto`, e não um nome por peça: a sala ganha objeto clicável a
+ * cada rodada de layout, e cada um deles viraria uma linha nova no dashboard
+ * para responder a mesma pergunta ("no que as pessoas clicam aqui dentro?").
+ *
+ * `estado` só é preenchido por quem tem mais de um: o monitor, que cicla.
+ */
+export const trackRoomObjectClick = (objeto: string, estado = '') =>
+  trackEvent('room_object_click', { objeto, estado });
 
 export const trackRoomLoaded = (timeToInteractiveMs: number, isMobile: boolean) =>
   trackEvent('room_loaded', { time_to_interactive_ms: timeToInteractiveMs, is_mobile: isMobile });

@@ -37,7 +37,7 @@ export default async function ListaPage({searchParams}: {
                     </p>
                 ) : (
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-                        {livros.map((l) => <BookCard key={l.slug} livro={l}/>)}
+                        {livros.map((l, i) => <BookCard key={l.slug} livro={l} posicao={i + 1}/>)}
                     </div>
                 )}
             </div>

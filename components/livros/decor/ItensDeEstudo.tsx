@@ -4,6 +4,7 @@ import {useState} from 'react';
 import {Html} from '@react-three/drei';
 import {useRouter} from 'next/navigation';
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
+import {trackRoomObjectClick} from '@/utils/analytics';
 
 /**
  * O canto de estudo sobre o braço direito da mesa em L: uma bíblia aberta, uma
@@ -85,6 +86,10 @@ export default function ItensDeEstudo({origem, isMobile = false}: {
                 }}
                 onClick={(e) => {
                     e.stopPropagation();
+                    // O `book_opened` sai sozinho quando a URL muda (ver
+                    // RoomCanvas); este evento diz de ONDE veio o clique, que é
+                    // o que separa a bíblia de uma lombada da estante.
+                    trackRoomObjectClick('biblia');
                     router.push(`/livros/${SLUG_DA_BIBLIA}`);
                 }}
             >

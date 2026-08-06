@@ -2,6 +2,7 @@
 
 import {useState} from 'react';
 import {Html, useTexture} from '@react-three/drei';
+import {trackOutboundClick} from '@/utils/analytics';
 
 /**
  * Escudo redondo de madeira com o emblema do escotismo mundial, pendurado na
@@ -46,6 +47,8 @@ export default function EscudoEscoteiro({position, normal = 1, isMobile = false}
     const emblema = useTexture('/livros/escoteiro-flor-de-lis.png');
 
     const abrirSite = () => {
+        // Antes do window.open: depois dele a aba pode já ter perdido o foco.
+        trackOutboundClick('gealdeiaverde');
         // `noopener` não é detalhe: sem ele a página aberta recebe uma
         // referência a esta pelo `window.opener` e pode navegá-la para
         // qualquer lugar.

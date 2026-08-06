@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {useState} from 'react';
 import {usePathname} from 'next/navigation';
 import {useLang} from '@/context/LanguageContext';
+import {trackNavClick, trackMobileMenuOpened, trackLanguageToggled} from '@/utils/analytics';
 
 const navLinks = {
   pt: [
@@ -28,6 +29,12 @@ const Header = () => {
   const {lang, toggle} = useLang();
   const links = navLinks[lang];
 
+  // O evento leva o idioma de DESTINO, não o atual: é o que a pessoa quis ver.
+  const trocarIdioma = () => {
+    trackLanguageToggled(lang === 'pt' ? 'en' : 'pt');
+    toggle();
+  };
+
   if (pathname.startsWith('/casamento') || pathname.startsWith('/w/') || pathname.startsWith('/q/')) return null;
 
   return (
@@ -44,6 +51,7 @@ const Header = () => {
               <Link
                 key={href}
                 href={href}
+                onClick={() => trackNavClick(href, 'header')}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   pathname === href
                     ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30'
@@ -55,7 +63,7 @@ const Header = () => {
             ))}
 
             <button
-              onClick={toggle}
+              onClick={trocarIdioma}
               className="ml-3 flex items-center gap-1 font-mono text-xs font-semibold px-2.5 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
               title={lang === 'pt' ? 'Switch to English' : 'Mudar para Português'}
             >
@@ -67,7 +75,7 @@ const Header = () => {
 
           <div className="flex items-center gap-2 md:hidden">
             <button
-              onClick={toggle}
+              onClick={trocarIdioma}
               className="flex items-center gap-1 font-mono text-xs font-semibold px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700"
             >
               <span className={lang === 'pt' ? 'text-green-500' : 'text-gray-400'}>PT</span>
@@ -75,7 +83,12 @@ const Header = () => {
               <span className={lang === 'en' ? 'text-green-500' : 'text-gray-400'}>EN</span>
             </button>
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={() => {
+                // Só a abertura vira evento: fechar é o mesmo botão, e contaria
+                // duas vezes a mesma visita ao menu.
+                if (!isMobileMenuOpen) trackMobileMenuOpened();
+                setIsMobileMenuOpen(!isMobileMenuOpen);
+              }}
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -95,7 +108,10 @@ const Header = () => {
               <Link
                 key={href}
                 href={href}
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => {
+                  trackNavClick(href, 'menu_mobile');
+                  setIsMobileMenuOpen(false);
+                }}
                 className={`block px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
                   pathname === href
                     ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30'

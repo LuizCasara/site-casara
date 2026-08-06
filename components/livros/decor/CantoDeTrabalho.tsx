@@ -9,6 +9,7 @@ import DeitadoNoTampo from '@/components/livros/decor/DeitadoNoTampo';
 import PrateleiraAerea from '@/components/livros/decor/PrateleiraAerea';
 import Quadro from '@/components/livros/decor/Quadro';
 import StandDeEspadas from '@/components/livros/decor/StandDeEspadas';
+import {trackRoomObjectClick} from '@/utils/analytics';
 
 /**
  * O canto de trabalho, à direita da estante: mesa em L encaixada na quina das
@@ -214,7 +215,13 @@ export default function CantoDeTrabalho({quina, onAbrirRetrato, isMobile = false
                 }}
                 onClick={(e) => {
                     e.stopPropagation();
-                    setEstadoDaTela((atual) => (atual + 1) % ESTADOS_DA_TELA.length);
+                    setEstadoDaTela((atual) => {
+                        const proximo = (atual + 1) % ESTADOS_DA_TELA.length;
+                        // O estado de DESTINO, não o de origem: é o que a
+                        // pessoa quis ver ao clicar.
+                        trackRoomObjectClick('monitor', ESTADOS_DA_TELA[proximo].id);
+                        return proximo;
+                    });
                 }}
             >
                 <KenneyModel

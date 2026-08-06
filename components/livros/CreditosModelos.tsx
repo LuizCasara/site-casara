@@ -1,3 +1,7 @@
+'use client';
+
+import {trackOutboundClick} from '@/utils/analytics';
+
 /**
  * Créditos dos modelos 3D da sala, no rodapé de `/livros`.
  *
@@ -28,9 +32,17 @@ const AUTORES = [
 
 const LINK = 'underline hover:text-gray-600 dark:hover:text-gray-300';
 
-function Externo({href, children}: {href: string; children: React.ReactNode}) {
+function Externo({href, destino, children}: {
+    href: string; destino: string; children: React.ReactNode;
+}) {
     return (
-        <a href={href} target="_blank" rel="noopener noreferrer" className={LINK}>
+        <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackOutboundClick(destino)}
+            className={LINK}
+        >
             {children}
         </a>
     );
@@ -45,11 +57,18 @@ export default function CreditosModelos({compacto = false}: {compacto?: boolean}
     const creditos = (
         <>
             Modelos 3D por {AUTORES.join(', ')} —{' '}
-            <Externo href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</Externo>
-            , via <Externo href="https://poly.pizza">poly.pizza</Externo>. Mobília do{' '}
-            <Externo href="https://kenney.nl/assets/furniture-kit">Furniture Kit</Externo>
+            <Externo href="https://creativecommons.org/licenses/by/3.0/" destino="cc_by">
+                CC BY 3.0
+            </Externo>
+            , via <Externo href="https://poly.pizza" destino="poly_pizza">poly.pizza</Externo>.
+            {' '}Mobília do{' '}
+            <Externo href="https://kenney.nl/assets/furniture-kit" destino="kenney">
+                Furniture Kit
+            </Externo>
             {' '}de Kenney (CC0).{' '}
-            <Externo href="/livros/modelos/LICENSE.md">Lista completa</Externo>.
+            <Externo href="/livros/modelos/LICENSE.md" destino="licenca_modelos">
+                Lista completa
+            </Externo>.
         </>
     );
 

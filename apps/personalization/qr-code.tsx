@@ -1,6 +1,7 @@
 "use client";
 
 import {useState, useRef} from "react";
+import {trackAppAction, trackAppOutput} from '@/utils/analytics';
 
 const QRCodeGenerator = () => {
     // QR Code content types
@@ -760,7 +761,7 @@ const QRCodeGenerator = () => {
 
                         <div className="flex space-x-6">
                             <button
-                                onClick={generateQRCode}
+                                onClick={() => { trackAppAction('qr-code', 'gerar'); generateQRCode(); }}
                                 className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
                                 disabled={isGenerating}
                             >
@@ -824,6 +825,7 @@ const QRCodeGenerator = () => {
                             <a
                                 href={qrCodeUrl}
                                 download={`qrcode-${new Date().getTime()}.png`}
+                                onClick={() => trackAppOutput('qr-code', 'png')}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"

@@ -1,6 +1,5 @@
 import type {Metadata} from 'next';
 import Image from 'next/image';
-import Link from 'next/link';
 import {notFound} from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import {buscarLivroPorSlug} from '@/lib/books';
@@ -9,6 +8,7 @@ import {corDeTextoSobre} from '@/lib/contraste.mjs';
 import StarRating from '@/components/livros/StarRating';
 import BotaoComentario from '@/components/livros/BotaoComentario';
 import BotaoCompartilhar from '@/components/livros/BotaoCompartilhar';
+import {TagDoLivro, VoltarParaLista} from '@/components/livros/LinksDoLivro';
 import {REMAP_HEADINGS} from '@/components/livros/markdown-headings';
 
 export const dynamic = 'force-dynamic';
@@ -64,11 +64,11 @@ export default async function LivroPage({params}: {params: Promise<{slug: string
             */}
             <div className="relative z-10 mx-auto max-w-3xl rounded-2xl bg-white/90 p-6
                             shadow-xl backdrop-blur-sm dark:bg-black/70 sm:p-10">
-                <Link href="/livros/lista"
-                      className="mb-8 inline-block text-sm text-gray-500 underline
-                                 hover:text-gray-800 dark:hover:text-gray-200">
-                    ← todos os livros
-                </Link>
+                <VoltarParaLista
+                    slug={livro.slug}
+                    className="mb-8 inline-block text-sm text-gray-500 underline
+                               hover:text-gray-800 dark:hover:text-gray-200"
+                />
 
                 <div className="flex flex-col gap-8 sm:flex-row">
                     {livro.cover_path && (
@@ -107,12 +107,7 @@ export default async function LivroPage({params}: {params: Promise<{slug: string
                                 </span>
                             )}
                             {livro.tags.map((t) => (
-                                <Link key={t} href={`/livros/lista?tag=${encodeURIComponent(t)}`}
-                                      className="rounded-full bg-gray-100 px-2 py-0.5 text-xs
-                                                 text-gray-600 hover:bg-gray-200
-                                                 dark:bg-gray-800 dark:text-gray-300">
-                                    {t}
-                                </Link>
+                                <TagDoLivro key={t} slug={livro.slug} tag={t}/>
                             ))}
                         </div>
 

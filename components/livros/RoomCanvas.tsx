@@ -23,7 +23,9 @@ import {CENAS, anoVizinho, paradaVizinha} from '@/lib/livros-cenas.mjs';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
 import {
     trackRoomLoaded, trackListFallback, trackBookOpened,
-    trackShelfSorted, trackIndexOpened,
+    trackShelfSorted, trackIndexOpened, trackBookFilter,
+    trackRoomSceneChanged, trackShelfYearFocused, trackBookPaged,
+    trackBookClosed, trackRoomObjectClick,
 } from '@/utils/analytics';
 
 export type ShelvedBookInput = {
@@ -160,15 +162,20 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
 
     /** Clicar no ano já ativo sobe um nível — o mesmo gesto da etiqueta 3D. */
     const selecionarGrupo = useCallback((indice: number) => {
-        setGrupoFocado((atual) => (atual === indice ? null : indice));
-    }, []);
+        setGrupoFocado((atual) => {
+            // Só a ENTRADA no ano vira evento; sair dele é o mesmo clique e
+            // contaria duas vezes o mesmo interesse.
+            if (atual !== indice) trackShelfYearFocused(grupos[indice]?.rotulo ?? '', indice);
+            return atual === indice ? null : indice;
+        });
+    }, [grupos]);
 
     /**
      * Um passo no trilho da sala — cenas e anos no mesmo caminho, em loop (ver
      * `trilhoDeCenas`). Uma parada carrega os dois estados de uma vez: a cena
      * define o enquadramento, e o ano (quando existe) o nicho em foco.
      */
-    const andarNoTrilho = useCallback((direcao: 1 | -1) => {
+    const andarNoTrilho = useCallback((direcao: 1 | -1, origem: 'seta' | 'scroll') => {
         const destino = paradaVizinha(
             {cena: manualViewpoint, ano: grupoFocado},
             direcao,
@@ -176,7 +183,11 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
         ) as {cena: Viewpoint; ano: number | null};
         setManualViewpoint(destino.cena);
         setGrupoFocado(destino.ano);
-    }, [manualViewpoint, grupoFocado, grupos.length]);
+        // A parada é a cena OU um ano dentro dela — os dois são um passo no
+        // mesmo trilho, e o que interessa medir aqui é por onde a pessoa andou.
+        if (destino.ano !== null) trackShelfYearFocused(grupos[destino.ano]?.rotulo ?? '', destino.ano);
+        else trackRoomSceneChanged(destino.cena, origem);
+    }, [manualViewpoint, grupoFocado, grupos]);
 
     // Abrir um livro com o índice aberto não deixa os dois empilhados, nem
     // `indiceAberto` verdadeiro escondido no estado depois que o livro fecha.
@@ -200,9 +211,11 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     // `replace`, não `push`: cada livro folheado viraria uma entrada no
     // histórico, e o "✕ fechar" (que é router.back()) passaria a voltar pro livro
     // anterior em vez de pra sala.
-    const folhear = useCallback((slug: string | null) => {
-        if (slug) router.replace(`/livros/${slug}`);
-    }, [router]);
+    const folhear = useCallback((slug: string | null, direcao: 'anterior' | 'proximo') => {
+        if (!slug) return;
+        trackBookPaged(openSlug ?? '', slug, direcao);
+        router.replace(`/livros/${slug}`);
+    }, [router, openSlug]);
 
     // Os dois vizinhos do livro aberto entram no Router Cache antes de alguém
     // pedir por eles, então a seta troca de livro sem esperar rede. Só os dois
@@ -225,9 +238,11 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     useEffect(() => {
         const aoTeclar = (e: KeyboardEvent) => {
             if (openSlug) {
-                if (e.key === 'Escape') fecharLivro();
-                else if (e.key === 'ArrowLeft') folhear(vizinhos.anterior);
-                else if (e.key === 'ArrowRight') folhear(vizinhos.proximo);
+                if (e.key === 'Escape') {
+                    trackBookClosed(openSlug, 'esc');
+                    fecharLivro();
+                } else if (e.key === 'ArrowLeft') folhear(vizinhos.anterior, 'anterior');
+                else if (e.key === 'ArrowRight') folhear(vizinhos.proximo, 'proximo');
                 return;
             }
             if (retratoAberto) {
@@ -251,8 +266,8 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                 setGrupoFocado((atual) => anoVizinho(atual, e.key === 'ArrowUp' ? 1 : -1, grupos.length));
                 return;
             }
-            if (e.key === 'ArrowLeft') andarNoTrilho(-1);
-            else if (e.key === 'ArrowRight') andarNoTrilho(1);
+            if (e.key === 'ArrowLeft') andarNoTrilho(-1, 'seta');
+            else if (e.key === 'ArrowRight') andarNoTrilho(1, 'seta');
         };
         window.addEventListener('keydown', aoTeclar);
         return () => window.removeEventListener('keydown', aoTeclar);
@@ -284,7 +299,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
             const agora = Date.now();
             if (agora - ultimaTroca < INTERVALO_MS) return;
             ultimaTroca = agora;
-            andarNoTrilho(e.deltaY > 0 ? 1 : -1);
+            andarNoTrilho(e.deltaY > 0 ? 1 : -1, 'scroll');
         };
 
         window.addEventListener('wheel', aoRolar, {passive: true});
@@ -403,6 +418,14 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
         setSortCriterio(criterio);
         trackShelfSorted(criterio);
     };
+    // Compara com o estado anterior para saber QUAL dos dois campos mudou — o
+    // painel manda o par inteiro a cada clique, e sem isso todo clique numa
+    // categoria também registraria um evento de tag.
+    const mudarFiltros = (novos: IndiceFiltros) => {
+        if (novos.categoria !== filtros.categoria) trackBookFilter('categoria', novos.categoria ?? '');
+        if (novos.tag !== filtros.tag) trackBookFilter('tag', novos.tag ?? '');
+        setFiltros(novos);
+    };
 
     return (
         <>
@@ -419,7 +442,10 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                 <Canvas shadows camera={{fov: 50}} dpr={isMobile ? 1 : [1, 2]}>
                     <Room
                         gruposDeAno={grupos.length}
-                        onAbrirRetrato={mode.kind === 'sala' ? () => setRetratoAberto((v) => !v) : undefined}
+                        onAbrirRetrato={mode.kind === 'sala' ? () => setRetratoAberto((v) => {
+                            if (!v) trackRoomObjectClick('retrato');
+                            return !v;
+                        }) : undefined}
                         isMobile={isMobile}
                     />
                     <Bookshelf
@@ -517,7 +543,10 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                         {CENAS.map((cena: {id: Viewpoint; rotulo: string}) => (
                             <button
                                 key={cena.id}
-                                onClick={() => setManualViewpoint(cena.id)}
+                                onClick={() => {
+                                    if (cena.id !== manualViewpoint) trackRoomSceneChanged(cena.id, 'botao');
+                                    setManualViewpoint(cena.id);
+                                }}
                                 aria-current={manualViewpoint === cena.id ? 'true' : undefined}
                                 className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg transition ${manualViewpoint === cena.id ? 'bg-white text-black' : 'bg-black/60 text-white'}`}
                             >
@@ -544,7 +573,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                 <>
                     {vizinhos.anterior && (
                         <button
-                            onClick={() => folhear(vizinhos.anterior)}
+                            onClick={() => folhear(vizinhos.anterior, 'anterior')}
                             aria-label="Livro anterior"
                             className="fixed bottom-4 left-4 z-40 flex h-11 w-11 items-center
                                        justify-center rounded-full bg-black/60 text-xl text-white
@@ -556,7 +585,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                     )}
                     {vizinhos.proximo && (
                         <button
-                            onClick={() => folhear(vizinhos.proximo)}
+                            onClick={() => folhear(vizinhos.proximo, 'proximo')}
                             aria-label="Próximo livro"
                             className="fixed bottom-4 right-4 z-40 flex h-11 w-11 items-center
                                        justify-center rounded-full bg-black/60 text-xl text-white
@@ -574,7 +603,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                     sortCriterio={sortCriterio}
                     onSortChange={mudarOrdenacao}
                     filtros={filtros}
-                    onFilterChange={setFiltros}
+                    onFilterChange={mudarFiltros}
                     onClose={fecharIndice}
                 />
             )}

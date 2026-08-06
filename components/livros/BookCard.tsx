@@ -1,15 +1,24 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import type {Book} from '@/lib/books';
 import {getCategory} from '@/lib/book-categories.mjs';
 import {corDeTextoSobre} from '@/lib/contraste.mjs';
+import {trackBookCardClick} from '@/utils/analytics';
 import StarRating from './StarRating';
 
-export default function BookCard({livro}: {livro: Book}) {
+/**
+ * @param posicao índice do card na grade, a partir de 1. Vai no evento porque
+ *   distingue "este livro interessa" de "é o primeiro da lista" — sem ele, todo
+ *   acervo pareceria ter os melhores livros no começo.
+ */
+export default function BookCard({livro, posicao}: {livro: Book; posicao: number}) {
     const categoria = getCategory(livro.category);
 
     return (
         <Link href={`/livros/${livro.slug}`}
+              onClick={() => trackBookCardClick(livro.slug, posicao)}
               className="group flex flex-col gap-2 rounded-lg p-2 transition
                          hover:bg-gray-100 dark:hover:bg-gray-800">
             <div className="relative aspect-[2/3] w-full overflow-hidden rounded shadow-md">

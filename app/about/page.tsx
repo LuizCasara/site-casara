@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {FaGithub, FaGlobe, FaInstagram, FaLinkedin, FaWhatsapp} from "react-icons/fa";
-import {trackSocialMediaClick} from "@/utils/analytics";
+import {trackSocialMediaClick, trackCvDownload} from "@/utils/analytics";
 import {useLang} from "@/context/LanguageContext";
 import {Typewriter} from "@/components/ui/typewriter";
 
@@ -204,6 +204,7 @@ export default function About() {
               <a
                 href="/2026_Luiz_Casara_Resume_US.pdf"
                 download
+                onClick={trackCvDownload}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

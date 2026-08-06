@@ -1,6 +1,7 @@
 "use client";
 
 import {useState, useEffect} from "react";
+import {trackAppAction} from '@/utils/analytics';
 
 const CurrencyConverter = () => {
     // Common currencies
@@ -224,7 +225,7 @@ const CurrencyConverter = () => {
 
             <div className="flex space-x-6 mb-6">
                 <button
-                    onClick={calculateConversion}
+                    onClick={() => { trackAppAction('currency', 'converter'); calculateConversion(); }}
                     className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
                     disabled={loading}
                 >
