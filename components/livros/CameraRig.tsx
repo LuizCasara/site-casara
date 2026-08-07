@@ -4,10 +4,19 @@ import {useEffect, useRef} from 'react';
 import {CameraControls, CameraControlsImpl} from '@react-three/drei';
 import {ROOM_ANCHORS} from '@/components/livros/Room';
 import {ESTANTE_ANCHOR, posicaoDaEstante} from '@/components/livros/decor/EstanteDoAcervo';
+import {ESTANTE_AMARELA_ANCHOR, ESTANTE_AMARELA_ALTURA_M} from '@/components/livros/decor/YellowShelf';
 import {NICHOS, NICHOS_POR_ESTANTE, BOOKSHELF_SIZE_M} from '@/lib/bookshelf-model.mjs';
 import {contarEstantes} from '@/lib/shelf-years.mjs';
 
-export type Viewpoint = 'geral' | 'estante' | 'mesa' | 'pc' | 'retrato';
+/**
+ * `camping` é a estante AMARELA (a dos trecos de acampamento), não a do
+ * acervo — essa continua sendo `estante`. Os ids ficaram assim porque o rótulo
+ * que a pessoa lê no botão mudou depois: hoje `estante` aparece como "Livros"
+ * e `camping` aparece como "Estante" (ver CENAS em lib/livros-cenas.mjs).
+ * Renomear os ids arrastaria os eventos de analytics já gravados, os
+ * viewpoints e os testes — o id é o nome interno, o rótulo é o da tela.
+ */
+export type Viewpoint = 'geral' | 'estante' | 'camping' | 'mesa' | 'pc' | 'retrato';
 
 type ViewpointConfig = {
     camera: [number, number, number];
@@ -103,7 +112,7 @@ const estanteCentroY = ESTANTE_ANCHOR.position[1] + BOOKSHELF_SIZE_M.alturaM / 2
  * está aqui: ela é calculada em runtime (ver `viewpointDaEstante`), porque
  * enquadrar o móvel inteiro depende de quanto o rodapé está cobrindo.
  */
-const VIEWPOINTS: Record<Exclude<Viewpoint, 'estante'>, ViewpointConfig> = {
+const VIEWPOINTS: Record<Exclude<Viewpoint, 'estante' | 'camping'>, ViewpointConfig> = {
     geral: {
         camera: [0, 1.75, 2.6],
         target: [0, estanteCentroY, estanteZ],
@@ -167,6 +176,43 @@ function viewpointDaEstante(cobertoEmbaixoPx: number): ViewpointConfig {
 }
 
 /**
+ * A estante amarela (trecos de camping) de frente.
+ *
+ * Enquadrada como a do acervo — pela altura do móvel e pela faixa livre da
+ * tela, não por números calibrados à mão —, mas com uma diferença: aquela está
+ * de frente para a câmera na parede do fundo, e esta fica de perfil na parede
+ * lateral. Por isso a câmera é posta na NORMAL do móvel, girando a distância
+ * pelo mesmo `rotationY` com que ele é desenhado. Assim, mover a estante de
+ * lugar ou mudar o giro dela reenquadra sozinho, em vez de deixar a câmera
+ * apontada para o vazio onde ela estava.
+ *
+ * Os limites de giro também saem do ângulo em vez de serem constantes: um
+ * `minAzimuth` fixo aqui apontaria para a direção errada — as outras cenas
+ * podem usar valores em torno de zero porque olham o fundo da sala, esta olha
+ * para o lado.
+ */
+const GIRO_LIVRE_RAD = 0.25;
+
+function viewpointDaEstanteAmarela(cobertoEmbaixoPx: number): ViewpointConfig {
+    const {distancia, alvoDeslocadoM} = enquadrar(ESTANTE_AMARELA_ALTURA_M, cobertoEmbaixoPx);
+    const [x, , z] = ESTANTE_AMARELA_ANCHOR.position;
+    const angulo = ESTANTE_AMARELA_ANCHOR.rotationY;
+
+    // O móvel é desenhado girado em Y, então a direção que sai da frente dele é
+    // (sin, cos) desse mesmo ângulo — a câmera recua por ali.
+    const camX = x + distancia * Math.sin(angulo);
+    const camZ = z + distancia * Math.cos(angulo);
+    const alvoY = ESTANTE_AMARELA_ALTURA_M / 2 + alvoDeslocadoM;
+
+    return {
+        camera: [camX, alvoY, camZ],
+        target: [x, alvoY, z],
+        minAzimuth: angulo - GIRO_LIVRE_RAD, maxAzimuth: angulo + GIRO_LIVRE_RAD,
+        minPolar: 1.35, maxPolar: 1.75,
+    };
+}
+
+/**
  * Nível 2: um nicho preenchendo o quadro, com as bordas dos vizinhos ainda
  * aparecendo — só a câmera se move, nada escurece nem muda de cor. A margem
  * somada à altura do vão é justamente o que deixa o vizinho espiando, que é o
@@ -216,6 +262,10 @@ export default function CameraRig({
         v = grupoFocado !== null
             ? viewpointDoGrupo(grupoFocado, totalGrupos, cobertoEmbaixoPx)
             : viewpointDaEstante(cobertoEmbaixoPx);
+    } else if (viewpoint === 'camping') {
+        // Também calculada em runtime, pela mesma razão da estante do acervo:
+        // enquadrar o móvel inteiro depende de quanto o rodapé está cobrindo.
+        v = viewpointDaEstanteAmarela(cobertoEmbaixoPx);
     } else {
         // Toda cena de composição fixa passa pela correção do rodapé — ele é
         // `fixed` por cima do canvas e come a base do quadro em qualquer uma

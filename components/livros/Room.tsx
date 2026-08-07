@@ -7,7 +7,7 @@ import CantoDeLeitura, {MESA_ANCHOR, pontoNoTampo} from '@/components/livros/dec
 import Quadro from '@/components/livros/decor/Quadro';
 import CantoDeTrabalho from '@/components/livros/decor/CantoDeTrabalho';
 import ParedeLateral, {PAREDE_LATERAL_X} from '@/components/livros/decor/ParedeLateral';
-import YellowShelf from '@/components/livros/decor/YellowShelf';
+import YellowShelf, {ESTANTE_AMARELA_ANCHOR} from '@/components/livros/decor/YellowShelf';
 import EscudoEscoteiro from '@/components/livros/decor/EscudoEscoteiro';
 import {Planta} from '@/components/livros/decor/PersonalProps';
 import {NICHOS, NICHOS_POR_ESTANTE} from '@/lib/bookshelf-model.mjs';
@@ -120,12 +120,17 @@ export default function Room({gruposDeAno = 1, onAbrirRetrato, isMobile = false}
               -0.12 tiram o móvel do esquadro perfeito com a parede. Girada
               assim ela ocupa só ~0,49m em X e cabe sem ser cortada.
             */}
-            <YellowShelf position={[-2.35, 0, -0.45]} rotationY={Math.PI / 2 - 0.12}/>
+            <YellowShelf position={ESTANTE_AMARELA_ANCHOR.position}
+                         rotationY={ESTANTE_AMARELA_ANCHOR.rotationY}/>
             {/* Escudo escoteiro na faixa de parede livre à frente da estante
                 amarela. `normal` +1 porque esta é a parede da ESQUERDA, cuja
                 face olha para +x. A 1,15m ele conversa com o móvel ao lado, em
-                vez de ficar sozinho acima do topo dele. */}
-            <EscudoEscoteiro position={[-PAREDE_LATERAL_X, 1.15, 0.35]} normal={1} isMobile={isMobile}/>
+                vez de ficar sozinho acima do topo dele.
+
+                O Z acompanha o da estante (+0,45 em relação ao original): os
+                dois formam um conjunto, e mover só o móvel deixaria o escudo
+                para trás, sozinho no meio da parede. */}
+            <EscudoEscoteiro position={[-PAREDE_LATERAL_X, 1.15, 0.8]} normal={1} isMobile={isMobile}/>
             {/* A planta é "atrás da poltrona", não do conjunto da estante
                 amarela — inclusive o tamanho foi pedido assim. */}
             <Planta position={[-2.2, 0, -1.4]} alturaM={0.94}/>
