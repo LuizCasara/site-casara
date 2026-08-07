@@ -9,6 +9,8 @@ import DeitadoNoTampo from '@/components/livros/decor/DeitadoNoTampo';
 import PrateleiraAerea from '@/components/livros/decor/PrateleiraAerea';
 import Quadro from '@/components/livros/decor/Quadro';
 import StandDeEspadas from '@/components/livros/decor/StandDeEspadas';
+import {useRadio, NIVEIS_DE_VOLUME} from '@/components/livros/decor/use-radio';
+import {useTexturaDePlayer} from '@/components/livros/decor/use-textura-de-player';
 import {trackRoomObjectClick} from '@/utils/analytics';
 
 /**
@@ -93,12 +95,23 @@ const BRILHO_DA_TELA = 0.42;
  * — por isso a etiqueta usa o índice atual e não o seguinte. Somar +1 aqui
  * aplica o deslocamento duas vezes e a etiqueta passa a anunciar o estado
  * depois do próximo.
+ *
+ * **A sala abre em `desligada`, e isso não é escolha estética.** Desde que a
+ * tela passou a mandar no ÁUDIO também, começar em `lofi` seria prometer um som
+ * que nenhum navegador deixaria tocar sem um gesto da pessoa — a tela mostraria
+ * um player e não sairia nada. Nascendo apagada, cada estado quer dizer
+ * exatamente o que se vê e se ouve, e o primeiro clique não precisa ser um caso
+ * especial. O monitor da ESQUERDA continua aceso, então o canto não fica morto.
  */
 const ESTADOS_DA_TELA = [
+    {id: 'desligada', rotulo: 'Ligar o som'},
     {id: 'lofi', rotulo: 'Chuva'},
     {id: 'chuva', rotulo: 'Desligar'},
-    {id: 'desligada', rotulo: 'Ligar'},
 ] as const;
+
+/** Volume inicial: o médio de NIVEIS_DE_VOLUME. Som ambiente que chega alto na
+ *  primeira vez é som que a pessoa desliga em vez de ajustar. */
+const VOLUME_INICIAL = 1;
 const LUZ_DAS_TELAS = 0.9;
 const COR_LED = '#4da3ff';
 
@@ -117,19 +130,26 @@ type CantoDeTrabalhoProps = {
  *   deixaria uma fresta ou enfiaria o tampo na alvenaria.
  */
 export default function CantoDeTrabalho({quina, onAbrirRetrato, isMobile = false}: CantoDeTrabalhoProps) {
-    // Uma imagem por tela. Elas são carregadas aqui, e não dentro do
+    // A imagem da tela da esquerda, que é fixa. Carregada aqui, e não dentro do
     // KenneyModel, porque quem carrega é quem suspende — e o modelo já suspende
-    // pelo próprio .glb.
-    const [telaEsquerda, telaDireita] = useTexture([
-        '/livros/tela-factorio.jpg',
-        '/livros/tela-lofi.jpg',
-    ]);
+    // pelo próprio .glb. A da direita não é mais imagem: é o player desenhado
+    // quadro a quadro (ver use-textura-de-player.ts).
+    const telaEsquerda = useTexture('/livros/tela-factorio.jpg');
     const [estadoDaTela, setEstadoDaTela] = useState(0);
     const [telaHover, setTelaHover] = useState(false);
-    // A chuva só é desenhada no estado dela — o hook devolve a mesma textura
-    // sempre, congelada quando não está em cena.
-    const chuva = useTexturaDeChuva(ESTADOS_DA_TELA[estadoDaTela].id === 'chuva');
-    const telaAtual = {lofi: telaDireita, chuva, desligada: null}[ESTADOS_DA_TELA[estadoDaTela].id];
+    const [volume, setVolume] = useState(VOLUME_INICIAL);
+    const estadoAtual = ESTADOS_DA_TELA[estadoDaTela].id;
+
+    // O áudio da sala inteira sai daqui: o monitor escolhe O QUE toca e a caixa
+    // de som da prateleira, QUÃO ALTO. Os dois moram neste componente porque a
+    // PrateleiraAerea já é montada por ele — nenhum contexto novo é necessário.
+    const radio = useRadio(estadoAtual, volume);
+
+    // As duas telas dinâmicas só são desenhadas no estado delas; fora dele o
+    // hook devolve a mesma textura, congelada no último quadro e sem custo.
+    const chuva = useTexturaDeChuva(estadoAtual === 'chuva');
+    const player = useTexturaDePlayer(estadoAtual === 'lofi', radio);
+    const telaAtual = {lofi: player, chuva, desligada: null}[estadoAtual];
     const meio = MESA_LADO_M / 2;
     const centro: [number, number, number] = [quina[0] - meio, 0, quina[1] + meio];
     // O braço da mesa que corre junto à parede de fundo, onde ficam as telas.
@@ -367,7 +387,21 @@ export default function CantoDeTrabalho({quina, onAbrirRetrato, isMobile = false
               1,55m deixa 39cm livres sobre os monitores, e 1,72m põe as
               espadas acima da linha de quem estivesse sentado.
             */}
-            <PrateleiraAerea position={[quina[0] - 0.9, 1.55, quina[1]]} larguraM={1.5}/>
+            <PrateleiraAerea
+                position={[quina[0] - 0.9, 1.55, quina[1]]}
+                larguraM={1.5}
+                caixaDeSom={{
+                    nivel: volume,
+                    onCiclarVolume: () => setVolume((atual) => {
+                        const proximo = (atual + 1) % NIVEIS_DE_VOLUME.length;
+                        trackRoomObjectClick('caixa-de-som', NIVEIS_DE_VOLUME[proximo].id);
+                        return proximo;
+                    }),
+                    tocando: estadoAtual !== 'desligada' && !radio.foraDoAr,
+                    lerEspectro: radio.lerEspectro,
+                    isMobile,
+                }}
+            />
             <StandDeEspadas position={[quina[0], 1.72, quina[1] + 1.5]}/>
 
             {/* Gabinete no chão, sob o braço lateral da mesa: uma caixa escura

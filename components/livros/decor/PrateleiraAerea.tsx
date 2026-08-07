@@ -1,6 +1,7 @@
 'use client';
 
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
+import CaixaDeSom, {type CaixaDeSomProps} from '@/components/livros/decor/CaixaDeSom';
 
 /**
  * Prateleira aérea na parede de fundo, acima dos monitores, com troféus e
@@ -53,9 +54,19 @@ type PrateleiraAereaProps = {
     /** Centro da prateleira: [x, altura do tampo dela, z da parede]. */
     position: [number, number, number];
     larguraM: number;
+    /**
+     * A caixa de som, quando há áudio na sala. Opcional para a prateleira
+     * continuar montável sem ele — e os controles chegam de fora porque quem
+     * sabe o que está tocando é o CantoDeTrabalho, não a tábua da parede.
+     *
+     * Onde a caixa fica é decisão DAQUI, não de quem passa as props: esta
+     * prateleira já posiciona troféus e vasos, e espalhar os objetos dela por
+     * dois arquivos acabaria com dois deles no mesmo ponto.
+     */
+    caixaDeSom?: Omit<CaixaDeSomProps, 'position' | 'rotationY'>;
 };
 
-export default function PrateleiraAerea({position, larguraM}: PrateleiraAereaProps) {
+export default function PrateleiraAerea({position, larguraM, caixaDeSom}: PrateleiraAereaProps) {
     const [x, y, z] = position;
     // A prateleira encosta na parede e avança para a sala, então o centro dela
     // fica meia profundidade à frente do plano da parede.
@@ -90,6 +101,19 @@ export default function PrateleiraAerea({position, larguraM}: PrateleiraAereaPro
             */}
             <Trofeu position={[x - larguraM / 2 + 0.16, topo, zCentro]} altura={0.19}/>
             <Trofeu position={[x - larguraM / 2 + 0.32, topo, zCentro + 0.01]} altura={0.14}/>
+            {/*
+              A caixa de som ocupa o vão entre os troféus e o primeiro vaso — o
+              único trecho livre da tábua. Levemente girada para a sala, como
+              uma caixa de verdade estaria: apontada para quem senta, não
+              paralela à parede.
+            */}
+            {caixaDeSom && (
+                <CaixaDeSom
+                    position={[x - 0.18, topo, zCentro - 0.005]}
+                    rotationY={0.22}
+                    {...caixaDeSom}
+                />
+            )}
             <KenneyModel
                 url={MODELOS.planta}
                 position={[x + 0.06, topo, zCentro - 0.01]}

@@ -1,5 +1,6 @@
 'use client';
 
+import {ESTACAO} from '@/lib/radio';
 import {trackOutboundClick} from '@/utils/analytics';
 
 /**
@@ -69,6 +70,15 @@ export default function CreditosModelos({compacto = false}: {compacto?: boolean}
             <Externo href="/livros/modelos/LICENSE.md" destino="licenca_modelos">
                 Lista completa
             </Externo>.
+            {/*
+              A rádio é cortesia, não licença — ao contrário dos modelos CC BY
+              acima, ninguém exige este crédito. Ele fica porque a estação é
+              mantida por doação de ouvintes e o monitor da sala toca o stream
+              dela a cada visita: citar quem sustenta o que se consome é o
+              mínimo, e é de graça.
+            */}
+            {' '}Rádio por{' '}
+            <Externo href={ESTACAO.site} destino="radio_estacao">{ESTACAO.nome}</Externo>.
         </>
     );
 

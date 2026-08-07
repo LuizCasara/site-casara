@@ -248,6 +248,87 @@ usada e o prefetch vira request desperdiçado.
 Para o que sobra (primeiro livro da sessão, conexão ruim), o esqueleto em
 `@livro/(.)[slug]/loading.tsx` segura o layout no lugar.
 
+## Som ambiente
+
+O monitor da direita manda no áudio da sala; a caixa de som da prateleira aérea
+manda no volume. `components/livros/decor/use-radio.ts` é o dono de tudo, e
+`lib/radio.ts` é o ponto único de configuração da estação.
+
+**A sala abre em silêncio, com a tela apagada.** Não é gosto: desde que a tela
+passou a mandar no som, começar em `lofi` seria mostrar um player que nenhum
+navegador deixaria tocar sem um gesto da pessoa. Nascendo apagada, cada estado
+quer dizer exatamente o que se vê e se ouve, e o primeiro clique não é um caso
+especial. O monitor da esquerda continua aceso, então o canto não fica morto.
+
+| estado | tela | som |
+|---|---|---|
+| `desligada` *(inicial)* | preta, sem emissivo | silêncio |
+| `lofi` | player ao vivo | stream da rádio |
+| `chuva` | chuva desenhada | ruído sintetizado |
+
+### A tela é um player de verdade, não um papel de parede
+
+`use-textura-de-player.ts` desenha capa, faixa, artista, barra de progresso,
+espectro e contador de ouvintes quadro a quadro — irmão do
+`use-textura-de-chuva.ts`, mesmo tamanho e mesmo "só desenha quando ativa".
+
+A barra de progresso **interpola com o relógio local** a partir da posição que a
+estação informou; ela anda a 60fps sem pedir nada à rede. E o próximo pedido de
+"tocando agora" é agendado para o fim da faixa (`proximoPollMs`), não num
+intervalo fixo — um `setInterval` de 5s faria dezenas de requisições inúteis no
+meio de uma música de três minutos.
+
+**Foi cogitado usar os wallpapers da própria estação e isso foi recusado**: a
+API `v2/backgrounds` devolve frames de anime comercial (5 Centímetros por
+Segundo, entre outros), e as próprias strings do site da estação dizem que os
+fundos pertencem a seus autores. Exibir capa ao lado de "tocando agora" é o que
+todo player faz; republicar o filme de alguém não é a mesma coisa. Este projeto
+já leva licença a sério em `CreditosModelos.tsx` — seria contradizer o próprio
+padrão.
+
+### Três degradações, nenhuma delas um erro
+
+O `crossOrigin` do `<audio>` é **tudo-ou-nada**: sem ele o Web Audio recusa
+analisar o sinal, mas com ele um dia sem CORS do outro lado pararia o áudio por
+completo. Daí a escada: stream com `crossOrigin` (toca + espectro) → stream sem
+ele (toca, tela sem barras) → `FAIXA_DE_RESERVA`, se houver → "Estação fora do
+ar" na tela. Nenhum degrau estoura exceção na cena.
+
+`FAIXA_DE_RESERVA` é nula hoje, e de propósito: não há arquivo de música que
+este repositório possa versionar sem alguém escolher a licença.
+
+### A chuva é sintetizada, não é arquivo
+
+Mesma decisão (e o mesmo motivo) do `use-textura-de-chuva.ts`: não há arquivo
+para baixar, o loop não tem emenda, e mudar a densidade é mexer em meia dúzia de
+números. Com ruído a ausência de emenda é ainda mais forte que na imagem —
+ruído não tem altura nem ritmo, então não há ponto de repetição a reconhecer.
+
+Ruído marrom (o corpo do aguaceiro) + branco (o estalo das gotas), passando por
+um passa-baixas e um passa-altas em paralelo. O oscilador de ~25s varrendo a
+frequência do passa-baixas é o que separa "chuva" de "chiado de rádio".
+
+### A caixa de som existe pelo LED
+
+O controle do que toca está no monitor; a caixa serve para **avisar que a sala
+tem som**. Quem chega com tudo desligado não tem por que imaginar que existe
+áudio ali — um LED pulsando na batida resolve isso sem texto na tela.
+
+Três níveis discretos no clique, sem slider: arrastar dentro da cena disputa o
+gesto com o OrbitControls, num alvo de 10cm no fundo da prateleira. Clique não
+tem esse problema e funciona igual no celular, que não tem hover. E **sem mute**
+— mutar já é desligar a tela, e dois caminhos para o mesmo silêncio seriam dois
+modelos mentais disputando o mesmo resultado.
+
+### O proxy da capa
+
+`app/api/livros/capa-radio` existe porque `i.plaza.one` serve a imagem sem
+`Access-Control-Allow-Origin`, e textura WebGL de outra origem sem CORS é
+recusada. A **allowlist de host é a razão de ser do arquivo**: um proxy que
+busca qualquer URL é um SSRF. Como a URL de origem é endereçada por conteúdo, a
+resposta vai com `immutable` e a CDN absorve — na prática uma invocação por
+faixa no mundo, não por visitante.
+
 ## Créditos dos modelos
 
 Dez modelos da sala são CC BY 3.0, e essa licença **exige atribuição no lugar

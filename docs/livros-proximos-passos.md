@@ -12,14 +12,29 @@ O que já está decidido e implementado vive em [livros-sala-3d.md](livros-sala-
 
 ### Som ambiente lo-fi
 
-O gancho já existe (`lib/sound.ts`, mesmo padrão do loop de giro do Sorteio) e o
-monitor da direita já tem um estado "lofi". Faltam duas coisas: um botão
-flutuante discreto, visível só na sala, e o arquivo
-`public/sounds/lofi-loop.mp3` — que é diferente dos efeitos curtos já
-existentes, precisa soar bem sem costura na volta ao início.
+**Feito.** Ver a seção "Som ambiente" em [livros-sala-3d.md](livros-sala-3d.md).
 
-Sem persistência em `localStorage`: é preferência de sessão. Começa desligado —
-autoplay sem interação seria bloqueado pelo navegador de qualquer jeito.
+Três coisas previstas aqui não aconteceram, e por bons motivos:
+
+- **O botão flutuante foi descartado.** O monitor virou o controle, porque ele
+  já tinha o ciclo lofi → chuva → desligado e já era descoberto pelo hover. Um
+  botão na tela repetiria um controle que a sala já oferece por dentro da ficção
+  dela.
+- **`public/sounds/lofi-loop.mp3` não existe.** A música é o stream ao vivo de
+  uma rádio; a chuva é ruído sintetizado. Nenhum arquivo de áudio novo entrou no
+  repositório.
+- **`lib/sound.ts` não foi reaproveitado.** Ele toca efeitos curtos por
+  `<audio>`, e aqui era preciso um grafo de Web Audio (ganho, analisador de
+  espectro, síntese). São necessidades diferentes o bastante para não forçar uma
+  abstração comum.
+
+O que continua valendo do plano original: começa desligado, e sem persistência
+em `localStorage` — é preferência de sessão.
+
+O que ficou em aberto: **a faixa local de reserva**. `FAIXA_DE_RESERVA` em
+`lib/radio.ts` é nula, então o stream fora do ar vira "Estação fora do ar" na
+tela em vez de música local. Preencher exige escolher uma faixa e a licença
+dela; o código já trata os dois casos.
 
 ### Poeira no facho de luz
 
@@ -90,22 +105,34 @@ estão `✅`.
    pode responder só uma parte, e pode alterar campos que já tinham valor.
    **Peça o ISBN-13 quando faltar**: com ele, `lib/book-sources/` costuma
    devolver ano, editora e páginas de graça.
-4. **Revise o texto antes de gravar**: ortografia, concordância e pontuação,
+4. **Confira se o ISBN bate com o livro antes de gravar qualquer coisa.**
+   Valide o dígito verificador e procure o ISBN — se ele apontar para outro
+   título, PARE e pergunte. Aconteceu no livro 02: veio o ISBN de "Sun Tzu e a
+   Arte da Guerra Moderna" (McNeilly, Record) para o registro de "A Arte da
+   Guerra" (Sun Tzu). O risco não é o ISBN em si, e sim os campos que vêm
+   junto — ano e editora daquele mesmo trecho copiado — que entrariam sem
+   ninguém notar, porque ninguém confere editora depois.
+5. **Revise o texto antes de gravar**: ortografia, concordância e pontuação,
    mais sugestões pontuais de leitura — sem mudar o sentido nem a voz dele. A
    resenha é texto pessoal; corrigir não é reescrever.
-5. Grave pelo `edit` de `scripts/livros.mjs` (nunca por SQL: o `\n` literal e o
+6. Grave pelo `edit` de `scripts/livros.mjs` (nunca por SQL: o `\n` literal e o
    apóstrofo já morderam uma vez — ver o histórico da Metamorfose).
-6. **Marque a linha na tabela**: remova os campos preenchidos da coluna "falta"
+7. **Marque a linha na tabela**: remova os campos preenchidos da coluna "falta"
    e troque para `✅` quando não sobrar nada.
-7. Apresente o próximo.
+8. Apresente o próximo.
 
-`rating` não entra na conta: os 6 livros sem nota são os 3 em `lendo`, os 2 em
+`rating` não entra na conta: os livros sem nota são os que estão em `lendo`, em
 `quero-ler` e a Bíblia — todos legitimamente sem nota ainda.
+
+`progress_pct` também não: desde 07/08/2026 ele é derivado do status pelo
+próprio CLI (`resolverProgresso` em `scripts/livros.mjs`) — 100 para `lido`,
+perguntado só para `lendo`, nulo nos outros dois. Os 48 livros que já estavam
+lidos foram acertados de uma vez na mesma data.
 
 | # | slug | livro | falta | ok |
 |---|------|-------|-------|----|
 | 01 | `100-presente` | 100% Presente — Joel Jota | — | ✅ |
-| 02 | `a-arte-da-guerra` | A Arte da Guerra — Sun Tzu | ISBN-13, editora, resenha | ⬜ |
+| 02 | `a-arte-da-guerra` | A Arte da Guerra — Sun Tzu | ISBN-13, editora | ⬜ |
 | 03 | `a-coragem-de-nao-agradar` | A Coragem de Não Agradar — Ichiro Kishimi | ISBN-13, editora, resenha | ⬜ |
 | 04 | `a-metamorfose` | A Metamorfose — Franz Kafka | — | ✅ |
 | 05 | `a-nascente` | A Nascente — Ayn Rand | resenha | ⬜ |

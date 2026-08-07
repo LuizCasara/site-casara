@@ -176,6 +176,18 @@ ficou de fora do V1 está em `docs/livros-proximos-passos.md`.
 - Skoob **não** é uma fonte: a API pública foi desligada em setembro de 2025 e
   não há exportação nativa. `lib/book-sources/index.mjs` existe como gancho caso
   isso mude
+- **O som da sala não passa por `lib/sound.ts`** (ver "Sound effects" abaixo):
+  ele toca efeitos curtos por `<audio>`, e aqui é preciso um grafo de Web Audio
+  — ganho, analisador de espectro, síntese de ruído. O monitor da direita
+  cicla `desligada → lofi → chuva` e é o controle do que toca; a caixa de som
+  da prateleira aérea é o volume (3 níveis no clique, sem mute — mutar já é
+  desligar a tela). `lib/radio.ts` é o ponto único de configuração da estação,
+  e é o único arquivo a mexer para trocá-la. **A sala abre em silêncio com a
+  tela apagada**, porque autoplay sem gesto seria bloqueado de qualquer forma —
+  mostrar um player mudo seria pior que mostrar um monitor desligado. A chuva é
+  ruído sintetizado e a música é stream ao vivo: **nenhum arquivo de áudio novo
+  entrou no repositório**. Detalhes e as recusas (wallpaper de anime da
+  estação, botão flutuante) em `docs/livros-sala-3d.md`
 - `/livros` é **só em português**, como os mini-apps e as dinâmicas — o
   `LanguageProvider` cobre apenas home, about, projects e a listagem `/app`
 
@@ -191,6 +203,12 @@ A second forced-choice personality-style test, `apps/desenvolvimento-pessoal/des
 - Same `/stats` treatment as temperament: a `LINGUAGENS_DO_AMOR_ANALYSIS` panel next to `TEMPERAMENTO_ANALYSIS`, fed by the `love_languages` block in `GET /api/metrics/stats` (started/completed/conversion, per-language averages, `combined_rate`, avg duration) — see `app/stats/page.tsx`
 
 ### Sound effects
+
+**Scope: the three live dynamics only.** `/livros` has its own, unrelated audio
+stack (Web Audio graph, live radio stream, synthesized rain) in
+`components/livros/decor/use-radio.ts` — see "Acervo de Livros" above. Don't
+route one through the other: this file plays short one-shot clips through plain
+`<audio>` elements, which is not what a gain/analyser graph needs.
 
 Shared across all three live dynamics — `lib/sound.ts` exports `playSound(name)` (fire-and-forget, cached `HTMLAudioElement` per name) and `startLoop(name)` (returns a stop function, used only by Sorteio's spin). Every `.play()` is `.catch(() => {})`'d, same spirit as `toggleFullscreen`: a browser autoplay-policy rejection just means "no sound this time," never a thrown error. Effect files live in `public/sounds/*.mp3` — short (12-110KB) clips from [Mixkit's free SFX library](https://mixkit.co/free-sound-effects/) (no attribution required). Swapping a sound is a one-file replacement, no code change needed as long as the filename stays the same.
 
