@@ -6,6 +6,7 @@ import {buscarLivroPorSlug} from '@/lib/books';
 import {getCategory} from '@/lib/book-categories.mjs';
 import {corDeTextoSobre} from '@/lib/contraste.mjs';
 import StarRating from '@/components/livros/StarRating';
+import SeloDeStatus from '@/components/livros/SeloDeStatus';
 import BotaoComentario from '@/components/livros/BotaoComentario';
 import BotaoCompartilhar from '@/components/livros/BotaoCompartilhar';
 import {TagDoLivro, VoltarDoLivro} from '@/components/livros/LinksDoLivro';
@@ -76,6 +77,13 @@ export default async function LivroPage({params}: {params: Promise<{slug: string
                     )}
 
                     <div className="flex flex-col gap-3">
+                        {/*
+                          O tom claro existe porque este card tem fundo
+                          bg-white/90 no tema claro — o mesmo selo do overlay,
+                          que vive sobre bg-black/70, ficaria ilegível aqui.
+                        */}
+                        <SeloDeStatus livro={livro} tom="claro"/>
+
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                             {livro.title}
                         </h1>
@@ -106,12 +114,6 @@ export default async function LivroPage({params}: {params: Promise<{slug: string
                                 <TagDoLivro key={t} slug={livro.slug} tag={t}/>
                             ))}
                         </div>
-
-                        {livro.status === 'lendo' && livro.progress_pct !== null && (
-                            <p className="mt-2 text-sm font-medium text-emerald-700 dark:text-emerald-400">
-                                Lendo agora — {livro.progress_pct}%
-                            </p>
-                        )}
 
                         <div className="mt-3 flex flex-wrap gap-2">
                             <BotaoComentario slug={livro.slug} titulo={livro.title}

@@ -6,6 +6,8 @@ import {useRouter} from 'next/navigation';
 import {Html} from '@react-three/drei';
 import * as THREE from 'three';
 import StarRating from '@/components/livros/StarRating';
+import {rotuloCompactoDeStatus, COR_DO_STATUS} from '@/lib/book-status.mjs';
+import type {BookStatus} from '@/lib/books';
 import {BOOK_DEPTH_M} from '@/lib/book-dimensions.mjs';
 import {corDeLombada} from '@/lib/cor-lombada.mjs';
 
@@ -99,11 +101,20 @@ export type ShelfBookData = {
     tags: string[];
     year: number | null;
     /**
-     * Data de leitura. `Book` não usa — quem usa é o agrupamento por nicho em
-     * Bookshelf.tsx —, mas o campo mora aqui porque é este o tipo que atravessa
-     * a estante inteira.
+     * Data de leitura. Usada em dois lugares bem diferentes: o agrupamento por
+     * nicho em Bookshelf.tsx, e o "LIDO 2025" do balão de hover aqui embaixo.
      */
     finishedAt: Date | string | null;
+    /**
+     * Status e progresso, só para o balão de hover.
+     *
+     * O status é redundante com o LUGAR do livro (estante = lido, mesa =
+     * lendo, torre = quero-ler) — mas o balão precisa dele como texto, e
+     * derivá-lo de qual componente está renderizando espalharia a regra por
+     * três arquivos em vez de deixá-la vir do banco, que é a fonte real.
+     */
+    status: BookStatus | null;
+    progressPct: number | null;
 };
 
 type BookProps = {
@@ -322,8 +333,37 @@ export default function Book({
                 <Html position={posicaoDoBalao} center style={{pointerEvents: 'none'}}>
                     <span className="flex items-center gap-1.5 whitespace-nowrap rounded-full
                                      bg-black/80 px-2 py-0.5 text-[11px] text-white shadow-lg backdrop-blur-sm">
+                        {/*
+                          O status vem primeiro porque é a única informação
+                          aqui que a lombada não dá de graça: título e autor
+                          estão impressos nela, as estrelas se leem na
+                          visualização aberta, mas "já li" ou "ainda quero
+                          ler" não aparece em lugar nenhum da cena. O ponto
+                          colorido repete a cor do selo da visualização
+                          aberta — é o que faz o status ser reconhecido antes
+                          de ser lido.
+                        */}
+                        {book.status && (
+                            <span className="flex items-center gap-1 font-bold tracking-wide"
+                                  style={{color: COR_DO_STATUS[book.status]}}>
+                                <span className="h-1.5 w-1.5 rounded-full"
+                                      style={{backgroundColor: COR_DO_STATUS[book.status]}} aria-hidden/>
+                                {rotuloCompactoDeStatus(book.status, {
+                                    progressPct: book.progressPct,
+                                    finishedAt: book.finishedAt,
+                                })}
+                            </span>
+                        )}
                         <span className="max-w-[180px] truncate font-semibold">{book.title}</span>
-                        <StarRating nota={book.rating} tamanho="text-[9px]"/>
+                        {book.author && (
+                            <span className="max-w-[120px] truncate text-white/60">— {book.author}</span>
+                        )}
+                        {/*
+                          Estrelas só para quem já foi lido: uma nota num livro
+                          da torre de "quero ler" seria uma opinião sobre algo
+                          que ainda não foi lido.
+                        */}
+                        {book.status === 'lido' && <StarRating nota={book.rating} tamanho="text-[9px]"/>}
                     </span>
                 </Html>
             )}

@@ -16,6 +16,7 @@ import {useIsMobile} from '@/components/livros/use-is-mobile';
 import {useFecharLivro} from '@/components/livros/use-fechar-livro';
 import {useAlturaRodape, useAlturaDoElemento} from '@/components/livros/use-altura-rodape';
 import {toShelfBooks} from '@/lib/book-dimensions.mjs';
+import type {BookStatus} from '@/lib/books';
 import {NICHO_CAPACIDADE_M} from '@/lib/bookshelf-model.mjs';
 import {agruparPorAnoDeLeitura} from '@/lib/shelf-years.mjs';
 import {sortShelfBooks, filterShelfBooks, vizinhosDe} from '@/lib/livros-shelf.mjs';
@@ -40,6 +41,8 @@ export type ShelvedBookInput = {
     tags: string[];
     year: number | null;
     finished_at: Date | string | null;
+    status: BookStatus;
+    progress_pct: number | null;
 };
 
 export type LivrosMode = {kind: 'sala'} | {kind: 'livro'; slug: string};

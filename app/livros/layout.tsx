@@ -15,6 +15,11 @@ function mapShelved(l: Book) {
         tags: l.tags,
         year: l.year,
         finished_at: l.finished_at,
+        // O lugar na sala já implica o status (estante = lido, mesa = lendo,
+        // torre = quero-ler), mas o balão de hover precisa dele como texto, e
+        // `progress_pct` não é dedutível de lugar nenhum.
+        status: l.status,
+        progress_pct: l.progress_pct,
     };
 }
 

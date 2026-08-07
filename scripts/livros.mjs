@@ -105,6 +105,20 @@ async function perguntarProgresso(io, padrao) {
 }
 
 /**
+ * O `progress_pct` que corresponde ao status — só 'lendo' é perguntado.
+ *
+ * 'lido' é 100 por definição: deixá-lo nulo obrigava quem lê o dado a saber
+ * que "sem progresso + status lido" significa "terminado", o que é uma regra
+ * implícita a mais para um número que já podemos escrever. Os outros dois
+ * status não têm progresso nenhum a registrar — um livro que você ainda quer
+ * ler não está 0% lido, está fora da conta.
+ */
+async function resolverProgresso(io, status, padrao) {
+    if (status === 'lendo') return perguntarProgresso(io, padrao);
+    return status === 'lido' ? 100 : null;
+}
+
+/**
  * Pergunta a nota (0-5, decimal aceito, ex. 4.5) e repete até ser válida.
  * Vazio continua significando "sem nota" — devolve `null` nesse caso, sem
  * entrar no loop de reprompt. A repergunta usa sempre padrão vazio (não o
@@ -316,10 +330,13 @@ async function comandoAdd(sql, isbn, dryRun) {
         const tags = resolverTags(await perguntar(io, 'Tags (separadas por vírgula)'), jaUsadas);
 
         const status = await perguntarStatus(io, 'lido');
-        const progress = status === 'lendo' ? await perguntarProgresso(io, '0') : null;
+        const progress = await resolverProgresso(io, status, '0');
         const rating = await perguntarNota(io, '');
 
-        const synopsis = await perguntar(io, 'Sinopse curta (uma frase)');
+        // 2-3 frases, não uma: é o que docs/livros-proximos-passos.md definiu
+        // para a sinopse escrita por IA durante o cadastro, e o que as duas
+        // telas que a exibem comportam.
+        const synopsis = await perguntar(io, 'Sinopse (2-3 frases, do que trata o livro)');
 
         const slugBase = slugify(title);
         const slug = await slugLivre(sql, slugBase, year || null);
@@ -429,9 +446,7 @@ async function comandoEdit(sql, slug) {
         // O padrão aqui é sempre o valor atual do livro (já passou pelo
         // CHECK do Postgres quando foi gravado), então aceitar com Enter
         // nunca cai em reprompt — só entradas novas e inválidas caem.
-        const progress = status === 'lendo'
-            ? await perguntarProgresso(io, String(livro.progress_pct ?? 0))
-            : null;
+        const progress = await resolverProgresso(io, status, String(livro.progress_pct ?? 0));
         const rating = await perguntarNota(io, livro.rating != null ? String(livro.rating) : '');
 
         const synopsis = await perguntar(io, 'Sinopse', livro.synopsis ?? '');
