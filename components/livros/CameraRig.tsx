@@ -2,7 +2,7 @@
 
 import {useEffect, useRef} from 'react';
 import {CameraControls, CameraControlsImpl} from '@react-three/drei';
-import {ROOM_ANCHORS} from '@/components/livros/Room';
+import {ROOM_ANCHORS, ANCORAS_DO_PC} from '@/components/livros/Room';
 import {ESTANTE_ANCHOR, posicaoDaEstante} from '@/components/livros/decor/EstanteDoAcervo';
 import {ESTANTE_AMARELA_ANCHOR, ESTANTE_AMARELA_ALTURA_M} from '@/components/livros/decor/YellowShelf';
 import {NICHOS, NICHOS_POR_ESTANTE, BOOKSHELF_SIZE_M} from '@/lib/bookshelf-model.mjs';
@@ -134,22 +134,24 @@ const VIEWPOINTS: Record<Exclude<Viewpoint, 'estante' | 'camping'>, ViewpointCon
       acima da linha do tampo, para o que está SOBRE a mesa não sumir atrás da
       borda dela.
 
-      **O quadro é fechado sobre TRÊS coisas**, e o alvo é o centro delas, não o
-      centro do móvel: a caixa de som na prateleira (y≈1.65), as telas (y≈0.95)
-      e a bíblia aberta no braço direito (x≈2.22, z≈-0.35). Enquadrando o canto
-      inteiro, como antes, cadeira, gabinete e kettlebells entravam no quadro e
-      empurravam para longe justamente o que se quer olhar — a tela do monitor
-      ficava pequena demais para ler o que toca.
+      **Esta é a parada ABERTA do canto — o plano de apresentação.** Ela não
+      tenta deixar nada legível, e é por isso que pode ser larga: os quatro
+      objetos com ação viraram sub-paradas próprias (ver VIEWPOINTS_DO_PC), cada
+      uma com o close que merece.
 
-      O alvo subiu de 0.95 para 1.18 para caber a prateleira, e a distância caiu
-      de ~2.34m para ~1.9m. Não dá para fechar mais sem perder a bíblia, que
-      está a mais de um metro das telas: daí a tipografia da tela do player ter
-      crescido junto (ver use-textura-de-player.ts) — as duas mudanças resolvem
-      metade do problema cada uma, e nenhuma delas resolvia sozinha.
+      Houve uma tentativa intermediária de resolver tudo aqui, fechando o quadro
+      sobre quadro de recados, telas e bíblia ao mesmo tempo. Não funciona: são
+      um metro e meio de distância entre as pontas, então o enquadramento que
+      cabe os três deixa a tela do monitor pequena demais para se ler o que
+      toca. Uma parada não consegue ser plano geral e close ao mesmo tempo.
+
+      O alvo fica um pouco acima do tampo (1.10, não 0.95) para a prateleira
+      aérea entrar no quadro — ela faz parte do canto e some se o alvo mirar só
+      a mesa.
     */
     pc: {
-        camera: [0.92, 1.66, 0.68],
-        target: [1.77, 1.18, -0.95],
+        camera: [0.70, 1.72, 1.30],
+        target: [1.72, 1.10, -0.85],
         minAzimuth: -0.75, maxAzimuth: -0.15,
         minPolar: 1.05, maxPolar: 1.55,
     },
@@ -170,6 +172,66 @@ const VIEWPOINTS: Record<Exclude<Viewpoint, 'estante' | 'camping'>, ViewpointCon
         minPolar: 1.25, maxPolar: 1.7,
     },
 };
+
+/**
+ * Uma parada olhando para UM objeto, a partir de uma direção e uma distância.
+ *
+ * Os limites de giro saem da própria direção, com uma folga fixa em volta —
+ * não são escritos à mão. Calculá-los na mão para quatro paradas é quatro
+ * chances de errar um `atan2` em silêncio: o sintoma seria a câmera nascer
+ * fora do próprio limite e dar um salto no primeiro toque, que é exatamente o
+ * tipo de defeito que ninguém associa a um número no meio do arquivo.
+ *
+ * @param direcao do ALVO para a câmera; o comprimento é ignorado (normalizado).
+ */
+function focoDeObjeto(
+    alvo: [number, number, number],
+    direcao: [number, number, number],
+    distancia: number,
+    folgaAzimute = 0.34,
+    folgaPolar = 0.26,
+): ViewpointConfig {
+    const norma = Math.hypot(...direcao) || 1;
+    const [dx, dy, dz] = direcao.map((c) => (c / norma) * distancia);
+
+    return {
+        camera: [alvo[0] + dx, alvo[1] + dy, alvo[2] + dz],
+        target: alvo,
+        // Azimute conta a partir de +z; polar, a partir de +y. É a convenção do
+        // CameraControls, e é por isso que o polar usa a distância HORIZONTAL
+        // contra o dy, e não o contrário.
+        minAzimuth: Math.atan2(dx, dz) - folgaAzimute,
+        maxAzimuth: Math.atan2(dx, dz) + folgaAzimute,
+        minPolar: Math.atan2(Math.hypot(dx, dz), dy) - folgaPolar,
+        maxPolar: Math.atan2(Math.hypot(dx, dz), dy) + folgaPolar,
+    };
+}
+
+/**
+ * As quatro sub-paradas do canto de trabalho, na ordem de FOCOS_DO_PC
+ * (recomendações → monitores → alto-falante → bíblia), varrendo o canto da
+ * esquerda para a direita como o trilho principal varre a sala.
+ *
+ * As distâncias são o que separa uma parada útil de um close inútil: o quadro
+ * de recados e a bíblia pedem folga para se lerem inteiros, enquanto a caixa de
+ * som tem 10cm e some se a câmera parar longe. Nenhuma delas tenta enquadrar
+ * duas coisas ao mesmo tempo — foi justamente isso que a parada única do "PC"
+ * fazia, e o custo era a tela do monitor pequena demais para se ler.
+ */
+const VIEWPOINTS_DO_PC: ViewpointConfig[] = [
+    // Quadro de recados: quase de frente, com um leve deslocamento lateral para
+    // não virar uma foto chapada de um retângulo branco.
+    focoDeObjeto(ANCORAS_DO_PC.recomendacoes, [0.18, -0.04, 0.98], 0.85),
+    // Monitores: de três quartos, na altura das telas. A tela da direita é o
+    // player, e é ela que precisa estar legível aqui.
+    focoDeObjeto(ANCORAS_DO_PC.monitores, [-0.15, 0.24, 0.96], 0.95),
+    // Alto-falante: perto, mas não colado — a prateleira em volta é o que dá a
+    // escala da caixinha.
+    focoDeObjeto(ANCORAS_DO_PC.caixaDeSom, [-0.12, 0.16, 0.98], 0.70),
+    // Bíblia: de cima, porque ela está DEITADA no tampo. Uma câmera na altura
+    // dos olhos veria a lombada de canto e quase nada da página aberta.
+    focoDeObjeto(ANCORAS_DO_PC.biblia, [-0.45, 0.62, 0.64], 0.85),
+];
 
 /**
  * Nível 1: o móvel inteiro em quadro. A distância vem da altura dele e da
@@ -256,6 +318,8 @@ type CameraRigProps = {
     /** Índice do grupo de ano em foco. Só tem efeito no viewpoint 'estante'. */
     grupoFocado?: number | null;
     totalGrupos?: number;
+    /** Índice em FOCOS_DO_PC. Só tem efeito no viewpoint 'pc'. */
+    focoDoPC?: number | null;
     /**
      * Quantos pixels da base do canvas estão cobertos (rodapé + a barra de
      * botões), medidos por quem renderiza. Entra no enquadramento da estante:
@@ -266,7 +330,8 @@ type CameraRigProps = {
 };
 
 export default function CameraRig({
-    viewpoint, animate = true, grupoFocado = null, totalGrupos = 0, cobertoEmbaixoPx = 0,
+    viewpoint, animate = true, grupoFocado = null, totalGrupos = 0,
+    focoDoPC = null, cobertoEmbaixoPx = 0,
 }: CameraRigProps) {
     const controlsRef = useRef<CameraControls>(null);
 
@@ -275,6 +340,12 @@ export default function CameraRig({
         v = grupoFocado !== null
             ? viewpointDoGrupo(grupoFocado, totalGrupos, cobertoEmbaixoPx)
             : viewpointDaEstante(cobertoEmbaixoPx);
+    } else if (viewpoint === 'pc' && focoDoPC !== null && VIEWPOINTS_DO_PC[focoDoPC]) {
+        // Sem `subirParaFaixaLivre`: essas paradas já miram o CENTRO de um
+        // objeto pequeno com folga em volta, e empurrar o alvo para cima
+        // tiraria justamente ele do meio do quadro. A correção do rodapé existe
+        // para enquadrar móveis inteiros, não para closes.
+        v = VIEWPOINTS_DO_PC[focoDoPC];
     } else if (viewpoint === 'camping') {
         // Também calculada em runtime, pela mesma razão da estante do acervo:
         // enquadrar o móvel inteiro depende de quanto o rodapé está cobrindo.
@@ -289,7 +360,7 @@ export default function CameraRig({
     useEffect(() => {
         controlsRef.current?.setLookAt(...v.camera, ...v.target, animate);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [viewpoint, grupoFocado, cobertoEmbaixoPx]);
+    }, [viewpoint, grupoFocado, focoDoPC, cobertoEmbaixoPx]);
 
     // Sem trilho de arrasto (`truckSpeed={0}`): a estante é vertical e cabe
     // inteira no quadro, e navegar é escolher um ano — mais preciso no toque do

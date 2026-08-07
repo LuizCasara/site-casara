@@ -5,7 +5,7 @@ import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
 import EstanteDoAcervo, {ESTANTE_ANCHOR, posicaoDaEstante} from '@/components/livros/decor/EstanteDoAcervo';
 import CantoDeLeitura, {MESA_ANCHOR, pontoNoTampo} from '@/components/livros/decor/CantoDeLeitura';
 import Quadro from '@/components/livros/decor/Quadro';
-import CantoDeTrabalho from '@/components/livros/decor/CantoDeTrabalho';
+import CantoDeTrabalho, {ancorasDoCantoDeTrabalho} from '@/components/livros/decor/CantoDeTrabalho';
 import ParedeLateral, {PAREDE_LATERAL_X} from '@/components/livros/decor/ParedeLateral';
 import YellowShelf, {ESTANTE_AMARELA_ANCHOR} from '@/components/livros/decor/YellowShelf';
 import EscudoEscoteiro from '@/components/livros/decor/EscudoEscoteiro';
@@ -14,6 +14,24 @@ import {NICHOS, NICHOS_POR_ESTANTE} from '@/lib/bookshelf-model.mjs';
 import {contarEstantes} from '@/lib/shelf-years.mjs';
 import {linkDeSugestao} from '@/lib/whatsapp-livros.mjs';
 import {trackBookSuggestion} from '@/utils/analytics';
+
+/** A quina de paredes que o canto de trabalho abraça: fundo à direita. */
+const QUINA_DO_PC: [number, number] = [PAREDE_LATERAL_X, -1.6];
+
+/** Centro do quadro de recados, na parede do fundo. Constante, e não escrito
+ *  duas vezes, porque o CameraRig tem uma parada mirando nele. */
+const QUADRO_RECOMENDACOES: [number, number, number] = [0.68, 1.36, -1.58];
+
+/**
+ * Os quatro objetos COM AÇÃO do canto de trabalho, na ordem em que o trilho os
+ * varre (ver FOCOS_DO_PC em lib/livros-cenas.mjs). O CameraRig monta uma parada
+ * para cada um a partir daqui — Room continua sendo o mapa da sala, e nenhuma
+ * coordenada precisa ser copiada para dentro da câmera.
+ */
+export const ANCORAS_DO_PC = {
+    recomendacoes: QUADRO_RECOMENDACOES,
+    ...ancorasDoCantoDeTrabalho(QUINA_DO_PC),
+};
 
 export const ROOM_ANCHORS = {
     // Referências, não cópias: a estante e o canto de leitura são território
@@ -182,7 +200,7 @@ export default function Room({gruposDeAno = 1, onAbrirRetrato, isMobile = false}
               ser um formulário que grava no banco.
             */}
             <Quadro
-                position={[0.68, 1.36, -1.58]}
+                position={QUADRO_RECOMENDACOES}
                 imagem="/livros/quadro-recomendacoes.jpg"
                 larguraM={0.44}
                 alturaM={0.43}
@@ -200,7 +218,7 @@ export default function Room({gruposDeAno = 1, onAbrirRetrato, isMobile = false}
             {/* O canto de trabalho, encaixado na quina do fundo com a parede
                 direita. Deliberadamente NÃO congelado, ao contrário da estante e
                 do canto de leitura: é o pedaço em que ainda se mexe. */}
-            <CantoDeTrabalho quina={[PAREDE_LATERAL_X, -1.6]} onAbrirRetrato={onAbrirRetrato} isMobile={isMobile}/>
+            <CantoDeTrabalho quina={QUINA_DO_PC} onAbrirRetrato={onAbrirRetrato} isMobile={isMobile}/>
 
             <ParedeLateral lado="esquerda"/>
             <ParedeLateral lado="direita"/>

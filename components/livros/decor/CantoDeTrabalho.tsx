@@ -6,7 +6,7 @@ import {useTexturaDeChuva} from '@/components/livros/decor/use-textura-de-chuva'
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
 import ItensDeEstudo from '@/components/livros/decor/ItensDeEstudo';
 import DeitadoNoTampo from '@/components/livros/decor/DeitadoNoTampo';
-import PrateleiraAerea from '@/components/livros/decor/PrateleiraAerea';
+import PrateleiraAerea, {posicaoDaCaixaDeSom} from '@/components/livros/decor/PrateleiraAerea';
 import Quadro from '@/components/livros/decor/Quadro';
 import StandDeEspadas from '@/components/livros/decor/StandDeEspadas';
 import {useRadio, NIVEIS_DE_VOLUME} from '@/components/livros/decor/use-radio';
@@ -112,8 +112,50 @@ const ESTADOS_DA_TELA = [
 /** Volume inicial: o médio de NIVEIS_DE_VOLUME. Som ambiente que chega alto na
  *  primeira vez é som que a pessoa desliga em vez de ajustar. */
 const VOLUME_INICIAL = 1;
+
+/** Altura da prateleira aérea na parede de fundo, e o quanto ela recua da quina. */
+const PRATELEIRA_Y = 1.55;
+const PRATELEIRA_RECUO_X = 0.9;
+
 const LUZ_DAS_TELAS = 0.9;
 const COR_LED = '#4da3ff';
+
+/**
+ * Onde estão, no mundo, os objetos deste canto que a câmera precisa enquadrar.
+ *
+ * **Exportada pelo mesmo motivo de ESTANTE_ANCHOR e ESTANTE_AMARELA_ANCHOR**: o
+ * CameraRig tem uma parada para cada um destes objetos, e as posições saem de
+ * uma conta que só existe aqui dentro (a mesa em L se posiciona a partir da
+ * QUINA das paredes, não de um centro escrito à mão). Copiar os números para
+ * lá daria uma câmera apontada para o vazio no dia em que a mesa mudar de
+ * lugar — e nada avisaria, porque uma câmera errada não quebra build nem teste.
+ *
+ * O `y` de cada um é o do CENTRO do que se olha, não a base: é para lá que a
+ * câmera aponta.
+ */
+export function ancorasDoCantoDeTrabalho(quina: [number, number]) {
+    const meio = MESA_LADO_M / 2;
+    const centroX = quina[0] - meio;
+    const zDoFundo = quina[1] + 0.28;
+    const prateleira: [number, number, number] = [
+        quina[0] - PRATELEIRA_RECUO_X, PRATELEIRA_Y, quina[1],
+    ];
+    const caixa = posicaoDaCaixaDeSom(prateleira);
+
+    return {
+        /**
+         * Entre os dois monitores, mas puxado para o da DIREITA: ele é o que
+         * mostra o player e o único dos dois que responde a clique. O ponto
+         * médio exato deixaria o interessante na borda do quadro.
+         */
+        monitores: [centroX + 0.18, ALTURA_MESA + ALTURA_MONITOR * 0.6, zDoFundo] as [number, number, number],
+        /** Meia altura acima da base, que é onde o alto-falante de fato está. */
+        caixaDeSom: [caixa[0], caixa[1] + 0.078, caixa[2]] as [number, number, number],
+        /** A bíblia aberta, no braço direito do L (ver ItensDeEstudo). Um dedo
+         *  acima do tampo, senão a câmera mira a madeira sob o livro. */
+        biblia: [quina[0] - 0.38, ALTURA_MESA + 0.06, quina[1] + 1.25] as [number, number, number],
+    };
+}
 
 type CantoDeTrabalhoProps = {
     /** Quina que a mesa abraça: canto do fundo à direita. */
@@ -388,7 +430,7 @@ export default function CantoDeTrabalho({quina, onAbrirRetrato, isMobile = false
               espadas acima da linha de quem estivesse sentado.
             */}
             <PrateleiraAerea
-                position={[quina[0] - 0.9, 1.55, quina[1]]}
+                position={[quina[0] - PRATELEIRA_RECUO_X, PRATELEIRA_Y, quina[1]]}
                 larguraM={1.5}
                 caixaDeSom={{
                     nivel: volume,

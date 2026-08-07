@@ -20,7 +20,9 @@ import type {BookStatus} from '@/lib/books';
 import {NICHO_CAPACIDADE_M} from '@/lib/bookshelf-model.mjs';
 import {agruparPorAnoDeLeitura} from '@/lib/shelf-years.mjs';
 import {sortShelfBooks, filterShelfBooks, vizinhosDe} from '@/lib/livros-shelf.mjs';
-import {CENAS, anoVizinho, paradaVizinha} from '@/lib/livros-cenas.mjs';
+import {
+    CENAS, subVizinha, paradaVizinha, totalDeSubParadas, rotuloDaSubParada,
+} from '@/lib/livros-cenas.mjs';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
 import {
     trackRoomLoaded, trackListFallback, trackBookOpened,
@@ -99,7 +101,14 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     const [indiceAberto, setIndiceAberto] = useState(false);
     /** Close no porta-retratos da mesa do PC — ver o viewpoint 'retrato'. */
     const [retratoAberto, setRetratoAberto] = useState(false);
-    const [grupoFocado, setGrupoFocado] = useState<number | null>(null);
+    /**
+     * A sub-parada em foco DENTRO da cena atual — um nicho de ano na estante,
+     * um objeto no canto do PC. Um estado só para as duas famílias, e não um
+     * por cena: quem manda no significado é `manualViewpoint`, e dois estados
+     * paralelos permitiriam o par impossível "ano 3 focado enquanto se olha o
+     * alto-falante".
+     */
+    const [subFocado, setSubFocado] = useState<number | null>(null);
     const isMobile = useIsMobile();
     const fecharLivro = useFecharLivro();
     const alturaRodape = useAlturaRodape();
@@ -157,15 +166,35 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
         previousOpenSlugRef.current = openSlug;
     }, [openSlug]);
 
-    // Sair da cena da estante larga o foco do ano: voltar depois pela cena
-    // "Estante" começa do nível 1, não no zoom de três cliques atrás.
+    /**
+     * Quantas sub-paradas a cena atual tem — os nichos de ano na estante, os
+     * objetos com ação no canto do PC, zero no resto.
+     */
+    const totalDeSubs = totalDeSubParadas(manualViewpoint, grupos.length) as number;
+
+    /**
+     * O foco DERIVADO para cada consumidor, em vez de dois estados guardados.
+     *
+     * `subFocado` sozinho não diz o que ele significa — quem dá sentido a ele é
+     * a cena. Derivando aqui, é impossível a estante receber um índice enquanto
+     * a câmera está no alto-falante, que é o bug que dois `useState` paralelos
+     * deixariam acontecer no primeiro lugar em que alguém esquecesse de zerar
+     * um deles.
+     */
+    const grupoFocado = manualViewpoint === 'estante' ? subFocado : null;
+    const focoDoPC = manualViewpoint === 'pc' ? subFocado : null;
+
+    // Sair para uma cena SEM sub-paradas larga o foco: voltar depois pela cena
+    // começa do plano aberto, não no zoom de três cliques atrás. A condição é
+    // "não tem sub-parada", e não "não é a estante", senão trocar para o canto
+    // do PC zeraria o foco no mesmo render em que o trilho acabou de defini-lo.
     useEffect(() => {
-        if (manualViewpoint !== 'estante') setGrupoFocado(null);
-    }, [manualViewpoint]);
+        if (totalDeSubs === 0) setSubFocado(null);
+    }, [totalDeSubs]);
 
     /** Clicar no ano já ativo sobe um nível — o mesmo gesto da etiqueta 3D. */
     const selecionarGrupo = useCallback((indice: number) => {
-        setGrupoFocado((atual) => {
+        setSubFocado((atual) => {
             // Só a ENTRADA no ano vira evento; sair dele é o mesmo clique e
             // contaria duas vezes o mesmo interesse.
             if (atual !== indice) trackShelfYearFocused(grupos[indice]?.rotulo ?? '', indice);
@@ -174,23 +203,35 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     }, [grupos]);
 
     /**
-     * Um passo no trilho da sala — cenas e anos no mesmo caminho, em loop (ver
-     * `trilhoDeCenas`). Uma parada carrega os dois estados de uma vez: a cena
-     * define o enquadramento, e o ano (quando existe) o nicho em foco.
+     * Um passo no trilho da sala — cenas e sub-paradas no mesmo caminho, em loop
+     * (ver `trilhoDeCenas`). Uma parada carrega os dois estados de uma vez: a
+     * cena define o enquadramento, e a sub-parada (quando existe) o detalhe.
      */
     const andarNoTrilho = useCallback((direcao: 1 | -1, origem: 'seta' | 'scroll') => {
         const destino = paradaVizinha(
-            {cena: manualViewpoint, ano: grupoFocado},
+            {cena: manualViewpoint, sub: subFocado},
             direcao,
             grupos.length,
-        ) as {cena: Viewpoint; ano: number | null};
+        ) as {cena: Viewpoint; sub: number | null};
         setManualViewpoint(destino.cena);
-        setGrupoFocado(destino.ano);
-        // A parada é a cena OU um ano dentro dela — os dois são um passo no
+        setSubFocado(destino.sub);
+
+        // A parada é a cena OU um detalhe dentro dela — os dois são um passo no
         // mesmo trilho, e o que interessa medir aqui é por onde a pessoa andou.
-        if (destino.ano !== null) trackShelfYearFocused(grupos[destino.ano]?.rotulo ?? '', destino.ano);
-        else trackRoomSceneChanged(destino.cena, origem);
-    }, [manualViewpoint, grupoFocado, grupos]);
+        // Os anos têm evento próprio porque já tinham antes desta generalização
+        // e o histórico continua comparável; o resto entra como troca de cena
+        // com o nome do objeto, sem inventar um evento novo por sub-parada.
+        if (destino.sub === null) {
+            trackRoomSceneChanged(destino.cena, origem);
+        } else if (destino.cena === 'estante') {
+            trackShelfYearFocused(grupos[destino.sub]?.rotulo ?? '', destino.sub);
+        } else {
+            trackRoomSceneChanged(
+                `${destino.cena}:${rotuloDaSubParada(destino.cena, destino.sub)}`,
+                origem,
+            );
+        }
+    }, [manualViewpoint, subFocado, grupos]);
 
     // Abrir um livro com o índice aberto não deixa os dois empilhados, nem
     // `indiceAberto` verdadeiro escondido no estado depois que o livro fecha.
@@ -256,17 +297,18 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                 if (e.key === 'Escape') setIndiceAberto(false);
                 return;
             }
-            // Esc na estante sobe um nível antes de qualquer outra coisa: quem
-            // está com um ano em foco espera sair do zoom, não trocar de cena.
-            if (e.key === 'Escape' && grupoFocado !== null) {
-                setGrupoFocado(null);
+            // Esc sobe um nível antes de qualquer outra coisa: quem está com um
+            // detalhe em foco espera sair do zoom, não trocar de cena.
+            if (e.key === 'Escape' && subFocado !== null) {
+                setSubFocado(null);
                 return;
             }
-            // Segundo eixo de navegação, só na estante: as setas verticais andam
-            // pelos ANOS. preventDefault porque ↑/↓ rolam a página por padrão.
-            if (manualViewpoint === 'estante' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+            // Segundo eixo de navegação, em qualquer cena que tenha sub-paradas:
+            // as setas verticais pulam de detalhe em detalhe sem percorrer o
+            // trilho inteiro. preventDefault porque ↑/↓ rolam a página.
+            if (totalDeSubs > 0 && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
                 e.preventDefault();
-                setGrupoFocado((atual) => anoVizinho(atual, e.key === 'ArrowUp' ? 1 : -1, grupos.length));
+                setSubFocado((atual) => subVizinha(atual, e.key === 'ArrowUp' ? 1 : -1, totalDeSubs));
                 return;
             }
             if (e.key === 'ArrowLeft') andarNoTrilho(-1, 'seta');
@@ -274,7 +316,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
         };
         window.addEventListener('keydown', aoTeclar);
         return () => window.removeEventListener('keydown', aoTeclar);
-    }, [openSlug, indiceAberto, retratoAberto, manualViewpoint, grupoFocado, grupos.length, vizinhos, folhear, fecharLivro, andarNoTrilho]);
+    }, [openSlug, indiceAberto, retratoAberto, subFocado, totalDeSubs, vizinhos, folhear, fecharLivro, andarNoTrilho]);
 
     /**
      * A roda do mouse percorre o MESMO trilho das setas laterais: sala, mesa,
@@ -491,6 +533,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                         animate={animateTransitions}
                         grupoFocado={grupoFocado}
                         totalGrupos={grupos.length}
+                        focoDoPC={focoDoPC}
                         cobertoEmbaixoPx={cobertoEmbaixoPx}
                     />
                     {/*

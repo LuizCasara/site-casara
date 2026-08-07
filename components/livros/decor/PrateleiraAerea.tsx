@@ -24,6 +24,25 @@ const COR_BASE_TROFEU = '#2b2320';
 const ESPESSURA_M = 0.04;
 const PROFUNDIDADE_M = 0.22;
 
+/** Deslocamento da caixa de som em relação ao centro da tábua: o vão livre
+ *  entre os troféus (à esquerda) e o primeiro vaso. */
+const CAIXA_DESLOC_X = -0.18;
+
+/**
+ * Onde a caixa de som assenta, no mundo, dada a posição da prateleira.
+ *
+ * Exportada porque o CameraRig precisa enquadrá-la e essa conta envolve três
+ * números que só existem aqui dentro (o vão livre da tábua, a espessura dela e
+ * a profundidade). Copiá-los para o CameraRig faria a câmera apontar para o
+ * lugar errado no dia em que a prateleira mudar de tamanho — mesmo motivo de
+ * ESTANTE_ANCHOR e ESTANTE_AMARELA_ANCHOR existirem.
+ */
+export function posicaoDaCaixaDeSom(
+    [x, y, z]: [number, number, number],
+): [number, number, number] {
+    return [x + CAIXA_DESLOC_X, y + ESPESSURA_M / 2, z + PROFUNDIDADE_M / 2 - 0.005];
+}
+
 /** Taça: base larga, haste fina, copo cônico. Nesta escala é o bastante. */
 function Trofeu({position, altura}: {position: [number, number, number]; altura: number}) {
     // Proporções derivadas da altura para os dois troféus não parecerem o
@@ -109,7 +128,7 @@ export default function PrateleiraAerea({position, larguraM, caixaDeSom}: Pratel
             */}
             {caixaDeSom && (
                 <CaixaDeSom
-                    position={[x - 0.18, topo, zCentro - 0.005]}
+                    position={posicaoDaCaixaDeSom(position)}
                     rotationY={0.22}
                     {...caixaDeSom}
                 />
