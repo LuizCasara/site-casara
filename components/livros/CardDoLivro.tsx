@@ -1,10 +1,9 @@
 'use client';
 
 import {useEffect} from 'react';
-import {usePathname} from 'next/navigation';
 import {useSalaMontada} from '@/components/livros/ContextoDaSala';
 import {useFecharLivro} from '@/components/livros/use-fechar-livro';
-import {trackBookClosed, trackBookOpened} from '@/utils/analytics';
+import {trackBookClosed} from '@/utils/analytics';
 
 /**
  * A moldura do livro aberto — a mesma rota interceptada servindo dois cenários.
@@ -26,16 +25,10 @@ import {trackBookClosed, trackBookOpened} from '@/utils/analytics';
 export default function CardDoLivro({children}: {children: React.ReactNode}) {
     const salaMontada = useSalaMontada();
     const fechar = useFecharLivro();
-    const pathname = usePathname();
-    const slug = pathname.replace('/livros/', '');
 
-    // Quem registra o livro aberto normalmente é o RoomCanvas, que aqui não
-    // existe. A condição é a mesma dos dois lados — a sala e este card nunca
-    // estão montados juntos —, então não há risco de contar duas vezes.
-    useEffect(() => {
-        if (!salaMontada) trackBookOpened(slug);
-    }, [salaMontada, slug]);
-
+    // A abertura do livro não tem evento próprio: o `page_view` que o
+    // middleware grava para /livros/<slug> já registra exatamente isso, e os
+    // dois andavam praticamente em 1:1 (178 contra 162 numa semana).
     useEffect(() => {
         if (salaMontada) return;
         const aoTeclar = (e: KeyboardEvent) => {

@@ -21,14 +21,12 @@ import {NICHO_CAPACIDADE_M} from '@/lib/bookshelf-model.mjs';
 import {agruparPorAnoDeLeitura} from '@/lib/shelf-years.mjs';
 import {sortShelfBooks, filterShelfBooks, vizinhosDe} from '@/lib/livros-shelf.mjs';
 import {
-    CENAS, subVizinha, paradaVizinha, totalDeSubParadas, rotuloDaSubParada,
+    CENAS, subVizinha, paradaVizinha, totalDeSubParadas,
 } from '@/lib/livros-cenas.mjs';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
 import {
-    trackRoomLoaded, trackListFallback, trackBookOpened,
-    trackShelfSorted, trackIndexOpened, trackBookFilter,
-    trackRoomSceneChanged, trackShelfYearFocused, trackBookPaged,
-    trackBookClosed, trackRoomObjectClick,
+    trackListFallback, trackShelfSorted, trackIndexOpened, trackBookFilter,
+    trackShelfYearFocused, trackBookPaged, trackBookClosed, trackRoomObjectClick,
 } from '@/utils/analytics';
 
 export type ShelvedBookInput = {
@@ -160,12 +158,6 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     }, [atlas]);
     const animateTransitions = !(isFirstSceneRender && instantOpen);
 
-    const previousOpenSlugRef = useRef<string | null>(null);
-    useEffect(() => {
-        if (openSlug && previousOpenSlugRef.current !== openSlug) trackBookOpened(openSlug);
-        previousOpenSlugRef.current = openSlug;
-    }, [openSlug]);
-
     /**
      * Quantas sub-paradas a cena atual tem — os nichos de ano na estante, os
      * objetos com ação no canto do PC, zero no resto.
@@ -206,8 +198,13 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
      * Um passo no trilho da sala — cenas e sub-paradas no mesmo caminho, em loop
      * (ver `trilhoDeCenas`). Uma parada carrega os dois estados de uma vez: a
      * cena define o enquadramento, e a sub-parada (quando existe) o detalhe.
+     *
+     * Andar pelo trilho NÃO gera evento, de propósito: a roda do mouse
+     * atravessa paradas às dezenas por gesto, e cada travessia virava uma linha
+     * em `casara.events` para registrar um lugar por onde ninguém escolheu
+     * parar. Ficam medidos os cliques — a etiqueta do ano, os objetos da sala.
      */
-    const andarNoTrilho = useCallback((direcao: 1 | -1, origem: 'seta' | 'scroll') => {
+    const andarNoTrilho = useCallback((direcao: 1 | -1) => {
         const destino = paradaVizinha(
             {cena: manualViewpoint, sub: subFocado},
             direcao,
@@ -215,22 +212,6 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
         ) as {cena: Viewpoint; sub: number | null};
         setManualViewpoint(destino.cena);
         setSubFocado(destino.sub);
-
-        // A parada é a cena OU um detalhe dentro dela — os dois são um passo no
-        // mesmo trilho, e o que interessa medir aqui é por onde a pessoa andou.
-        // Os anos têm evento próprio porque já tinham antes desta generalização
-        // e o histórico continua comparável; o resto entra como troca de cena
-        // com o nome do objeto, sem inventar um evento novo por sub-parada.
-        if (destino.sub === null) {
-            trackRoomSceneChanged(destino.cena, origem);
-        } else if (destino.cena === 'estante') {
-            trackShelfYearFocused(grupos[destino.sub]?.rotulo ?? '', destino.sub);
-        } else {
-            trackRoomSceneChanged(
-                `${destino.cena}:${rotuloDaSubParada(destino.cena, destino.sub)}`,
-                origem,
-            );
-        }
     }, [manualViewpoint, subFocado, grupos]);
 
     // Abrir um livro com o índice aberto não deixa os dois empilhados, nem
@@ -311,8 +292,8 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                 setSubFocado((atual) => subVizinha(atual, e.key === 'ArrowUp' ? 1 : -1, totalDeSubs));
                 return;
             }
-            if (e.key === 'ArrowLeft') andarNoTrilho(-1, 'seta');
-            else if (e.key === 'ArrowRight') andarNoTrilho(1, 'seta');
+            if (e.key === 'ArrowLeft') andarNoTrilho(-1);
+            else if (e.key === 'ArrowRight') andarNoTrilho(1);
         };
         window.addEventListener('keydown', aoTeclar);
         return () => window.removeEventListener('keydown', aoTeclar);
@@ -344,7 +325,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
             const agora = Date.now();
             if (agora - ultimaTroca < INTERVALO_MS) return;
             ultimaTroca = agora;
-            andarNoTrilho(e.deltaY > 0 ? 1 : -1, 'scroll');
+            andarNoTrilho(e.deltaY > 0 ? 1 : -1);
         };
 
         window.addEventListener('wheel', aoRolar, {passive: true});
@@ -373,17 +354,14 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
         const chave = chaveAtlas(livrosDoAtlas);
         if (atlasCache && atlasCache.chave === chave) {
             setAtlas(atlasCache.atlas);
-            trackRoomLoaded(0, window.innerWidth < 768);
             return;
         }
 
-        const inicio = performance.now();
         let cancelado = false;
         buildSpineAtlas(livrosDoAtlas).then((resultado) => {
             if (cancelado) return;
             atlasCache = {chave, atlas: resultado};
             setAtlas(resultado);
-            trackRoomLoaded(Math.round(performance.now() - inicio), window.innerWidth < 768);
         });
         return () => {
             cancelado = true;
@@ -596,10 +574,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                         {CENAS.map((cena: {id: Viewpoint; rotulo: string}) => (
                             <button
                                 key={cena.id}
-                                onClick={() => {
-                                    if (cena.id !== manualViewpoint) trackRoomSceneChanged(cena.id, 'botao');
-                                    setManualViewpoint(cena.id);
-                                }}
+                                onClick={() => setManualViewpoint(cena.id)}
                                 aria-current={manualViewpoint === cena.id ? 'true' : undefined}
                                 className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg transition ${manualViewpoint === cena.id ? 'bg-white text-black' : 'bg-black/60 text-white'}`}
                             >

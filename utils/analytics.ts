@@ -1,24 +1,105 @@
 import { track } from '@vercel/analytics/react';
 
-// Envia para Vercel Analytics E para o Neon DB simultaneamente
+/**
+ * O gate do CLIENTE: em `npm run dev` nem chega a enfileirar. Quem realmente
+ * barra é o servidor (`lib/analytics-env.ts`, por `VERCEL_ENV`) — aqui só dá
+ * para olhar `NODE_ENV`, porque o Next só inlina `NEXT_PUBLIC_*` no bundle.
+ * Este primeiro gate poupa a viagem de rede; o de lá fecha a porta.
+ */
+const GRAVA_EVENTOS = process.env.NODE_ENV === 'production';
+
+type EventoNaFila = {
+  event_name: string;
+  payload: Record<string, string | number | boolean>;
+  route: string;
+  resolution: string;
+};
+
+/** Silêncio de 2s encerra o lote; 10 eventos o encerram antes disso. */
+const ESPERA_MS = 2000;
+const LOTE_MAXIMO = 10;
+
+let fila: EventoNaFila[] = [];
+let temporizador: ReturnType<typeof setTimeout> | null = null;
+let ouvindoSaida = false;
+
+/**
+ * `aoSair` escolhe o transporte, e essa escolha é a razão de o lote não perder
+ * eventos quando alguém fecha o site no meio da visita:
+ *
+ * - `sendBeacon` é o único que sobrevive ao descarregamento da página — o
+ *   navegador assume a entrega e a completa depois que a aba já morreu. Um
+ *   `fetch` pendente seria cancelado no unload.
+ * - Durante a visita, `fetch` normal: o beacon tem uma fila pequena e
+ *   compartilhada no navegador, e gastá-la com envios de rotina deixaria o
+ *   envio que importa (o da saída) sem espaço.
+ *
+ * O `fetch` de fallback existe porque `sendBeacon` devolve `false` quando essa
+ * fila estoura — aí `keepalive` dá a melhor chance restante.
+ */
+function esvaziar(aoSair: boolean) {
+  if (temporizador) {
+    clearTimeout(temporizador);
+    temporizador = null;
+  }
+  if (fila.length === 0) return;
+
+  const corpo = JSON.stringify(fila);
+  fila = [];
+
+  if (aoSair && navigator.sendBeacon?.('/api/events', new Blob([corpo], { type: 'application/json' }))) {
+    return;
+  }
+
+  fetch('/api/events', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: corpo,
+    keepalive: true,
+  }).catch(() => {});
+}
+
+/**
+ * `visibilitychange` e NÃO `beforeunload`: este último não dispara no Safari
+ * do iOS nem quando a aba entra no bfcache — ou seja, justamente no caso
+ * "fechei o site no celular". Trocar de aba, minimizar, bloquear a tela e
+ * fechar passam todos por `hidden`.
+ *
+ * `pagehide` fica como segunda rede: cobre o descarregamento de uma aba que já
+ * estava oculta, onde nenhum `visibilitychange` novo vai acontecer.
+ */
+function garantirEscutaDeSaida() {
+  if (ouvindoSaida) return;
+  ouvindoSaida = true;
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') esvaziar(true);
+  });
+  window.addEventListener('pagehide', () => esvaziar(true));
+}
+
+// Envia para Vercel Analytics na hora, e para o Neon DB em lote.
 const trackEvent = (
   name: string,
   payload: Record<string, string | number | boolean> = {}
 ) => {
   track(name, payload as Record<string, string>);
 
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || !GRAVA_EVENTOS) return;
 
-  fetch('/api/events', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      event_name: name,
-      payload,
-      route: window.location.pathname,
-      resolution: `${window.screen.width}x${window.screen.height}`,
-    }),
-  }).catch(() => {});
+  garantirEscutaDeSaida();
+  fila.push({
+    event_name: name,
+    payload,
+    route: window.location.pathname,
+    resolution: `${window.screen.width}x${window.screen.height}`,
+  });
+
+  if (fila.length >= LOTE_MAXIMO) {
+    esvaziar(false);
+    return;
+  }
+  if (temporizador) clearTimeout(temporizador);
+  temporizador = setTimeout(() => esvaziar(false), ESPERA_MS);
 };
 
 // ─── Navegação geral ──────────────────────────────────────────────────────────
@@ -207,9 +288,6 @@ export const trackSorteioRealizado = (entryCount: number, winnerCount: number) =
 
 // ─── Livros ───────────────────────────────────────────────────────────────────
 
-export const trackBookOpened = (slug: string) =>
-  trackEvent('book_opened', { slug });
-
 /**
  * `campo` é 'categoria' ou 'tag'. Disparado pelos dois filtros que existem — o
  * Índice da sala 3D e os chips de `/livros/lista` —, de propósito com o mesmo
@@ -240,12 +318,10 @@ export const trackBookBackToRoom = (slug: string) =>
   trackEvent('book_back_to_room', { slug });
 
 /**
- * `origem` responde à pergunta que motivou o trilho único: a roda do mouse
- * está sendo descoberta, ou todo mundo usa os botões?
+ * O ZOOM num ano da estante, e só quando vem de clique na etiqueta. Andar pelo
+ * trilho (roda, seta) atravessa anos sem que ninguém tenha escolhido nenhum —
+ * medir a travessia enchia a tabela de paradas de passagem.
  */
-export const trackRoomSceneChanged = (cena: string, origem: 'botao' | 'seta' | 'scroll') =>
-  trackEvent('room_scene_changed', { cena, origem });
-
 export const trackShelfYearFocused = (rotulo: string, indice: number) =>
   trackEvent('shelf_year_focused', { rotulo, indice });
 
@@ -267,9 +343,6 @@ export const trackBookClosed = (slug: string, via: 'botao' | 'esc' | 'fora') =>
  */
 export const trackRoomObjectClick = (objeto: string, estado = '') =>
   trackEvent('room_object_click', { objeto, estado });
-
-export const trackRoomLoaded = (timeToInteractiveMs: number, isMobile: boolean) =>
-  trackEvent('room_loaded', { time_to_interactive_ms: timeToInteractiveMs, is_mobile: isMobile });
 
 export const trackListFallback = (motivo: string) =>
   trackEvent('list_fallback', { motivo });
