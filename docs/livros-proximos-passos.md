@@ -133,7 +133,7 @@ lidos foram acertados de uma vez na mesma data.
 |---|------|-------|-------|----|
 | 01 | `100-presente` | 100% Presente — Joel Jota | — | ✅ |
 | 02 | `a-arte-da-guerra` | A Arte da Guerra — Sun Tzu | ISBN-13, editora | ⬜ |
-| 03 | `a-coragem-de-nao-agradar` | A Coragem de Não Agradar — Ichiro Kishimi | ISBN-13, editora, resenha | ⬜ |
+| 03 | `a-coragem-de-nao-agradar` | A Coragem de Não Agradar — Ichiro Kishimi | — | ✅ |
 | 04 | `a-metamorfose` | A Metamorfose — Franz Kafka | — | ✅ |
 | 05 | `a-nascente` | A Nascente — Ayn Rand | resenha | ⬜ |
 | 06 | `a-outra-face` | A Outra Face — Sidney Sheldon | ISBN-13, ano, editora, sinopse, resenha | ⬜ |

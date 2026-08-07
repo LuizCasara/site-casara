@@ -133,10 +133,23 @@ const VIEWPOINTS: Record<Exclude<Viewpoint, 'estante' | 'camping'>, ViewpointCon
       A câmera fica dentro da sala (a parede direita está em x=2.6) e um pouco
       acima da linha do tampo, para o que está SOBRE a mesa não sumir atrás da
       borda dela.
+
+      **O quadro é fechado sobre TRÊS coisas**, e o alvo é o centro delas, não o
+      centro do móvel: a caixa de som na prateleira (y≈1.65), as telas (y≈0.95)
+      e a bíblia aberta no braço direito (x≈2.22, z≈-0.35). Enquadrando o canto
+      inteiro, como antes, cadeira, gabinete e kettlebells entravam no quadro e
+      empurravam para longe justamente o que se quer olhar — a tela do monitor
+      ficava pequena demais para ler o que toca.
+
+      O alvo subiu de 0.95 para 1.18 para caber a prateleira, e a distância caiu
+      de ~2.34m para ~1.9m. Não dá para fechar mais sem perder a bíblia, que
+      está a mais de um metro das telas: daí a tipografia da tela do player ter
+      crescido junto (ver use-textura-de-player.ts) — as duas mudanças resolvem
+      metade do problema cada uma, e nenhuma delas resolvia sozinha.
     */
     pc: {
-        camera: [0.75, 1.65, 1.25],
-        target: [1.75, 0.95, -0.75],
+        camera: [0.92, 1.66, 0.68],
+        target: [1.77, 1.18, -0.95],
         minAzimuth: -0.75, maxAzimuth: -0.15,
         minPolar: 1.05, maxPolar: 1.55,
     },

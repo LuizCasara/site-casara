@@ -34,11 +34,13 @@ const COR_APAGADA = '#7d8aa3';
 const COR_DESTAQUE = '#8fd0f5';
 const COR_QUENTE = '#f0abfc';
 
-/** Barras do espectro. Menos que os 64 bins porque as frequências altas de uma
- *  música ficam quase sempre vazias — agrupar os graves e cortar o topo dá um
- *  gráfico que se mexe, em vez de um monte de barras mortas à direita. */
+/** Barras do espectro. Muito menos que os 512 bins porque as frequências altas
+ *  de uma música ficam quase sempre vazias — agrupar e cortar o topo dá um
+ *  gráfico que se mexe, em vez de um monte de barras mortas à direita.
+ *
+ *  200 bins de ~43 Hz vão até ~8,6 kHz, que é onde a música de fato acaba. */
 const BARRAS = 28;
-const BINS_USADOS = 44;
+const BINS_USADOS = 200;
 
 /** Pausa nas pontas do vai-e-vem do título longo, em segundos. Sem ela o texto
  *  inverte no instante em que chega ao fim e não dá tempo de ler a última
@@ -58,7 +60,7 @@ function cabecalho(ctx: CanvasRenderingContext2D, ouvintes: number, tocando: boo
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(0, 0, LARGURA, 34);
 
-    ctx.font = '700 15px Quicksand, sans-serif';
+    ctx.font = '700 17px Quicksand, sans-serif';
     ctx.fillStyle = COR_TEXTO;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
@@ -67,15 +69,15 @@ function cabecalho(ctx: CanvasRenderingContext2D, ouvintes: number, tocando: boo
     if (tocando) {
         ctx.fillStyle = COR_QUENTE;
         ctx.beginPath();
-        ctx.arc(LARGURA - MARGEM - 62, 18, 4, 0, Math.PI * 2);
+        ctx.arc(LARGURA - MARGEM - 78, 18, 4, 0, Math.PI * 2);
         ctx.fill();
-        ctx.font = '700 12px Quicksand, sans-serif';
-        ctx.fillText('AO VIVO', LARGURA - MARGEM - 52, 18);
+        ctx.font = '700 13px Quicksand, sans-serif';
+        ctx.fillText('AO VIVO', LARGURA - MARGEM - 68, 18);
     }
 
     if (ouvintes > 0) {
         ctx.textAlign = 'right';
-        ctx.font = '400 12px "Space Mono", monospace';
+        ctx.font = '400 14px "Space Mono", monospace';
         ctx.fillStyle = COR_APAGADA;
         ctx.fillText(String(ouvintes), LARGURA - MARGEM, 18);
     }
@@ -110,12 +112,12 @@ function tituloRolante(
     largura: number,
     tempoS: number,
 ) {
-    ctx.font = '700 23px Quicksand, sans-serif';
+    ctx.font = '700 29px Quicksand, sans-serif';
     const excesso = ctx.measureText(texto).width - largura;
 
     ctx.save();
     ctx.beginPath();
-    ctx.rect(x, y - 18, largura, 34);
+    ctx.rect(x, y - 23, largura, 42);
     ctx.clip();
 
     let deslocamento = 0;
@@ -170,14 +172,14 @@ function progresso(ctx: CanvasRenderingContext2D, atualS: number, totalS: number
     ctx.fillStyle = COR_DESTAQUE;
     ctx.fillRect(MARGEM, y, largura * fracao, 5);
 
-    ctx.font = '400 12px "Space Mono", monospace';
+    ctx.font = '400 15px "Space Mono", monospace';
     ctx.fillStyle = COR_APAGADA;
     ctx.textBaseline = 'top';
     ctx.textAlign = 'left';
-    ctx.fillText(tempoCurto(atualS), MARGEM, y + 12);
+    ctx.fillText(tempoCurto(atualS), MARGEM, y + 13);
     if (totalS > 0) {
         ctx.textAlign = 'right';
-        ctx.fillText(tempoCurto(totalS), LARGURA - MARGEM, y + 12);
+        ctx.fillText(tempoCurto(totalS), LARGURA - MARGEM, y + 13);
         ctx.textAlign = 'left';
     }
     ctx.textBaseline = 'middle';
@@ -187,12 +189,12 @@ function progresso(ctx: CanvasRenderingContext2D, atualS: number, totalS: number
  *  player — meia tela de player com campos vazios pareceria defeito. */
 function recado(ctx: CanvasRenderingContext2D, texto: string, detalhe: string) {
     ctx.textAlign = 'center';
-    ctx.font = '700 20px Quicksand, sans-serif';
+    ctx.font = '700 26px Quicksand, sans-serif';
     ctx.fillStyle = COR_TEXTO;
-    ctx.fillText(texto, LARGURA / 2, ALTURA / 2 - 10);
-    ctx.font = '400 14px Quicksand, sans-serif';
+    ctx.fillText(texto, LARGURA / 2, ALTURA / 2 - 12);
+    ctx.font = '400 18px Quicksand, sans-serif';
     ctx.fillStyle = COR_APAGADA;
-    ctx.fillText(detalhe, LARGURA / 2, ALTURA / 2 + 18);
+    ctx.fillText(detalhe, LARGURA / 2, ALTURA / 2 + 22);
     ctx.textAlign = 'left';
 }
 
@@ -244,31 +246,34 @@ export function useTexturaDePlayer(ativa: boolean, radio: RadioDaSala) {
         } else {
             cabecalho(ctx, faixa.ouvintes, true);
 
-            const LADO_CAPA = 96;
-            const yCapa = 52;
+            // A capa encolheu de 96 para 84 para pagar a tipografia maior: o
+            // texto é o que precisa ser LIDO de quase dois metros de distância,
+            // a capa só precisa ser reconhecida.
+            const LADO_CAPA = 84;
+            const yCapa = 48;
             capa(ctx, imagemRef.current, MARGEM, yCapa, LADO_CAPA);
 
-            const xTexto = MARGEM + LADO_CAPA + 18;
+            const xTexto = MARGEM + LADO_CAPA + 16;
             const larguraTexto = LARGURA - xTexto - MARGEM;
-            tituloRolante(ctx, faixa.titulo, xTexto, yCapa + 22, larguraTexto, tempoRef.current);
+            tituloRolante(ctx, faixa.titulo, xTexto, yCapa + 26, larguraTexto, tempoRef.current);
 
-            ctx.font = '600 17px Quicksand, sans-serif';
+            ctx.font = '600 21px Quicksand, sans-serif';
             ctx.fillStyle = COR_DESTAQUE;
-            ctx.fillText(faixa.artista, xTexto, yCapa + 54);
+            ctx.fillText(faixa.artista, xTexto, yCapa + 58);
 
             if (faixa.album) {
-                ctx.font = '400 13px Quicksand, sans-serif';
+                ctx.font = '400 15px Quicksand, sans-serif';
                 ctx.fillStyle = COR_APAGADA;
-                ctx.fillText(faixa.album, xTexto, yCapa + 78);
+                ctx.fillText(faixa.album, xTexto, yCapa + 84);
             }
 
             // Sem espectro (o caminho sem CORS), o espaço vira folga em vez de
             // um retângulo vazio — a tela continua equilibrada.
             if (!radio.semEspectro && radio.lerEspectro(dados)) {
-                espectro(ctx, dados, 168, 48);
+                espectro(ctx, dados, 150, 52);
             }
 
-            progresso(ctx, radio.posicaoAtualS(), faixa.duracaoS, 232);
+            progresso(ctx, radio.posicaoAtualS(), faixa.duracaoS, 220);
         }
 
         textura.needsUpdate = true;

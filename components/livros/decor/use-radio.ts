@@ -33,9 +33,28 @@ export const NIVEIS_DE_VOLUME = [
     {id: 'alto', rotulo: 'Volume: alto', ganho: 0.6},
 ] as const;
 
-/** 64 faixas de frequência — o que a tela desenha em ~28 barras e o LED lê como
- *  uma média. `fftSize` precisa ser potência de dois; 128 dá esses 64 bins. */
-const BINS = 64;
+/**
+ * Resolução da análise. `fftSize` precisa ser potência de dois e dá metade
+ * disso em bins, cada um cobrindo `sampleRate / fftSize` Hz.
+ *
+ * **512 bins, e não 64.** Com `fftSize` de 128 cada bin tinha 344 Hz de
+ * largura, então "os primeiros bins" cobriam de 0 a 4 kHz — quase toda a faixa
+ * musical. A média disso é o volume geral da música, que quase não varia, e foi
+ * por isso que o LED e o cone do woofer não pulsavam: o sinal que os movia era
+ * praticamente contínuo. Com 1024, cada bin tem ~43 Hz e o grave vira grave de
+ * verdade.
+ */
+const BINS = 512;
+
+/**
+ * Os bins que formam a batida: ~43 a 390 Hz, onde vivem bumbo e baixo.
+ *
+ * O bin 0 fica DE FORA de propósito — ele carrega a componente contínua e o
+ * ronco de sub-grave, que não pulsam com a música e só somariam um piso morto
+ * à média.
+ */
+export const GRAVE_PRIMEIRO_BIN = 1;
+export const GRAVE_ULTIMO_BIN = 9;
 
 /**
  * O buffer que recebe o espectro.
@@ -201,7 +220,11 @@ export function useRadio(estado: EstadoDeAudio, indiceDeVolume: number): RadioDa
         analisador.fftSize = BINS * 2;
         // Suaviza o espectro entre quadros. Sem isso as barras tremem tanto que
         // o desenho vira ruído visual em vez de leitura do som.
-        analisador.smoothingTimeConstant = 0.78;
+        //
+        // Baixou de 0.78 para 0.6 junto com o aumento da resolução: 0.78 é uma
+        // média longa, que amassava justamente o ataque do bumbo — o transiente
+        // que faz a batida ser percebida como batida.
+        analisador.smoothingTimeConstant = 0.6;
 
         // O analisador fica ANTES do volume: o que ele mede é o conteúdo, não o
         // quão alto está. Depois do ganho, baixar o volume apagaria as barras da
@@ -221,17 +244,35 @@ export function useRadio(estado: EstadoDeAudio, indiceDeVolume: number): RadioDa
         grafo.ctx.close().catch(() => {});
     }, []);
 
-    // ------------------------------------------------------------------
-    // Volume. Rampa curta, não atribuição direta: mudar um ganho de golpe
-    // produz um estalo audível (a descontinuidade na forma de onda).
-    // ------------------------------------------------------------------
+    /**
+     * Escreve o volume no ganho mestre.
+     *
+     * Rampa curta, não atribuição direta: mudar um ganho de golpe produz um
+     * estalo audível (a descontinuidade na forma de onda).
+     *
+     * **É função, e não só o efeito abaixo, porque os dois caminhos precisam
+     * dela.** O grafo nasce com ganho zero e é criado pelo efeito das FONTES,
+     * que é declarado DEPOIS deste — então, na primeiríssima vez que alguém
+     * liga o som, o efeito de volume rodava antes do grafo existir, caía no
+     * `if (!grafo) return` e o ganho ficava em zero. O áudio tocava para um
+     * ganho mudo: LED e espectro funcionavam (o analisador fica ANTES do ganho,
+     * de propósito) e não saía som nenhum. Só o clique seguinte, qualquer que
+     * fosse, destravava.
+     *
+     * Corrigir reordenando os efeitos funcionaria e seria pior: amarraria o
+     * áudio à ordem de declaração de dois hooks, que é exatamente o tipo de
+     * acoplamento invisível que produziu o defeito.
+     */
+    function aplicarVolume(grafo: Grafo, estadoAtual: EstadoDeAudio, indice: number) {
+        const alvo = estadoAtual === 'desligada'
+            ? 0
+            : (NIVEIS_DE_VOLUME[indice] ?? NIVEIS_DE_VOLUME[1]).ganho;
+        grafo.master.gain.setTargetAtTime(alvo, grafo.ctx.currentTime, 0.08);
+    }
+
     useEffect(() => {
         const grafo = grafoRef.current;
-        if (!grafo) return;
-        const alvo = estado === 'desligada'
-            ? 0
-            : (NIVEIS_DE_VOLUME[indiceDeVolume] ?? NIVEIS_DE_VOLUME[1]).ganho;
-        grafo.master.gain.setTargetAtTime(alvo, grafo.ctx.currentTime, 0.08);
+        if (grafo) aplicarVolume(grafo, estado, indiceDeVolume);
     }, [estado, indiceDeVolume]);
 
     // ------------------------------------------------------------------
@@ -256,6 +297,10 @@ export function useRadio(estado: EstadoDeAudio, indiceDeVolume: number): RadioDa
         const grafo = garantirGrafo();
         if (!grafo) return;
         grafo.ctx.resume().catch(() => {});
+        // Aqui, e não só no efeito de volume: na primeira vez o grafo acabou de
+        // nascer com ganho zero, e o efeito de volume já rodou (e desistiu) antes
+        // disto existir. Ver aplicarVolume.
+        aplicarVolume(grafo, estado, indiceDeVolume);
         let cancelado = false;
 
         if (estado === 'chuva') {
