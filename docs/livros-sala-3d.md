@@ -41,6 +41,17 @@ filtrável com query params compartilháveis.
 inteiro se perde. Clicar num livro muda a URL via **intercepting route**
 (`@livro/(.)[slug]`) e a cena continua de pé; o botão "voltar" fecha o livro.
 
+> **Armadilha:** para o interceptador `(.)[slug]`, qualquer segmento sob
+> `/livros/` é um slug — inclusive `/livros/lista`. Numa navegação client-side
+> ele intercepta, procura um livro chamado "lista", não acha e mostra "Livro não
+> encontrado" por cima de uma listagem que nem aparece (com F5 funciona, porque
+> interceptação só ocorre em navegação suave). O antídoto é declarar o segmento
+> estático dentro do slot — `app/livros/@livro/lista/page.tsx`, devolvendo
+> `null` —, porque estático tem precedência sobre dinâmico. **Todo segmento novo
+> sob `/livros/` precisa do irmão correspondente ali.** `default.tsx` não
+> resolve: ele só entra quando nenhuma rota do slot casa, e o problema é uma
+> casar quando não devia.
+
 ### Link externo entrega conteúdo primeiro
 
 Quem abre `/livros/<slug>` de fora recebe o HTML na hora; a sala materializa
