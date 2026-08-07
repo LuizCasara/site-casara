@@ -311,7 +311,11 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
         if (motivo) {
             if (mode.kind === 'sala') {
                 trackListFallback(motivo);
-                router.replace('/livros/lista');
+                // Navegação DURA, como todo caminho para a listagem: um
+                // router.replace daqui seria interceptado pela rota do livro
+                // (ver LinkParaLista). E não há o que preservar — este ramo
+                // existe justamente porque a sala não vai rodar.
+                window.location.replace('/livros/lista');
             } else {
                 // Em /livros/<slug> a página SSR já é um fallback completo —
                 // degradar aqui é só "não mostrar o 3D", nunca redirecionar pra

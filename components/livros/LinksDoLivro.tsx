@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import LinkParaLista from '@/components/livros/LinkParaLista';
 import {trackBookTagClick, trackBookBackToList, trackBookBackToRoom} from '@/utils/analytics';
 
 /**
- * Os dois links da página do livro que precisam registrar evento.
+ * Os links da página do livro que precisam registrar evento.
  *
  * Existem como componentes de cliente separados porque `/livros/[slug]` é
  * server-rendered de propósito (é a página que o Google indexa e o WhatsApp
@@ -12,20 +13,20 @@ import {trackBookTagClick, trackBookBackToList, trackBookBackToRoom} from '@/uti
  * recebe dados simples e chama o track sozinho, em vez de receber a função —
  * função não é serializável do servidor para o cliente.
  *
- * O estilo fica aqui junto e não é prop: são dois links específicos desta
- * página, não um sistema de links reutilizável.
+ * Todo link para a listagem passa por `LinkParaLista`, que é `<a>` e não
+ * `<Link>` — ver o porquê lá.
  */
 
 export function TagDoLivro({slug, tag}: {slug: string; tag: string}) {
     return (
-        <Link
-            href={`/livros/lista?tag=${encodeURIComponent(tag)}`}
+        <LinkParaLista
+            query={{tag}}
             onClick={() => trackBookTagClick(slug, tag)}
             className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600
                        hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
         >
             {tag}
-        </Link>
+        </LinkParaLista>
     );
 }
 
@@ -50,13 +51,12 @@ export function VoltarDoLivro({slug}: {slug: string}) {
             >
                 ← voltar para a sala
             </Link>
-            <Link
-                href="/livros/lista"
+            <LinkParaLista
                 onClick={() => trackBookBackToList(slug)}
                 className={`${base} text-gray-500 hover:text-gray-800 dark:hover:text-gray-200`}
             >
                 todos os livros
-            </Link>
+            </LinkParaLista>
         </div>
     );
 }

@@ -1,11 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import {useEffect, useState} from 'react';
 import {CATEGORIES} from '@/lib/book-categories.mjs';
 import {SORT_CRITERIA} from '@/lib/livros-shelf.mjs';
 import {corDeTextoSobre} from '@/lib/contraste.mjs';
 import {useDebounce} from '@/components/livros/use-debounce';
+import LinkParaLista from '@/components/livros/LinkParaLista';
 
 const SORT_LABELS: Record<string, string> = {
     padrao: 'Padrão',
@@ -133,19 +133,13 @@ export default function IndexPanel({
                         acervo em 3D, a listagem mostra em grade, com as capas.
                         Leva os filtros junto para a troca não perder o
                         contexto de quem já filtrou aqui. */}
-                    <Link
-                        href={{pathname: '/livros/lista', query: Object.fromEntries(
-                            Object.entries({
-                                categoria: filtros.categoria,
-                                tag: filtros.tag,
-                                busca: filtros.busca || null,
-                            }).filter(([, v]) => v),
-                        )}}
+                    <LinkParaLista
+                        query={{categoria: filtros.categoria, tag: filtros.tag, busca: filtros.busca}}
                         className="inline-flex items-center gap-1 text-xs font-medium text-white/70
                                    underline underline-offset-2 hover:text-white"
                     >
                         Ver todos os livros em lista →
-                    </Link>
+                    </LinkParaLista>
                 </div>
 
                 {tags.length > 0 && (

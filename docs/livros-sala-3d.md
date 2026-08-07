@@ -41,16 +41,26 @@ filtrável com query params compartilháveis.
 inteiro se perde. Clicar num livro muda a URL via **intercepting route**
 (`@livro/(.)[slug]`) e a cena continua de pé; o botão "voltar" fecha o livro.
 
-> **Armadilha:** para o interceptador `(.)[slug]`, qualquer segmento sob
-> `/livros/` é um slug — inclusive `/livros/lista`. Numa navegação client-side
-> ele intercepta, procura um livro chamado "lista", não acha e mostra "Livro não
-> encontrado" por cima de uma listagem que nem aparece (com F5 funciona, porque
-> interceptação só ocorre em navegação suave). O antídoto é declarar o segmento
-> estático dentro do slot — `app/livros/@livro/lista/page.tsx`, devolvendo
-> `null` —, porque estático tem precedência sobre dinâmico. **Todo segmento novo
-> sob `/livros/` precisa do irmão correspondente ali.** `default.tsx` não
-> resolve: ele só entra quando nenhuma rota do slot casa, e o problema é uma
-> casar quando não devia.
+> **Armadilha, verificada no navegador:** para o interceptador `(.)[slug]`,
+> qualquer segmento sob `/livros/` é um slug — inclusive `/livros/lista`. Numa
+> navegação suave ele intercepta, procura um livro chamado "lista", não acha e
+> mostra "Livro não encontrado", enquanto o `children` congela na página
+> anterior (comportamento normal de interceptação: o conteúdo de trás fica como
+> estava, que é o que faz o modal do livro funcionar). Com F5 tudo funciona,
+> porque interceptação só ocorre em navegação client-side.
+>
+> **O único antídoto que funciona é navegar duro** — `<a href>`, não `<Link>`;
+> `window.location`, não `router.replace`. Está encapsulado em
+> `components/livros/LinkParaLista.tsx`, e todo caminho para a listagem passa
+> por lá. Duas tentativas mais elegantes falharam: declarar o segmento estático
+> dentro do slot (`@livro/lista/page.tsx`) não adianta, porque a interceptação é
+> resolvida numa passada própria, antes da precedência entre estático e
+> dinâmico; e `default.tsx` só entra quando nenhuma rota do slot casa, enquanto
+> aqui o problema é uma casar quando não devia.
+>
+> Pelo mesmo motivo, a sincronia de URL dos filtros usa
+> `history.replaceState` e não `router.replace`: o router dispararia uma
+> navegação interceptável a cada clique num filtro.
 
 ### Link externo entrega conteúdo primeiro
 

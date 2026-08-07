@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import LinkParaLista from '@/components/livros/LinkParaLista';
 
 /**
  * Cobre o segmento `/livros/*` inteiro — sem isso, `notFound()` chamado em
@@ -15,11 +15,11 @@ export default function LivrosNaoEncontrado() {
             <p className="mb-8 text-sm text-gray-500 dark:text-gray-400">
                 Esse link pode estar desatualizado.
             </p>
-            <Link href="/livros/lista"
-                  className="text-sm text-gray-500 underline hover:text-gray-800
-                             dark:hover:text-gray-200">
+            <LinkParaLista
+                className="text-sm text-gray-500 underline hover:text-gray-800
+                           dark:hover:text-gray-200">
                 ← todos os livros
-            </Link>
+            </LinkParaLista>
         </div>
     );
 }

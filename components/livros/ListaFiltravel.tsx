@@ -1,7 +1,6 @@
 'use client';
 
 import {useMemo, useState} from 'react';
-import {useRouter} from 'next/navigation';
 import type {Book} from '@/lib/books';
 import {filtrarPorBusca} from '@/lib/busca-livros.mjs';
 import {CATEGORIES} from '@/lib/book-categories.mjs';
@@ -27,17 +26,17 @@ import BookFilters from '@/components/livros/BookFilters';
  * entregando a lista COMPLETA no HTML — melhor para indexação do que um
  * subconjunto filtrado.
  *
- * A URL continua espelhando o estado, por `replace`: `/livros/lista?tag=x` abre
- * já filtrado e continua compartilhável. `replace` e não `push` porque cada
- * tecla digitada viraria uma entrada no histórico, e sair da página exigiria
- * apertar "voltar" uma vez por caractere.
+ * A URL continua espelhando o estado — `/livros/lista?tag=x` abre já filtrado e
+ * continua compartilhável —, mas por `history.replaceState`, sem envolver o
+ * router: ver `sincronizarUrl`. `replace` e não `push` porque cada tecla
+ * digitada viraria uma entrada no histórico, e sair da página exigiria apertar
+ * "voltar" uma vez por caractere.
  */
 export default function ListaFiltravel({livros, tags, iniciais}: {
     livros: Book[];
     tags: string[];
     iniciais: {categoria?: string; tag?: string; status?: string; busca?: string};
 }) {
-    const router = useRouter();
     const [filtros, setFiltros] = useState(iniciais);
     const [termo, setTermo] = useState(iniciais.busca ?? '');
     const termoAtrasado = useDebounce(termo, 300);
@@ -52,12 +51,20 @@ export default function ListaFiltravel({livros, tags, iniciais}: {
         return filtrarPorBusca(porCampos, termoAtrasado) as Book[];
     }, [livros, filtros, termoAtrasado]);
 
-    /** Reescreve a URL sem recarregar nada — é só para poder compartilhar. */
+    /**
+     * Reescreve a barra de endereços, só isso — é para o filtro poder ser
+     * compartilhado, não para navegar.
+     *
+     * `history.replaceState` e NÃO `router.replace`: o router dispararia uma
+     * navegação do Next para `/livros/lista`, que é interceptada pela rota do
+     * livro (ver LinkParaLista) e derrubaria a listagem a cada clique num
+     * filtro. Aqui não há nada a buscar — a filtragem já aconteceu em memória.
+     */
     const sincronizarUrl = (proximos: typeof filtros, busca: string) => {
         const params = new URLSearchParams();
         for (const [k, v] of Object.entries({...proximos, busca})) if (v) params.set(k, String(v));
         const qs = params.toString();
-        router.replace(qs ? `/livros/lista?${qs}` : '/livros/lista', {scroll: false});
+        window.history.replaceState(null, '', qs ? `/livros/lista?${qs}` : '/livros/lista');
     };
 
     const mudarFiltro = (campo: 'categoria' | 'tag' | 'status', valor: string | null) => {
