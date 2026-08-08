@@ -132,8 +132,9 @@ ficou de fora do V1 está em `docs/livros-proximos-passos.md`.
   pública. O script lê `DATABASE_URL` de `.env.local` com o mesmo parsing manual
   de `scripts/migrate-casara.mjs`, escreve em **produção**, e por isso sempre
   mostra o que vai gravar e pede confirmação; tem `--dry-run`. Comandos:
-  `list`, `add <isbn>`, `edit <slug>` (um livro por vez) e `seed [--limit N]
-  [--apply] [--incluir-revisar]` (importação em lote a partir de
+  `list`, `add <isbn>`, `edit <slug>` (um livro por vez), `capa <slug> [url]`
+  (troca a capa de um livro já cadastrado) e `seed [--limit N] [--apply]
+  [--incluir-revisar]` (importação em lote a partir de
   `scripts/seed/acervo.json`)
 - **`scripts/seed/acervo.json` é a fonte da verdade** para título, autor,
   nota, categoria, tags e status — a Open Library só entra para complementar
@@ -176,6 +177,26 @@ ficou de fora do V1 está em `docs/livros-proximos-passos.md`.
 - **A Open Library é incompleta**, sobretudo para edições brasileiras: faltar
   `number_of_pages` ou capa é rotina. O CLI trata isso como caminho normal
   (pergunta no terminal, gera capa placeholder), não como erro
+- **A Amazon é a segunda fonte de CAPA — e só de capa.** Para livros, o ASIN
+  dela é o ISBN-10, e `/images/P/<asin>.01._SCLZZZZZZZ_.jpg` serve a imagem sem
+  raspar página nem chave de API; `capaDaAmazon` em `lib/book-cover.mjs` monta
+  essa URL a partir do ISBN-13 gravado (`isbn13Para10` recalcula o dígito
+  verificador — não é truncar o ISBN-13). É o que `livros.mjs capa <slug>` usa
+  quando você não passa uma URL. Ela **não** entra no `add`/`seed` como fonte de
+  metadados: título e autor vindos de página de loja trazem texto de marketing
+  junto, o mesmo motivo pelo qual o `acervo.json` é a fonte da verdade. Quando
+  não tem a capa, a Amazon responde **200 com um GIF de 43 bytes** em vez de
+  404 — é para isso que serve o `BYTES_MINIMOS` de `baixarCapa`, que rejeita a
+  resposta pelo tamanho. Nem todo livro está lá: dos 6 sem capa na importação de
+  07/08/2026, 5 tinham capa por ISBN e 1 só saiu com a URL passada à mão
+- **Trocar a capa exige o comando `capa`, não copiar o JPG por cima.**
+  `spine_color` é o que a estante 3D desenha, e só o cadastro a calculava — um
+  JPG substituído na mão deixava a lombada com a cor genérica da categoria para
+  sempre. O comando rebaixa a imagem, recalcula a cor pelo `sharp` e faz o
+  `UPDATE`. Ele guarda o arquivo anterior em memória antes do download e o
+  restaura se a origem não devolver imagem utilizável, porque `baixarCapa`
+  escreve o placeholder por cima em caso de falha — sem isso, uma URL ruim
+  destruiria uma capa boa
 - Skoob **não** é uma fonte: a API pública foi desligada em setembro de 2025 e
   não há exportação nativa. `lib/book-sources/index.mjs` existe como gancho caso
   isso mude

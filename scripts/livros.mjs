@@ -12,7 +12,7 @@
  * ATENÇÃO: este script escreve no banco de PRODUÇÃO. Não existe staging.
  * Nada é gravado sem confirmação explícita com o resumo à vista.
  */
-import {readFileSync} from 'node:fs';
+import {existsSync, readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 import {neon} from '@neondatabase/serverless';
@@ -22,7 +22,7 @@ import {writeFileSync, readFileSync as lerArquivo, unlinkSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {buscarMetadados} from '../lib/book-sources/index.mjs';
 import {buscarComRetentativa} from '../lib/book-sources/openlibrary-search.mjs';
-import {baixarCapa} from '../lib/book-cover.mjs';
+import {baixarCapa, capaDaAmazon} from '../lib/book-cover.mjs';
 import {slugify, normalizeTag, tagKey} from '../lib/book-utils.mjs';
 import {CATEGORY_IDS} from '../lib/book-categories.mjs';
 
@@ -246,7 +246,12 @@ Acervo de livros — luizcasara.com
   node scripts/livros.mjs list
   node scripts/livros.mjs add <isbn> [--dry-run]
   node scripts/livros.mjs edit <slug>
+  node scripts/livros.mjs capa <slug> [url] [--dry-run]
   node scripts/livros.mjs seed [--limit N] [--apply] [--incluir-revisar]
+
+O 'capa' troca a capa de um livro já cadastrado e recalcula a cor da lombada —
+é o conserto para os livros que ficaram com capa placeholder. Sem a url, ele
+tenta a capa da Amazon deduzida do ISBN gravado.
 
 O 'add' e o 'edit' abrem seu editor para escrever a resenha em Markdown.
 Configure a variável de ambiente EDITOR — e NÃO ESQUEÇA do --wait, senão o
@@ -500,6 +505,93 @@ async function comandoEdit(sql, slug) {
     }
 }
 
+/**
+ * Troca a capa de um livro já cadastrado e recalcula a cor da lombada.
+ *
+ * Existe porque capa placeholder é ROTINA, não exceção: a Open Library não tem
+ * a maioria das edições brasileiras, e até aqui o único conserto era trocar o
+ * JPG na mão em public/livros/capas/ — o que deixava `spine_color` com a cor
+ * genérica da categoria para sempre, já que só o cadastro a calculava. A cor
+ * da lombada é o que a estante 3D desenha, então a sala continuava errada
+ * mesmo depois de a capa certa estar no disco.
+ *
+ * Sem `url`, tenta a Amazon a partir do ISBN gravado (ver `capaDaAmazon`).
+ */
+async function comandoCapa(sql, slug, url, dryRun) {
+    if (!slug) {
+        console.error('Faltou o slug. Uso: node scripts/livros.mjs capa <slug> [url]');
+        process.exitCode = 1;
+        return;
+    }
+
+    const [livro] = await sql`
+        SELECT slug, title, isbn, category, spine_color FROM casara.books WHERE slug = ${slug}`;
+    if (!livro) {
+        console.error(`Não achei nenhum livro com slug "${slug}". Veja: livros.mjs list`);
+        process.exitCode = 1;
+        return;
+    }
+
+    const origem = url ?? capaDaAmazon(livro.isbn);
+    if (!origem) {
+        console.error(`"${livro.title}" não tem ISBN-13 gravado, então não dá para deduzir a `
+            + 'capa da Amazon. Passe a URL: livros.mjs capa <slug> <url>');
+        process.exitCode = 1;
+        return;
+    }
+    console.log(`\n${livro.title}\n  de: ${origem}${url ? '' : '  (deduzida do ISBN)'}`);
+
+    // O arquivo é guardado ANTES do download porque baixarCapa escreve o
+    // placeholder por cima quando a origem falha — sem isto, apontar para uma
+    // URL ruim destruiria uma capa boa que já estava lá.
+    const destino = join(ROOT, 'public', 'livros', 'capas', `${slug}.jpg`);
+    const anterior = existsSync(destino) ? lerArquivo(destino) : null;
+
+    const {coverPath, spineColor, placeholder} =
+        await baixarCapa(origem, slug, livro.category, ROOT, livro.title);
+
+    if (placeholder) {
+        if (anterior) writeFileSync(destino, anterior);
+        console.error('\n✗ A URL não devolveu uma imagem de capa utilizável (a Amazon responde '
+            + '200 com\n  um GIF de 43 bytes quando não tem a capa). Nada foi alterado.');
+        process.exitCode = 1;
+        return;
+    }
+
+    console.log(`\n─── Será atualizado ───`);
+    console.table([{
+        slug,
+        arquivo: `public${coverPath}`,
+        lombada_antes: livro.spine_color,
+        lombada_depois: spineColor,
+    }]);
+
+    // Mesma convenção do `seed`: o dry-run é do BANCO, não do disco. O JPG novo
+    // já está gravado, e é assim que se confere a capa antes de assumir a cor.
+    if (dryRun) {
+        console.log('\n--dry-run: o JPG foi trocado, mas spine_color NÃO foi atualizado no banco.');
+        console.log(`   Olhe public${coverPath} e rode de novo sem --dry-run para confirmar.`);
+        return;
+    }
+
+    const io = rl();
+    try {
+        if (!await confirmar(io, '\nAtualizar spine_color no banco de PRODUÇÃO?')) {
+            console.log('Cancelado. O JPG novo ficou no disco, mas o banco não mudou.');
+            return;
+        }
+    } finally {
+        io.close();
+    }
+
+    await sql`
+        UPDATE casara.books
+        SET spine_color = ${spineColor}, updated_at = NOW()
+        WHERE slug = ${slug}`;
+
+    console.log(`✅ Atualizado. Lembre do commit: a capa só aparece no site depois do deploy.`);
+}
+
 /** Pausa entre requisições — a Open Library não gosta de rajada. */
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -714,6 +806,15 @@ async function main() {
         case 'edit': {
             const sql = abrirBanco();
             await comandoEdit(sql, argumento);
+            break;
+        }
+        case 'capa': {
+            // A URL é o 2º argumento posicional e é OPCIONAL — sem ela, o
+            // comando deduz a da Amazon pelo ISBN. Filtramos as flags para que
+            // `capa <slug> --dry-run` não tome "--dry-run" como sendo a URL.
+            const url = process.argv[4]?.startsWith('--') ? undefined : process.argv[4];
+            const sql = abrirBanco();
+            await comandoCapa(sql, argumento, url, process.argv.includes('--dry-run'));
             break;
         }
         case 'seed': {

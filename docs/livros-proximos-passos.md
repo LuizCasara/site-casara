@@ -115,11 +115,17 @@ estão `✅`.
 5. **Revise o texto antes de gravar**: ortografia, concordância e pontuação,
    mais sugestões pontuais de leitura — sem mudar o sentido nem a voz dele. A
    resenha é texto pessoal; corrigir não é reescrever.
-6. Grave pelo `edit` de `scripts/livros.mjs` (nunca por SQL: o `\n` literal e o
+6. **Toda resenha termina com a data em que foi escrita**, como blockquote:
+   `> resenha escrita em MM/AAAA`. Anexe automaticamente, sem perguntar — não
+   é enfeite: boa parte do acervo foi lida anos atrás, e a resenha é o que o
+   Luiz pensa HOJE sobre o que lembra, não o que achou na época. Sem a data, o
+   leitor não tem como saber a distância entre as duas coisas. Regra adotada
+   em 07/08/2026; as cinco resenhas anteriores foram acertadas na mesma data.
+7. Grave pelo `edit` de `scripts/livros.mjs` (nunca por SQL: o `\n` literal e o
    apóstrofo já morderam uma vez — ver o histórico da Metamorfose).
-7. **Marque a linha na tabela**: remova os campos preenchidos da coluna "falta"
+8. **Marque a linha na tabela**: remova os campos preenchidos da coluna "falta"
    e troque para `✅` quando não sobrar nada.
-8. Apresente o próximo.
+9. Apresente o próximo.
 
 `rating` não entra na conta: os livros sem nota são os que estão em `lendo`, em
 `quero-ler` e a Bíblia — todos legitimamente sem nota ainda.
@@ -129,6 +135,12 @@ próprio CLI (`resolverProgresso` em `scripts/livros.mjs`) — 100 para `lido`,
 perguntado só para `lendo`, nulo nos outros dois. Os 48 livros que já estavam
 lidos foram acertados de uma vez na mesma data.
 
+**Pendência transversal, decidir no fim do mutirão**: a tag `ficção` nasceu
+durante ele e está em 3 dos 12 livros da categoria Ficção. Enquanto estiver
+assim, filtrar por ela devolve um subconjunto arbitrário — pior que não existir.
+Ou completa nos 12, ou sai: a categoria `ficcao` já marca isso, com chip
+colorido no card e na página.
+
 | # | slug | livro | falta | ok |
 |---|------|-------|-------|----|
 | 01 | `100-presente` | 100% Presente — Joel Jota | — | ✅ |
@@ -136,16 +148,16 @@ lidos foram acertados de uma vez na mesma data.
 | 03 | `a-coragem-de-nao-agradar` | A Coragem de Não Agradar — Ichiro Kishimi | — | ✅ |
 | 04 | `a-metamorfose` | A Metamorfose — Franz Kafka | — | ✅ |
 | 05 | `a-nascente` | A Nascente — Ayn Rand | resenha | ⬜ |
-| 06 | `a-outra-face` | A Outra Face — Sidney Sheldon | ISBN-13, ano, editora, sinopse, resenha | ⬜ |
-| 07 | `a-psicologia-financeira` | A Psicologia Financeira — Morgan Housel | ISBN-13, ano, editora, resenha | ⬜ |
-| 08 | `a-revolta-de-atlas` | A Revolta de Atlas — Ayn Rand | ISBN-13, editora, resenha | ⬜ |
-| 09 | `a-revolucao-dos-bichos` | A Revolução dos Bichos — George Orwell | ISBN-13, editora, resenha | ⬜ |
-| 10 | `a-sutil-arte-de-ligar-o-f-da-se` | A Sutil Arte de Ligar o F*da-se — Mark Manson | ISBN-13, ano, editora, resenha | ⬜ |
-| 11 | `a-vida-feliz` | A Vida Feliz — Sêneca | ISBN-13, ano, editora, págs, resenha | ⬜ |
+| 06 | `a-outra-face` | A Outra Face — Sidney Sheldon | — | ✅ |
+| 07 | `a-psicologia-financeira` | A Psicologia Financeira — Morgan Housel | — | ✅ |
+| 08 | `a-revolta-de-atlas` | A Revolta de Atlas — Ayn Rand | — | ✅ |
+| 09 | `a-revolucao-dos-bichos` | A Revolução dos Bichos — George Orwell | — | ✅ |
+| 10 | `a-sutil-arte-de-ligar-o-f-da-se` | A Sutil Arte de Ligar o F*da-se — Mark Manson | — | ✅ |
+| 11 | `a-vida-feliz` | A Vida Feliz — Sêneca | resenha | ⬜ |
 | 12 | `animais-fantasticos-e-onde-habitam-o-roteiro-original` | Animais Fantásticos e Onde Habitam: O Roteiro Original — J. K. Rowling | resenha | ⬜ |
-| 13 | `arrume-a-sua-cama` | Arrume a Sua Cama — William H. McRaven | resenha | ⬜ |
-| 14 | `as-4-disciplinas-da-execucao` | As 4 Disciplinas da Execução — Chris McChesney | ISBN-13, ano, editora, resenha | ⬜ |
-| 15 | `as-48-leis-do-poder` | As 48 Leis do Poder — Robert Greene | ISBN-13, ano, editora, resenha | ⬜ |
+| 13 | `arrume-a-sua-cama` | Arrume a Sua Cama — William H. McRaven | — | ✅ |
+| 14 | `as-4-disciplinas-da-execucao` | As 4 Disciplinas da Execução — Chris McChesney | — | ✅ |
+| 15 | `as-48-leis-do-poder` | As 48 Leis do Poder — Robert Greene | — | ✅ |
 | 16 | `as-cavernas-de-aco` | As Cavernas de Aço — Isaac Asimov | ISBN-13, ano, editora, resenha | ⬜ |
 | 17 | `bora-vender` | Bora Vender — Alfredo Soares | ISBN-13, ano, editora, resenha | ⬜ |
 | 18 | `biblia-sagrada-nvi` | Bíblia Sagrada NVI | ISBN-13, ano, resenha | ⬜ |
