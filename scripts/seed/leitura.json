@@ -1,0 +1,131 @@
+{
+  "_comentario": [
+    "Ordem de leitura por ano e páginas estimadas — a fonte da verdade para",
+    "`finished_at` (data de leitura), no mesmo espírito de acervo.json.",
+    "",
+    "ANOS: a ordem dentro de cada ano é a ordem de leitura informada pelo dono",
+    "do acervo, e o script depende dela — não reordenar alfabeticamente.",
+    "",
+    "PAGINAS: a Open Library só devolveu `number_of_pages` para 9 dos 51",
+    "livros (edições brasileiras são mal cobertas — ver CLAUDE.md). Os demais",
+    "estão ESTIMADOS a partir das edições brasileiras mais comuns. São",
+    "aproximações deliberadas: o número é usado para a espessura da lombada na",
+    "sala 3D e para ordenar os meses dentro do ano, dois usos em que errar 20",
+    "páginas não muda nada. Sem eles, `bookThicknessM` joga todos no fallback",
+    "da mediana e 42 livros ganham lombadas idênticas de 3cm.",
+    "",
+    "Os 9 que a Open Library já preencheu NÃO aparecem aqui e não são tocados."
+  ],
+
+  "anos": {
+    "2020": [
+      "Geração de Valor 1",
+      "O Codificador Limpo",
+      "Geração de Valor 2"
+    ],
+    "2021": [
+      "A Revolução dos Bichos",
+      "100% Presente",
+      "Arrume a Sua Cama",
+      "Quem Pensa Enriquece",
+      "Geração de Valor 3"
+    ],
+    "2022": [
+      "Por que Generalistas Vencem em um Mundo de Especialistas",
+      "Ponto de Inflexão",
+      "Do Mil ao Milhão",
+      "A Outra Face",
+      "O Monge e o Executivo",
+      "Por que Fazemos o que Fazemos?",
+      "A Arte da Guerra",
+      "As Cavernas de Aço",
+      "Pai Rico, Pai Pobre"
+    ],
+    "2023": [
+      "O Pequeno Príncipe",
+      "O Pior Ano da Minha Vida",
+      "O Menino que Descobriu o Vento",
+      "Escotismo para Rapazes",
+      "A Psicologia Financeira",
+      "O Jogo Interior do Tênis",
+      "Mais Esperto que o Diabo",
+      "Decifre e Influencie Pessoas",
+      "Sou Puta, Doutor!",
+      "Rápido e Devagar",
+      "Como Fazer Amigos e Influenciar Pessoas"
+    ],
+    "2024": [
+      "Diário Estoico",
+      "A Metamorfose",
+      "O Mítico Homem-Mês",
+      "Forward",
+      "A Coragem de Não Agradar",
+      "O Homem Mais Rico da Babilônia",
+      "As 48 Leis do Poder",
+      "As 4 Disciplinas da Execução",
+      "Factfulness"
+    ],
+    "2025": [
+      "A Revolta de Atlas",
+      "Em Nome do Povo",
+      "Bora Vender",
+      "Em Busca de Sentido",
+      "O Hobbit",
+      "O Segredo de Todas as Coisas"
+    ],
+    "2026": [
+      "Chaves Bíblicas para o Homem de Deus",
+      "Leruth",
+      "O Homem que Comprou o Tempo",
+      "A Sutil Arte de Ligar o F*da-se",
+      "Disciplina é Liberdade",
+      "O Almanaque de Naval Ravikant"
+    ]
+  },
+
+  "paginas_estimadas": {
+    "100% Presente": 240,
+    "A Outra Face": 336,
+    "A Psicologia Financeira": 256,
+    "A Revolução dos Bichos": 152,
+    "A Sutil Arte de Ligar o F*da-se": 224,
+    "A Vida Feliz": 128,
+    "As 4 Disciplinas da Execução": 312,
+    "As 48 Leis do Poder": 640,
+    "As Cavernas de Aço": 288,
+    "Bora Vender": 192,
+    "Cada Homem um Guerreiro": 208,
+    "Chaves Bíblicas para o Homem de Deus": 176,
+    "Como Fazer Amigos e Influenciar Pessoas": 256,
+    "Decifre e Influencie Pessoas": 208,
+    "Disciplina é Liberdade": 224,
+    "Diário Estoico": 416,
+    "Do Mil ao Milhão": 176,
+    "Em Nome do Povo": 256,
+    "Escotismo para Rapazes": 352,
+    "Forward": 240,
+    "Geração de Valor 1": 192,
+    "Geração de Valor 2": 208,
+    "Leruth": 320,
+    "Mais Esperto que o Diabo": 256,
+    "O Almanaque de Naval Ravikant": 272,
+    "O Codificador Limpo": 256,
+    "O Hobbit": 336,
+    "O Homem Mais Rico da Babilônia": 160,
+    "O Homem que Comprou o Tempo": 208,
+    "O Jogo Interior do Tênis": 192,
+    "O Menino que Descobriu o Vento": 288,
+    "O Monge e o Executivo": 144,
+    "O Mítico Homem-Mês": 336,
+    "O Pequeno Príncipe": 96,
+    "O Pior Ano da Minha Vida": 208,
+    "O Segredo de Todas as Coisas": 224,
+    "Pai Rico, Pai Pobre": 336,
+    "Ponto de Inflexão": 224,
+    "Por que Fazemos o que Fazemos?": 160,
+    "Por que Generalistas Vencem em um Mundo de Especialistas": 368,
+    "Quem Pensa Enriquece": 336,
+    "Sapiens: Uma Breve História da Humanidade": 464,
+    "Sou Puta, Doutor!": 192
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import {useEffect, useState} from "react";
+import {trackStatsPeriodChanged} from "@/utils/analytics";
 
 type StatsData = {
   overview: { total_events: number; total_page_views: number; unique_routes: number };
@@ -71,6 +72,28 @@ const EVENT_LABELS: Record<string, string> = {
   quiz_session_saved:           "QUIZ_SAVED",
   quiz_session_discarded:       "QUIZ_DISCARDED",
   sorteio_realizado:            "SORTEIO_RUN",
+  nav_click:                    "NAV_CLICK",
+  mobile_menu_opened:           "MOBILE_MENU",
+  language_toggled:             "LANG_TOGGLE",
+  outbound_click:               "OUTBOUND",
+  app_action:                   "APP_ACTION",
+  app_output:                   "APP_OUTPUT",
+  stats_period_changed:         "STATS_PERIOD",
+  list_fallback:                "ROOM_FALLBACK",
+  room_object_click:            "ROOM_OBJECT",
+  shelf_year_focused:           "SHELF_YEAR",
+  shelf_sorted:                 "SHELF_SORT",
+  index_opened:                 "BOOK_INDEX",
+  book_filter:                  "BOOK_FILTER",
+  book_closed:                  "BOOK_CLOSED",
+  book_paged:                   "BOOK_PAGED",
+  book_card_click:              "BOOK_CARD",
+  book_tag_click:               "BOOK_TAG",
+  book_back_to_list:            "BOOK_BACK",
+  book_back_to_room:            "BOOK_TO_ROOM",
+  book_shared:                  "BOOK_SHARED",
+  book_comment_whatsapp:        "BOOK_COMMENT",
+  book_suggestion_whatsapp:     "BOOK_SUGGEST",
 };
 
 const EVENT_DESCRIPTIONS: Record<string, string> = {
@@ -104,6 +127,28 @@ const EVENT_DESCRIPTIONS: Record<string, string> = {
   quiz_session_saved:           "Host salvou o quiz encerrado",
   quiz_session_discarded:       "Host descartou o quiz encerrado",
   sorteio_realizado:            "Sorteio de nomes foi executado",
+  nav_click:                    "Clicou num link do menu",
+  mobile_menu_opened:           "Abriu o menu no celular",
+  language_toggled:             "Trocou o idioma do site",
+  outbound_click:               "Clicou num link que sai do site",
+  app_action:                   "Usou um mini-app depois de abri-lo",
+  app_output:                   "Baixou ou copiou o resultado de um mini-app",
+  stats_period_changed:         "Trocou o período deste painel",
+  list_fallback:                "Caiu na lista em HTML por não rodar a sala",
+  room_object_click:            "Clicou num objeto da sala (retrato, monitor, bíblia)",
+  shelf_year_focused:           "Clicou na etiqueta de um ano da estante",
+  shelf_sorted:                 "Reordenou a estante",
+  index_opened:                 "Abriu o Índice pela lava lamp",
+  book_filter:                  "Filtrou o acervo por categoria ou tag",
+  book_closed:                  "Fechou a ficha do livro (botão, Esc ou clique fora)",
+  book_paged:                   "Folheou para o livro vizinho",
+  book_card_click:              "Abriu um livro pela grade da listagem",
+  book_tag_click:               "Seguiu uma tag a partir da página do livro",
+  book_back_to_list:            "Voltou do livro para a listagem",
+  book_back_to_room:            "Voltou do livro para a sala 3D",
+  book_shared:                  "Compartilhou o link de um livro",
+  book_comment_whatsapp:        "Foi comentar sobre um livro pelo WhatsApp",
+  book_suggestion_whatsapp:     "Foi sugerir um livro pelo WhatsApp",
 };
 
 const TEMP_DISPLAY: Record<string, string> = {
@@ -410,7 +455,10 @@ export default function StatsPage() {
             {(["7d", "30d", "all"] as Period[]).map(p => (
               <button
                 key={p}
-                onClick={() => setPeriod(p)}
+                onClick={() => {
+                  if (p !== period) trackStatsPeriodChanged(p);
+                  setPeriod(p);
+                }}
                 className={`px-3 py-1 text-xs border rounded transition-all ${
                   period === p
                     ? "border-green-400 text-green-300 bg-green-950/60 shadow-[0_0_8px_rgba(74,222,128,0.2)]"

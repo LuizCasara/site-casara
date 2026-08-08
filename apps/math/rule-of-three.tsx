@@ -1,6 +1,7 @@
 "use client";
 
 import {useState} from "react";
+import {trackAppAction} from '@/utils/analytics';
 
 const RuleOfThreeCalculator = () => {
     // State for input values
@@ -220,7 +221,7 @@ const RuleOfThreeCalculator = () => {
 
             <div className="flex space-x-6 mb-6">
                 <button
-                    onClick={calculateResult}
+                    onClick={() => { trackAppAction('rule-of-three', 'calcular'); calculateResult(); }}
                     className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
                 >
                     Calcular

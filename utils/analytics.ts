@@ -1,25 +1,127 @@
 import { track } from '@vercel/analytics/react';
 
-// Envia para Vercel Analytics E para o Neon DB simultaneamente
+/**
+ * O gate do CLIENTE: em `npm run dev` nem chega a enfileirar. Quem realmente
+ * barra é o servidor (`lib/analytics-env.ts`, por `VERCEL_ENV`) — aqui só dá
+ * para olhar `NODE_ENV`, porque o Next só inlina `NEXT_PUBLIC_*` no bundle.
+ * Este primeiro gate poupa a viagem de rede; o de lá fecha a porta.
+ */
+const GRAVA_EVENTOS = process.env.NODE_ENV === 'production';
+
+type EventoNaFila = {
+  event_name: string;
+  payload: Record<string, string | number | boolean>;
+  route: string;
+  resolution: string;
+};
+
+/** Silêncio de 2s encerra o lote; 10 eventos o encerram antes disso. */
+const ESPERA_MS = 2000;
+const LOTE_MAXIMO = 10;
+
+let fila: EventoNaFila[] = [];
+let temporizador: ReturnType<typeof setTimeout> | null = null;
+let ouvindoSaida = false;
+
+/**
+ * `aoSair` escolhe o transporte, e essa escolha é a razão de o lote não perder
+ * eventos quando alguém fecha o site no meio da visita:
+ *
+ * - `sendBeacon` é o único que sobrevive ao descarregamento da página — o
+ *   navegador assume a entrega e a completa depois que a aba já morreu. Um
+ *   `fetch` pendente seria cancelado no unload.
+ * - Durante a visita, `fetch` normal: o beacon tem uma fila pequena e
+ *   compartilhada no navegador, e gastá-la com envios de rotina deixaria o
+ *   envio que importa (o da saída) sem espaço.
+ *
+ * O `fetch` de fallback existe porque `sendBeacon` devolve `false` quando essa
+ * fila estoura — aí `keepalive` dá a melhor chance restante.
+ */
+function esvaziar(aoSair: boolean) {
+  if (temporizador) {
+    clearTimeout(temporizador);
+    temporizador = null;
+  }
+  if (fila.length === 0) return;
+
+  const corpo = JSON.stringify(fila);
+  fila = [];
+
+  if (aoSair && navigator.sendBeacon?.('/api/events', new Blob([corpo], { type: 'application/json' }))) {
+    return;
+  }
+
+  fetch('/api/events', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: corpo,
+    keepalive: true,
+  }).catch(() => {});
+}
+
+/**
+ * `visibilitychange` e NÃO `beforeunload`: este último não dispara no Safari
+ * do iOS nem quando a aba entra no bfcache — ou seja, justamente no caso
+ * "fechei o site no celular". Trocar de aba, minimizar, bloquear a tela e
+ * fechar passam todos por `hidden`.
+ *
+ * `pagehide` fica como segunda rede: cobre o descarregamento de uma aba que já
+ * estava oculta, onde nenhum `visibilitychange` novo vai acontecer.
+ */
+function garantirEscutaDeSaida() {
+  if (ouvindoSaida) return;
+  ouvindoSaida = true;
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') esvaziar(true);
+  });
+  window.addEventListener('pagehide', () => esvaziar(true));
+}
+
+// Envia para Vercel Analytics na hora, e para o Neon DB em lote.
 const trackEvent = (
   name: string,
   payload: Record<string, string | number | boolean> = {}
 ) => {
   track(name, payload as Record<string, string>);
 
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || !GRAVA_EVENTOS) return;
 
-  fetch('/api/events', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      event_name: name,
-      payload,
-      route: window.location.pathname,
-      resolution: `${window.screen.width}x${window.screen.height}`,
-    }),
-  }).catch(() => {});
+  garantirEscutaDeSaida();
+  fila.push({
+    event_name: name,
+    payload,
+    route: window.location.pathname,
+    resolution: `${window.screen.width}x${window.screen.height}`,
+  });
+
+  if (fila.length >= LOTE_MAXIMO) {
+    esvaziar(false);
+    return;
+  }
+  if (temporizador) clearTimeout(temporizador);
+  temporizador = setTimeout(() => esvaziar(false), ESPERA_MS);
 };
+
+// ─── Navegação geral ──────────────────────────────────────────────────────────
+//
+// O acesso em si já é coberto pelo `page_view` que o middleware.ts grava por
+// request. O que está aqui é a INTENÇÃO — por onde a pessoa escolheu andar.
+
+export const trackNavClick = (destino: string, origem: 'header' | 'menu_mobile') =>
+  trackEvent('nav_click', { destino, origem });
+
+export const trackMobileMenuOpened = () => trackEvent('mobile_menu_opened');
+
+export const trackLanguageToggled = (para: string) =>
+  trackEvent('language_toggled', { para });
+
+/**
+ * Todo clique que tira a pessoa do site. Um evento só com `destino`, e não um
+ * por link: assim o próximo link externo que aparecer já entra na conta sem
+ * precisar de código novo no dashboard.
+ */
+export const trackOutboundClick = (destino: string) =>
+  trackEvent('outbound_click', { destino });
 
 // ─── Home ─────────────────────────────────────────────────────────────────────
 
@@ -115,9 +217,27 @@ export const trackProjectClick = (projectName: string) =>
 export const trackAppClick = (appId: string, appTitle: string) =>
   trackEvent('app_click', { app_id: appId, app_title: appTitle });
 
+/**
+ * Uma ação DENTRO de um mini-app — calcular, converter, gerar. Um evento só
+ * para os nove apps, com `app_id` distinguindo: nomes separados por app
+ * multiplicariam o dashboard por nove para responder a mesma pergunta ("este
+ * app é usado depois de aberto, ou só espiado?").
+ */
+export const trackAppAction = (appId: string, acao: string) =>
+  trackEvent('app_action', { app_id: appId, acao });
+
+/** O resultado saiu do app: download, cópia, compartilhamento. */
+export const trackAppOutput = (appId: string, formato: string) =>
+  trackEvent('app_output', { app_id: appId, formato });
+
 // ─── CV ───────────────────────────────────────────────────────────────────────
 
 export const trackCvDownload = () => trackEvent('cv_download');
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+
+export const trackStatsPeriodChanged = (periodo: string) =>
+  trackEvent('stats_period_changed', { periodo });
 
 // ─── Casamento ────────────────────────────────────────────────────────────────
 
@@ -165,3 +285,83 @@ export const trackQuizSessionDiscarded = (sessionId: string) =>
 
 export const trackSorteioRealizado = (entryCount: number, winnerCount: number) =>
   trackEvent('sorteio_realizado', { entry_count: entryCount, winner_count: winnerCount });
+
+// ─── Livros ───────────────────────────────────────────────────────────────────
+
+/**
+ * `campo` é 'categoria' ou 'tag'. Disparado pelos dois filtros que existem — o
+ * Índice da sala 3D e os chips de `/livros/lista` —, de propósito com o mesmo
+ * nome: a pergunta ("o que as pessoas procuram no acervo?") é a mesma nos dois,
+ * e `route` já vem no evento para separá-los quando importar.
+ *
+ * Só a ATIVAÇÃO de um filtro conta. Desmarcar dispara com `valor` vazio, que é
+ * o que distingue "procurei ficção" de "desisti do filtro".
+ */
+export const trackBookFilter = (campo: string, valor: string) =>
+  trackEvent('book_filter', { campo, valor });
+
+export const trackBookCardClick = (slug: string, posicao: number) =>
+  trackEvent('book_card_click', { slug, posicao });
+
+export const trackBookTagClick = (slug: string, tag: string) =>
+  trackEvent('book_tag_click', { slug, tag });
+
+export const trackBookBackToList = (slug: string) =>
+  trackEvent('book_back_to_list', { slug });
+
+/**
+ * Voltar do livro para a SALA, não para a listagem. Evento separado de
+ * propósito: os dois botões ficam lado a lado na página, e qual deles as
+ * pessoas escolhem diz se a sala 3D é procurada por quem chega de fora.
+ */
+export const trackBookBackToRoom = (slug: string) =>
+  trackEvent('book_back_to_room', { slug });
+
+/**
+ * O ZOOM num ano da estante, e só quando vem de clique na etiqueta. Andar pelo
+ * trilho (roda, seta) atravessa anos sem que ninguém tenha escolhido nenhum —
+ * medir a travessia enchia a tabela de paradas de passagem.
+ */
+export const trackShelfYearFocused = (rotulo: string, indice: number) =>
+  trackEvent('shelf_year_focused', { rotulo, indice });
+
+export const trackBookPaged = (de: string, para: string, direcao: 'anterior' | 'proximo') =>
+  trackEvent('book_paged', { de, para, direcao });
+
+/** `fora` só existe no modal aberto pela listagem: sobre a sala 3D, clicar fora
+ *  do card é girar a câmera, não fechar. */
+export const trackBookClosed = (slug: string, via: 'botao' | 'esc' | 'fora') =>
+  trackEvent('book_closed', { slug, via });
+
+/**
+ * Clique num objeto da sala que não é livro — retrato, monitor, bíblia. Um
+ * evento com `objeto`, e não um nome por peça: a sala ganha objeto clicável a
+ * cada rodada de layout, e cada um deles viraria uma linha nova no dashboard
+ * para responder a mesma pergunta ("no que as pessoas clicam aqui dentro?").
+ *
+ * `estado` só é preenchido por quem tem mais de um: o monitor, que cicla.
+ */
+export const trackRoomObjectClick = (objeto: string, estado = '') =>
+  trackEvent('room_object_click', { objeto, estado });
+
+export const trackListFallback = (motivo: string) =>
+  trackEvent('list_fallback', { motivo });
+
+export const trackShelfSorted = (criterio: string) =>
+  trackEvent('shelf_sorted', { criterio });
+
+export const trackIndexOpened = (categoria: string | null, tag: string | null) =>
+  trackEvent('index_opened', { categoria: categoria ?? '', tag: tag ?? '' });
+
+// Os dois cliques que levam para fora do site, pro WhatsApp. Disparados ANTES
+// do window.open — depois dele a aba pode já ter perdido o foco.
+export const trackBookSuggestion = () =>
+  trackEvent('book_suggestion_whatsapp', {});
+
+export const trackBookComment = (slug: string) =>
+  trackEvent('book_comment_whatsapp', { slug });
+
+// `metodo` separa a folha de compartilhamento do sistema (celular) do
+// copiar-link (desktop) — são gestos diferentes com intenções diferentes.
+export const trackBookShared = (slug: string, metodo: 'share' | 'clipboard') =>
+  trackEvent('book_shared', { slug, metodo });

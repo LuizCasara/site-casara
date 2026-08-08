@@ -128,3 +128,39 @@ CREATE TABLE IF NOT EXISTS casara.quiz_answers (
 );
 
 CREATE INDEX IF NOT EXISTS idx_quiz_answers_session ON casara.quiz_answers (session_id);
+
+-- ─── Acervo de Livros ───────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS casara.books (
+  id           BIGSERIAL PRIMARY KEY,
+  slug         TEXT NOT NULL UNIQUE,
+  isbn         TEXT,
+  title        TEXT NOT NULL,
+  author       TEXT,
+  year         SMALLINT,
+  publisher    TEXT,
+  pages        SMALLINT,
+  synopsis     TEXT,
+  cover_path   TEXT,
+  spine_color  TEXT,
+  rating       NUMERIC(2,1) CHECK (rating BETWEEN 0 AND 5),
+  category     TEXT NOT NULL,
+  tags         TEXT[] NOT NULL DEFAULT '{}',
+  -- 'lendo'      pilha sobre a mesa de centro, na sala 3D
+  -- 'lido'       estante do acervo, agrupado por ano de leitura
+  -- 'quero-ler'  torre no chão ao lado da estante — a fila de leitura
+  -- 'referencia' só a página própria; fora da estante, da lista e dos filtros
+  --              (hoje: a Bíblia aberta na mesa do PC)
+  -- Ver lib/migrations/002-status-livros.sql.
+  status       TEXT NOT NULL CHECK (status IN ('lendo','lido','referencia','quero-ler')),
+  progress_pct SMALLINT CHECK (progress_pct BETWEEN 0 AND 100),
+  finished_at  DATE,
+  review       TEXT,
+  shelf_order  SMALLINT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_books_status   ON casara.books (status);
+CREATE INDEX IF NOT EXISTS idx_books_category ON casara.books (category);
+CREATE INDEX IF NOT EXISTS idx_books_tags     ON casara.books USING GIN (tags);

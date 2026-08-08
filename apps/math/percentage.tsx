@@ -1,6 +1,7 @@
 "use client";
 
 import {useState} from "react";
+import {trackAppAction} from '@/utils/analytics';
 
 const PercentageCalculator = () => {
     // Define calculation types
@@ -235,7 +236,7 @@ const PercentageCalculator = () => {
 
             <div className="flex space-x-6 mb-6">
                 <button
-                    onClick={calculateResult}
+                    onClick={() => { trackAppAction('percentage', 'calcular'); calculateResult(); }}
                     className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
                 >
                     Calcular
