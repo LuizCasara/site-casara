@@ -78,6 +78,9 @@ Two analytics systems run side by side, both driven from `utils/analytics.ts`'s 
 - `lib/db.ts` — lazy-initialized Neon client (`sql` tagged template) reading `DATABASE_URL`; avoids connecting at build time
 - `casara.events` — the single analytics table (event_name, route, payload JSONB, geo/browser columns)
 - `middleware.ts` — fire-and-forget inserts a `page_view` event per request (geo from Vercel headers, bot UAs filtered, skips `_next`/`api`/`_vercel`/favicon)
+- **Só produção grava evento — `lib/analytics-env.ts`.** `.env.local` aponta para o banco de PRODUÇÃO (é o mesmo `DATABASE_URL` do `scripts/livros.mjs`), então sem gate cada `npm run dev` gravava dado real: numa auditoria de 07/08/2026, **93,4% dos eventos dos 7 dias anteriores vinham de localhost**. O gate é duplo e por mecanismos diferentes de propósito — servidor (middleware + `/api/events`) por `VERCEL_ENV === 'production'`, que é o único que distingue produção de *preview* e não existe fora da Vercel; cliente (`utils/analytics.ts`) por `NODE_ENV`, porque o Next só inlina `NEXT_PUBLIC_*` no bundle. O do cliente poupa a viagem de rede, o do servidor é o que de fato barra
+- **Eventos do cliente vão em LOTE, não um POST por evento.** `trackEvent` enfileira em memória e esvazia após 2s de silêncio, ou na hora ao juntar 10. O flush de saída usa `navigator.sendBeacon` — o único transporte que sobrevive ao descarregamento da página, e a razão de fechar a aba não perder a fila; um `fetch` pendente seria cancelado. O listener é `visibilitychange → hidden` e **nunca `beforeunload`**, que não dispara no Safari do iOS nem no bfcache, ou seja, justamente no caso "fechei o site no celular". Do lado do servidor, `/api/events` aceita array (e ainda o objeto solto, para abas abertas antes do deploy) e grava o lote inteiro num `INSERT ... SELECT FROM UNNEST`: uma ida ao Neon por lote, não por evento
+- **Antes de criar um evento, pergunte se ele responde a algo que um `page_view` já não responde, e se é um gesto DELIBERADO.** Foi o que a mesma auditoria derrubou: `room_scene_changed` (74% vinha da roda do mouse — atravessar paradas não é escolher nenhuma), `room_loaded` (1:1 com o `page_view` de `/livros`, e o `time_to_interactive_ms` que o justificava era 0–14ms, ou seja cache hit) e `book_opened` (178 `page_view` de slug contra 162 aberturas — a mesma informação duas vezes). Medir travessia de navegação contínua é o antipadrão: um gesto de trackpad rendia dezenas de linhas. Cliques são baratos e ficam
 - Adding a new tracked event: add a `trackX` function in `utils/analytics.ts`, call it from the component, and (optionally) add its label to `EVENT_LABELS` in `app/stats/page.tsx` for the dashboard
 
 ### Nuvem de Palavras (live word-cloud dynamics)
@@ -113,6 +116,105 @@ Unlike Nuvem de Palavras and Quiz ao Vivo, this one is **single-screen and clien
 - The animated reveal (slot-machine-style name cycling, one winner at a time) and the confetti burst are both hand-rolled with framer-motion (already a project dependency via the Quiz/Nuvem de Palavras animations) rather than pulling in a dedicated confetti library
 - The spin's tick interval is **not** a fixed `setInterval` — `spinFor()` uses a recursive `setTimeout` whose delay follows `easedTickDelay()` (a `Math.sin` curve: slow → fast → slow), so the roulette accelerates then decelerates into the landing name over a fixed `SPIN_DURATION_MS`, regardless of how many entries are in the pool. This is deliberate: with a naive fixed-speed loop, a short list "landed" almost instantly and killed the suspense — duration is now time-based, not cycle-count-based
 
+### Acervo de Livros
+
+`/livros` (a sala de leitura 3D — o `<Canvas>` mora em `app/livros/layout.tsx`,
+nunca numa page, e clicar num livro é uma intercepting route `@livro/(.)[slug]`),
+`/livros/lista` (grade com filtros por categoria/tag/status, todos via query
+param para serem compartilháveis) e `/livros/[slug]` (página do livro,
+server-rendered para SEO). **As decisões da sala 3D — estante por ano, trilho de
+navegação, territórios congelados, contrato do `KenneyModel` — estão em
+`docs/livros-sala-3d.md`; leia antes de mexer em `components/livros/`.** O que
+ficou de fora do V1 está em `docs/livros-proximos-passos.md`.
+
+- **Não existe rota de admin.** O cadastro acontece só por `scripts/livros.mjs`,
+  rodando localmente — foi requisito explícito de não criar superfície de ataque
+  pública. O script lê `DATABASE_URL` de `.env.local` com o mesmo parsing manual
+  de `scripts/migrate-casara.mjs`, escreve em **produção**, e por isso sempre
+  mostra o que vai gravar e pede confirmação; tem `--dry-run`. Comandos:
+  `list`, `add <isbn>`, `edit <slug>` (um livro por vez), `capa <slug> [url]`
+  (troca a capa de um livro já cadastrado) e `seed [--limit N] [--apply]
+  [--incluir-revisar]` (importação em lote a partir de
+  `scripts/seed/acervo.json`)
+- **`scripts/seed/acervo.json` é a fonte da verdade** para título, autor,
+  nota, categoria, tags e status — a Open Library só entra para complementar
+  **capa, páginas e ano**. Não é uma limitação temporária: a busca por
+  título+autor devolve com frequência texto de marketing dentro de
+  `author_name` e casa o livro errado com um box de 3 volumes, então usar a
+  resposta da API para título/autor/nota corromperia dado bom com dado ruim.
+  `seed` sem `--apply` é dry-run (não grava no banco, mas AINDA baixa capas
+  para o disco — é assim que se descobre quais vão ficar placeholder antes de
+  gravar); `--limit N` importa só os N primeiros da fila; `--incluir-revisar`
+  inclui livros marcados com `_revisar` no JSON (pulados por padrão).
+  **A idempotência do `seed` é por TÍTULO**, não por slug: rodar de novo só
+  importa os livros do `acervo.json` cujo título ainda não está no banco
+  — comparar por slug quebraria, porque o slug gravado pode ganhar sufixo
+  (`-<ano>` ou `-2`) em caso de colisão e nunca mais bater com `slugify(title)`
+- **Armadilha do `seed --apply`: as linhas vão para o banco de produção NA
+  HORA, mas as capas baixadas só existem no site ao vivo depois de
+  `git commit` + deploy** (`public/livros/capas/` é versionado). Entre rodar
+  `--apply` e dar push, o site fica com `/livros` mostrando imagens quebradas
+  para as capas novas. Rode e faça o push junto, no mesmo momento
+- **A lógica pura vive em `.mjs`, não `.ts`** (`lib/book-utils.mjs`,
+  `lib/book-categories.mjs`, `lib/book-sources/`, `lib/book-cover.mjs`): o CLI é
+  Node puro e não consegue importar `.ts` sem build. Esses arquivos são
+  importados tanto pelo CLI quanto pelo Next, e são os únicos cobertos por teste
+  (`npm test`, via `node --test`) — porque um bug ali corrompe dado permanente
+- `lib/books.ts` é o lado Next: tipo `Book` e queries. Sempre `casara.books`
+- **Um livro tem UMA `category`** (taxonomia fechada em `lib/book-categories.mjs`,
+  define a cor) **e N `tags` livres** (eixo transversal de busca). Multi-categoria
+  tornaria a posição na prateleira ambígua
+- **`status` tem quatro valores** (CHECK em `lib/schema.sql`), e cada um é um
+  lugar da sala: `lido` na estante, `lendo` na pilha da mesa de centro,
+  `quero-ler` na torre no chão e `referencia` em lugar nenhum — este último tem
+  página própria e é alcançado só por link direto ou pelo objeto 3D que o
+  representa (a Bíblia aberta na mesa do PC), ficando fora de toda listagem,
+  filtro e contagem via `STATUS_OCULTOS` em `lib/books.ts`
+- **Capas são baixadas, não linkadas** (`public/livros/capas/<slug>.jpg`): a API
+  de covers da Open Library tem rate limit e linkar direto faria cada visitante
+  bater no servidor deles. `spine_color` é a cor dominante, extraída uma vez no
+  cadastro pelo `sharp` — o navegador nunca faz esse trabalho
+- **A Open Library é incompleta**, sobretudo para edições brasileiras: faltar
+  `number_of_pages` ou capa é rotina. O CLI trata isso como caminho normal
+  (pergunta no terminal, gera capa placeholder), não como erro
+- **A Amazon é a segunda fonte de CAPA — e só de capa.** Para livros, o ASIN
+  dela é o ISBN-10, e `/images/P/<asin>.01._SCLZZZZZZZ_.jpg` serve a imagem sem
+  raspar página nem chave de API; `capaDaAmazon` em `lib/book-cover.mjs` monta
+  essa URL a partir do ISBN-13 gravado (`isbn13Para10` recalcula o dígito
+  verificador — não é truncar o ISBN-13). É o que `livros.mjs capa <slug>` usa
+  quando você não passa uma URL. Ela **não** entra no `add`/`seed` como fonte de
+  metadados: título e autor vindos de página de loja trazem texto de marketing
+  junto, o mesmo motivo pelo qual o `acervo.json` é a fonte da verdade. Quando
+  não tem a capa, a Amazon responde **200 com um GIF de 43 bytes** em vez de
+  404 — é para isso que serve o `BYTES_MINIMOS` de `baixarCapa`, que rejeita a
+  resposta pelo tamanho. Nem todo livro está lá: dos 6 sem capa na importação de
+  07/08/2026, 5 tinham capa por ISBN e 1 só saiu com a URL passada à mão
+- **Trocar a capa exige o comando `capa`, não copiar o JPG por cima.**
+  `spine_color` é o que a estante 3D desenha, e só o cadastro a calculava — um
+  JPG substituído na mão deixava a lombada com a cor genérica da categoria para
+  sempre. O comando rebaixa a imagem, recalcula a cor pelo `sharp` e faz o
+  `UPDATE`. Ele guarda o arquivo anterior em memória antes do download e o
+  restaura se a origem não devolver imagem utilizável, porque `baixarCapa`
+  escreve o placeholder por cima em caso de falha — sem isso, uma URL ruim
+  destruiria uma capa boa
+- Skoob **não** é uma fonte: a API pública foi desligada em setembro de 2025 e
+  não há exportação nativa. `lib/book-sources/index.mjs` existe como gancho caso
+  isso mude
+- **O som da sala não passa por `lib/sound.ts`** (ver "Sound effects" abaixo):
+  ele toca efeitos curtos por `<audio>`, e aqui é preciso um grafo de Web Audio
+  — ganho, analisador de espectro, síntese de ruído. O monitor da direita
+  cicla `desligada → lofi → chuva` e é o controle do que toca; a caixa de som
+  da prateleira aérea é o volume (3 níveis no clique, sem mute — mutar já é
+  desligar a tela). `lib/radio.ts` é o ponto único de configuração da estação,
+  e é o único arquivo a mexer para trocá-la. **A sala abre em silêncio com a
+  tela apagada**, porque autoplay sem gesto seria bloqueado de qualquer forma —
+  mostrar um player mudo seria pior que mostrar um monitor desligado. A chuva é
+  ruído sintetizado e a música é stream ao vivo: **nenhum arquivo de áudio novo
+  entrou no repositório**. Detalhes e as recusas (wallpaper de anime da
+  estação, botão flutuante) em `docs/livros-sala-3d.md`
+- `/livros` é **só em português**, como os mini-apps e as dinâmicas — o
+  `LanguageProvider` cobre apenas home, about, projects e a listagem `/app`
+
 ### Descubra sua Linguagem do Amor
 
 A second forced-choice personality-style test, `apps/desenvolvimento-pessoal/descubra-sua-linguagem-do-amor.tsx`, following the same lessons as the temperament test (see `docs/testes-de-personalidade.md`) but researched separately in `docs/linguagens-do-amor-pesquisa.md` — read that doc before changing the question bank or scoring.
@@ -125,6 +227,12 @@ A second forced-choice personality-style test, `apps/desenvolvimento-pessoal/des
 - Same `/stats` treatment as temperament: a `LINGUAGENS_DO_AMOR_ANALYSIS` panel next to `TEMPERAMENTO_ANALYSIS`, fed by the `love_languages` block in `GET /api/metrics/stats` (started/completed/conversion, per-language averages, `combined_rate`, avg duration) — see `app/stats/page.tsx`
 
 ### Sound effects
+
+**Scope: the three live dynamics only.** `/livros` has its own, unrelated audio
+stack (Web Audio graph, live radio stream, synthesized rain) in
+`components/livros/decor/use-radio.ts` — see "Acervo de Livros" above. Don't
+route one through the other: this file plays short one-shot clips through plain
+`<audio>` elements, which is not what a gain/analyser graph needs.
 
 Shared across all three live dynamics — `lib/sound.ts` exports `playSound(name)` (fire-and-forget, cached `HTMLAudioElement` per name) and `startLoop(name)` (returns a stop function, used only by Sorteio's spin). Every `.play()` is `.catch(() => {})`'d, same spirit as `toggleFullscreen`: a browser autoplay-policy rejection just means "no sound this time," never a thrown error. Effect files live in `public/sounds/*.mp3` — short (12-110KB) clips from [Mixkit's free SFX library](https://mixkit.co/free-sound-effects/) (no attribution required). Swapping a sound is a one-file replacement, no code change needed as long as the filename stays the same.
 

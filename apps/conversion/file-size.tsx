@@ -1,6 +1,7 @@
 "use client";
 
 import {useState} from "react";
+import {trackAppAction} from '@/utils/analytics';
 
 const FileSizeConverter = () => {
     // Define file size units
@@ -270,7 +271,7 @@ const FileSizeConverter = () => {
 
             <div className="flex space-x-6 mb-6">
                 <button
-                    onClick={convertFileSize}
+                    onClick={() => { trackAppAction('file-size', 'converter'); convertFileSize(); }}
                     className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
                 >
                     Converter

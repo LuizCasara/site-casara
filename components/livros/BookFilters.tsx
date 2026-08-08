@@ -1,0 +1,100 @@
+'use client';
+
+import type {BookFilters as Filtros} from '@/lib/books';
+import {corDeTextoSobre} from '@/lib/contraste.mjs';
+
+type Categoria = {id: string; nome: string; cor: string};
+
+/**
+ * Os chips de filtro de `/livros/lista`.
+ *
+ * São `<button>`, e não `<Link>` com a query string: quem filtra é o estado do
+ * cliente (ver ListaFiltravel), não uma navegação. A URL continua espelhando a
+ * escolha, mas por `router.replace`, depois — o filtro já aconteceu.
+ *
+ * Clicar no chip ativo desliga o filtro, mesmo gesto do Índice da sala 3D.
+ */
+
+function Chip({ativo, children, cor, onClick}: {
+    ativo: boolean; children: React.ReactNode; cor?: string; onClick: () => void;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            aria-pressed={ativo}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                ativo
+                    ? ''
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 ' +
+                      'dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+            }`}
+            style={ativo && cor ? {backgroundColor: cor, color: corDeTextoSobre(cor)} : undefined}
+        >
+            {children}
+        </button>
+    );
+}
+
+export default function BookFilters({categorias, tags, ativos, onFiltrar, onLimpar}: {
+    categorias: Categoria[];
+    tags: string[];
+    ativos: Filtros;
+    onFiltrar: (campo: 'categoria' | 'tag' | 'status', valor: string | null) => void;
+    onLimpar: () => void;
+}) {
+    const temFiltro = Boolean(ativos.categoria || ativos.tag || ativos.status);
+
+    return (
+        <div className="mb-6 flex flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold uppercase text-gray-400">Status</span>
+                <Chip ativo={ativos.status === 'lendo'} cor="#059669"
+                      onClick={() => onFiltrar('status', ativos.status === 'lendo' ? null : 'lendo')}>
+                    Lendo agora
+                </Chip>
+                <Chip ativo={ativos.status === 'lido'} cor="#475569"
+                      onClick={() => onFiltrar('status', ativos.status === 'lido' ? null : 'lido')}>
+                    Já li
+                </Chip>
+                <Chip ativo={ativos.status === 'quero-ler'} cor="#7c3aed"
+                      onClick={() => onFiltrar('status', ativos.status === 'quero-ler' ? null : 'quero-ler')}>
+                    Quero ler
+                </Chip>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold uppercase text-gray-400">Categoria</span>
+                {categorias.map((c) => (
+                    <Chip key={c.id} ativo={ativos.categoria === c.id} cor={c.cor}
+                          onClick={() => onFiltrar('categoria', ativos.categoria === c.id ? null : c.id)}>
+                        {c.nome}
+                    </Chip>
+                ))}
+            </div>
+
+            {tags.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold uppercase text-gray-400">Tags</span>
+                    {tags.map((t) => (
+                        <Chip key={t} ativo={ativos.tag === t} cor="#0ea5e9"
+                              onClick={() => onFiltrar('tag', ativos.tag === t ? null : t)}>
+                            {t}
+                        </Chip>
+                    ))}
+                </div>
+            )}
+
+            {temFiltro && (
+                <button
+                    type="button"
+                    onClick={onLimpar}
+                    className="self-start text-xs text-gray-500 underline hover:text-gray-800
+                               dark:hover:text-gray-200"
+                >
+                    limpar filtros
+                </button>
+            )}
+        </div>
+    );
+}

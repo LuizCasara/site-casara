@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import * as potrace from "potrace";
 import Image from "next/image";
+import {trackAppAction, trackAppOutput} from '@/utils/analytics';
 
 const ImageToSvgConverter = () => {
   // State for file and conversion
@@ -321,7 +322,7 @@ const ImageToSvgConverter = () => {
 
           <div className="flex flex-col xs:flex-row space-y-3 xs:space-y-0 xs:space-x-6">
             <button
-              onClick={convertToSvg}
+              onClick={() => { trackAppAction('image-to-svg', 'converter'); convertToSvg(); }}
               className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:bg-gray-400"
               disabled={!selectedFile || isConverting}
             >
@@ -376,7 +377,7 @@ const ImageToSvgConverter = () => {
                     />
                   </div>
                   <button
-                    onClick={downloadSvg}
+                    onClick={() => { trackAppOutput('image-to-svg', 'svg'); downloadSvg(); }}
                     className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
                   >
                     Baixar SVG

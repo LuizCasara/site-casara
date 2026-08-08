@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { REAL_ROUTE_RE } from '@/lib/routes';
 import { parseBrowser } from '@/lib/request-meta';
+import { shouldRecordEvents } from '@/lib/analytics-env';
 
 const SKIP_PREFIXES = ['/_next', '/api', '/favicon', '/_vercel'];
 
@@ -22,6 +23,10 @@ export async function middleware(request: NextRequest) {
   if (!REAL_ROUTE_RE.test(pathname)) {
     return NextResponse.next();
   }
+
+  // `.env.local` aponta para o banco de PRODUÇÃO, então sem este gate cada
+  // `npm run dev` gravava page_view real. Ver lib/analytics-env.ts.
+  if (!shouldRecordEvents()) return NextResponse.next();
 
   if (!process.env.DATABASE_URL) return NextResponse.next();
 
