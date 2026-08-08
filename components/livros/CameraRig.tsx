@@ -212,6 +212,11 @@ function focoDeObjeto(
  * (recomendações → gaveta → monitores → alto-falante → bíblia), varrendo o canto
  * da esquerda para a direita como o trilho principal varre a sala.
  *
+ * São cinco aqui e quatro no trilho: a gaveta tem enquadramento como qualquer
+ * outra, mas ninguém a atravessa navegando — só o clique nela leva a câmera até
+ * aqui (ver `foraDoTrilho` em lib/livros-cenas.mjs). O índice dela continua
+ * valendo, e é por isso que ela segue nesta lista em vez de ser removida.
+ *
  * As distâncias são o que separa uma parada útil de um close inútil: o quadro
  * de recados e a bíblia pedem folga para se lerem inteiros, enquanto a caixa de
  * som tem 10cm e some se a câmera parar longe. Nenhuma delas tenta enquadrar
