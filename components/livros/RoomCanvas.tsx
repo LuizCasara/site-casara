@@ -23,7 +23,7 @@ import {NICHO_CAPACIDADE_M} from '@/lib/bookshelf-model.mjs';
 import {agruparPorAnoDeLeitura} from '@/lib/shelf-years.mjs';
 import {sortShelfBooks, filterShelfBooks, vizinhosDe} from '@/lib/livros-shelf.mjs';
 import {
-    CENAS, subVizinha, paradaVizinha, totalDeSubParadas, indiceDoFoco,
+    CENAS, subVizinha, paradaVizinha, subParadasDaCena, indiceDoFoco,
 } from '@/lib/livros-cenas.mjs';
 import BilheteOverlay from '@/components/livros/BilheteOverlay';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
@@ -49,7 +49,8 @@ export type ShelvedBookInput = {
 };
 
 /**
- * A sub-parada da gaveta dentro do canto do PC.
+ * A sub-parada da gaveta dentro do canto do PC — fora do trilho, alcançada só
+ * pelo clique na própria gaveta (ver `alternarGaveta`).
  *
  * Buscada pelo id e não escrita como número: a ordem de `FOCOS_DO_PC` é a
  * posição dos objetos no MUNDO, então ela muda sempre que um objeto novo entrar
@@ -215,10 +216,19 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     const animateTransitions = !(isFirstSceneRender && instantOpen);
 
     /**
-     * Quantas sub-paradas a cena atual tem — os nichos de ano na estante, os
-     * objetos com ação no canto do PC, zero no resto.
+     * As sub-paradas navegáveis da cena atual — os nichos de ano na estante, os
+     * objetos com ação no canto do PC (menos a gaveta, que só se alcança
+     * clicando), nenhuma no resto.
+     *
+     * Uma LISTA de índices, não uma contagem: com a gaveta fora, os índices do
+     * canto do PC ficam com um buraco no meio, e contar quantos são não diz
+     * quais são.
      */
-    const totalDeSubs = totalDeSubParadas(manualViewpoint, grupos.length) as number;
+    const subsDaCena = useMemo(
+        () => subParadasDaCena(manualViewpoint, grupos.length) as number[],
+        [manualViewpoint, grupos.length],
+    );
+    const totalDeSubs = subsDaCena.length;
 
     /**
      * O foco DERIVADO para cada consumidor, em vez de dois estados guardados.
@@ -265,9 +275,11 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
      * tela. Abrir sem aproximar mostraria a coisa acontecendo longe demais para
      * se ver o que apareceu lá dentro.
      *
-     * **Chegar na parada pela roda ou pelas setas não abre nada**, de propósito:
-     * atravessar é diferente de escolher. É a mesma lição que apagou o evento
-     * `room_scene_changed` do analytics.
+     * **Este é o ÚNICO caminho até a parada da gaveta**: ela está fora do trilho
+     * (`foraDoTrilho` em FOCOS_DO_PC), então roda e setas passam direto do quadro
+     * de recados para os monitores. Atravessar é diferente de escolher — é a
+     * mesma lição que apagou o evento `room_scene_changed` do analytics —, e uma
+     * gaveta que só se abre clicando é uma coisa que se descobre.
      */
     const alternarGaveta = useCallback(() => {
         setManualViewpoint('pc');
@@ -406,7 +418,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
             // trilho inteiro. preventDefault porque ↑/↓ rolam a página.
             if (totalDeSubs > 0 && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
                 e.preventDefault();
-                setSubFocado((atual) => subVizinha(atual, e.key === 'ArrowUp' ? 1 : -1, totalDeSubs));
+                setSubFocado((atual) => subVizinha(atual, e.key === 'ArrowUp' ? 1 : -1, subsDaCena));
                 return;
             }
             if (e.key === 'ArrowLeft') andarNoTrilho(-1);
@@ -414,7 +426,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
         };
         window.addEventListener('keydown', aoTeclar);
         return () => window.removeEventListener('keydown', aoTeclar);
-    }, [openSlug, indiceAberto, retratoAberto, bilheteAberto, gavetaAberta, subFocado, totalDeSubs, vizinhos, folhear, fecharLivro, andarNoTrilho]);
+    }, [openSlug, indiceAberto, retratoAberto, bilheteAberto, gavetaAberta, subFocado, totalDeSubs, subsDaCena, vizinhos, folhear, fecharLivro, andarNoTrilho]);
 
     /**
      * A roda do mouse percorre o MESMO trilho das setas laterais: sala, mesa,

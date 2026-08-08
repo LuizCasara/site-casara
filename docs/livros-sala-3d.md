@@ -152,7 +152,7 @@ trocariam de prateleira debaixo do dedo de quem está filtrando.
 
 ## Navegação
 
-Um trilho único, em loop: `[sala, mesa, estante, ano₁…anoₙ, PC]`. Setas
+Um trilho único, em loop: `[sala, mesa, estante, anoₙ…ano₁, PC]`. Setas
 laterais e roda do mouse percorrem tudo; as setas verticais são um atalho para
 pular de ano em ano dentro da estante.
 
@@ -160,10 +160,19 @@ Isso já foi dois eixos cruzados (laterais trocavam cena, verticais andavam nos
 anos) e o efeito era ficar preso: chegando na estante, rolar só circulava entre
 os nichos. O mesmo gesto significava coisas diferentes conforme onde se estava.
 
-Fora do trilho ficam três estados que só se alcança clicando num objeto — o
-Índice (lava lamp), o close no porta-retratos e o bilhete da gaveta —, todos com
-saída por `Esc`. O bilhete é o único de dentro de outro: fechá-lo devolve a
-gaveta aberta, e só o `Esc` seguinte fecha a gaveta.
+**O trilho desce a estante: entra pelo ano mais RECENTE, no topo, e termina no
+mais antigo, na base.** É o único lugar em que a ordem do trilho não é a do
+mundo, e a razão é que o trilho apresenta — quem chega quer ver primeiro o que
+foi lido por último, como uma linha do tempo que abre no post mais novo. A
+estante em si continua montada de baixo para cima (a cronologia sobe, ver
+"Estante por ano"), e as setas ↑/↓ continuam seguindo o mundo: subir é subir na
+estante. São dois eixos com significados diferentes de propósito — o de andar
+pela sala e o de andar pelo móvel.
+
+Fora do trilho ficam os estados que só se alcança clicando num objeto — o Índice
+(lava lamp), o close no porta-retratos, o bilhete e **a própria parada da
+gaveta** —, todos com saída por `Esc`. O bilhete é o único de dentro de outro:
+fechá-lo devolve a gaveta aberta, e só o `Esc` seguinte fecha a gaveta.
 
 **A câmera nunca se move ao abrir um livro.** Existiu um ponto de vista que
 recuava até o centro da sala, e o zoom dava um solavanco no mesmo instante em
@@ -499,11 +508,23 @@ bandeja** — que, de resto, é onde as coisas ficam quando se puxa uma gaveta d
 verdade. Abaixar a câmera resolveria também, e foi testado: a 0,96m ela entra na
 altura do encosto da cadeira.
 
-**Chegar na parada não abre a gaveta; clicar abre.** Atravessar não é escolher —
-a mesma lição que apagou o evento `room_scene_changed`. E sair da parada fecha,
-senão o plano geral fica com uma gaveta escancarada embaixo da mesa. O clique
+**Só o clique chega na gaveta.** A parada dela existe em `VIEWPOINTS_DO_PC` como
+as outras, mas está marcada `foraDoTrilho`: roda e setas passam direto do quadro
+de recados para os monitores, e nada em percorrer a sala revela que há uma
+gaveta ali. Atravessar não é escolher — a mesma lição que apagou o evento
+`room_scene_changed` —, e uma gaveta que só se abre para quem a procurou é uma
+coisa que se descobre, não uma que se recebe pronta ao rolar a página. O clique
 faz as duas coisas juntas (leva a câmera e abre), porque do plano aberto do
-canto a gaveta é um puxador de dois centímetros na tela.
+canto a gaveta é um puxador de dois centímetros na tela. E sair da parada fecha,
+senão o plano geral fica com uma gaveta escancarada embaixo da mesa.
+
+Isso obriga `paradaVizinha` a procurar num trilho COMPLETO (com as ocultas) e a
+chegar num VISÍVEL: quem está na gaveta está numa parada que o trilho não
+conhece, e sem os dois a primeira rolada depois de abri-la teletransportaria a
+câmera para o começo da sala. Pelo mesmo motivo, as sub-paradas de uma cena são
+uma LISTA de índices e não uma contagem — com a gaveta fora, os índices do canto
+do PC são `[0, 2, 3, 4]`, e um `total = 4` faria a navegação parar na caixa de
+som e nunca chegar à bíblia.
 
 **Os post-its são primitivas, não um quarto `.glb`.** Um post-it é um quadrado
 de cinco centímetros: três planos girados resolvem igual a esta distância e
