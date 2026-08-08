@@ -5,11 +5,13 @@ import {useRouter} from 'next/navigation';
 import {Canvas} from '@react-three/fiber';
 import {EffectComposer, Bloom, N8AO, Vignette} from '@react-three/postprocessing';
 import {Suspense} from 'react';
-import Room, {posicaoDaLavaLamp} from '@/components/livros/Room';
+import Room, {posicaoDaLavaLamp, INTERRUPTOR_ANCHOR, JANELA_ANCHOR} from '@/components/livros/Room';
 import Bookshelf from '@/components/livros/Bookshelf';
 import DeskBooks from '@/components/livros/DeskBooks';
 import TorreQueroLer from '@/components/livros/TorreQueroLer';
 import LavaLamp from '@/components/livros/decor/LavaLamp';
+import Interruptor from '@/components/livros/decor/Interruptor';
+import Janela from '@/components/livros/decor/Janela';
 import IndexPanel from '@/components/livros/IndexPanel';
 import CameraRig, {type Viewpoint} from '@/components/livros/CameraRig';
 import {useIsMobile} from '@/components/livros/use-is-mobile';
@@ -21,8 +23,9 @@ import {NICHO_CAPACIDADE_M} from '@/lib/bookshelf-model.mjs';
 import {agruparPorAnoDeLeitura} from '@/lib/shelf-years.mjs';
 import {sortShelfBooks, filterShelfBooks, vizinhosDe} from '@/lib/livros-shelf.mjs';
 import {
-    CENAS, subVizinha, paradaVizinha, totalDeSubParadas,
+    CENAS, subVizinha, paradaVizinha, totalDeSubParadas, indiceDoFoco,
 } from '@/lib/livros-cenas.mjs';
+import BilheteOverlay from '@/components/livros/BilheteOverlay';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
 import {
     trackListFallback, trackShelfSorted, trackIndexOpened, trackBookFilter,
@@ -44,6 +47,16 @@ export type ShelvedBookInput = {
     status: BookStatus;
     progress_pct: number | null;
 };
+
+/**
+ * A sub-parada da gaveta dentro do canto do PC.
+ *
+ * Buscada pelo id e não escrita como número: a ordem de `FOCOS_DO_PC` é a
+ * posição dos objetos no MUNDO, então ela muda sempre que um objeto novo entrar
+ * entre os que já existem — e um `1` cravado aqui passaria a apontar para o
+ * vizinho sem nada quebrar.
+ */
+const PARADA_DA_GAVETA = indiceDoFoco('gaveta') as number;
 
 export type LivrosMode = {kind: 'sala'} | {kind: 'livro'; slug: string};
 
@@ -99,6 +112,49 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     const [indiceAberto, setIndiceAberto] = useState(false);
     /** Close no porta-retratos da mesa do PC — ver o viewpoint 'retrato'. */
     const [retratoAberto, setRetratoAberto] = useState(false);
+    /**
+     * A gaveta da mesa do PC, e a folha de anotações dentro dela.
+     *
+     * Moram aqui pela mesma razão que `retratoAberto`: são estados que a CÂMERA
+     * consulta, e a câmera é deste arquivo. A gaveta em si é desenhada lá no
+     * `CantoDeTrabalho`, que é onde o clone da mesa existe.
+     */
+    const [gavetaAberta, setGavetaAberta] = useState(false);
+    const [bilheteAberto, setBilheteAberto] = useState(false);
+    /**
+     * As três luzes que se apagam: o teto (interruptor da parede), o abajur da
+     * poltrona e a lanterna da estante amarela.
+     *
+     * Um estado só, e não três `useState`, porque elas são um conceito único —
+     * "o que está aceso na sala" — e é isso que o `Room` recebe. Sem
+     * `localStorage`, pela mesma razão do volume e do estado do monitor: é
+     * preferência de sessão.
+     *
+     * **Teto e abajur começam acesos; a lanterna, não.** Quem chega tem que ver
+     * a sala antes de decidir apagá-la — mas uma lanterna esquecida acesa numa
+     * prateleira não é o estado de repouso de uma lanterna, e o facho na parede
+     * vale muito mais como coisa que se descobre clicando.
+     */
+    const [luzes, setLuzes] = useState({teto: true, abajur: true, lanterna: false});
+    /**
+     * A cortina da janela. **Fechada quando a sala abre**, e isso é a feature
+     * inteira: o lado de fora — que é a hora de verdade de quem está vendo — só
+     * se revela para quem clica. Uma janela já aberta entregaria o efeito de
+     * graça, e não sobraria nada para descobrir.
+     *
+     * Estado próprio, e não um quarto campo em `luzes`: aquele objeto significa
+     * "o que está ACESO na sala", e uma cortina não acende. Ela deixa entrar,
+     * que é outra coisa — tanto que a luz que passa por ela muda de cor com a
+     * hora, enquanto os três interruptores só ligam e desligam.
+     */
+    const [cortinaAberta, setCortinaAberta] = useState(false);
+
+    const alternarLuz = useCallback((qual: 'abajur' | 'lanterna') => {
+        setLuzes((atual) => {
+            trackRoomObjectClick(qual, atual[qual] ? 'apagada' : 'acesa');
+            return {...atual, [qual]: !atual[qual]};
+        });
+    }, []);
     /**
      * A sub-parada em foco DENTRO da cena atual — um nicho de ano na estante,
      * um objeto no canto do PC. Um estado só para as duas famílias, e não um
@@ -183,6 +239,56 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     useEffect(() => {
         if (totalDeSubs === 0) setSubFocado(null);
     }, [totalDeSubs]);
+
+    /**
+     * Sair da parada da gaveta fecha a gaveta — e junto com ela o bilhete.
+     *
+     * Sem isto, girar a roda depois de abrir deixaria uma gaveta escancarada
+     * embaixo da mesa no plano geral da sala, que é o tipo de estado que ninguém
+     * associa a um clique dado três paradas atrás.
+     *
+     * A condição é a parada exata, e não "saí do canto do PC": andar do quadro
+     * de recados até a bíblia também passa longe da gaveta.
+     */
+    const naGaveta = manualViewpoint === 'pc' && subFocado === PARADA_DA_GAVETA;
+    useEffect(() => {
+        if (naGaveta) return;
+        setGavetaAberta(false);
+        setBilheteAberto(false);
+    }, [naGaveta]);
+
+    /**
+     * Clique na gaveta: leva a câmera até ela E abre.
+     *
+     * Os dois juntos, e não só o segundo, porque a gaveta pode ser clicada do
+     * plano aberto do canto — de onde ela é um puxador de dois centímetros na
+     * tela. Abrir sem aproximar mostraria a coisa acontecendo longe demais para
+     * se ver o que apareceu lá dentro.
+     *
+     * **Chegar na parada pela roda ou pelas setas não abre nada**, de propósito:
+     * atravessar é diferente de escolher. É a mesma lição que apagou o evento
+     * `room_scene_changed` do analytics.
+     */
+    const alternarGaveta = useCallback(() => {
+        setManualViewpoint('pc');
+        setSubFocado(PARADA_DA_GAVETA);
+        setGavetaAberta((atual) => {
+            trackRoomObjectClick('gaveta', atual ? 'fechar' : 'abrir');
+            return !atual;
+        });
+        // Fechar a gaveta leva o bilhete junto: ele é uma folha que está DENTRO
+        // dela, e deixá-lo no ar sobre uma gaveta fechada seria um painel sem
+        // objeto. Incondicional, e não dentro do updater acima: abrindo, o
+        // bilhete já está fechado, e `setState` dentro do updater de outro
+        // `setState` é efeito colateral no meio de uma função que precisa ser
+        // pura para o StrictMode.
+        setBilheteAberto(false);
+    }, []);
+
+    const abrirBilhete = useCallback(() => {
+        setBilheteAberto(true);
+        trackRoomObjectClick('bilhete');
+    }, []);
 
     /** Clicar no ano já ativo sobe um nível — o mesmo gesto da etiqueta 3D. */
     const selecionarGrupo = useCallback((indice: number) => {
@@ -270,6 +376,17 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                 else if (e.key === 'ArrowRight') folhear(vizinhos.proximo, 'proximo');
                 return;
             }
+            // O bilhete é a camada mais interna do canto do PC: fechá-lo devolve
+            // a gaveta aberta, e só o Esc seguinte fecha a gaveta. Duas camadas,
+            // dois Esc — a mesma escada do livro e do índice.
+            if (bilheteAberto) {
+                if (e.key === 'Escape') setBilheteAberto(false);
+                return;
+            }
+            if (gavetaAberta) {
+                if (e.key === 'Escape') setGavetaAberta(false);
+                return;
+            }
             if (retratoAberto) {
                 if (e.key === 'Escape') setRetratoAberto(false);
                 return;
@@ -297,7 +414,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
         };
         window.addEventListener('keydown', aoTeclar);
         return () => window.removeEventListener('keydown', aoTeclar);
-    }, [openSlug, indiceAberto, retratoAberto, subFocado, totalDeSubs, vizinhos, folhear, fecharLivro, andarNoTrilho]);
+    }, [openSlug, indiceAberto, retratoAberto, bilheteAberto, gavetaAberta, subFocado, totalDeSubs, vizinhos, folhear, fecharLivro, andarNoTrilho]);
 
     /**
      * A roda do mouse percorre o MESMO trilho das setas laterais: sala, mesa,
@@ -314,7 +431,10 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
      * roda é do conteúdo do painel, não da sala.
      */
     useEffect(() => {
-        if (mode.kind !== 'sala' || indiceAberto || retratoAberto) return;
+        // O bilhete entra na mesma lista do índice: com a folha aberta a roda é
+        // do painel, não da sala — e trocar de parada por baixo dele fecharia a
+        // gaveta que o sustenta.
+        if (mode.kind !== 'sala' || indiceAberto || retratoAberto || bilheteAberto) return;
 
         const LIMIAR_PX = 24;
         const INTERVALO_MS = 550;
@@ -330,7 +450,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
 
         window.addEventListener('wheel', aoRolar, {passive: true});
         return () => window.removeEventListener('wheel', aoRolar);
-    }, [mode.kind, indiceAberto, retratoAberto, andarNoTrilho]);
+    }, [mode.kind, indiceAberto, retratoAberto, bilheteAberto, andarNoTrilho]);
 
     useEffect(() => {
         const motivo = detectaMotivoDegradacao();
@@ -476,6 +596,11 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                             if (!v) trackRoomObjectClick('retrato');
                             return !v;
                         }) : undefined}
+                        gavetaAberta={gavetaAberta}
+                        onAlternarGaveta={mode.kind === 'sala' ? alternarGaveta : undefined}
+                        onAbrirBilhete={mode.kind === 'sala' ? abrirBilhete : undefined}
+                        luzes={luzes}
+                        onAlternarLuz={mode.kind === 'sala' ? alternarLuz : undefined}
                         isMobile={isMobile}
                     />
                     <Bookshelf
@@ -504,6 +629,37 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                             onOpen={mode.kind === 'sala' && !indiceAberto ? abrirIndice : undefined}
                             isMobile={isMobile}
                             mostrarEtiqueta={viewpoint === 'estante'}
+                        />
+                        {/*
+                          O interruptor, montado aqui pelo mesmo motivo da lava
+                          lamp: ele é CONTROLE, e Room.tsx é cenário — a sala
+                          recebe `luzAcesa` e ilumina, sem saber que existe um
+                          objeto clicável mandando nela. Com um livro aberto ele
+                          perde o `onAlternar` e vira enfeite, igual à lâmpada.
+                        */}
+                        <Interruptor
+                            position={INTERRUPTOR_ANCHOR}
+                            acesa={luzes.teto}
+                            onAlternar={mode.kind === 'sala' ? () => setLuzes((atual) => {
+                                trackRoomObjectClick('interruptor', atual.teto ? 'apagada' : 'acesa');
+                                return {...atual, teto: !atual.teto};
+                            }) : undefined}
+                            isMobile={isMobile}
+                        />
+                        {/*
+                          A janela, montada aqui pelo mesmo motivo dos dois
+                          acima: ela é CONTROLE. A sala publica em que ponto da
+                          parede ela fica (`JANELA_ANCHOR`) e não sabe que
+                          existe uma cortina, nem que hora é lá fora.
+                        */}
+                        <Janela
+                            position={JANELA_ANCHOR}
+                            aberta={cortinaAberta}
+                            onAlternar={mode.kind === 'sala' ? () => setCortinaAberta((atual) => {
+                                trackRoomObjectClick('cortina', atual ? 'fechada' : 'aberta');
+                                return !atual;
+                            }) : undefined}
+                            isMobile={isMobile}
                         />
                     </Suspense>
                     <CameraRig
@@ -636,6 +792,9 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                     visiveis={shelfBooksVisiveis.length}
                     total={shelfBooksBase.length}
                 />
+            )}
+            {mode.kind === 'sala' && bilheteAberto && (
+                <BilheteOverlay onClose={() => setBilheteAberto(false)}/>
             )}
         </>
     );

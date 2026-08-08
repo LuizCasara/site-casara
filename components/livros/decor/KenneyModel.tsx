@@ -1,6 +1,7 @@
 'use client';
 
 import {useEffect, useMemo} from 'react';
+import type {RefObject} from 'react';
 import {useGLTF} from '@react-three/drei';
 import {Box3, Vector3} from 'three';
 import type * as THREE from 'three';
@@ -71,6 +72,42 @@ type KenneyModelProps = {
     cores?: CoresPorMaterial;
     emissivos?: EmissivosPorMaterial;
     texturas?: TexturasPorMaterial;
+    /**
+     * Materiais que somem, por nome — mesmo endereçamento das cores, mas
+     * apagando a malha em vez de pintá-la.
+     *
+     * Existe pelo relógio: os algarismos dele são GEOMETRIA moldada dentro do
+     * arquivo, um horário fixo que nenhuma textura por cima consegue mudar. A
+     * saída é usar a peça como carcaça e pôr um display próprio no lugar — e
+     * para isso os dígitos originais precisam sair da frente.
+     *
+     * A peça escondida continua pesando na medição da caixa envolvente, e isso
+     * é de propósito: o tamanho pedido em metros tem que continuar valendo
+     * para o objeto inteiro, não encolher porque um pedaço ficou invisível.
+     */
+    ocultos?: string[];
+    /**
+     * Nós internos do `.glb` entregues ao pai para ANIMAR, por nome de nó.
+     *
+     * É a única porta deste componente endereçada por NÓ, e não por material —
+     * todas as outras (`cores`, `emissivos`, `texturas`, `ocultos`) mexem em
+     * aparência, que é coisa de material, enquanto mover uma peça é coisa de
+     * nó. Existe pelas cortinas da janela: as duas dividem o mesmo material
+     * (`mat13`), então nenhum mapa por material consegue distinguir esquerda de
+     * direita, e mexer numa mexeria nas duas.
+     *
+     * **Não é um escape hatch para o modelo inteiro**, de propósito: o pai
+     * recebe só os nós que pediu pelo nome, e o contrato do componente (tamanho
+     * em metros, `position` no chão sob o centro) continua valendo, porque a
+     * escala e o recentramento moram na RAIZ do clone e os nós articulados são
+     * filhos dela. Um nó movido em 0,1 anda 0,1 × escala no mundo — que é a
+     * razão de `janela-model.mjs` guardar o movimento das cortinas em unidades
+     * do modelo, e não em centímetros.
+     *
+     * O objeto precisa ser ESTÁVEL entre renders (um `useMemo` no pai): um
+     * literal novo a cada render refaria a busca na árvore a cada quadro.
+     */
+    articulados?: Record<string, RefObject<Object3D | null>>;
     position?: [number, number, number];
     rotation?: [number, number, number];
     /** Altura final em METROS. O componente calcula a escala sozinho. */
@@ -103,7 +140,8 @@ type KenneyModelProps = {
  * centro da peça**, sempre, para qualquer modelo.
  */
 export default function KenneyModel({
-    url, cores, emissivos, texturas, position, rotation, alturaAlvo, larguraAlvo,
+    url, cores, emissivos, texturas, ocultos, articulados, position, rotation,
+    alturaAlvo, larguraAlvo,
 }: KenneyModelProps) {
     const {scene} = useGLTF(url);
 
@@ -121,6 +159,7 @@ export default function KenneyModel({
     const chaveCores = JSON.stringify([
         cores ?? null,
         emissivos ?? null,
+        ocultos ?? null,
         Object.entries(texturas ?? {}).map(([nome, t]) => [nome, t.uuid]),
     ]);
     const {objeto, descartaveis} = useMemo(() => {
@@ -154,6 +193,17 @@ export default function KenneyModel({
                 // Branco no `color`: ele MULTIPLICA a textura, então qualquer
                 // outra cor tingiria a imagem inteira.
                 m.color.set('#ffffff');
+                // E OPACO, sempre. Material que recebe imagem é uma tela — não
+                // se pinta uma imagem em algo para depois enxergar através
+                // dela. As telas dos monitores já vinham opacas do Furniture
+                // Kit e não sentem esta linha; quem a tornou necessária foi o
+                // vidro da janela, que vem `alphaMode: BLEND` com alfa 0,4 e
+                // deixaria a parede da sala aparecendo por trás do céu.
+                const transparencia = material as unknown as {
+                    transparent: boolean; opacity: number;
+                };
+                transparencia.transparent = false;
+                transparencia.opacity = 1;
             }
 
             const brilho = emissivos?.[material.name];
@@ -174,6 +224,18 @@ export default function KenneyModel({
         const caixa = new Box3().setFromObject(clone);
         const tamanho = caixa.getSize(new Vector3());
         const centro = caixa.getCenter(new Vector3());
+
+        // DEPOIS de medir, nunca antes. Versões do three divergem sobre se
+        // Box3.setFromObject ignora malha invisível, e não vale depender disso:
+        // medindo primeiro, o tamanho pedido em metros vale para a peça inteira
+        // em qualquer versão, e o que some some sem mexer em número nenhum.
+        if (ocultos?.length) {
+            clone.traverse((filho: Object3D) => {
+                const mesh = filho as Mesh;
+                if (!mesh.isMesh || !mesh.material || Array.isArray(mesh.material)) return;
+                if (ocultos.includes(mesh.material.name)) mesh.visible = false;
+            });
+        }
 
         // Com um alvo só a escala é uniforme (o outro eixo herda o mesmo
         // fator, que é o que preserva a proporção do modelo). Com os dois, X/Z
@@ -205,6 +267,24 @@ export default function KenneyModel({
     //
     // As `texturas` não entram: vêm de fora, e quem carrega é quem descarta.
     useEffect(() => () => descartaveis.forEach((d) => d.dispose()), [descartaveis]);
+
+    // Os nós articulados são entregues DEPOIS do clone existir, num efeito, e
+    // não durante o `useMemo`: preencher ref em tempo de render é efeito
+    // colateral no meio do render, e aqui não custa nada evitar — quem os usa
+    // (o `useFrame` do pai) só roda a partir do primeiro quadro, que vem depois
+    // do efeito de qualquer jeito. Zerar na limpeza importa porque o clone é
+    // refeito quando cores ou texturas mudam, e um ref apontando para a árvore
+    // antiga animaria um objeto que não está mais na cena.
+    useEffect(() => {
+        if (!articulados) return;
+        objeto.traverse((filho: Object3D) => {
+            const ref = articulados[filho.name];
+            if (ref) ref.current = filho;
+        });
+        return () => {
+            for (const ref of Object.values(articulados)) ref.current = null;
+        };
+    }, [objeto, articulados]);
 
     return (
         <group position={position} rotation={rotation}>
@@ -247,12 +327,30 @@ export const MODELOS = {
     tapeteQuadrado: '/livros/modelos/rug-square.glb',
     // O canto de trabalho, à direita da estante
     mesaEmL: '/livros/modelos/desk-corner.glb',
-    cadeiraDeEscritorio: '/livros/modelos/desk-chair.glb',
+    // A única peça de mobília do canto que NÃO vem do Furniture Kit: a cadeira
+    // do kit era um banquinho de escritório genérico, e esta tem encosto alto,
+    // apoio de braço e base de cinco pontas. Custa 60KB contra os ~20KB do kit
+    // — caro para um enfeite, barato para o móvel que o canto inteiro rodeia,
+    // e ainda assim quatro vezes menor que a espada longa.
+    cadeiraDeEscritorio: '/livros/modelos/cadeira-executiva.glb',
     monitor: '/livros/modelos/computer-screen.glb',
     teclado: '/livros/modelos/computer-keyboard.glb',
     livroAberto: '/livros/modelos/open-book.glb',
     planta: '/livros/modelos/potted-plant.glb',
     abajur: '/livros/modelos/lamp-round-floor.glb',
+    // A carcaça do relógio da prateleira aérea. Os algarismos dele NÃO vêm
+    // daqui — ver RelogioDigital.tsx.
+    relogio: '/livros/modelos/relogio.glb',
+    interruptor: '/livros/modelos/interruptor.glb',
+    oculos: '/livros/modelos/oculos.glb',
+    // A janela da parede lateral. O vidro dela é um quad de quatro vértices com
+    // material próprio, e é nele que o céu é pintado — ver Janela.tsx.
+    janela: '/livros/modelos/janela.glb',
+    // O que mora na gaveta da mesa em L. Os dois são planos — a espessura é o
+    // menor eixo dos dois —, então nascem deitados e são pedidos por
+    // `larguraAlvo`, como o tapete. Ver Gaveta.tsx.
+    nota: '/livros/modelos/nota.glb',
+    caneta: '/livros/modelos/caneta.glb',
 } as const;
 
 Object.values(MODELOS).forEach((url) => useGLTF.preload(url));

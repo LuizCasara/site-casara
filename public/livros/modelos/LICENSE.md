@@ -1,13 +1,15 @@
 # Modelos 3D da sala de leitura
 
-28 arquivos `.glb`, ~1,5 MB no total. Todo modelo montado na sala está listado
+34 arquivos `.glb`, ~1,7 MB no total. Todo modelo montado na sala está listado
 aqui; se um arquivo desta pasta não aparecer em nenhuma tabela abaixo, ele é
 órfão e pode sair.
 
 ## Atribuição OBRIGATÓRIA — CC BY 3.0
 
-Estes dez modelos **não são domínio público**, e o crédito a eles não é
-opcional. Baixados em 06/08/2026 via [poly.pizza](https://poly.pizza).
+Estes dezessete modelos **não são domínio público**, e o crédito a eles não é
+opcional. Baixados em 06/08/2026 via [poly.pizza](https://poly.pizza) — o
+relógio, a cadeira, o interruptor, os óculos, a janela, o bloco de notas e a
+caneta, em 07/08/2026.
 
 | Arquivo | Modelo | Autor |
 |---|---|---|
@@ -21,11 +23,27 @@ opcional. Baixados em 06/08/2026 via [poly.pizza](https://poly.pizza).
 | `lampiao.glb` | [Lantern](https://poly.pizza/m/h1HBWwsIGk) | Nick Slough |
 | `saco-de-dormir.glb` | [Bed roll](https://poly.pizza/m/3kczVpdqvGP) | Justin Randall |
 | `kettlebell.glb` | [Kettlebell](https://poly.pizza/m/08Gs4e3L1N8) | Poly by Google |
+| `relogio.glb` | [Clock](https://poly.pizza/m/0bcQotWTmTi) | Poly by Google |
+| `cadeira-executiva.glb` | [Office Chair](https://poly.pizza/m/dCEsSsJJ1Md) | CMHT Oculus |
+| `interruptor.glb` | [Light Switch](https://poly.pizza/m/1xBl-8de6b0) | Jarlan Perez |
+| `oculos.glb` | [Glasses](https://poly.pizza/m/9i5mmOwt7cu) | jeremy |
+| `janela.glb` | [Window](https://poly.pizza/m/9FqbXmzB-CS) | Jonathan Granskog |
+| `nota.glb` | [Notebook](https://poly.pizza/m/9Ptsg_xZt6B) | jeremy |
+| `caneta.glb` | [Pen](https://poly.pizza/m/7SIpgx0rEIv) | jeremy |
 
 A CC BY permite uso comercial e modificação (o líquido da lava lamp foi
 recolorido de vermelho para verde; a espada longa foi clareada, porque os
-materiais dela vêm quase pretos e sumiriam na parede escura da sala), mas
-**exige que os autores sejam creditados**.
+materiais dela vêm quase pretos e sumiriam na parede escura da sala, e os óculos
+levaram a mesma correção pelo mesmo motivo, contra a madeira da mesa de centro;
+o relógio teve os **algarismos escondidos** — eles são geometria moldada, um
+horário fixo, e a sala precisa de um display que ande; e a janela teve as
+cortinas recoloridas de laranja puro para terracota e **passou a ter partes
+móveis**, com os dois panos de cortina animados por nó, além do vidro pintado
+com o céu da hora; e o bloco de notas e a caneta trocaram o amarelo de
+marca-texto e o azul de escritório pela paleta da sala, porque os materiais
+deles são nomeados pelo próprio hexadecimal original e nenhuma das cores de
+fábrica cabia numa gaveta de madeira escura), mas **exige que os autores sejam
+creditados**.
 
 Os mesmos nomes aparecem para quem visita `/livros`, no rodapé da rota
 (`components/livros/CreditosModelos.tsx`) — é lá que a CC BY é de fato cumprida,
@@ -54,7 +72,6 @@ que redistribui o mesmo pacote já convertido para glTF binário.
 |---|---|---|
 | `lounge-chair.glb` | Lounge Chair | A poltrona de leitura |
 | `desk-corner.glb` | Desk Corner | A mesa em L do canto de trabalho |
-| `desk-chair.glb` | Desk Chair | A cadeira de escritório |
 | `computer-screen.glb` | Computer Screen | Os dois monitores (usado duas vezes) |
 | `computer-keyboard.glb` | Computer Keyboard | O teclado |
 | `bookcase-open.glb` | Bookcase Open | A estante amarela |

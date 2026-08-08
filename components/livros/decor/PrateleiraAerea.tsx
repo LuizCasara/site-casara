@@ -2,6 +2,7 @@
 
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
 import CaixaDeSom, {type CaixaDeSomProps} from '@/components/livros/decor/CaixaDeSom';
+import RelogioDigital from '@/components/livros/decor/RelogioDigital';
 
 /**
  * Prateleira aérea na parede de fundo, acima dos monitores, com troféus e
@@ -27,6 +28,23 @@ const PROFUNDIDADE_M = 0.22;
 /** Deslocamento da caixa de som em relação ao centro da tábua: o vão livre
  *  entre os troféus (à esquerda) e o primeiro vaso. */
 const CAIXA_DESLOC_X = -0.18;
+
+/**
+ * O relógio, no meio exato do vão entre os dois vasos — os únicos ~50cm de
+ * tábua que sobravam depois dos troféus, da caixa de som e das plantas.
+ *
+ * 14cm de largura é um relógio de cabeceira de verdade, e a altura sai da
+ * proporção do modelo (~5,5cm, o suficiente para o display se ler daqui sem
+ * competir com os 24cm do vaso ao lado).
+ */
+const RELOGIO_LARGURA_M = 0.14;
+/**
+ * Virado de leve para o CENTRO da sala: ele fica no terço direito da tábua, e
+ * um relógio paralelo à parede mostraria a hora de canto para quem olha.
+ * Negativo porque o giro positivo levaria o display para +x, ou seja, para a
+ * parede lateral.
+ */
+const RELOGIO_GIRO = -0.2;
 
 /**
  * Onde a caixa de som assenta, no mundo, dada a posição da prateleira.
@@ -145,6 +163,20 @@ export default function PrateleiraAerea({position, larguraM, caixaDeSom}: Pratel
                 rotation={[0, 0.7, 0]}
                 alturaAlvo={0.19}
                 cores={{wood: '#a05a3a', woodDark: '#7a3f28', plant: '#3f7a4a'}}
+            />
+
+            {/* Entre os dois vasos, no meio do vão que eles deixam. A conta usa
+                as mesmas expressões das posições deles logo acima, em vez de um
+                número escrito à mão: mover um vaso reposiciona o relógio junto,
+                sem deixar dois objetos disputando o mesmo palmo de tábua. */}
+            <RelogioDigital
+                position={[
+                    ((x + 0.06) + (x + larguraM / 2 - 0.18)) / 2,
+                    topo,
+                    zCentro + 0.01,
+                ]}
+                larguraM={RELOGIO_LARGURA_M}
+                rotationY={RELOGIO_GIRO}
             />
         </group>
     );

@@ -208,9 +208,9 @@ function focoDeObjeto(
 }
 
 /**
- * As quatro sub-paradas do canto de trabalho, na ordem de FOCOS_DO_PC
- * (recomendações → monitores → alto-falante → bíblia), varrendo o canto da
- * esquerda para a direita como o trilho principal varre a sala.
+ * As cinco sub-paradas do canto de trabalho, na ordem de FOCOS_DO_PC
+ * (recomendações → gaveta → monitores → alto-falante → bíblia), varrendo o canto
+ * da esquerda para a direita como o trilho principal varre a sala.
  *
  * As distâncias são o que separa uma parada útil de um close inútil: o quadro
  * de recados e a bíblia pedem folga para se lerem inteiros, enquanto a caixa de
@@ -222,6 +222,23 @@ const VIEWPOINTS_DO_PC: ViewpointConfig[] = [
     // Quadro de recados: quase de frente, com um leve deslocamento lateral para
     // não virar uma foto chapada de um retângulo branco.
     focoDeObjeto(ANCORAS_DO_PC.recomendacoes, [0.18, -0.04, 0.98], 0.85),
+    /*
+      Gaveta: a única parada do canto que olha de BAIXO da linha do tampo. As
+      outras quatro miram de cima, e qualquer uma delas esconderia a gaveta atrás
+      da própria mesa — ela fica a 62cm do chão, com 12cm de madeira por cima.
+
+      **A aproximação vem pela esquerda, e isso não é composição: é desvio.** A
+      cadeira está no vão do L e tem 95cm de altura; uma câmera que se aproxime
+      pela frente-centro atravessa o encosto. Ela já foi empurrada para trás
+      (`RECUO_DA_CADEIRA` em CantoDeTrabalho) justamente para abrir este caminho,
+      e o x negativo aqui é a outra metade da solução. Mexer neste vetor sem
+      olhar a cadeira é como o defeito volta.
+
+      Um pouco de cima ainda assim (y positivo), porque o que interessa está
+      DEITADO no fundo da gaveta: na altura dos olhos ver-se-ia a borda da
+      bandeja e quase nada do bloco de notas.
+    */
+    focoDeObjeto(ANCORAS_DO_PC.gaveta, [-0.55, 0.62, 0.56], 0.75),
     // Monitores: de três quartos, na altura das telas. A tela da direita é o
     // player, e é ela que precisa estar legível aqui.
     focoDeObjeto(ANCORAS_DO_PC.monitores, [-0.15, 0.24, 0.96], 0.95),

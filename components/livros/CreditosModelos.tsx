@@ -6,7 +6,7 @@ import {trackOutboundClick} from '@/utils/analytics';
 /**
  * Créditos dos modelos 3D da sala, no rodapé de `/livros`.
  *
- * **Isto não é cortesia, é a licença.** Dez dos modelos da sala são CC BY 3.0,
+ * **Isto não é cortesia, é a licença.** Dezessete dos modelos da sala são CC BY 3.0,
  * que exige atribuição no lugar onde a obra é exibida — um arquivo dentro do
  * repositório não cumpre isso para quem visita o site. Os CC0 (Furniture Kit do
  * Kenney e companhia) não exigem nada, e por isso o modo compacto cita só o
@@ -29,6 +29,9 @@ const AUTORES = [
     'S. Paul Michael',
     'Nick Slough',
     'Justin Randall',
+    'CMHT Oculus',
+    'jeremy',
+    'Jonathan Granskog',
 ];
 
 const LINK = 'underline hover:text-gray-600 dark:hover:text-gray-300';

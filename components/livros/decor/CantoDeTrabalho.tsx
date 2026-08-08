@@ -1,9 +1,12 @@
 'use client';
 
-import {useState} from 'react';
+import {useMemo, useRef, useState} from 'react';
 import {Html, useTexture} from '@react-three/drei';
+import type * as THREE from 'three';
 import {useTexturaDeChuva} from '@/components/livros/decor/use-textura-de-chuva';
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
+import Gaveta from '@/components/livros/decor/Gaveta';
+import {GAVETA, gavetaEmMetros} from '@/lib/gaveta-model.mjs';
 import ItensDeEstudo from '@/components/livros/decor/ItensDeEstudo';
 import DeitadoNoTampo from '@/components/livros/decor/DeitadoNoTampo';
 import PrateleiraAerea, {posicaoDaCaixaDeSom} from '@/components/livros/decor/PrateleiraAerea';
@@ -37,6 +40,20 @@ const MESA_ROT_Y = Math.PI;
 const MESA_LADO_M = ALTURA_MESA * 2.535;
 
 const ALTURA_CADEIRA = 0.95;
+/**
+ * O quanto a cadeira recua do centro da mesa, nos dois eixos do vão do L.
+ *
+ * **0,62 e não 0,45 por causa da gaveta.** Encostada na mesa, a cadeira ficava
+ * bem na frente do único caminho que a câmera tem até a gaveta — e a parada
+ * dela, que precisa olhar de BAIXO da linha do tampo, atravessava o encosto.
+ * Empurrada para trás, ela sai da frente e ainda ganha em leitura: cadeira
+ * afastada da mesa é cadeira de quem levantou, não de vitrine de loja.
+ *
+ * O limite superior é o tapete (que vai até z ≈ 0,64) e os dois kettlebells no
+ * chão, à esquerda — recuar mais que isto começa a plantar a cadeira no meio da
+ * sala.
+ */
+const RECUO_DA_CADEIRA = 0.62;
 const ALTURA_MONITOR = 0.42;
 const LARGURA_TECLADO = 0.42;
 const LADO_TAPETE_M = 2.0;
@@ -141,6 +158,7 @@ export function ancorasDoCantoDeTrabalho(quina: [number, number]) {
         quina[0] - PRATELEIRA_RECUO_X, PRATELEIRA_Y, quina[1],
     ];
     const caixa = posicaoDaCaixaDeSom(prateleira);
+    const g = gavetaEmMetros(ALTURA_MESA);
 
     return {
         /**
@@ -151,6 +169,23 @@ export function ancorasDoCantoDeTrabalho(quina: [number, number]) {
         monitores: [centroX + 0.18, ALTURA_MESA + ALTURA_MONITOR * 0.6, zDoFundo] as [number, number, number],
         /** Meia altura acima da base, que é onde o alto-falante de fato está. */
         caixaDeSom: [caixa[0], caixa[1] + 0.078, caixa[2]] as [number, number, number],
+        /**
+         * A gaveta, no braço do fundo, à esquerda do teclado.
+         *
+         * Mirada na posição ABERTA (daí o `+ g.curso`), e não na fechada: é para
+         * lá que o bloco de notas vem quando alguém clica, e é isso que a parada
+         * existe para mostrar. Com a gaveta fechada, o que se vê é a frente dela
+         * um palmo atrás — ainda dentro do quadro, e antecipando o gesto.
+         *
+         * Nenhum dos números sai daqui: `gavetaEmMetros` os lê do `.glb` (ver
+         * `lib/gaveta-model.mjs`), e o sinal trocado em X e Z é a meia volta da
+         * mesa, exatamente como no `Gaveta.tsx`.
+         */
+        gaveta: [
+            centroX - g.dx,
+            g.fundoY + 0.02,
+            quina[1] + meio - g.dz + g.curso,
+        ] as [number, number, number],
         /** A bíblia aberta, no braço direito do L (ver ItensDeEstudo). Um dedo
          *  acima do tampo, senão a câmera mira a madeira sob o livro. */
         biblia: [quina[0] - 0.38, ALTURA_MESA + 0.06, quina[1] + 1.25] as [number, number, number],
@@ -162,6 +197,18 @@ type CantoDeTrabalhoProps = {
     quina: [number, number];
     /** Clique no porta-retratos — quem decide o que fazer é RoomCanvas.tsx. */
     onAbrirRetrato?: () => void;
+    /**
+     * A gaveta da mesa e o bloco de notas dentro dela.
+     *
+     * Chegam como props em vez de a `Gaveta` ser montada direto no `RoomCanvas`
+     * (que é o caminho da lava lamp, do interruptor e da janela, todos controle)
+     * por um motivo físico: o nó que se move vive DENTRO do clone do
+     * `desk-corner.glb`, e esse clone é montado aqui. Fora deste componente ele
+     * não existe.
+     */
+    gavetaAberta?: boolean;
+    onAlternarGaveta?: () => void;
+    onAbrirBilhete?: () => void;
     isMobile?: boolean;
 };
 
@@ -171,7 +218,10 @@ type CantoDeTrabalhoProps = {
  *   encaixado nas duas paredes — mover uma parede sem mover a mesa junto
  *   deixaria uma fresta ou enfiaria o tampo na alvenaria.
  */
-export default function CantoDeTrabalho({quina, onAbrirRetrato, isMobile = false}: CantoDeTrabalhoProps) {
+export default function CantoDeTrabalho({
+    quina, onAbrirRetrato, gavetaAberta = false, onAlternarGaveta, onAbrirBilhete,
+    isMobile = false,
+}: CantoDeTrabalhoProps) {
     // A imagem da tela da esquerda, que é fixa. Carregada aqui, e não dentro do
     // KenneyModel, porque quem carrega é quem suspende — e o modelo já suspende
     // pelo próprio .glb. A da direita não é mais imagem: é o player desenhado
@@ -181,6 +231,13 @@ export default function CantoDeTrabalho({quina, onAbrirRetrato, isMobile = false
     const [telaHover, setTelaHover] = useState(false);
     const [volume, setVolume] = useState(VOLUME_INICIAL);
     const estadoAtual = ESTADOS_DA_TELA[estadoDaTela].id;
+
+    // O nó da gaveta dentro do clone da mesa. O ref nasce aqui porque é aqui que
+    // a mesa é montada; quem o MOVE é o `Gaveta.tsx`, logo abaixo. O mapa é
+    // memoizado como o `articulados` do KenneyModel exige — um literal novo a
+    // cada render refaria a busca na árvore a cada quadro.
+    const noDaGaveta = useRef<THREE.Object3D>(null);
+    const articulados = useMemo(() => ({[GAVETA.no]: noDaGaveta}), []);
 
     // O áudio da sala inteira sai daqui: o monitor escolhe O QUE toca e a caixa
     // de som da prateleira, QUÃO ALTO. Os dois moram neste componente porque a
@@ -209,12 +266,31 @@ export default function CantoDeTrabalho({quina, onAbrirRetrato, isMobile = false
                 cores={{carpet: COR_TAPETE, carpetDarker: COR_TAPETE_ESCURO}}
             />
 
+            {/*
+              A mesa, e junto dela a gaveta.
+
+              O `articulados` entrega o nó `drawer` do clone — é a mesma porta
+              que as cortinas da janela usam, e a única do `KenneyModel`
+              endereçada por NÓ em vez de material. Aqui ela é obrigatória e não
+              conveniência: a gaveta divide `wood` e `metal` com a mesa inteira,
+              então nenhum mapa por material consegue distingui-la do tampo.
+            */}
             <KenneyModel
                 url={MODELOS.mesaEmL}
                 position={centro}
                 rotation={[0, MESA_ROT_Y, 0]}
                 alturaAlvo={ALTURA_MESA}
                 cores={{wood: COR_MADEIRA, metal: COR_METAL}}
+                articulados={articulados}
+            />
+            <Gaveta
+                no={noDaGaveta}
+                centroDaMesa={centro}
+                alturaDaMesa={ALTURA_MESA}
+                aberta={gavetaAberta}
+                onAlternar={onAlternarGaveta}
+                onAbrirBilhete={onAbrirBilhete}
+                isMobile={isMobile}
             />
 
             {/*
@@ -225,13 +301,37 @@ export default function CantoDeTrabalho({quina, onAbrirRetrato, isMobile = false
               Virada para os monitores, que é o que a pessoa sentada estaria
               olhando: de costas para quem entra na sala, e o encosto é
               justamente o lado interessante de uma cadeira de escritório.
+
+              **Esta cadeira nasce virada para o lado CONTRÁRIO das peças do
+              Furniture Kit.** Medindo o modelo, os vértices do topo (o encosto)
+              têm z médio NEGATIVO, ou seja, ela olha para +z de fábrica —
+              enquanto o kit inteiro aponta para -z. Daí a meia volta, que o
+              resto do canto não precisa.
+
+              E o desvio de 0,3 troca de sinal junto: depois da meia volta um
+              ajuste positivo gira a frente para +x, então repetir o `-0.3` da
+              cadeira antiga deixaria esta torta para o lado errado.
             */}
             <KenneyModel
                 url={MODELOS.cadeiraDeEscritorio}
-                position={[centro[0] - 0.45, 0, centro[2] + 0.45]}
-                rotation={[0, -0.3, 0]}
+                position={[centro[0] - RECUO_DA_CADEIRA, 0, centro[2] + RECUO_DA_CADEIRA]}
+                rotation={[0, Math.PI - 0.3, 0]}
                 alturaAlvo={ALTURA_CADEIRA}
-                cores={{metalMedium: COR_METAL_ESCURO, carpet: COR_ESTOFADO}}
+                /*
+                  Os nomes dos materiais aqui não são semânticos como os do
+                  Kenney (`wood`, `carpet`): são `Executive__1`, `__2`, `__3`.
+                  Quem é o quê foi descoberto medindo a faixa de altura de cada
+                  um — `__2` vai de 15 a 45 no eixo Y, que é assento mais
+                  encosto, e portanto é o estofado; `Executive` é a estrela da
+                  base, larga e baixa; `__1` são rodízios e coluna; `__3` são
+                  17 vértices na altura do assento, a alavanca de regulagem.
+                */
+                cores={{
+                    Executive: COR_METAL,
+                    Executive__1: COR_METAL_ESCURO,
+                    Executive__2: COR_ESTOFADO,
+                    Executive__3: COR_METAL,
+                }}
             />
 
             {/*

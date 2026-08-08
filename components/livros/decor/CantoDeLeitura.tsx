@@ -71,10 +71,25 @@ export function pontoNoTampo(lx: number, lz: number): [number, number, number] {
  * inferior do quadro e é cortado pela borda de baixo; em z=0.3 a poltrona
  * virava um borrão de primeiro plano tomando um quarto da tela.
  */
-export default function CantoDeLeitura() {
+export default function CantoDeLeitura({abajurAceso = true, onAlternarAbajur, isMobile = false}: {
+    /**
+     * O abajur virou interruptor (ver Poltrona.tsx). Estes três props só
+     * ATRAVESSAM este arquivo — o congelamento continua valendo para posição,
+     * ângulo, escala e distância entre as peças, que é o que ele protege.
+     */
+    abajurAceso?: boolean;
+    onAlternarAbajur?: () => void;
+    isMobile?: boolean;
+} = {}) {
     return (
         <>
-            <Poltrona position={POLTRONA_CHAO} rotationY={POLTRONA_ROT_Y}/>
+            <Poltrona
+                position={POLTRONA_CHAO}
+                rotationY={POLTRONA_ROT_Y}
+                abajurAceso={abajurAceso}
+                onAlternarAbajur={onAlternarAbajur}
+                isMobile={isMobile}
+            />
             <MesaDeCentro position={MESA_CHAO} rotationY={MESA_ROT_Y}/>
         </>
     );
