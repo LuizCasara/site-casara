@@ -5,11 +5,14 @@ import {useRouter} from 'next/navigation';
 import {Canvas} from '@react-three/fiber';
 import {EffectComposer, Bloom, N8AO, Vignette} from '@react-three/postprocessing';
 import {Suspense} from 'react';
-import Room, {posicaoDaLavaLamp, INTERRUPTOR_ANCHOR, JANELA_ANCHOR} from '@/components/livros/Room';
+import Room, {
+    posicaoDaLavaLamp, posicaoDaCarteira, INTERRUPTOR_ANCHOR, JANELA_ANCHOR,
+} from '@/components/livros/Room';
 import Bookshelf from '@/components/livros/Bookshelf';
 import DeskBooks from '@/components/livros/DeskBooks';
 import TorreQueroLer from '@/components/livros/TorreQueroLer';
 import LavaLamp from '@/components/livros/decor/LavaLamp';
+import CarteiraHunter from '@/components/livros/decor/CarteiraHunter';
 import Interruptor from '@/components/livros/decor/Interruptor';
 import Janela from '@/components/livros/decor/Janela';
 import IndexPanel from '@/components/livros/IndexPanel';
@@ -26,6 +29,8 @@ import {
     CENAS, subVizinha, paradaVizinha, subParadasDaCena, indiceDoFoco,
 } from '@/lib/livros-cenas.mjs';
 import BilheteOverlay from '@/components/livros/BilheteOverlay';
+import CarteiraOverlay from '@/components/livros/CarteiraOverlay';
+import {fichaDoAcervo} from '@/lib/ficha-do-acervo.mjs';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
 import {
     trackListFallback, trackShelfSorted, trackIndexOpened, trackBookFilter,
@@ -123,6 +128,18 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     const [gavetaAberta, setGavetaAberta] = useState(false);
     const [bilheteAberto, setBilheteAberto] = useState(false);
     /**
+     * A carteira de caçador da vitrine da estante.
+     *
+     * Estado solto, e não uma sub-parada como a gaveta, porque o clique nela
+     * **não mexe na câmera**: o conteúdo é um painel DOM que já chega em tamanho
+     * de leitura, e aproximar por trás dele seria o segundo movimento brigando
+     * com o primeiro — a mesma razão pela qual a câmera não se move ao abrir um
+     * livro. Ela também não pode virar sub-parada da estante nem por engano: os
+     * índices daquela cena SÃO os grupos de ano (ver `grupoFocado`), e um a mais
+     * ali passaria a apontar para um nicho que não existe.
+     */
+    const [carteiraAberta, setCarteiraAberta] = useState(false);
+    /**
      * As três luzes que se apagam: o teto (interruptor da parede), o abajur da
      * poltrona e a lanterna da estante amarela.
      *
@@ -192,6 +209,17 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
         () => agruparPorAnoDeLeitura(shelfBooksBase, NICHO_CAPACIDADE_M),
         [shelfBooksBase],
     );
+
+    /**
+     * Os números da carteira de caçador — conta pura sobre os livros que este
+     * componente JÁ recebeu.
+     *
+     * De `books` e não de `shelfBooksBase`: `toShelfBooks` troca `pages` pela
+     * espessura da lombada, e a ficha precisa da contagem de páginas de volta.
+     * Pela mesma razão não sai da lista FILTRADA — a carteira fala do acervo,
+     * não do recorte que está na tela.
+     */
+    const ficha = useMemo(() => fichaDoAcervo(books), [books]);
 
     // Quanto da base do canvas está tapado. Medido, não estimado: a barra cresce
     // de uma para duas linhas quando os anos não cabem lado a lado, e é aí que um
@@ -399,6 +427,13 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                 if (e.key === 'Escape') setGavetaAberta(false);
                 return;
             }
+            // A carteira é uma camada só, sem nada dentro: um Esc fecha e a
+            // pessoa volta para a sala exatamente onde estava — a câmera nunca
+            // saiu do lugar para abri-la.
+            if (carteiraAberta) {
+                if (e.key === 'Escape') setCarteiraAberta(false);
+                return;
+            }
             if (retratoAberto) {
                 if (e.key === 'Escape') setRetratoAberto(false);
                 return;
@@ -426,7 +461,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
         };
         window.addEventListener('keydown', aoTeclar);
         return () => window.removeEventListener('keydown', aoTeclar);
-    }, [openSlug, indiceAberto, retratoAberto, bilheteAberto, gavetaAberta, subFocado, totalDeSubs, subsDaCena, vizinhos, folhear, fecharLivro, andarNoTrilho]);
+    }, [openSlug, indiceAberto, retratoAberto, bilheteAberto, gavetaAberta, carteiraAberta, subFocado, totalDeSubs, subsDaCena, vizinhos, folhear, fecharLivro, andarNoTrilho]);
 
     /**
      * A roda do mouse percorre o MESMO trilho das setas laterais: sala, mesa,
@@ -445,8 +480,10 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     useEffect(() => {
         // O bilhete entra na mesma lista do índice: com a folha aberta a roda é
         // do painel, não da sala — e trocar de parada por baixo dele fecharia a
-        // gaveta que o sustenta.
-        if (mode.kind !== 'sala' || indiceAberto || retratoAberto || bilheteAberto) return;
+        // gaveta que o sustenta. A carteira entra pelo primeiro motivo: rolar
+        // sobre um painel aberto é rolar o painel.
+        if (mode.kind !== 'sala' || indiceAberto || retratoAberto || bilheteAberto
+            || carteiraAberta) return;
 
         const LIMIAR_PX = 24;
         const INTERVALO_MS = 550;
@@ -462,7 +499,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
 
         window.addEventListener('wheel', aoRolar, {passive: true});
         return () => window.removeEventListener('wheel', aoRolar);
-    }, [mode.kind, indiceAberto, retratoAberto, bilheteAberto, andarNoTrilho]);
+    }, [mode.kind, indiceAberto, retratoAberto, bilheteAberto, carteiraAberta, andarNoTrilho]);
 
     useEffect(() => {
         const motivo = detectaMotivoDegradacao();
@@ -573,6 +610,10 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
         trackIndexOpened(filtros.categoria, filtros.tag);
     };
     const fecharIndice = () => setIndiceAberto(false);
+    const abrirCarteira = () => {
+        setCarteiraAberta(true);
+        trackRoomObjectClick('carteira');
+    };
     const mudarOrdenacao = (criterio: string) => {
         setSortCriterio(criterio);
         trackShelfSorted(criterio);
@@ -639,6 +680,23 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                         <LavaLamp
                             position={posicaoDaLavaLamp(grupos.length)}
                             onOpen={mode.kind === 'sala' && !indiceAberto ? abrirIndice : undefined}
+                            isMobile={isMobile}
+                            mostrarEtiqueta={viewpoint === 'estante'}
+                        />
+                        {/*
+                          A carteira de caçador, dois nichos abaixo da lâmpada e
+                          na vitrine do lado oposto. Montada aqui pelo mesmo
+                          motivo dela: abre um painel, logo é CONTROLE, e
+                          `Room.tsx` é cenário — a sala só publica em que
+                          prateleira ela se apoia.
+
+                          Com um livro aberto ela perde o `onAbrir` e vira
+                          enfeite, sem etiqueta nem clique, igual à lâmpada e ao
+                          interruptor.
+                        */}
+                        <CarteiraHunter
+                            position={posicaoDaCarteira(grupos.length)}
+                            onAbrir={mode.kind === 'sala' && !carteiraAberta ? abrirCarteira : undefined}
                             isMobile={isMobile}
                             mostrarEtiqueta={viewpoint === 'estante'}
                         />
@@ -807,6 +865,9 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
             )}
             {mode.kind === 'sala' && bilheteAberto && (
                 <BilheteOverlay onClose={() => setBilheteAberto(false)}/>
+            )}
+            {mode.kind === 'sala' && carteiraAberta && (
+                <CarteiraOverlay ficha={ficha} onClose={() => setCarteiraAberta(false)}/>
             )}
         </>
     );

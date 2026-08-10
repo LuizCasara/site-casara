@@ -16,15 +16,63 @@ import EscudoEscoteiro from '@/components/livros/decor/EscudoEscoteiro';
 import {Planta} from '@/components/livros/decor/PersonalProps';
 import {NICHOS, NICHOS_POR_ESTANTE} from '@/lib/bookshelf-model.mjs';
 import {contarEstantes} from '@/lib/shelf-years.mjs';
+import {QUADRO_Z, QUADROS_DO_FUNDO} from '@/lib/parede-do-fundo.mjs';
 import {linkDeSugestao} from '@/lib/whatsapp-livros.mjs';
-import {trackBookSuggestion} from '@/utils/analytics';
+import {trackBookSuggestion, trackOutboundClick} from '@/utils/analytics';
 
 /** A quina de paredes que o canto de trabalho abraça: fundo à direita. */
 const QUINA_DO_PC: [number, number] = [PAREDE_LATERAL_X, -1.6];
 
+/**
+ * Os dois pôsteres da parede do fundo levam para fora do site.
+ *
+ * As URLs ficam aqui, ao lado das posições, e não num `lib/` — é a mesma
+ * escolha do escudo escoteiro, que guarda o site do grupo no próprio
+ * componente. Um arquivo de "links da sala" só se justificaria se algo além
+ * destes objetos precisasse deles, e nada precisa.
+ */
+const PLAYLIST_GORILLAZ =
+    'https://www.youtube.com/watch?v=WXR-bCF5dbM&list=PLxA687tYuMWiFcoCI8k0WL6-Y0unNno5g';
+const PLAYLIST_HUNTER =
+    'https://www.youtube.com/watch?v=2FT1uN80TTo&list=PL-t1336xq7ykbAgh3eJNVkp0z2U6TWRaf';
+
+/**
+ * Abrir um link de fora da sala.
+ *
+ * `noopener` não é detalhe: sem ele a página aberta recebe uma referência a
+ * esta pelo `window.opener` e pode navegá-la para qualquer lugar. E o evento vai
+ * ANTES do `open` — depois dele a aba pode já ter perdido o foco, e o lote de
+ * eventos do cliente ainda não teria saído (ver utils/analytics.ts).
+ */
+function abrirExterno(url: string, rotulo: string) {
+    trackOutboundClick(rotulo);
+    window.open(url, '_blank', 'noopener,noreferrer');
+}
+
 /** Centro do quadro de recados, na parede do fundo. Constante, e não escrito
  *  duas vezes, porque o CameraRig tem uma parada mirando nele. */
-const QUADRO_RECOMENDACOES: [number, number, number] = [0.68, 1.36, -1.58];
+const QUADRO_RECOMENDACOES: [number, number, number] = [
+    QUADROS_DO_FUNDO.recomendacoes.x, QUADROS_DO_FUNDO.recomendacoes.y, QUADRO_Z,
+];
+
+/**
+ * Centro do pôster de Hunter x Hunter, na parede lateral ESQUERDA.
+ *
+ * **O z é o meio da faixa que sobra**, e não uma coordenada bonita: de um lado a
+ * estante amarela, que ocupa até z ≈ -0,33; do outro a quina com a parede do
+ * fundo, em -1,6. Centrado em -0,98, o pôster de 56cm fica com ~29cm de folga
+ * para a quina e ~37cm para o móvel — por isso mexer na estante amarela obriga a
+ * revisar este número, como já vale para a janela e o stand de espadas.
+ *
+ * O y de 1,5 põe a base dele em 1,29m, bem acima da planta de 94cm que fica
+ * embaixo, e o topo em 1,71m, longe dos 3m de pé-direito.
+ *
+ * **Não passa por `lib/parede-do-fundo.mjs`**, e isso é a diferença que fez ele
+ * mudar de parede: aquele arquivo existe porque a estante do acervo cresce e
+ * come a parede do fundo. Esta faixa aqui não tem móvel nenhum disputando, então
+ * não há colisão futura para prever.
+ */
+const POSTER_HUNTER: [number, number, number] = [-PAREDE_LATERAL_X, 1.5, -0.98];
 
 /**
  * Os quatro objetos COM AÇÃO do canto de trabalho, na ordem em que o trilho os
@@ -94,6 +142,28 @@ const RUG_COLOR = '#a89584';
 const NICHO_DA_LAVA = 3;
 
 /**
+ * Nicho da carteira de caçador: o terceiro, dois andares abaixo da lava lamp.
+ *
+ * **Não é o nicho 1, que também está "mais embaixo".** As vitrines alternam de
+ * lado a cada andar (é isso que o zigue-zague do móvel significa), e a do 1 cai
+ * do MESMO lado da lava lamp — os dois objetos clicáveis ficariam empilhados na
+ * mesma coluna. O 2 fica na diagonal, do lado oposto. E não é o 0 porque aquela
+ * vitrine é rente ao chão, na sombra da estante, onde nenhuma parada da câmera
+ * chega perto o bastante para se descobrir um cartão de dez centímetros.
+ */
+const NICHO_DA_CARTEIRA = 2;
+
+/**
+ * O quanto a carteira avança em relação ao centro da estante.
+ *
+ * Ela fica DEITADA de frente para cima (ver `CarteiraHunter`), e cartão deitado
+ * só se vê de cima — puxá-la para a frente da prateleira é o que a tira da
+ * sombra do tampo de cima e a põe no campo das paradas da câmera. Mesma razão do
+ * `+0.04` da lava lamp, e quase o mesmo número.
+ */
+const AVANCO_DA_CARTEIRA_M = 0.035;
+
+/**
  * A lava lamp NÃO fica no vão dos livros: ela fica na vitrine ao lado — o
  * compartimento estreito que o zigue-zague deixa livre naquele andar, do lado
  * oposto ao vão (ver `vitrineOffsetXM` em lib/bookshelf-model.mjs).
@@ -114,6 +184,31 @@ export function posicaoDaLavaLamp(gruposDeAno: number): [number, number, number]
         // Um pouco à frente do centro da estante (onde as lombadas ficam): a
         // lâmpada é fina, e no meio da profundidade pareceria enfiada no fundo.
         base[2] + 0.04,
+    ];
+}
+
+/**
+ * Onde a carteira de caçador se apoia — a vitrine do nicho 2.
+ *
+ * Irmã de `posicaoDaLavaLamp`, e derivada da mesma forma: uma coordenada fixa
+ * aqui descolaria do móvel no dia em que uma segunda estante aparecesse ao lado
+ * e deslocasse a primeira.
+ *
+ * Devolve o ponto da PRATELEIRA sob o cartão, e não o centro dele — o mesmo
+ * contrato de posicionamento do `KenneyModel`. Quem sabe a espessura do cartão é
+ * o `CarteiraHunter`, e é ele quem levanta a peça a partir daqui.
+ *
+ * Exportada pelo mesmo motivo da lava lamp e do interruptor: quem MONTA a
+ * carteira é o `RoomCanvas`, porque ela abre um painel e portanto é CONTROLE. A
+ * sala é cenário e só publica onde ela fica.
+ */
+export function posicaoDaCarteira(gruposDeAno: number): [number, number, number] {
+    const nicho = NICHOS[NICHO_DA_CARTEIRA];
+    const base = posicaoDaEstante(0, contarEstantes(gruposDeAno, NICHOS_POR_ESTANTE));
+    return [
+        base[0] + nicho.vitrineOffsetX,
+        base[1] + nicho.pisoY,
+        base[2] + AVANCO_DA_CARTEIRA_M,
     ];
 }
 
@@ -281,15 +376,60 @@ export default function Room({
                 cores={{'1A1A1A': '#4b5158'}}
             />
 
-            {/* Quadro na parede de fundo, atrás da poltrona (x=-1.45 é o eixo
-                dela). Quadrado porque a arte é uma capa de disco — o formato do
-                quadro acompanha a imagem, não o contrário. */}
+            {/*
+              Pôster do Gorillaz na parede do fundo, atrás da poltrona (x=-1.45 é
+              o eixo dela). Quadrado porque a arte é uma capa de disco — o
+              formato do quadro acompanha a imagem, não o contrário.
+
+              Clicar abre a playlist da banda no YouTube, com a mesma mecânica do
+              escudo escoteiro, o outro objeto da sala que leva para fora.
+
+              **As medidas saem de `lib/parede-do-fundo.mjs`, não daqui**, e o
+              motivo é o vizinho: quem fecha esta parede pela direita é a ESTANTE
+              DO ACERVO, que ganha uma cópia a cada cinco grupos de ano com o
+              conjunto sempre centrado — ou seja, cada móvel novo empurra a borda
+              por cima do que está pendurado. Um quadro enterrado em madeira não
+              estoura exceção nem quebra build, só some; a conta mora num `.mjs`
+              para o `npm test` poder refazê-la. Mesma razão da mira da lanterna
+              e dos nichos.
+            */}
             <Quadro
-                position={[-1.45, 1.6, -1.58]}
+                position={[QUADROS_DO_FUNDO.gorillaz.x, QUADROS_DO_FUNDO.gorillaz.y, QUADRO_Z]}
                 imagem="/livros/poster-gorillaz.jpg"
-                larguraM={0.5}
-                alturaM={0.5}
-                rotationY={0.04}
+                larguraM={QUADROS_DO_FUNDO.gorillaz.larguraM}
+                alturaM={QUADROS_DO_FUNDO.gorillaz.alturaM}
+                rotationY={QUADROS_DO_FUNDO.gorillaz.rotationY}
+                onClick={() => abrirExterno(PLAYLIST_GORILLAZ, 'gorillaz-youtube')}
+                rotulo="Gorillaz no YouTube ↗"
+                isMobile={isMobile}
+            />
+
+            {/*
+              Pôster de Hunter x Hunter, na parede LATERAL ESQUERDA — a mesma da
+              estante amarela e do escudo escoteiro —, no trecho entre o móvel e
+              a quina do fundo.
+
+              **Ele saiu da parede do fundo de propósito.** Lá ele dividia com o
+              Gorillaz um vão de 78cm que a estante do acervo fecha sozinha
+              quando o acervo cresce; aqui o vão é de 1,15m e não depende de
+              quantos livros existem. É a única faixa de parede da sala que
+              nenhum móvel disputa, e por isso não precisa de teste de colisão:
+              não há o que colidir.
+
+              Ele fica acima da planta (0,94m de altura) e abaixo do topo da
+              parede, no campo das cenas "Sala" e "Mesa" — que são as duas que
+              olham para este lado do cômodo.
+            */}
+            <Quadro
+                position={POSTER_HUNTER}
+                imagem="/livros/poster-hunter.jpg"
+                larguraM={0.56}
+                alturaM={0.42}
+                parede={1}
+                rotationY={-0.04}
+                onClick={() => abrirExterno(PLAYLIST_HUNTER, 'hunter-youtube')}
+                rotulo="Hunter x Hunter no YouTube ↗"
+                isMobile={isMobile}
             />
 
             {/*
@@ -314,9 +454,9 @@ export default function Room({
             <Quadro
                 position={QUADRO_RECOMENDACOES}
                 imagem="/livros/quadro-recomendacoes.jpg"
-                larguraM={0.44}
-                alturaM={0.43}
-                rotationY={-0.03}
+                larguraM={QUADROS_DO_FUNDO.recomendacoes.larguraM}
+                alturaM={QUADROS_DO_FUNDO.recomendacoes.alturaM}
+                rotationY={QUADROS_DO_FUNDO.recomendacoes.rotationY}
                 corMoldura="#b9c2cc"
                 comBandeja
                 onClick={() => {

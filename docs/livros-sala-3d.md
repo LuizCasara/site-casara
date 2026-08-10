@@ -170,9 +170,12 @@ estante. São dois eixos com significados diferentes de propósito — o de anda
 pela sala e o de andar pelo móvel.
 
 Fora do trilho ficam os estados que só se alcança clicando num objeto — o Índice
-(lava lamp), o close no porta-retratos, o bilhete e **a própria parada da
-gaveta** —, todos com saída por `Esc`. O bilhete é o único de dentro de outro:
-fechá-lo devolve a gaveta aberta, e só o `Esc` seguinte fecha a gaveta.
+(lava lamp), o close no porta-retratos, o bilhete, a carteira de caçador e **a
+própria parada da gaveta** —, todos com saída por `Esc`. O bilhete é o único de
+dentro de outro: fechá-lo devolve a gaveta aberta, e só o `Esc` seguinte fecha a
+gaveta. A carteira é o oposto — camada única, e o `Esc` devolve a sala
+exatamente onde estava, porque a câmera nunca saiu do lugar para abri-la (ver
+"A carteira de caçador").
 
 **A câmera nunca se move ao abrir um livro.** Existiu um ponto de vista que
 recuava até o centro da sala, e o zoom dava um solavanco no mesmo instante em
@@ -677,6 +680,218 @@ por segundo sem mudar nada que se veja.
 - **Clima de verdade.** A chuva do monitor é música ambiente, não meteorologia;
   amarrar as duas criaria dois climas discordando na mesma sala. A janela fala
   só de hora.
+
+## Os quadros, e por que nenhum é enfeite mudo
+
+São três, em duas paredes: o pôster do Gorillaz e o quadro de recados na do
+fundo, e o de Hunter x Hunter na lateral esquerda (acrescentado em 10/08/2026).
+**Todos os três respondem ao clique** — dois abrem uma playlist no YouTube, o
+terceiro abre o WhatsApp. Vale manter assim: um quarto quadro sem ação passaria
+a ser a exceção que ninguém tem como adivinhar olhando.
+
+Os dois links externos seguem a mecânica do escudo escoteiro —
+`trackOutboundClick` disparado ANTES do `window.open`, porque depois dele a aba
+pode já ter perdido o foco e o lote de eventos do cliente ainda não teria saído;
+e `noopener`, sem o qual a página aberta ganha uma referência a esta pelo
+`window.opener`.
+
+A imagem de Hunter x Hunter é um quadro de transmissão **recortado**, e o
+recorte é a parte que importa: o original é 16:9 e traz a marca d'água da
+emissora no canto. Foi fechado em 4:3 preservando os quatro personagens e
+deixando a marca de fora — o mesmo tratamento que a `quadro-recomendacoes.jpg`
+levou, onde só o miolo branco virou textura e a moldura de alumínio da foto real
+ficou de fora. As duas artes são de terceiros, como já era o caso do pôster do
+Gorillaz, e não entram no `CreditosModelos.tsx`, que existe para a atribuição
+CC BY dos modelos 3D.
+
+**`Quadro` passou a SOMAR o `rotationY` ao quarto de volta da parede**, em vez de
+ignorá-lo. Antes, passar os dois juntos não fazia nada e nada dizia — um ajuste
+silenciosamente descartado. Agora um quadro de parede lateral também fica
+levemente torto, que é a regra da sala inteira (a xícara, os óculos, os pôsteres
+do fundo).
+
+### Por que o de Hunter x Hunter não ficou na parede do fundo
+
+Ele nasceu lá, no vão de 78cm entre o Gorillaz e a estante, e saiu no mesmo dia.
+Dois motivos, e o segundo só apareceu depois de montado:
+
+1. **O vão não é estável.** Quem o fecha pela direita é a estante do acervo, que
+   ganha uma cópia a cada cinco grupos de ano com o conjunto sempre centrado na
+   parede — cada móvel novo empurra a borda por cima do que está pendurado.
+2. **A luminária do canto de leitura ficava na frente.** Ela está em x = −0,94
+   com a cúpula a 1,33m, e o pôster ocupava x de −1,09 a −0,53, y de 1,29 a
+   1,71. As duas faixas se cruzam: 1,45m de abajur plantado no meio do quadro.
+   Nenhuma conta de parede pega isso, porque a luminária não está NA parede.
+
+Na lateral esquerda o vão é de 1,15m, entre a estante amarela (que vai até
+z ≈ −0,35) e a quina do fundo, com ~34cm de folga de cada lado. **É a única
+faixa de parede da sala que nenhum móvel disputa**, e por isso o pôster de lá
+não passa por `parede-do-fundo.mjs`: não há o que colidir.
+
+### A parede do fundo tem um ocupante que cresce sozinho
+
+`lib/parede-do-fundo.mjs` guarda a geometria dos quadros do fundo e a regra de
+que nada se sobrepõe; `Room.tsx` lê as medidas de lá, e o teste monta a lista de
+ocupantes. **Um quadro enterrado em madeira não estoura exceção nem quebra
+build — só some**, exatamente como o facho da lanterna apontado para a quina.
+
+O teste registra três estados, e os dois últimos como asserção e não como falha
+(uma suíte vermelha por um estado futuro é ruído, não aviso):
+
+| estantes | o que acontece |
+|---|---|
+| 1 *(hoje)* | parede livre |
+| 2 | **o quadro de recados é engolido pela segunda estante** — 40cm dos 44 |
+| 3 | o Gorillaz também entra na primeira, por 11cm |
+
+**O caso de duas estantes é um problema real e pendente, anterior a qualquer
+pôster:** o quadro de recados está em x = 0,68 desde que existe, e a segunda
+estante avança até 0,87. É o próximo passo do crescimento do acervo, não um
+cenário remoto. Quando chegar, o quadro de recados precisa subir ou mudar de
+faixa — a mesma saída que o pôster de Hunter x Hunter já tomou.
+
+A `FOLGA_MINIMA_M` de 3cm foi **medida, não escolhida**: o par mais apertado que
+a sala tem hoje e funciona é o quadro de recados contra a estante, a 4,2cm. Um
+limiar de 5cm reprovaria a sala como ela está. Um teste próprio guarda esse
+número, para ele não virar falso positivo em silêncio.
+
+O único valor duplicado em tudo isso é o `ESTANTE_GAP_M` dentro do teste. Ele
+mora em `EstanteDoAcervo.tsx`, que é território congelado e um `.tsx` que
+`node --test` não importa sem build. É a constante menos provável de mudar — o
+que cresce é a QUANTIDADE de estantes, e disso o teste sabe sozinho. A
+prateleira aérea do canto de trabalho também está fora do modelo, porque as
+medidas dela nascem da quina das paredes dentro de `CantoDeTrabalho` e trazê-las
+para cá seria copiar coordenada de móvel, que é o que este arquivo evita.
+
+## A Licença Hunter
+
+Um cartão largado na vitrine do **nicho 2** da estante, dois andares abaixo da
+lava lamp. Clicar abre um painel com a arte ampliada e uma ficha do acervo.
+`decor/CarteiraHunter.tsx`, `CarteiraOverlay.tsx`, `lib/carteira.ts`,
+`lib/ficha-do-acervo.mjs`.
+
+O objeto se chama **Licença Hunter** em todo lugar em que aparece — a etiqueta de
+hover no 3D, o título do painel e o `aria-label` do diálogo. Os arquivos ainda se
+chamam `Carteira*`, e isso é dívida deliberada: renomeá-los custaria mexer em
+quatro imports para trocar uma palavra que o visitante nunca lê.
+
+**Nicho 2, e não 1 nem 0.** As vitrines alternam de lado a cada andar — é isso
+que o zigue-zague do móvel significa —, e a do nicho 1 cai do MESMO lado da lava
+lamp: os dois objetos clicáveis ficariam empilhados na mesma coluna. O 2 fica na
+diagonal, do lado oposto. O 0 está rente ao chão, na sombra, onde nenhuma parada
+da câmera chega perto o bastante para se descobrir um cartão de dez centímetros.
+
+**O cartão é primitiva, não um `.glb`** — mesma decisão dos post-its da gaveta:
+um retângulo com uma arte na frente resolve igual a esta distância e poupa um
+download, uma pré-carga e mais uma atribuição de licença.
+
+**Ele fica DEITADO de frente para cima**, largado na prateleira como um cartão
+que alguém tirou do bolso e pousou ali. Chegou a ficar escorado no fundo do
+móvel, inclinado, e não é isso: escorado lê como item exposto em vitrine de loja,
+deitado lê como coisa esquecida — que é o que um easter egg deve parecer.
+
+Deitado, ele depende de a câmera olhar **de cima**, e é o nicho que resolve isso:
+as paradas da sala ficam entre 1,2m e 1,6m mirando um pouco para baixo, e a
+vitrine do nicho 2 está a 79cm. Num nicho alto a mesma pose deixaria o cartão de
+perfil e praticamente invisível. Ele também avança 3,5cm em relação ao centro da
+estante, pelo mesmo motivo do `+0,04` da lava lamp: sai da sombra do tampo de
+cima.
+
+Os 10cm de largura são 16% mais que um cartão real, pela mesma razão que os
+livros desta sala são maiores que livros reais: a peça precisa dizer o que é a
+três metros. Deitado, ele ocupa 10 × 6,3cm numa vitrine de 14,9cm, com 4,6cm de
+folga até a frente da prateleira.
+
+**Dois sinais que parecem detalhe e não são.** O quarto de volta que deita a peça
+é NEGATIVO: com +90° a arte encararia o chão e o que se veria na prateleira seria
+o verso branco do plástico. E a etiqueta de hover se desloca em **Z local**, não
+em Y — o grupo está deitado, então é o +Z local que aponta para cima no mundo, e
+um `[0, 0.08, 0]` jogaria o balão para dentro do fundo da estante.
+
+### O clique NÃO mexe na câmera
+
+É a diferença que separa a carteira da gaveta, e ela não é economia. O conteúdo
+da gaveta **é 3D** — sem aproximar, o bloco de notas aparece longe demais para
+se ver o que surgiu lá dentro. O da carteira é um painel DOM, que já chega em
+tamanho de leitura e tapa a cena inteira: o zoom aconteceria atrás dele, sem
+ninguém ver, e seria o segundo movimento brigando com o primeiro. É a mesma
+razão pela qual a câmera não se move ao abrir um livro.
+
+Consequência prática: `carteiraAberta` é um `useState` solto no `RoomCanvas`, e
+**não** uma sub-parada. Não poderia ser nem por engano — os índices de
+sub-parada da cena "estante" SÃO os grupos de ano (ver `grupoFocado`), e um a
+mais ali passaria a apontar para um nicho que não existe.
+
+Ela se descobre olhando a estante de perto, como a lanterna e o interruptor: dar
+zoom naquele ano põe a vitrine no quadro.
+
+### A ficha sai do acervo, não de um arquivo escrito à mão
+
+`lib/ficha-do-acervo.mjs` calcula livros lidos, páginas, "caçando desde",
+categoria mais lida e nota média a partir da lista que o `RoomCanvas` **já
+recebe** — `app/livros/layout.tsx` entrega os livros com `pages`, `finished_at`,
+`rating` e `category` porque a estante precisa deles de qualquer forma.
+**Nenhuma query nova, nenhuma rota nova, nada no banco.** Escrever esses números
+à mão significaria vir corrigir um arquivo a cada livro cadastrado, e errar em
+silêncio quando alguém esquecesse.
+
+Vem de `books` e não de `shelfBooksBase` porque `toShelfBooks` troca `pages` pela
+espessura da lombada; e não da lista FILTRADA porque a carteira fala do acervo,
+não do recorte que está na tela.
+
+`.mjs` com teste `node --test`, como toda lógica pura daqui. O que o teste
+protege não é óbvio de olho:
+
+- **`rating` é NUMERIC, e o driver do Neon devolve NUMERIC como STRING.** Somar
+  direto concatenaria texto (`"4"+"5" = "45"`) e a média sairia absurda sem nada
+  quebrar.
+- **O ano vem de `anoDeLeitura`, com `getUTCFullYear`** — a mesma armadilha dos
+  nichos: `DATE` volta como meia-noite UTC, e lido em America/Sao_Paulo um livro
+  de 1º de janeiro pularia para o ano anterior.
+- **O desempate de categoria é alfabético.** A ordem da lista que chega muda com
+  o critério do Índice, e "a primeira que apareceu" faria a carteira trocar de
+  especialidade conforme a ordenação escolhida na tela.
+- **Campo sem dado devolve `null`, e a linha some do painel** em vez de mostrar
+  "desde —". Um acervo recém cadastrado pode ter os 50 livros e nenhuma data.
+
+O texto fixo (nome, lema, privilégios) mora em `lib/carteira.ts`, separado do
+componente pelo mesmo motivo do `lib/bilhete.ts`: quem edita é o dono do acervo,
+não quem mexe em layout. O lema é uma citação, e o autor é **campo próprio** e
+não parte da string — o painel o tipografa como assinatura (`blockquote` +
+`cite`), que não é a mesma coisa que a frase.
+
+E, como o bilhete e a ficha de um livro, o painel é **DOM e nunca texto no 3D**.
+O cartão de 10cm fornece o objeto; o conteúdo aparece por cima. Ele é escuro nos
+dois temas, pela mesma razão que o papel do bilhete é claro nos dois: é objeto
+físico da sala, não superfície da interface.
+
+### O painel se divide como um documento, não como duas colunas
+
+A primeira versão punha a arte à esquerda e **todo** o resto à direita, e ficava
+torta: uma coluna cheia ao lado de uma imagem solta. O layout de hoje segue a
+anatomia de um documento de identificação:
+
+- **cabeçalho e rodapé atravessam** as duas metades — quem identifica o documento
+  inteiro manda nas duas, não pertence a uma;
+- **embaixo da imagem**, o dado carimbado: os quatro números do acervo;
+- **do outro lado**, o que está escrito no documento: a citação, a especialidade
+  e os privilégios.
+
+Os quatro números são **stat tiles numa grade, não linhas de tabela**. São
+grandezas independentes e sem escala em comum — livros, páginas, um ano, uma nota
+—, e empilhá-las com rótulo à esquerda e valor à direita as fazia parecer linhas
+de uma mesma tabela, sugerindo uma comparação que não existe. Pela mesma lógica
+não há gráfico nenhum aqui: quatro escalares soltos não têm o que plotar.
+
+**O valor vai em tinta, nunca em cor.** A única coisa colorida da ficha é o ponto
+da categoria mais lida, porque ali a cor codifica identidade de verdade — e ela
+vem da taxonomia (`lib/book-categories.mjs`), a mesma que pinta a categoria no
+card do livro, não de um tom escolhido para este painel. O nome sempre acompanha
+o ponto, então a identidade nunca depende só da cor.
+
+Sem `tabular-nums` nos valores: ele dá a todo dígito a largura de um `0`, o que
+é certo numa coluna de números que precisa alinhar e errado num valor grande e
+solto, onde deixa o número frouxo.
 
 ## Créditos dos modelos
 
