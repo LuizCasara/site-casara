@@ -94,6 +94,7 @@ const EVENT_LABELS: Record<string, string> = {
   book_shared:                  "BOOK_SHARED",
   book_comment_whatsapp:        "BOOK_COMMENT",
   book_suggestion_whatsapp:     "BOOK_SUGGEST",
+  caderno_desbloqueado:         "CADERNO_UNLOCK",
 };
 
 const EVENT_DESCRIPTIONS: Record<string, string> = {
@@ -149,6 +150,7 @@ const EVENT_DESCRIPTIONS: Record<string, string> = {
   book_shared:                  "Compartilhou o link de um livro",
   book_comment_whatsapp:        "Foi comentar sobre um livro pelo WhatsApp",
   book_suggestion_whatsapp:     "Foi sugerir um livro pelo WhatsApp",
+  caderno_desbloqueado:         "Achou as 17 coisas da sala e pegou o caderno",
 };
 
 const TEMP_DISPLAY: Record<string, string> = {

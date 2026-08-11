@@ -49,3 +49,33 @@ code, pre, kbd, samp {
 @media (prefers-reduced-motion: reduce) {
   .entrada-do-livro { animation: none; }
 }
+
+/*
+ * O aviso de que as 17 coisas da sala foram encontradas.
+ *
+ * Ele nasce discreto de propósito — nada é sequestrado quando o último item é
+ * achado —, e discreto demais é o que ele acabou ficando: uma linha branca a
+ * mais numa fileira de botões brancos, no rodapé, num canvas 3D disputando
+ * atenção. O pulso é a correção mínima: ele NÃO cresce nem se mexe de lugar
+ * (isso empurraria os botões de cena embaixo dele a cada ciclo), só respira num
+ * halo que dilata e some.
+ *
+ * `box-shadow` e não `transform: scale`, pela mesma razão: sombra não ocupa
+ * espaço no layout, então a barra medida por `useAlturaDoElemento` continua com
+ * a mesma altura e o enquadramento da câmera não oscila junto.
+ *
+ * 2,4s por ciclo. Mais rápido vira notificação de app pedindo clique; mais
+ * lento não é percebido como movimento.
+ */
+@keyframes pulso-do-aviso {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.55); }
+  55% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); }
+}
+
+.pulso-do-aviso {
+  animation: pulso-do-aviso 2.4s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulso-do-aviso { animation: none; }
+}

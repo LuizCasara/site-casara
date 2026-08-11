@@ -170,9 +170,12 @@ estante. São dois eixos com significados diferentes de propósito — o de anda
 pela sala e o de andar pelo móvel.
 
 Fora do trilho ficam os estados que só se alcança clicando num objeto — o Índice
-(lava lamp), o close no porta-retratos, o bilhete e **a própria parada da
-gaveta** —, todos com saída por `Esc`. O bilhete é o único de dentro de outro:
-fechá-lo devolve a gaveta aberta, e só o `Esc` seguinte fecha a gaveta.
+(lava lamp), o close no porta-retratos, o bilhete, a carteira de caçador e **a
+própria parada da gaveta** —, todos com saída por `Esc`. O bilhete é o único de
+dentro de outro: fechá-lo devolve a gaveta aberta, e só o `Esc` seguinte fecha a
+gaveta. A carteira é o oposto — camada única, e o `Esc` devolve a sala
+exatamente onde estava, porque a câmera nunca saiu do lugar para abri-la (ver
+"A carteira de caçador").
 
 **A câmera nunca se move ao abrir um livro.** Existiu um ponto de vista que
 recuava até o centro da sala, e o zoom dava um solavanco no mesmo instante em
@@ -678,6 +681,418 @@ por segundo sem mudar nada que se veja.
   amarrar as duas criaria dois climas discordando na mesma sala. A janela fala
   só de hora.
 
+## Os quadros, e por que nenhum é enfeite mudo
+
+São três, em duas paredes: o pôster do Gorillaz e o quadro de recados na do
+fundo, e o de Hunter x Hunter na lateral esquerda (acrescentado em 10/08/2026).
+**Todos os três respondem ao clique** — dois abrem uma playlist no YouTube, o
+terceiro abre o WhatsApp. Vale manter assim: um quarto quadro sem ação passaria
+a ser a exceção que ninguém tem como adivinhar olhando.
+
+Os dois links externos seguem a mecânica do escudo escoteiro —
+`trackOutboundClick` disparado ANTES do `window.open`, porque depois dele a aba
+pode já ter perdido o foco e o lote de eventos do cliente ainda não teria saído;
+e `noopener`, sem o qual a página aberta ganha uma referência a esta pelo
+`window.opener`.
+
+A imagem de Hunter x Hunter é um quadro de transmissão **recortado**, e o
+recorte é a parte que importa: o original é 16:9 e traz a marca d'água da
+emissora no canto. Foi fechado em 4:3 preservando os quatro personagens e
+deixando a marca de fora — o mesmo tratamento que a `quadro-recomendacoes.jpg`
+levou, onde só o miolo branco virou textura e a moldura de alumínio da foto real
+ficou de fora. As duas artes são de terceiros, como já era o caso do pôster do
+Gorillaz, e não entram no `CreditosModelos.tsx`, que existe para a atribuição
+CC BY dos modelos 3D.
+
+**`Quadro` passou a SOMAR o `rotationY` ao quarto de volta da parede**, em vez de
+ignorá-lo. Antes, passar os dois juntos não fazia nada e nada dizia — um ajuste
+silenciosamente descartado. Agora um quadro de parede lateral também fica
+levemente torto, que é a regra da sala inteira (a xícara, os óculos, os pôsteres
+do fundo).
+
+### Por que o de Hunter x Hunter não ficou na parede do fundo
+
+Ele nasceu lá, no vão de 78cm entre o Gorillaz e a estante, e saiu no mesmo dia.
+Dois motivos, e o segundo só apareceu depois de montado:
+
+1. **O vão não é estável.** Quem o fecha pela direita é a estante do acervo, que
+   ganha uma cópia a cada cinco grupos de ano com o conjunto sempre centrado na
+   parede — cada móvel novo empurra a borda por cima do que está pendurado.
+2. **A luminária do canto de leitura ficava na frente.** Ela está em x = −0,94
+   com a cúpula a 1,33m, e o pôster ocupava x de −1,09 a −0,53, y de 1,29 a
+   1,71. As duas faixas se cruzam: 1,45m de abajur plantado no meio do quadro.
+   Nenhuma conta de parede pega isso, porque a luminária não está NA parede.
+
+Na lateral esquerda o vão é de 1,15m, entre a estante amarela (que vai até
+z ≈ −0,35) e a quina do fundo, com ~34cm de folga de cada lado. **É a única
+faixa de parede da sala que nenhum móvel disputa**, e por isso o pôster de lá
+não passa por `parede-do-fundo.mjs`: não há o que colidir.
+
+### A parede do fundo tem um ocupante que cresce sozinho
+
+`lib/parede-do-fundo.mjs` guarda a geometria dos quadros do fundo e a regra de
+que nada se sobrepõe; `Room.tsx` lê as medidas de lá, e o teste monta a lista de
+ocupantes. **Um quadro enterrado em madeira não estoura exceção nem quebra
+build — só some**, exatamente como o facho da lanterna apontado para a quina.
+
+O teste registra três estados, e os dois últimos como asserção e não como falha
+(uma suíte vermelha por um estado futuro é ruído, não aviso):
+
+| estantes | o que acontece |
+|---|---|
+| 1 *(hoje)* | parede livre |
+| 2 | **o quadro de recados é engolido pela segunda estante** — 40cm dos 44 |
+| 3 | o Gorillaz também entra na primeira, por 11cm |
+
+**O caso de duas estantes é um problema real e pendente, anterior a qualquer
+pôster:** o quadro de recados está em x = 0,68 desde que existe, e a segunda
+estante avança até 0,87. É o próximo passo do crescimento do acervo, não um
+cenário remoto. Quando chegar, o quadro de recados precisa subir ou mudar de
+faixa — a mesma saída que o pôster de Hunter x Hunter já tomou.
+
+A `FOLGA_MINIMA_M` de 3cm foi **medida, não escolhida**: o par mais apertado que
+a sala tem hoje e funciona é o quadro de recados contra a estante, a 4,2cm. Um
+limiar de 5cm reprovaria a sala como ela está. Um teste próprio guarda esse
+número, para ele não virar falso positivo em silêncio.
+
+O único valor duplicado em tudo isso é o `ESTANTE_GAP_M` dentro do teste. Ele
+mora em `EstanteDoAcervo.tsx`, que é território congelado e um `.tsx` que
+`node --test` não importa sem build. É a constante menos provável de mudar — o
+que cresce é a QUANTIDADE de estantes, e disso o teste sabe sozinho. A
+prateleira aérea do canto de trabalho também está fora do modelo, porque as
+medidas dela nascem da quina das paredes dentro de `CantoDeTrabalho` e trazê-las
+para cá seria copiar coordenada de móvel, que é o que este arquivo evita.
+
+## A Licença Hunter
+
+Um cartão largado na vitrine do **nicho 2** da estante, dois andares abaixo da
+lava lamp. Clicar abre um painel com a arte ampliada e uma ficha do acervo.
+`decor/CarteiraHunter.tsx`, `CarteiraOverlay.tsx`, `lib/carteira.ts`,
+`lib/ficha-do-acervo.mjs`.
+
+O objeto se chama **Licença Hunter** em todo lugar em que aparece — a etiqueta de
+hover no 3D, o título do painel e o `aria-label` do diálogo. Os arquivos ainda se
+chamam `Carteira*`, e isso é dívida deliberada: renomeá-los custaria mexer em
+quatro imports para trocar uma palavra que o visitante nunca lê.
+
+**Nicho 2, e não 1 nem 0.** As vitrines alternam de lado a cada andar — é isso
+que o zigue-zague do móvel significa —, e a do nicho 1 cai do MESMO lado da lava
+lamp: os dois objetos clicáveis ficariam empilhados na mesma coluna. O 2 fica na
+diagonal, do lado oposto. O 0 está rente ao chão, na sombra, onde nenhuma parada
+da câmera chega perto o bastante para se descobrir um cartão de dez centímetros.
+
+**O cartão é primitiva, não um `.glb`** — mesma decisão dos post-its da gaveta:
+um retângulo com uma arte na frente resolve igual a esta distância e poupa um
+download, uma pré-carga e mais uma atribuição de licença.
+
+**Ele fica DEITADO de frente para cima**, largado na prateleira como um cartão
+que alguém tirou do bolso e pousou ali. Chegou a ficar escorado no fundo do
+móvel, inclinado, e não é isso: escorado lê como item exposto em vitrine de loja,
+deitado lê como coisa esquecida — que é o que um easter egg deve parecer.
+
+Deitado, ele depende de a câmera olhar **de cima**, e é o nicho que resolve isso:
+as paradas da sala ficam entre 1,2m e 1,6m mirando um pouco para baixo, e a
+vitrine do nicho 2 está a 79cm. Num nicho alto a mesma pose deixaria o cartão de
+perfil e praticamente invisível. Ele também avança 3,5cm em relação ao centro da
+estante, pelo mesmo motivo do `+0,04` da lava lamp: sai da sombra do tampo de
+cima.
+
+Os 10cm de largura são 16% mais que um cartão real, pela mesma razão que os
+livros desta sala são maiores que livros reais: a peça precisa dizer o que é a
+três metros. Deitado, ele ocupa 10 × 6,3cm numa vitrine de 14,9cm, com 4,6cm de
+folga até a frente da prateleira.
+
+**Dois sinais que parecem detalhe e não são.** O quarto de volta que deita a peça
+é NEGATIVO: com +90° a arte encararia o chão e o que se veria na prateleira seria
+o verso branco do plástico. E a etiqueta de hover se desloca em **Z local**, não
+em Y — o grupo está deitado, então é o +Z local que aponta para cima no mundo, e
+um `[0, 0.08, 0]` jogaria o balão para dentro do fundo da estante.
+
+### O clique NÃO mexe na câmera
+
+É a diferença que separa a carteira da gaveta, e ela não é economia. O conteúdo
+da gaveta **é 3D** — sem aproximar, o bloco de notas aparece longe demais para
+se ver o que surgiu lá dentro. O da carteira é um painel DOM, que já chega em
+tamanho de leitura e tapa a cena inteira: o zoom aconteceria atrás dele, sem
+ninguém ver, e seria o segundo movimento brigando com o primeiro. É a mesma
+razão pela qual a câmera não se move ao abrir um livro.
+
+Consequência prática: `carteiraAberta` é um `useState` solto no `RoomCanvas`, e
+**não** uma sub-parada. Não poderia ser nem por engano — os índices de
+sub-parada da cena "estante" SÃO os grupos de ano (ver `grupoFocado`), e um a
+mais ali passaria a apontar para um nicho que não existe.
+
+Ela se descobre olhando a estante de perto, como a lanterna e o interruptor: dar
+zoom naquele ano põe a vitrine no quadro.
+
+### A ficha sai do acervo, não de um arquivo escrito à mão
+
+`lib/ficha-do-acervo.mjs` calcula livros lidos, páginas, "caçando desde",
+categoria mais lida e nota média a partir da lista que o `RoomCanvas` **já
+recebe** — `app/livros/layout.tsx` entrega os livros com `pages`, `finished_at`,
+`rating` e `category` porque a estante precisa deles de qualquer forma.
+**Nenhuma query nova, nenhuma rota nova, nada no banco.** Escrever esses números
+à mão significaria vir corrigir um arquivo a cada livro cadastrado, e errar em
+silêncio quando alguém esquecesse.
+
+Vem de `books` e não de `shelfBooksBase` porque `toShelfBooks` troca `pages` pela
+espessura da lombada; e não da lista FILTRADA porque a carteira fala do acervo,
+não do recorte que está na tela.
+
+`.mjs` com teste `node --test`, como toda lógica pura daqui. O que o teste
+protege não é óbvio de olho:
+
+- **`rating` é NUMERIC, e o driver do Neon devolve NUMERIC como STRING.** Somar
+  direto concatenaria texto (`"4"+"5" = "45"`) e a média sairia absurda sem nada
+  quebrar.
+- **O ano vem de `anoDeLeitura`, com `getUTCFullYear`** — a mesma armadilha dos
+  nichos: `DATE` volta como meia-noite UTC, e lido em America/Sao_Paulo um livro
+  de 1º de janeiro pularia para o ano anterior.
+- **O desempate de categoria é alfabético.** A ordem da lista que chega muda com
+  o critério do Índice, e "a primeira que apareceu" faria a carteira trocar de
+  especialidade conforme a ordenação escolhida na tela.
+- **Campo sem dado devolve `null`, e a linha some do painel** em vez de mostrar
+  "desde —". Um acervo recém cadastrado pode ter os 50 livros e nenhuma data.
+
+O texto fixo (nome, lema, privilégios) mora em `lib/carteira.ts`, separado do
+componente pelo mesmo motivo do `lib/bilhete.ts`: quem edita é o dono do acervo,
+não quem mexe em layout. O lema é uma citação, e o autor é **campo próprio** e
+não parte da string — o painel o tipografa como assinatura (`blockquote` +
+`cite`), que não é a mesma coisa que a frase.
+
+E, como o bilhete e a ficha de um livro, o painel é **DOM e nunca texto no 3D**.
+O cartão de 10cm fornece o objeto; o conteúdo aparece por cima. Ele é escuro nos
+dois temas, pela mesma razão que o papel do bilhete é claro nos dois: é objeto
+físico da sala, não superfície da interface.
+
+### O painel se divide como um documento, não como duas colunas
+
+A primeira versão punha a arte à esquerda e **todo** o resto à direita, e ficava
+torta: uma coluna cheia ao lado de uma imagem solta. O layout de hoje segue a
+anatomia de um documento de identificação:
+
+- **cabeçalho e rodapé atravessam** as duas metades — quem identifica o documento
+  inteiro manda nas duas, não pertence a uma;
+- **embaixo da imagem**, o dado carimbado: os quatro números do acervo;
+- **do outro lado**, o que está escrito no documento: a citação, a especialidade
+  e os privilégios.
+
+Os quatro números são **stat tiles numa grade, não linhas de tabela**. São
+grandezas independentes e sem escala em comum — livros, páginas, um ano, uma nota
+—, e empilhá-las com rótulo à esquerda e valor à direita as fazia parecer linhas
+de uma mesma tabela, sugerindo uma comparação que não existe. Pela mesma lógica
+não há gráfico nenhum aqui: quatro escalares soltos não têm o que plotar.
+
+**O valor vai em tinta, nunca em cor.** A única coisa colorida da ficha é o ponto
+da categoria mais lida, porque ali a cor codifica identidade de verdade — e ela
+vem da taxonomia (`lib/book-categories.mjs`), a mesma que pinta a categoria no
+card do livro, não de um tom escolhido para este painel. O nome sempre acompanha
+o ponto, então a identidade nunca depende só da cor.
+
+Sem `tabular-nums` nos valores: ele dá a todo dígito a largura de um `0`, o que
+é certo numa coluna de números que precisa alinhar e errado num valor grande e
+solto, onde deixa o número frouxo.
+
+## Coisas que ninguém repara
+
+A sala tem 17 objetos que respondem ao clique, e quase ninguém encontra mais que
+três. Esta camada transforma isso numa lista que se preenche, e premeia quem
+completa com um caderno de anotações no braço da poltrona. O design completo está
+em [specs/2026-08-10-coisas-que-ninguem-repara-design.md](superpowers/specs/2026-08-10-coisas-que-ninguem-repara-design.md).
+
+Três peças: a **folha da bancada de estudo** vira clicável e abre a lista
+(`FolhaOverlay.tsx`); o **progresso mora no `localStorage`**, sem backend e sem
+conta; e ao completar, o **caderno aparece no braço da poltrona**
+(`decor/CadernoDoPremio.tsx` + `CadernoOverlay.tsx`), alimentado por arquivos
+`.md` em `content/caderno/`.
+
+**Não é fechadura.** Nada na sala fica trancado, em momento nenhum: a gaveta abre
+no primeiro clique de quem chegou agora, e o bilhete dela continua onde está. Um
+objeto que diz "não" a quem acabou de chegar custa mais do que rende. O prêmio
+*aparece*, não destranca.
+
+**Não é segredo.** O conteúdo do caderno é servido por `GET /api/caderno`; quem
+abrir o DevTools lê tudo sem jogar. Travar de verdade exigiria segredo no
+servidor, e o progresso mora no navegador — não existe segredo possível. Mesma
+honestidade da nota do pódio do quiz: **isto é ritmo, não segurança.**
+
+**Não é placar.** Sem ranking, sem tempo, sem comparação. É lista de observação,
+não corrida.
+
+### A fonte única, e as regras de quem acrescentar o item 18
+
+`lib/coisas-da-sala.mjs` — um array de `{id, texto, dica}` de onde saem tanto o
+`N` do contador quanto as linhas da folha. Os `id` reaproveitam os que
+`trackRoomObjectClick` já usava; onde não existia (a folha, o índice da lava
+lamp, abrir um livro, os dois pôsteres, o escudo), o id nasce ali e passa a ser o
+nome canônico do objeto.
+
+- **Objeto que cicla estados conta uma vez.** O monitor tem três e a caixa de som
+  tem três: qualquer um marca. Exigir os três vira tarefa, não descoberta.
+- **Link externo entra, WhatsApp não.** Os dois pôsteres e o escudo contam. O
+  quadro "Sugerir um livro" ficou de fora porque abre o WhatsApp — exigir que
+  alguém mande mensagem para ganhar prêmio é cobrança.
+- **Navegação não conta.** Paradas de câmera, filtros e ordenação ficam fora:
+  atravessar a sala não é reparar em nada. É a mesma lição que derrubou o
+  `room_scene_changed` na auditoria de agosto de 2026.
+- **A folha é o item 1** e se marca sozinha na primeira abertura, para a lista
+  nunca aparecer zerada e a primeira linha ensinar a mecânica pelo exemplo.
+
+### `marcarCoisa` é função de módulo, não prop nem contexto
+
+Metade dos objetos é controlada pelo `RoomCanvas` (interruptor, cortina,
+gaveta…), mas a outra metade decide sozinha dentro do próprio componente — a
+Bíblia em `ItensDeEstudo`, o escudo, os pôsteres em `Room.tsx`. Um handler por
+prop obrigaria a atravessar a árvore 3D inteira com uma prop nova, **incluindo
+`Room.tsx`, que por contrato é cenário burro e não deve saber que existe um
+jogo**. Uma função importada direto é exatamente como `trackRoomObjectClick` já é
+usada nesses mesmos arquivos. Quem quer REAGIR assina `useProgressoDaSala()`
+(`lib/progresso-da-sala.ts`, com `useSyncExternalStore`).
+
+**O lado do navegador tem nome diferente de propósito.** Ele já se chamou
+`coisas-da-sala.ts`, e com os dois arquivos de mesmo basename na pasta,
+`import … from '@/lib/coisas-da-sala'` resolvia para o `.mjs` — a ordem de
+extensões do bundler põe `.mjs` antes de `.ts`. Todo import de `marcarCoisa`
+virava `undefined`, com o build passando e só um aviso no meio do log.
+
+### `premiadoEm` é o que impede o prêmio de ser retirado
+
+O formato guardado é `{v, achados, premiadoEm}` na chave
+`coisas-que-ninguem-repara`.
+
+- `achados` é um **conjunto de ids**, não um contador: um número não sobreviveria
+  a clicar duas vezes no mesmo objeto, e não teria como riscar as linhas certas.
+- Uma vez preenchido com a data ISO da conquista, `premiadoEm` deixa o caderno na
+  sala **para sempre** — mesmo que um item 18 entre depois e o contador volte a
+  marcar `17 de 18`. Sem esse campo, acrescentar um objeto puniria justamente
+  quem já tinha completado.
+- `v` existe para o dia em que o formato mudar: **versão desconhecida = começar do
+  zero**, sem tentar migrar.
+- Ids desconhecidos são ignorados na leitura, nunca apagados na escrita — quem
+  voltar a uma versão anterior não perde progresso.
+- `localStorage` indisponível (aba anônima restrita, cota estourada) degrada para
+  "nada é lembrado". Nunca lança.
+
+### O reveal: nada é sequestrado
+
+Ao achar o 17º item aparece **uma linha discreta no rodapé** ("Você encontrou
+tudo. Ver o prêmio?"), e mais nada. A pessoa pode estar com um livro aberto ou ter
+acabado de voltar de um link externo, e modal, confete ou voo de câmera automático
+seriam a sala decidindo o momento por ela. Só no clique a câmera voa para a parada
+da poltrona (`VIEWPOINT_DO_CADERNO`, fora do trilho como o `retrato`), o caderno
+pousa ao lado da caneta, e uma batida depois ele abre.
+
+Fechar sem clicar não perde nada: a condição é `achou tudo && premiadoEm === null`
+— **estado, não evento** —, então o aviso volta na próxima visita. É a mesma razão
+pela qual ele aparece na volta de um link externo ou da página da Bíblia.
+
+**A caneta está no braço desde o primeiro segundo**, muito antes de existir
+caderno. Uma caneta sozinha no braço de uma poltrona é uma pergunta silenciosa:
+dá antecipação sem negar nada a quem chegou agora, e faz o caderno chegar
+completando uma cena que estava incompleta desde o começo, em vez de materializar
+do nada. É o mesmo `caneta.glb` da gaveta — nenhum arquivo novo entrou.
+
+**Um efeito sonoro, e é a única exceção da sala a `lib/sound.ts`.** Fechar as 17
+toca `reveal.mp3` a 45% de volume. O design original pedia reveal mudo e foi
+revertido depois de testar: sem som, completar a lista não tinha resposta
+nenhuma. A regra de que `/livros` não passa por `lib/sound.ts` continua valendo
+para o que ela foi escrita — o RÁDIO e a chuva, que precisam de grafo de Web
+Audio (ganho, analisador, síntese) e não de um `<audio>`. Um clipe de meio
+segundo tocado uma vez é exatamente o caso de `playSound`. **Nenhum arquivo de
+áudio novo entrou**: `reveal.mp3` já servia o pódio do quiz. Os 45% existem
+porque o reveal pode acontecer com a rádio lofi tocando, e efeito em volume cheio
+por cima de música é ruído.
+
+O disparo é de BORDA, com o ref inicializado pelo valor da montagem: quem volta
+de um link externo com a lista já completa não leva um som ao abrir a página — e
+nem levaria, porque sem gesto o navegador bloquearia o autoplay de qualquer
+forma. Quem acabou de clicar no 17º objeto, sim.
+
+**O aviso pulsa** (`.pulso-do-aviso`, em `globals.css`). Ele nasceu discreto de
+propósito e ficou discreto demais: uma linha branca a mais numa fileira de botões
+brancos, no rodapé de um canvas 3D. O pulso é `box-shadow`, **nunca
+`transform: scale`** — sombra não ocupa espaço no layout, então a barra medida por
+`useAlturaDoElemento` mantém a altura e o enquadramento da câmera não oscila a
+cada ciclo.
+
+### O caderno é primitiva, e o braço foi medido
+
+`decor/CadernoDoPremio.tsx` é uma capa, um miolo de páginas recuado em três lados
+(o quarto é a lombada) e um elástico atravessado — três caixas. Mesma decisão dos
+post-its da gaveta e do cartão da Licença Hunter: um `.glb` custaria download,
+pré-carga e provavelmente mais uma atribuição CC BY para um objeto de 15cm. O
+requisito de forma continua atendido: ele é fisicamente outra coisa que o
+`nota.glb` da gaveta, que é um bloco plano.
+
+**Onde ele pousa saiu dos vértices do `.glb`, não de chute**:
+`lib/poltrona-model.mjs` guarda a caixa da poltrona e o platô do braço (o trecho
+em que a face de cima é plana e tem a largura inteira), e `bracoEmMetros()` os
+converte pela altura pedida ao móvel. Mesmo tratamento da gaveta, das cortinas e
+do vão do relógio, e pelo mesmo motivo: trocar o modelo sem atualizar a tabela
+quebra o teste, em vez de deixar um caderno boiando ao lado de uma poltrona que
+encolheu. `pontoNoBraco()` em `CantoDeLeitura.tsx` leva isso para o mundo — irmão
+de `pontoNoTampo`, e publicado pela mesma razão: o conjunto está congelado, o que
+se apoia nele não.
+
+**Braço do lado +x local**, o oposto ao do abajur: do outro lado o caderno
+ficaria embaixo da cúpula.
+
+### As páginas, e o marcador que fecha o círculo
+
+`content/caderno/*.md`, **fora de `public/`** — lá, `/caderno/01-….md` serviria o
+texto cru. Ordem pelo nome do arquivo; título opcional (`# alguma coisa` na
+primeira linha); sem frontmatter, porque o projeto não tem parser de YAML e não
+vale trazer um por duas linhas. Renderizadas com `react-markdown` +
+`@tailwindcss/typography` e o `REMAP_HEADINGS` das resenhas — o caderno é seção
+da página, não documento à parte.
+
+`GET /api/caderno` só é chamado quando o caderno abre. As razões não são segredo:
+o conteúdo não pesa na carga da sala para os 99% que nunca vão abrir, e não fica
+no HTML inicial de todo mundo. **A pasta precisa estar em
+`outputFileTracingIncludes` no `next.config.ts`**: o caminho é montado em runtime,
+o tracing do Next só enxerga `import`, e sem aquela linha a rota funciona no
+`npm run dev` e devolve zero páginas em produção.
+
+**A última página do caderno É o marcador** (`utils/marcador-pdf.tsx`), e não um
+botão flutuante no canto: quem folheia até o fim encontra uma página que manda
+arrancar aquela. Reusa o `renderElementToPdf` dos dois testes de personalidade.
+Frente: a pergunta, tipografia grande, muita folga, pouca tinta — vai sair de
+impressora doméstica. Verso: **duas frases sorteadas do bloco de notas da gaveta**
+(`lib/bilhete.ts` tem doze, e não cabem num papel de 5cm — cada marcador leva as
+suas, o que é feature: dois impressos em dias diferentes não são o mesmo papel),
+a linha de `encontrado por` e o endereço do site no pé. **Sem formulário de
+nome**: o prêmio de um caderno de anotações ser um papel que pede para ser escrito
+à mão fecha o círculo.
+
+**As linhas de preencher são `borderBottom`, nunca uma fila de `_`.** A primeira
+versão usava underscores e a linha vazava para fora do tracejado: o underscore
+mede o que a FONTE diz e o papel mede o que o CORTE diz, então qualquer ajuste de
+corpo estoura de novo — em silêncio, dentro de um PDF que ninguém revisa. O
+marcador também foi de 190×570 para 240×720 px (mesma proporção 1:3), o que é a
+outra metade da correção.
+
+O sorteio das frases roda **uma vez por abertura do caderno**, num inicializador
+preguiçoso de `useState`. No corpo do render, o papel mudaria de conteúdo entre a
+pessoa ler a página e clicar em baixar.
+
+A pergunta `o que fica quando o livro acaba?` atravessa as três peças: é a última
+linha da folha (fora da contagem, sem tarja e sem dica — a única que pergunta), é
+o que está impresso no marcador, e é o que o caderno responde.
+
+### Analytics: um evento, só um
+
+`caderno_desbloqueado`, disparado quando `premiadoEm` é gravado. Passa nos dois
+testes da auditoria de agosto de 2026: responde algo que nenhum `page_view`
+responde (quantas pessoas chegam ao fim) e é gesto deliberado. **Nenhum evento por
+item** — os 17 cliques já são medidos por `trackRoomObjectClick` e pelos eventos
+de saída, e duplicá-los seria gravar a mesma informação duas vezes, o erro que
+derrubou o `book_opened`.
+
+### Para testar o reveal
+
+Não há UI de reset, de propósito. Apague a chave `coisas-que-ninguem-repara` no
+DevTools — fica registrado aqui em vez de virar um botão que ninguém deveria ver.
+
 ## Créditos dos modelos
 
 Dezessete modelos da sala são CC BY 3.0, e essa licença **exige atribuição no lugar
@@ -689,3 +1104,10 @@ rodapé, e o `Footer` a monta só em `/livros`. Mexeu no `LICENSE.md`, mexa lá.
 
 - **Adapter de Skoob**: a API pública foi desligada em setembro de 2025 e não há
   exportação nativa. O gancho existe em `lib/book-sources/`.
+- **Clique nos objetos que hoje não fazem nada** (stand de espadas, relógio
+  digital, kettlebells, óculos): cada um viraria um item novo da folha, mas custa
+  inventar o que o clique *faz* — e um clique que só marca ponto é justamente o
+  que a sala evitou até aqui.
+- **Sincronizar o progresso entre dispositivos**: quem completa no celular não
+  completa no desktop, e está certo assim. Exigir conta para uma caça a cliques
+  seria trocar a graça inteira por um formulário.

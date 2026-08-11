@@ -22,7 +22,9 @@ const CUPULA_ACESA = '#ffe0b0';
 const CUPULA_APAGADA = '#6b6157';
 
 // Medidas de móvel de verdade, em metros.
-const ALTURA_POLTRONA = 0.82;
+/** Exportada porque `lib/poltrona-model.mjs` converte as medidas do `.glb` a
+ *  partir dela: sem a altura pedida, os números do braço não viram metros. */
+export const ALTURA_POLTRONA = 0.82;
 const ALTURA_ABAJUR = 1.45;
 /** Altura do centro da cúpula: a mesma da luz, que já foi casada com o modelo. */
 const CUPULA_Y = ALTURA_ABAJUR - 0.12;

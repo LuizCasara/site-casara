@@ -55,7 +55,13 @@ export default function Quadro({
     const clicavel = onClick !== undefined;
     // Numa parede lateral o quadro gira um quarto de volta e se afasta do
     // reboco; sem parede, ele só recebe o giro que quem monta pediu.
-    const giro = parede ? (parede * Math.PI) / 2 : rotationY;
+    //
+    // O quarto de volta SOMA com o `rotationY` em vez de substituí-lo: um quadro
+    // de parede lateral também tem direito a ficar levemente torto, que é a
+    // regra da sala inteira (a xícara, os óculos, os dois pôsteres). Antes o
+    // `rotationY` era silenciosamente ignorado quando `parede` vinha junto — um
+    // ajuste que não fazia nada e nada dizia.
+    const giro = parede ? (parede * Math.PI) / 2 + rotationY : rotationY;
     const deslocado: [number, number, number] = parede
         ? [position[0] + parede * PROFUNDIDADE_M, position[1], position[2]]
         : position;

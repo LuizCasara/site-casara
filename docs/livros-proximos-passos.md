@@ -107,7 +107,7 @@ colorido no card e na página.
 | 13  | `arrume-a-sua-cama`                                        | Arrume a Sua Cama — William H. McRaven                                 | —                                       | ✅  |
 | 14  | `as-4-disciplinas-da-execucao`                             | As 4 Disciplinas da Execução — Chris McChesney                         | —                                       | ✅  |
 | 15  | `as-48-leis-do-poder`                                      | As 48 Leis do Poder — Robert Greene                                    | —                                       | ✅  |
-| 16  | `as-cavernas-de-aco`                                       | As Cavernas de Aço — Isaac Asimov                                      | ISBN-13, ano, editora, resenha          | ⬜  |
+| 16  | `as-cavernas-de-aco`                                       | As Cavernas de Aço — Isaac Asimov                                      | —                                       | ✅  |
 | 17  | `bora-vender`                                              | Bora Vender — Alfredo Soares                                           | ISBN-13, ano, editora, resenha          | ⬜  |
 | 18  | `biblia-sagrada-nvi`                                       | Bíblia Sagrada NVI                                                     | ISBN-13, ano, resenha                   | ⬜  |
 | 19  | `cada-homem-um-guerreiro`                                  | Cada Homem um Guerreiro — Lonnie Berger                                | ISBN-13, ano, editora, págs, resenha    | ⬜  |

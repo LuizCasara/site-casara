@@ -20,6 +20,18 @@ const nextConfig: NextConfig = {
          */
         staleTimes: {dynamic: 60},
     },
+    /**
+     * As páginas do caderno de `/livros` são lidas do disco em runtime, por
+     * caminho montado com `process.cwd()` (ver `app/api/caderno/route.ts`).
+     *
+     * O tracing do Next empacota o que consegue enxergar num `import`, e um
+     * caminho montado em runtime não é um import — sem esta linha a rota funciona
+     * no `npm run dev` e devolve zero páginas em produção, que é o tipo de
+     * defeito que só aparece depois do deploy.
+     */
+    outputFileTracingIncludes: {
+        '/api/caderno': ['./content/caderno/**/*'],
+    },
     // Environment variables that will be available at runtime
     env: {
         TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,

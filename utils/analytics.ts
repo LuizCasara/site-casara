@@ -344,6 +344,23 @@ export const trackBookClosed = (slug: string, via: 'botao' | 'esc' | 'fora') =>
 export const trackRoomObjectClick = (objeto: string, estado = '') =>
   trackEvent('room_object_click', { objeto, estado });
 
+/**
+ * Alguém achou as 17 coisas da sala e aceitou o prêmio — o momento em que
+ * `premiadoEm` é gravado (ver lib/coisas-da-sala.mjs).
+ *
+ * **É o ÚNICO evento de "Coisas que ninguém repara", e é de propósito.** Ele
+ * passa nos dois testes que a auditoria de agosto de 2026 estabeleceu: responde
+ * algo que nenhum `page_view` responde (quantas pessoas chegam ao fim), e é um
+ * gesto deliberado, não travessia de navegação contínua.
+ *
+ * **Nenhum evento por item.** Os 17 cliques já são medidos por
+ * `trackRoomObjectClick` e pelos eventos de saída; duplicá-los com um "achou o
+ * item X" seria gravar a mesma informação duas vezes — o erro que derrubou o
+ * `book_opened`.
+ */
+export const trackCadernoDesbloqueado = () =>
+  trackEvent('caderno_desbloqueado');
+
 export const trackListFallback = (motivo: string) =>
   trackEvent('list_fallback', { motivo });
 

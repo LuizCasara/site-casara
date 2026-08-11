@@ -89,7 +89,11 @@ const CORES_DA_NOTA = {
     '795548': '#4a3626',
     'F44336': '#a8503c',
 };
-const CORES_DA_CANETA = {
+/** Exportado porque a MESMA caneta está largada no braço da poltrona (ver
+ *  `Room.tsx`): os materiais deste `.glb` se chamam pelo hexadecimal original,
+ *  então uma cópia à mão lá seria uma segunda tabela ilegível para manter em
+ *  sincronia com esta. */
+export const CORES_DA_CANETA = {
     '1A1A1A': '#1b1f20',
     '455A64': '#59626b',
     '039BE5': '#a8503c',

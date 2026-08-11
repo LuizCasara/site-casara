@@ -4,6 +4,7 @@ import {useState} from 'react';
 import {Html} from '@react-three/drei';
 import {useRouter} from 'next/navigation';
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
+import {marcarCoisa} from '@/lib/progresso-da-sala';
 import {trackRoomObjectClick} from '@/utils/analytics';
 
 /**
@@ -57,13 +58,26 @@ function Caneta({position, rotationY, cor, comprimento = 0.14, raio = 0.006}: {
  *   é posicionado em relação a ele, para o canto de estudo poder ser
  *   deslocado inteiro sem recalcular oito coordenadas à mão.
  */
-export default function ItensDeEstudo({origem, isMobile = false}: {
+export default function ItensDeEstudo({origem, onAbrirFolha, isMobile = false}: {
     origem: [number, number, number];
+    /**
+     * Clique na folha de anotações. Ausente = ela volta a ser papel: sem clique e
+     * sem etiqueta — o mesmo contrato do `onOpen` da lava lamp com um livro
+     * aberto.
+     *
+     * Chega como prop (e não decidido aqui dentro, como a Bíblia) porque quem
+     * abre um painel é o `RoomCanvas`: a folha é conteúdo em foco sobre a sala, e
+     * a camada de cima é dele. `marcarCoisa`, esse sim, é chamado aqui — ver
+     * `lib/progresso-da-sala.ts`.
+     */
+    onAbrirFolha?: () => void;
     isMobile?: boolean;
 }) {
     const [ox, oy, oz] = origem;
     const router = useRouter();
     const [hovered, setHovered] = useState(false);
+    const [hoverFolha, setHoverFolha] = useState(false);
+    const folhaInterativa = Boolean(onAbrirFolha);
 
     return (
         <group>
@@ -90,6 +104,10 @@ export default function ItensDeEstudo({origem, isMobile = false}: {
                     // RoomCanvas); este evento diz de ONDE veio o clique, que é
                     // o que separa a bíblia de uma lombada da estante.
                     trackRoomObjectClick('biblia');
+                    // ANTES do `push`: a bíblia troca de rota, e este componente
+                    // sai da árvore junto. Marcar depois seria marcar num
+                    // componente que já foi desmontado.
+                    marcarCoisa('biblia');
                     router.push(`/livros/${SLUG_DA_BIBLIA}`);
                 }}
             >
@@ -124,8 +142,35 @@ export default function ItensDeEstudo({origem, isMobile = false}: {
               As "anotações" são cinco fiapos escuros de comprimentos diferentes
               — nesta distância é o que se vê de um rascunho manuscrito, e é mais
               barato que uma textura.
+
+              **Ela deixou de ser decoração**: é a lista das coisas clicáveis
+              desta sala (ver `lib/coisas-da-sala.mjs`), e o item 1 da própria
+              lista — marca-se sozinha na primeira abertura, para a folha nunca
+              aparecer zerada e para a primeira linha ensinar a mecânica pelo
+              exemplo.
             */}
-            <group position={[ox + 0.04, oy, oz + 0.34]} rotation={[0, -1.15, 0]}>
+            <group
+                position={[ox + 0.04, oy, oz + 0.34]}
+                rotation={[0, -1.15, 0]}
+                onPointerOver={(e) => {
+                    if (isMobile || !folhaInterativa) return;
+                    e.stopPropagation();
+                    setHoverFolha(true);
+                    document.body.style.cursor = 'pointer';
+                }}
+                onPointerOut={(e) => {
+                    if (isMobile || !folhaInterativa) return;
+                    e.stopPropagation();
+                    setHoverFolha(false);
+                    document.body.style.cursor = 'auto';
+                }}
+                onClick={(e) => {
+                    if (!onAbrirFolha) return;
+                    e.stopPropagation();
+                    marcarCoisa('folha');
+                    onAbrirFolha();
+                }}
+            >
                 <mesh position={[0, 0.001, 0]} receiveShadow>
                     <boxGeometry args={[0.21, 0.002, 0.29]}/>
                     <meshStandardMaterial color={COR_PAPEL} roughness={0.95}/>
@@ -136,6 +181,21 @@ export default function ItensDeEstudo({origem, isMobile = false}: {
                         <meshStandardMaterial color={COR_TINTA} roughness={1}/>
                     </mesh>
                 ))}
+                {/* Alvo de clique maior que o papel, como o do bloco de notas da
+                    gaveta: um retângulo de 2mm de espessura não se acerta com o
+                    dedo num celular, e nem com o mouse a três metros. */}
+                <mesh position={[0, 0.03, 0]}>
+                    <boxGeometry args={[0.23, 0.06, 0.31]}/>
+                    <meshBasicMaterial transparent opacity={0} depthWrite={false}/>
+                </mesh>
+                {hoverFolha && folhaInterativa && !isMobile && (
+                    <Html position={[0, 0.1, 0]} center style={{pointerEvents: 'none'}}>
+                        <span className="whitespace-nowrap rounded-full bg-black/80 px-2 py-0.5
+                                         text-[11px] font-semibold text-white shadow-lg">
+                            Ler
+                        </span>
+                    </Html>
+                )}
             </group>
 
             {/* Canetas e marca-textos espalhados: nenhum paralelo ao outro. */}

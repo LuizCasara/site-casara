@@ -7,24 +7,81 @@ import {INTERRUPTOR_RECUO_M} from '@/components/livros/decor/Interruptor';
 import {JANELA_RECUO_M} from '@/components/livros/decor/Janela';
 import {useLuzSuave} from '@/components/livros/decor/use-luz-suave';
 import EstanteDoAcervo, {ESTANTE_ANCHOR, posicaoDaEstante} from '@/components/livros/decor/EstanteDoAcervo';
-import CantoDeLeitura, {MESA_ANCHOR, pontoNoTampo} from '@/components/livros/decor/CantoDeLeitura';
+import CantoDeLeitura, {
+    MESA_ANCHOR, pontoNoTampo, pontoNoBraco, BRACO_ROT_Y,
+} from '@/components/livros/decor/CantoDeLeitura';
 import Quadro from '@/components/livros/decor/Quadro';
 import CantoDeTrabalho, {ancorasDoCantoDeTrabalho} from '@/components/livros/decor/CantoDeTrabalho';
+import {CORES_DA_CANETA} from '@/components/livros/decor/Gaveta';
 import ParedeLateral, {PAREDE_LATERAL_X} from '@/components/livros/decor/ParedeLateral';
 import YellowShelf, {ESTANTE_AMARELA_ANCHOR} from '@/components/livros/decor/YellowShelf';
 import EscudoEscoteiro from '@/components/livros/decor/EscudoEscoteiro';
 import {Planta} from '@/components/livros/decor/PersonalProps';
 import {NICHOS, NICHOS_POR_ESTANTE} from '@/lib/bookshelf-model.mjs';
 import {contarEstantes} from '@/lib/shelf-years.mjs';
+import {QUADRO_Z, QUADROS_DO_FUNDO} from '@/lib/parede-do-fundo.mjs';
 import {linkDeSugestao} from '@/lib/whatsapp-livros.mjs';
-import {trackBookSuggestion} from '@/utils/analytics';
+import {marcarCoisa} from '@/lib/progresso-da-sala';
+import {trackBookSuggestion, trackOutboundClick} from '@/utils/analytics';
 
 /** A quina de paredes que o canto de trabalho abraça: fundo à direita. */
 const QUINA_DO_PC: [number, number] = [PAREDE_LATERAL_X, -1.6];
 
+/**
+ * Os dois pôsteres da parede do fundo levam para fora do site.
+ *
+ * As URLs ficam aqui, ao lado das posições, e não num `lib/` — é a mesma
+ * escolha do escudo escoteiro, que guarda o site do grupo no próprio
+ * componente. Um arquivo de "links da sala" só se justificaria se algo além
+ * destes objetos precisasse deles, e nada precisa.
+ */
+const PLAYLIST_GORILLAZ =
+    'https://www.youtube.com/watch?v=WXR-bCF5dbM&list=PLxA687tYuMWiFcoCI8k0WL6-Y0unNno5g';
+const PLAYLIST_HUNTER =
+    'https://www.youtube.com/watch?v=2FT1uN80TTo&list=PL-t1336xq7ykbAgh3eJNVkp0z2U6TWRaf';
+
+/**
+ * Abrir um link de fora da sala.
+ *
+ * `noopener` não é detalhe: sem ele a página aberta recebe uma referência a
+ * esta pelo `window.opener` e pode navegá-la para qualquer lugar. E o evento vai
+ * ANTES do `open` — depois dele a aba pode já ter perdido o foco, e o lote de
+ * eventos do cliente ainda não teria saído (ver utils/analytics.ts).
+ */
+function abrirExterno(url: string, rotulo: string, coisa: string) {
+    trackOutboundClick(rotulo);
+    // Antes do `open` pelo mesmo motivo do evento: a aba pode já ter perdido o
+    // foco depois dele. O link abre em aba nova e ninguém sai da sala, mas se
+    // este for o 17º item, o aviso do prêmio precisa estar de pé na volta — e
+    // ele é lido do estado, não de um evento vivo.
+    marcarCoisa(coisa);
+    window.open(url, '_blank', 'noopener,noreferrer');
+}
+
 /** Centro do quadro de recados, na parede do fundo. Constante, e não escrito
  *  duas vezes, porque o CameraRig tem uma parada mirando nele. */
-const QUADRO_RECOMENDACOES: [number, number, number] = [0.68, 1.36, -1.58];
+const QUADRO_RECOMENDACOES: [number, number, number] = [
+    QUADROS_DO_FUNDO.recomendacoes.x, QUADROS_DO_FUNDO.recomendacoes.y, QUADRO_Z,
+];
+
+/**
+ * Centro do pôster de Hunter x Hunter, na parede lateral ESQUERDA.
+ *
+ * **O z é o meio da faixa que sobra**, e não uma coordenada bonita: de um lado a
+ * estante amarela, que ocupa até z ≈ -0,33; do outro a quina com a parede do
+ * fundo, em -1,6. Centrado em -0,98, o pôster de 56cm fica com ~29cm de folga
+ * para a quina e ~37cm para o móvel — por isso mexer na estante amarela obriga a
+ * revisar este número, como já vale para a janela e o stand de espadas.
+ *
+ * O y de 1,5 põe a base dele em 1,29m, bem acima da planta de 94cm que fica
+ * embaixo, e o topo em 1,71m, longe dos 3m de pé-direito.
+ *
+ * **Não passa por `lib/parede-do-fundo.mjs`**, e isso é a diferença que fez ele
+ * mudar de parede: aquele arquivo existe porque a estante do acervo cresce e
+ * come a parede do fundo. Esta faixa aqui não tem móvel nenhum disputando, então
+ * não há colisão futura para prever.
+ */
+const POSTER_HUNTER: [number, number, number] = [-PAREDE_LATERAL_X, 1.5, -0.98];
 
 /**
  * Os quatro objetos COM AÇÃO do canto de trabalho, na ordem em que o trilho os
@@ -78,12 +135,35 @@ export const JANELA_ANCHOR: [number, number, number] = [
     -1.06,
 ];
 
+/**
+ * Onde o caderno do prêmio pousa: o braço da poltrona, do lado oposto ao abajur.
+ *
+ * O `lz` positivo o empurra para a metade de trás do platô, deixando a metade da
+ * frente para a caneta — que fica ali desde o primeiro segundo, muito antes de
+ * existir caderno nenhum. Uma caneta sozinha no braço de uma poltrona é uma
+ * pergunta silenciosa: dá antecipação sem negar nada a ninguém, e faz o caderno
+ * chegar completando uma cena que estava incompleta desde o começo, em vez de
+ * materializar do nada.
+ *
+ * O leve desvio no giro é o mesmo truque da xícara e dos óculos da mesa de
+ * centro: alinhado demais lê como item de catálogo; torto, lê como coisa que
+ * alguém largou ali.
+ *
+ * Exportada porque quem MONTA o caderno é o `RoomCanvas` — ele abre um painel,
+ * logo é CONTROLE, e `Room.tsx` é cenário. A sala só publica onde ele fica.
+ */
+export const CADERNO_ANCHOR = {
+    position: pontoNoBraco(0, 0.055),
+    rotationY: BRACO_ROT_Y - 0.07,
+};
+
 export const ROOM_ANCHORS = {
     // Referências, não cópias: a estante e o canto de leitura são território
     // congelado e moram em decor/EstanteDoAcervo.tsx e decor/CantoDeLeitura.tsx.
     // Ficam listadas aqui só para este arquivo continuar sendo o mapa da sala.
     estante: ESTANTE_ANCHOR,
     mesa: MESA_ANCHOR,
+    caderno: CADERNO_ANCHOR.position,
 };
 
 const FLOOR_COLOR = '#3a2f2b';
@@ -92,6 +172,28 @@ const RUG_COLOR = '#a89584';
 
 /** Nicho onde a lava lamp mora: o quarto de baixo pra cima (base = 0). */
 const NICHO_DA_LAVA = 3;
+
+/**
+ * Nicho da carteira de caçador: o terceiro, dois andares abaixo da lava lamp.
+ *
+ * **Não é o nicho 1, que também está "mais embaixo".** As vitrines alternam de
+ * lado a cada andar (é isso que o zigue-zague do móvel significa), e a do 1 cai
+ * do MESMO lado da lava lamp — os dois objetos clicáveis ficariam empilhados na
+ * mesma coluna. O 2 fica na diagonal, do lado oposto. E não é o 0 porque aquela
+ * vitrine é rente ao chão, na sombra da estante, onde nenhuma parada da câmera
+ * chega perto o bastante para se descobrir um cartão de dez centímetros.
+ */
+const NICHO_DA_CARTEIRA = 2;
+
+/**
+ * O quanto a carteira avança em relação ao centro da estante.
+ *
+ * Ela fica DEITADA de frente para cima (ver `CarteiraHunter`), e cartão deitado
+ * só se vê de cima — puxá-la para a frente da prateleira é o que a tira da
+ * sombra do tampo de cima e a põe no campo das paradas da câmera. Mesma razão do
+ * `+0.04` da lava lamp, e quase o mesmo número.
+ */
+const AVANCO_DA_CARTEIRA_M = 0.035;
 
 /**
  * A lava lamp NÃO fica no vão dos livros: ela fica na vitrine ao lado — o
@@ -114,6 +216,31 @@ export function posicaoDaLavaLamp(gruposDeAno: number): [number, number, number]
         // Um pouco à frente do centro da estante (onde as lombadas ficam): a
         // lâmpada é fina, e no meio da profundidade pareceria enfiada no fundo.
         base[2] + 0.04,
+    ];
+}
+
+/**
+ * Onde a carteira de caçador se apoia — a vitrine do nicho 2.
+ *
+ * Irmã de `posicaoDaLavaLamp`, e derivada da mesma forma: uma coordenada fixa
+ * aqui descolaria do móvel no dia em que uma segunda estante aparecesse ao lado
+ * e deslocasse a primeira.
+ *
+ * Devolve o ponto da PRATELEIRA sob o cartão, e não o centro dele — o mesmo
+ * contrato de posicionamento do `KenneyModel`. Quem sabe a espessura do cartão é
+ * o `CarteiraHunter`, e é ele quem levanta a peça a partir daqui.
+ *
+ * Exportada pelo mesmo motivo da lava lamp e do interruptor: quem MONTA a
+ * carteira é o `RoomCanvas`, porque ela abre um painel e portanto é CONTROLE. A
+ * sala é cenário e só publica onde ela fica.
+ */
+export function posicaoDaCarteira(gruposDeAno: number): [number, number, number] {
+    const nicho = NICHOS[NICHO_DA_CARTEIRA];
+    const base = posicaoDaEstante(0, contarEstantes(gruposDeAno, NICHOS_POR_ESTANTE));
+    return [
+        base[0] + nicho.vitrineOffsetX,
+        base[1] + nicho.pisoY,
+        base[2] + AVANCO_DA_CARTEIRA_M,
     ];
 }
 
@@ -141,6 +268,12 @@ type RoomProps = {
     onAlternarGaveta?: () => void;
     onAbrirBilhete?: () => void;
     /**
+     * Clique na folha de anotações da bancada de estudo — a lista das coisas
+     * clicáveis da sala. Atravessa até `ItensDeEstudo` pelo mesmo caminho do
+     * bilhete: quem abre painel é o `RoomCanvas`.
+     */
+    onAbrirFolha?: () => void;
+    /**
      * As três luzes que se apagam, e quem as apaga.
      *
      * Um objeto só, e não seis props soltos: elas viraram um conceito único da
@@ -167,7 +300,7 @@ const LUZES_TODAS_ACESAS = {teto: true, abajur: true, lanterna: false};
  */
 export default function Room({
     gruposDeAno = 1, onAbrirRetrato, gavetaAberta, onAlternarGaveta, onAbrirBilhete,
-    luzes = LUZES_TODAS_ACESAS, onAlternarLuz, isMobile = false,
+    onAbrirFolha, luzes = LUZES_TODAS_ACESAS, onAlternarLuz, isMobile = false,
 }: RoomProps) {
     return (
         <group>
@@ -240,6 +373,33 @@ export default function Room({
                 isMobile={isMobile}
             />
             {/*
+              A caneta no braço da poltrona.
+
+              **Ela está aqui desde o primeiro segundo, e é de propósito**: é a
+              metade que já existe da cena que o caderno do prêmio vem completar
+              (ver `CADERNO_ANCHOR`, acima). Uma caneta sozinha no braço de uma
+              poltrona é uma pergunta silenciosa — dá antecipação sem negar nada a
+              quem chegou agora, e evita que o prêmio pareça materializar do nada.
+
+              É o mesmo `caneta.glb` que está na gaveta da mesa do PC, com o
+              mesmo mapa de cores importado de lá — os nomes dos materiais dele
+              são hexadecimais crus (`039BE5`), então uma cópia à mão aqui era
+              uma segunda tabela ilegível para manter em sincronia. Nenhum
+              arquivo novo entrou no repositório por causa dela.
+
+              `larguraAlvo` e não `alturaAlvo` pelo motivo de sempre: é uma peça
+              deitada, e pedir a altura de um cilindro de 8mm daria uma caneta do
+              tamanho de um taco.
+            */}
+            <KenneyModel
+                url={MODELOS.caneta}
+                position={pontoNoBraco(0, -0.103)}
+                rotation={[0, BRACO_ROT_Y + 0.25, 0]}
+                larguraAlvo={0.135}
+                cores={CORES_DA_CANETA}
+            />
+
+            {/*
               Xícara na mesa de centro, ao lado da pilha de "lendo agora" — o
               móvel está congelado, o que se apoia nele não. Posicionada por
               `pontoNoTampo`, então acompanha a mesa se ela girar; o tampo tem
@@ -281,15 +441,60 @@ export default function Room({
                 cores={{'1A1A1A': '#4b5158'}}
             />
 
-            {/* Quadro na parede de fundo, atrás da poltrona (x=-1.45 é o eixo
-                dela). Quadrado porque a arte é uma capa de disco — o formato do
-                quadro acompanha a imagem, não o contrário. */}
+            {/*
+              Pôster do Gorillaz na parede do fundo, atrás da poltrona (x=-1.45 é
+              o eixo dela). Quadrado porque a arte é uma capa de disco — o
+              formato do quadro acompanha a imagem, não o contrário.
+
+              Clicar abre a playlist da banda no YouTube, com a mesma mecânica do
+              escudo escoteiro, o outro objeto da sala que leva para fora.
+
+              **As medidas saem de `lib/parede-do-fundo.mjs`, não daqui**, e o
+              motivo é o vizinho: quem fecha esta parede pela direita é a ESTANTE
+              DO ACERVO, que ganha uma cópia a cada cinco grupos de ano com o
+              conjunto sempre centrado — ou seja, cada móvel novo empurra a borda
+              por cima do que está pendurado. Um quadro enterrado em madeira não
+              estoura exceção nem quebra build, só some; a conta mora num `.mjs`
+              para o `npm test` poder refazê-la. Mesma razão da mira da lanterna
+              e dos nichos.
+            */}
             <Quadro
-                position={[-1.45, 1.6, -1.58]}
+                position={[QUADROS_DO_FUNDO.gorillaz.x, QUADROS_DO_FUNDO.gorillaz.y, QUADRO_Z]}
                 imagem="/livros/poster-gorillaz.jpg"
-                larguraM={0.5}
-                alturaM={0.5}
-                rotationY={0.04}
+                larguraM={QUADROS_DO_FUNDO.gorillaz.larguraM}
+                alturaM={QUADROS_DO_FUNDO.gorillaz.alturaM}
+                rotationY={QUADROS_DO_FUNDO.gorillaz.rotationY}
+                onClick={() => abrirExterno(PLAYLIST_GORILLAZ, 'gorillaz-youtube', 'poster-gorillaz')}
+                rotulo="Gorillaz no YouTube ↗"
+                isMobile={isMobile}
+            />
+
+            {/*
+              Pôster de Hunter x Hunter, na parede LATERAL ESQUERDA — a mesma da
+              estante amarela e do escudo escoteiro —, no trecho entre o móvel e
+              a quina do fundo.
+
+              **Ele saiu da parede do fundo de propósito.** Lá ele dividia com o
+              Gorillaz um vão de 78cm que a estante do acervo fecha sozinha
+              quando o acervo cresce; aqui o vão é de 1,15m e não depende de
+              quantos livros existem. É a única faixa de parede da sala que
+              nenhum móvel disputa, e por isso não precisa de teste de colisão:
+              não há o que colidir.
+
+              Ele fica acima da planta (0,94m de altura) e abaixo do topo da
+              parede, no campo das cenas "Sala" e "Mesa" — que são as duas que
+              olham para este lado do cômodo.
+            */}
+            <Quadro
+                position={POSTER_HUNTER}
+                imagem="/livros/poster-hunter.jpg"
+                larguraM={0.56}
+                alturaM={0.42}
+                parede={1}
+                rotationY={-0.04}
+                onClick={() => abrirExterno(PLAYLIST_HUNTER, 'hunter-youtube', 'poster-hunter')}
+                rotulo="Hunter x Hunter no YouTube ↗"
+                isMobile={isMobile}
             />
 
             {/*
@@ -314,9 +519,9 @@ export default function Room({
             <Quadro
                 position={QUADRO_RECOMENDACOES}
                 imagem="/livros/quadro-recomendacoes.jpg"
-                larguraM={0.44}
-                alturaM={0.43}
-                rotationY={-0.03}
+                larguraM={QUADROS_DO_FUNDO.recomendacoes.larguraM}
+                alturaM={QUADROS_DO_FUNDO.recomendacoes.alturaM}
+                rotationY={QUADROS_DO_FUNDO.recomendacoes.rotationY}
                 corMoldura="#b9c2cc"
                 comBandeja
                 onClick={() => {
@@ -336,6 +541,7 @@ export default function Room({
                 gavetaAberta={gavetaAberta}
                 onAlternarGaveta={onAlternarGaveta}
                 onAbrirBilhete={onAbrirBilhete}
+                onAbrirFolha={onAbrirFolha}
                 isMobile={isMobile}
             />
 
