@@ -10,6 +10,7 @@ import {rotuloCompactoDeStatus, COR_DO_STATUS} from '@/lib/book-status.mjs';
 import type {BookStatus} from '@/lib/books';
 import {BOOK_DEPTH_M} from '@/lib/book-dimensions.mjs';
 import {corDeLombada} from '@/lib/cor-lombada.mjs';
+import {marcarCoisa} from '@/lib/progresso-da-sala';
 
 // Ordem de materiais do BoxGeometry: [+x, -x, +y, -y, +z, -z].
 //
@@ -309,6 +310,11 @@ export default function Book({
             onClick={(e) => {
                 if (isOpen) return;
                 e.stopPropagation();
+                // "um livro qualquer" — um dos 17 itens da folha da mesa (ver
+                // lib/coisas-da-sala.mjs). Qual livro não importa: a lista pede
+                // que se abra UM, não que se abra o acervo. Marcado ANTES do
+                // `push`, que desmonta esta lombada.
+                marcarCoisa('livro');
                 router.push(`/livros/${book.slug}`);
             }}
         >

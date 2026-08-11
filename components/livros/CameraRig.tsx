@@ -16,7 +16,7 @@ import {contarEstantes} from '@/lib/shelf-years.mjs';
  * Renomear os ids arrastaria os eventos de analytics já gravados, os
  * viewpoints e os testes — o id é o nome interno, o rótulo é o da tela.
  */
-export type Viewpoint = 'geral' | 'estante' | 'camping' | 'mesa' | 'pc' | 'retrato';
+export type Viewpoint = 'geral' | 'estante' | 'camping' | 'mesa' | 'pc' | 'retrato' | 'caderno';
 
 type ViewpointConfig = {
     camera: [number, number, number];
@@ -112,7 +112,7 @@ const estanteCentroY = ESTANTE_ANCHOR.position[1] + BOOKSHELF_SIZE_M.alturaM / 2
  * está aqui: ela é calculada em runtime (ver `viewpointDaEstante`), porque
  * enquadrar o móvel inteiro depende de quanto o rodapé está cobrindo.
  */
-const VIEWPOINTS: Record<Exclude<Viewpoint, 'estante' | 'camping'>, ViewpointConfig> = {
+const VIEWPOINTS: Record<Exclude<Viewpoint, 'estante' | 'camping' | 'caderno'>, ViewpointConfig> = {
     geral: {
         camera: [0, 1.75, 2.6],
         target: [0, estanteCentroY, estanteZ],
@@ -256,6 +256,25 @@ const VIEWPOINTS_DO_PC: ViewpointConfig[] = [
 ];
 
 /**
+ * O caderno do prêmio, no braço da poltrona.
+ *
+ * **Não é parada do trilho**, exatamente como o `retrato`: só se chega aqui pelo
+ * reveal, e sai-se fechando o caderno. Pôr o braço de uma poltrona na fila de
+ * lugares por onde a roda do mouse passa seria transformar o prêmio em mais uma
+ * parada de passagem — e para quem nunca completou a lista, uma parada olhando
+ * uma caneta sozinha.
+ *
+ * De CIMA, porque o caderno está deitado: na altura dos olhos ver-se-ia o
+ * elástico de perfil e quase nada da capa. Mesma razão da parada da bíblia. E de
+ * frente para a sala (x e z positivos na direção), que é o lado por onde a câmera
+ * pode chegar sem atravessar a parede da esquerda nem a própria poltrona.
+ *
+ * A distância deixa a caneta no quadro de propósito: ela é a metade da cena que
+ * já estava lá, e o reveal só faz sentido com as duas juntas.
+ */
+const VIEWPOINT_DO_CADERNO = focoDeObjeto(ROOM_ANCHORS.caderno, [0.55, 0.75, 0.72], 0.55);
+
+/**
  * Nível 1: o móvel inteiro em quadro. A distância vem da altura dele e da
  * faixa livre da tela, não de um número calibrado à mão — trocar o modelo por
  * outro, ou abrir num celular de rodapé alto, reenquadra sozinho. Quem quer
@@ -368,6 +387,10 @@ export default function CameraRig({
         // tiraria justamente ele do meio do quadro. A correção do rodapé existe
         // para enquadrar móveis inteiros, não para closes.
         v = VIEWPOINTS_DO_PC[focoDoPC];
+    } else if (viewpoint === 'caderno') {
+        // Sem `subirParaFaixaLivre`, pela mesma razão dos closes do canto do PC:
+        // esta parada já mira o CENTRO de um objeto pequeno com folga em volta.
+        v = VIEWPOINT_DO_CADERNO;
     } else if (viewpoint === 'camping') {
         // Também calculada em runtime, pela mesma razão da estante do acervo:
         // enquadrar o móvel inteiro depende de quanto o rodapé está cobrindo.

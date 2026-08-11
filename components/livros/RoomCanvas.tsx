@@ -7,6 +7,7 @@ import {EffectComposer, Bloom, N8AO, Vignette} from '@react-three/postprocessing
 import {Suspense} from 'react';
 import Room, {
     posicaoDaLavaLamp, posicaoDaCarteira, INTERRUPTOR_ANCHOR, JANELA_ANCHOR,
+    CADERNO_ANCHOR,
 } from '@/components/livros/Room';
 import Bookshelf from '@/components/livros/Bookshelf';
 import DeskBooks from '@/components/livros/DeskBooks';
@@ -30,11 +31,18 @@ import {
 } from '@/lib/livros-cenas.mjs';
 import BilheteOverlay from '@/components/livros/BilheteOverlay';
 import CarteiraOverlay from '@/components/livros/CarteiraOverlay';
+import FolhaOverlay from '@/components/livros/FolhaOverlay';
+import CadernoOverlay from '@/components/livros/CadernoOverlay';
+import CadernoDoPremio from '@/components/livros/decor/CadernoDoPremio';
 import {fichaDoAcervo} from '@/lib/ficha-do-acervo.mjs';
+import {achadosValidos, podeReceberPremio, temPremio} from '@/lib/coisas-da-sala.mjs';
+import {playSound} from '@/lib/sound';
+import {marcarCoisa, registrarPremio, useProgressoDaSala} from '@/lib/progresso-da-sala';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
 import {
     trackListFallback, trackShelfSorted, trackIndexOpened, trackBookFilter,
     trackShelfYearFocused, trackBookPaged, trackBookClosed, trackRoomObjectClick,
+    trackCadernoDesbloqueado,
 } from '@/utils/analytics';
 
 export type ShelvedBookInput = {
@@ -140,6 +148,31 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
      */
     const [carteiraAberta, setCarteiraAberta] = useState(false);
     /**
+     * A folha da bancada de estudo: a lista das 17 coisas clicáveis da sala.
+     *
+     * Estado solto e não sub-parada, como a carteira, e pelo mesmo motivo: o
+     * clique **não mexe na câmera**. O conteúdo é um painel DOM que já chega em
+     * tamanho de leitura, e aproximar por trás dele seria trabalho invisível
+     * brigando com o que se vê.
+     */
+    const [folhaAberta, setFolhaAberta] = useState(false);
+    /**
+     * O caderno do prêmio, aberto.
+     *
+     * Ele só existe na sala depois que alguém achou as 17 coisas E aceitou o
+     * prêmio (`premiadoEm`) — ver `lib/coisas-da-sala.mjs`. A partir daí é
+     * mobília: sempre lá, sempre clicável, sem aviso nenhum.
+     */
+    const [cadernoAberto, setCadernoAberto] = useState(false);
+    /**
+     * O reveal em curso: a câmera está na poltrona e o caderno está caindo.
+     *
+     * Um estado só para as duas coisas, e separado de `cadernoAberto`, porque só
+     * a PRIMEIRA vez tem voo de câmera. Nas visitas seguintes, clicar no caderno
+     * abre o painel onde a pessoa estiver — a mesma regra da carteira e do livro.
+     */
+    const [revelandoCaderno, setRevelandoCaderno] = useState(false);
+    /**
      * As três luzes que se apagam: o teto (interruptor da parede), o abajur da
      * poltrona e a lanterna da estante amarela.
      *
@@ -168,6 +201,11 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     const [cortinaAberta, setCortinaAberta] = useState(false);
 
     const alternarLuz = useCallback((qual: 'abajur' | 'lanterna') => {
+        // Fora do updater: `setState` precisa ser puro para o StrictMode, e
+        // `marcarCoisa` grava no localStorage. Os dois interruptores são itens da
+        // folha (ver lib/coisas-da-sala.mjs), e acender ou apagar dá no mesmo —
+        // o que se descobre é que a peça responde.
+        marcarCoisa(qual);
         setLuzes((atual) => {
             trackRoomObjectClick(qual, atual[qual] ? 'apagada' : 'acesa');
             return {...atual, [qual]: !atual[qual]};
@@ -181,6 +219,16 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
      * alto-falante".
      */
     const [subFocado, setSubFocado] = useState<number | null>(null);
+    /**
+     * O progresso de "Coisas que ninguém repara" — quantas das 17 já foram
+     * achadas, e se o caderno já foi conquistado.
+     *
+     * Mora no `localStorage` e chega aqui por `useSyncExternalStore`, não por
+     * prop nem contexto: metade dos objetos da sala se marca sozinha, de dentro
+     * do próprio componente (ver `lib/progresso-da-sala.ts`). Este hook é o lado de
+     * quem OUVE.
+     */
+    const progresso = useProgressoDaSala();
     const isMobile = useIsMobile();
     const fecharLivro = useFecharLivro();
     const alturaRodape = useAlturaRodape();
@@ -221,10 +269,57 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
      */
     const ficha = useMemo(() => fichaDoAcervo(books), [books]);
 
+    /**
+     * Os três estados do prêmio, derivados do progresso — nunca guardados.
+     *
+     * `avisoDoPremio` é condição de ESTADO, não evento: é por isso que fechar a
+     * sala sem clicar no aviso não perde nada, e ele volta na próxima visita.
+     * Também é o que faz o aviso aparecer na VOLTA de um link externo ou da
+     * página da Bíblia — a condição é lida na montagem, e não depende de um
+     * evento vivo no momento em que o 17º item foi marcado.
+     */
+    const achados = useMemo(() => achadosValidos(progresso) as string[], [progresso]);
+    const avisoDoPremio = podeReceberPremio(progresso);
+    const cadernoNaSala = temPremio(progresso);
+
+    /**
+     * O som de fechar a lista — o único efeito curto de `/livros`.
+     *
+     * **Ele é a exceção à regra de que a sala não passa por `lib/sound.ts`**, e a
+     * exceção cabe: aquela regra existe para o RÁDIO e a chuva, que precisam de
+     * grafo de Web Audio (ganho, analisador, síntese) e não de um `<audio>`. Isto
+     * aqui é exatamente o contrário — um clipe de meio segundo tocado uma vez —,
+     * que é para o que `playSound` foi feito. Nenhum arquivo de áudio novo entrou
+     * no repositório: `reveal.mp3` já servia o pódio do quiz.
+     *
+     * A 45% de volume porque o reveal pode acontecer com a rádio lofi tocando, e
+     * um efeito em volume cheio por cima de música é ruído.
+     *
+     * **Disparado na BORDA**, com o ref inicializado pelo valor da montagem: quem
+     * volta de um link externo com a lista já completa não leva um som na cara ao
+     * abrir a página — e nem levaria, porque sem gesto o navegador bloquearia o
+     * autoplay de qualquer forma. Quem acabou de clicar no 17º objeto, sim: aí o
+     * gesto existe e o som é a resposta a ele.
+     */
+    // `null` é "ainda não observei nada", e é o que faz a montagem não contar
+    // como borda: só um `false` anterior — visto de fato nesta sessão — libera o
+    // som.
+    const avisouAntes = useRef<boolean | null>(null);
+    useEffect(() => {
+        const subiu = avisoDoPremio && avisouAntes.current === false;
+        avisouAntes.current = avisoDoPremio;
+        if (subiu) playSound('reveal', 0.45);
+    }, [avisoDoPremio]);
+
     // Quanto da base do canvas está tapado. Medido, não estimado: a barra cresce
     // de uma para duas linhas quando os anos não cabem lado a lado, e é aí que um
     // valor fixo esconde o nicho mais baixo atrás dos botões.
-    const alturaBarra = useAlturaDoElemento(barraRef, [manualViewpoint, grupos.length, alturaRodape]);
+    // `avisoDoPremio` entra nas dependências porque o aviso mora DENTRO desta
+    // barra: sem ele aqui, a linha extra apareceria por cima do canvas sem que a
+    // câmera soubesse, e o nicho mais baixo da estante ficaria atrás dela.
+    const alturaBarra = useAlturaDoElemento(
+        barraRef, [manualViewpoint, grupos.length, alturaRodape, avisoDoPremio],
+    );
     const cobertoEmbaixoPx = alturaRodape + alturaBarra + 24;
 
     // "animate" só nasce falso quando a página já chega com um livro aberto
@@ -310,6 +405,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
      * gaveta que só se abre clicando é uma coisa que se descobre.
      */
     const alternarGaveta = useCallback(() => {
+        marcarCoisa('gaveta');
         setManualViewpoint('pc');
         setSubFocado(PARADA_DA_GAVETA);
         setGavetaAberta((atual) => {
@@ -327,7 +423,53 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
 
     const abrirBilhete = useCallback(() => {
         setBilheteAberto(true);
+        marcarCoisa('bilhete');
         trackRoomObjectClick('bilhete');
+    }, []);
+
+    const abrirFolha = useCallback(() => setFolhaAberta(true), []);
+
+    /**
+     * Aceitar o prêmio — o ÚNICO lugar em que `premiadoEm` é gravado.
+     *
+     * Achar as 17 coisas não grava nada: o aviso fica de pé enquanto ninguém
+     * clicar, e some para sempre quando alguém clica. A partir daqui o caderno é
+     * mobília da sala, e nem um item 18 o tira de lá.
+     *
+     * **Nada é sequestrado quando o 17º item é achado.** A pessoa pode estar com
+     * um livro aberto, ou ter acabado de voltar de um link externo; o que aparece
+     * é uma linha discreta no rodapé, e a câmera só sai do lugar aqui, no clique.
+     */
+    const aceitarPremio = useCallback(() => {
+        registrarPremio();
+        trackCadernoDesbloqueado();
+        setRevelandoCaderno(true);
+    }, []);
+
+    /**
+     * A batida entre o caderno pousar e ele abrir.
+     *
+     * O painel não sobe junto com o voo da câmera de propósito: ele taparia
+     * justamente o que o voo foi mostrar. `POUSO_MS` cobre a viagem da câmera
+     * mais a queda do caderno (ver `CadernoDoPremio`), e a limpeza cancela o
+     * timer se alguém fechar a sala no meio.
+     */
+    useEffect(() => {
+        if (!revelandoCaderno) return;
+        const POUSO_MS = 1600;
+        const id = setTimeout(() => setCadernoAberto(true), POUSO_MS);
+        return () => clearTimeout(id);
+    }, [revelandoCaderno]);
+
+    /**
+     * Fechar o caderno encerra o reveal, e a câmera volta para onde estava.
+     *
+     * Mesma escada do retrato: a cena escolhida na barra continua guardada em
+     * `manualViewpoint` embaixo, e reaparece assim que a camada de cima sai.
+     */
+    const fecharCaderno = useCallback(() => {
+        setCadernoAberto(false);
+        setRevelandoCaderno(false);
     }, []);
 
     /** Clicar no ano já ativo sobe um nível — o mesmo gesto da etiqueta 3D. */
@@ -427,11 +569,29 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                 if (e.key === 'Escape') setGavetaAberta(false);
                 return;
             }
+            // O caderno vem antes da carteira e da folha só porque, quando ele
+            // está aberto, ele é a camada mais recente — as três nunca aparecem
+            // juntas. Fechá-lo também encerra o reveal e devolve a câmera.
+            if (cadernoAberto) {
+                if (e.key === 'Escape') fecharCaderno();
+                return;
+            }
+            // A janela do reveal — entre o clique no aviso e o caderno abrir —
+            // engole o teclado inteiro, pelo mesmo motivo que já engolia a roda:
+            // o voo da câmera até a poltrona não pode ser interrompido no meio.
+            // Sem isto, uma seta apertada aqui trocava `manualViewpoint` por
+            // baixo do reveal, e a câmera ia parar num lugar surpresa ao fechar
+            // o caderno — um clique dado dois segundos antes explicando nada.
+            if (revelandoCaderno) return;
             // A carteira é uma camada só, sem nada dentro: um Esc fecha e a
             // pessoa volta para a sala exatamente onde estava — a câmera nunca
-            // saiu do lugar para abri-la.
+            // saiu do lugar para abri-la. A folha da mesa é igual.
             if (carteiraAberta) {
                 if (e.key === 'Escape') setCarteiraAberta(false);
+                return;
+            }
+            if (folhaAberta) {
+                if (e.key === 'Escape') setFolhaAberta(false);
                 return;
             }
             if (retratoAberto) {
@@ -461,7 +621,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
         };
         window.addEventListener('keydown', aoTeclar);
         return () => window.removeEventListener('keydown', aoTeclar);
-    }, [openSlug, indiceAberto, retratoAberto, bilheteAberto, gavetaAberta, carteiraAberta, subFocado, totalDeSubs, subsDaCena, vizinhos, folhear, fecharLivro, andarNoTrilho]);
+    }, [openSlug, indiceAberto, retratoAberto, bilheteAberto, gavetaAberta, carteiraAberta, folhaAberta, cadernoAberto, revelandoCaderno, fecharCaderno, subFocado, totalDeSubs, subsDaCena, vizinhos, folhear, fecharLivro, andarNoTrilho]);
 
     /**
      * A roda do mouse percorre o MESMO trilho das setas laterais: sala, mesa,
@@ -480,10 +640,12 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     useEffect(() => {
         // O bilhete entra na mesma lista do índice: com a folha aberta a roda é
         // do painel, não da sala — e trocar de parada por baixo dele fecharia a
-        // gaveta que o sustenta. A carteira entra pelo primeiro motivo: rolar
-        // sobre um painel aberto é rolar o painel.
+        // gaveta que o sustenta. A carteira, a folha e o caderno entram pelo
+        // primeiro motivo: rolar sobre um painel aberto é rolar o painel. O
+        // reveal em curso entra por outro: o voo da câmera até a poltrona não
+        // pode ser interrompido por um gesto de trackpad no meio.
         if (mode.kind !== 'sala' || indiceAberto || retratoAberto || bilheteAberto
-            || carteiraAberta) return;
+            || carteiraAberta || folhaAberta || cadernoAberto || revelandoCaderno) return;
 
         const LIMIAR_PX = 24;
         const INTERVALO_MS = 550;
@@ -499,7 +661,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
 
         window.addEventListener('wheel', aoRolar, {passive: true});
         return () => window.removeEventListener('wheel', aoRolar);
-    }, [mode.kind, indiceAberto, retratoAberto, bilheteAberto, carteiraAberta, andarNoTrilho]);
+    }, [mode.kind, indiceAberto, retratoAberto, bilheteAberto, carteiraAberta, folhaAberta, cadernoAberto, revelandoCaderno, andarNoTrilho]);
 
     useEffect(() => {
         const motivo = detectaMotivoDegradacao();
@@ -600,18 +762,23 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     // de ano à vista. Abrir um LIVRO, ao contrário, não mexe na câmera — ele se
     // apresenta onde está, e quem escolheu o enquadramento continua nele.
     //
-    // Precedência, de dentro para fora: o close no retrato ganha do índice, que
-    // ganha da cena escolhida na barra. São estados que só se alcançam clicando
-    // num objeto, então quem clicou por último manda.
-    const viewpoint: Viewpoint = retratoAberto ? 'retrato' : (indiceAberto ? 'estante' : manualViewpoint);
+    // Precedência, de dentro para fora: o reveal do caderno ganha do close no
+    // retrato, que ganha do índice, que ganha da cena escolhida na barra. São
+    // estados que só se alcançam clicando num objeto, então quem clicou por
+    // último manda — e o reveal é o clique mais recente que existe.
+    const viewpoint: Viewpoint = revelandoCaderno
+        ? 'caderno'
+        : (retratoAberto ? 'retrato' : (indiceAberto ? 'estante' : manualViewpoint));
 
     const abrirIndice = () => {
         setIndiceAberto(true);
+        marcarCoisa('indice');
         trackIndexOpened(filtros.categoria, filtros.tag);
     };
     const fecharIndice = () => setIndiceAberto(false);
     const abrirCarteira = () => {
         setCarteiraAberta(true);
+        marcarCoisa('carteira');
         trackRoomObjectClick('carteira');
     };
     const mudarOrdenacao = (criterio: string) => {
@@ -645,13 +812,17 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                 <Canvas shadows camera={{fov: 50}} dpr={isMobile ? 1 : [1, 2]}>
                     <Room
                         gruposDeAno={grupos.length}
-                        onAbrirRetrato={mode.kind === 'sala' ? () => setRetratoAberto((v) => {
-                            if (!v) trackRoomObjectClick('retrato');
-                            return !v;
-                        }) : undefined}
+                        onAbrirRetrato={mode.kind === 'sala' ? () => {
+                            marcarCoisa('retrato');
+                            setRetratoAberto((v) => {
+                                if (!v) trackRoomObjectClick('retrato');
+                                return !v;
+                            });
+                        } : undefined}
                         gavetaAberta={gavetaAberta}
                         onAlternarGaveta={mode.kind === 'sala' ? alternarGaveta : undefined}
                         onAbrirBilhete={mode.kind === 'sala' ? abrirBilhete : undefined}
+                        onAbrirFolha={mode.kind === 'sala' ? abrirFolha : undefined}
                         luzes={luzes}
                         onAlternarLuz={mode.kind === 'sala' ? alternarLuz : undefined}
                         isMobile={isMobile}
@@ -710,10 +881,13 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                         <Interruptor
                             position={INTERRUPTOR_ANCHOR}
                             acesa={luzes.teto}
-                            onAlternar={mode.kind === 'sala' ? () => setLuzes((atual) => {
-                                trackRoomObjectClick('interruptor', atual.teto ? 'apagada' : 'acesa');
-                                return {...atual, teto: !atual.teto};
-                            }) : undefined}
+                            onAlternar={mode.kind === 'sala' ? () => {
+                                marcarCoisa('interruptor');
+                                setLuzes((atual) => {
+                                    trackRoomObjectClick('interruptor', atual.teto ? 'apagada' : 'acesa');
+                                    return {...atual, teto: !atual.teto};
+                                });
+                            } : undefined}
                             isMobile={isMobile}
                         />
                         {/*
@@ -725,12 +899,39 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                         <Janela
                             position={JANELA_ANCHOR}
                             aberta={cortinaAberta}
-                            onAlternar={mode.kind === 'sala' ? () => setCortinaAberta((atual) => {
-                                trackRoomObjectClick('cortina', atual ? 'fechada' : 'aberta');
-                                return !atual;
-                            }) : undefined}
+                            onAlternar={mode.kind === 'sala' ? () => {
+                                marcarCoisa('cortina');
+                                setCortinaAberta((atual) => {
+                                    trackRoomObjectClick('cortina', atual ? 'fechada' : 'aberta');
+                                    return !atual;
+                                });
+                            } : undefined}
                             isMobile={isMobile}
                         />
+                        {/*
+                          O caderno do prêmio, no braço da poltrona — ao lado da
+                          caneta que está lá desde o primeiro segundo (ver
+                          `Room.tsx`). Só entra na cena depois de conquistado, e
+                          a partir daí nunca mais sai: `premiadoEm` é o que
+                          garante isso mesmo que um item 18 apareça depois.
+
+                          Montado aqui pelo mesmo motivo da lava lamp e da
+                          carteira: ele abre um painel, logo é CONTROLE, e
+                          `Room.tsx` é cenário — a sala só publica onde ele fica.
+                          Com um livro aberto ele perde o `onAbrir` e vira
+                          enfeite, sem etiqueta nem clique, como todos os outros.
+                        */}
+                        {cadernoNaSala && (
+                            <CadernoDoPremio
+                                position={CADERNO_ANCHOR.position}
+                                rotationY={CADERNO_ANCHOR.rotationY}
+                                chegando={revelandoCaderno}
+                                onAbrir={mode.kind === 'sala' && !cadernoAberto
+                                    ? () => setCadernoAberto(true)
+                                    : undefined}
+                                isMobile={isMobile}
+                            />
+                        )}
                     </Suspense>
                     <CameraRig
                         viewpoint={viewpoint}
@@ -791,6 +992,37 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                     style={{bottom: `${alturaRodape + 24}px`}}
                     className="fixed left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-2"
                 >
+                    {/*
+                      O aviso do prêmio: uma linha discreta ACIMA dos botões de
+                      cena, e nada mais.
+
+                      **Nada é sequestrado quando o 17º item é achado**: a pessoa
+                      pode ter acabado de voltar de um link externo, ou estar no
+                      meio de outra coisa. Modal, confete ou voo de câmera
+                      automático seriam a sala decidindo o momento por ela. A
+                      câmera só sai do lugar no clique (ver `aceitarPremio`).
+
+                      Fechar a sala sem clicar não perde nada: a condição é de
+                      estado (`achou tudo e ainda não pegou`), então o aviso volta
+                      na próxima visita.
+                    */}
+                    {avisoDoPremio && (
+                        <button
+                            onClick={aceitarPremio}
+                            // O pulso é o que separa este botão dos de cena logo
+                            // abaixo — sem ele, uma linha branca a mais numa
+                            // fileira de botões brancos passava despercebida. É
+                            // um halo que dilata e some (`box-shadow`), nunca uma
+                            // escala: sombra não ocupa espaço, então a barra
+                            // medida por `useAlturaDoElemento` não muda de altura
+                            // e o enquadramento da câmera não oscila. Ver
+                            // globals.css.
+                            className="pulso-do-aviso rounded-full bg-white/95 px-4 py-2 text-sm
+                                       font-semibold text-black shadow-lg transition hover:bg-white"
+                        >
+                            Você encontrou tudo. Ver o prêmio?
+                        </button>
+                    )}
                     {/*
                       Os anos NÃO aparecem aqui: a etiqueta no próprio nicho diz
                       que ano é aquela prateleira E serve de botão, enquanto uma
@@ -868,6 +1100,12 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
             )}
             {mode.kind === 'sala' && carteiraAberta && (
                 <CarteiraOverlay ficha={ficha} onClose={() => setCarteiraAberta(false)}/>
+            )}
+            {mode.kind === 'sala' && folhaAberta && (
+                <FolhaOverlay achados={achados} onClose={() => setFolhaAberta(false)}/>
+            )}
+            {mode.kind === 'sala' && cadernoAberto && (
+                <CadernoOverlay onClose={fecharCaderno}/>
             )}
         </>
     );

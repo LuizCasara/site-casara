@@ -14,6 +14,7 @@ import Quadro from '@/components/livros/decor/Quadro';
 import StandDeEspadas from '@/components/livros/decor/StandDeEspadas';
 import {useRadio, NIVEIS_DE_VOLUME} from '@/components/livros/decor/use-radio';
 import {useTexturaDePlayer} from '@/components/livros/decor/use-textura-de-player';
+import {marcarCoisa} from '@/lib/progresso-da-sala';
 import {trackRoomObjectClick} from '@/utils/analytics';
 
 /**
@@ -209,6 +210,9 @@ type CantoDeTrabalhoProps = {
     gavetaAberta?: boolean;
     onAlternarGaveta?: () => void;
     onAbrirBilhete?: () => void;
+    /** Clique na folha de anotações da bancada de estudo — ver `ItensDeEstudo`.
+     *  Só atravessa este arquivo. */
+    onAbrirFolha?: () => void;
     isMobile?: boolean;
 };
 
@@ -220,7 +224,7 @@ type CantoDeTrabalhoProps = {
  */
 export default function CantoDeTrabalho({
     quina, onAbrirRetrato, gavetaAberta = false, onAlternarGaveta, onAbrirBilhete,
-    isMobile = false,
+    onAbrirFolha, isMobile = false,
 }: CantoDeTrabalhoProps) {
     // A imagem da tela da esquerda, que é fixa. Carregada aqui, e não dentro do
     // KenneyModel, porque quem carrega é quem suspende — e o modelo já suspende
@@ -377,6 +381,11 @@ export default function CantoDeTrabalho({
                 }}
                 onClick={(e) => {
                     e.stopPropagation();
+                    // Qualquer um dos três estados marca o item: exigir que a
+                    // pessoa passasse por lofi, chuva E desligado transformaria
+                    // descoberta em tarefa. Fora do updater porque `setState`
+                    // precisa ser puro para o StrictMode.
+                    marcarCoisa('monitor');
                     setEstadoDaTela((atual) => {
                         const proximo = (atual + 1) % ESTADOS_DA_TELA.length;
                         // O estado de DESTINO, não o de origem: é o que a
@@ -501,7 +510,11 @@ export default function CantoDeTrabalho({
               dividem o mesmo móvel sem se atropelar porque cada um ficou num
               braço — telas no do fundo, papel no da direita.
             */}
-            <ItensDeEstudo origem={[quina[0] - 0.38, tampo, quina[1] + 1.25]} isMobile={isMobile}/>
+            <ItensDeEstudo
+                origem={[quina[0] - 0.38, tampo, quina[1] + 1.25]}
+                onAbrirFolha={onAbrirFolha}
+                isMobile={isMobile}
+            />
 
             {/*
               Dois kettlebells no chão, na ponta ESQUERDA da mesa — junto ao
@@ -534,11 +547,16 @@ export default function CantoDeTrabalho({
                 larguraM={1.5}
                 caixaDeSom={{
                     nivel: volume,
-                    onCiclarVolume: () => setVolume((atual) => {
-                        const proximo = (atual + 1) % NIVEIS_DE_VOLUME.length;
-                        trackRoomObjectClick('caixa-de-som', NIVEIS_DE_VOLUME[proximo].id);
-                        return proximo;
-                    }),
+                    onCiclarVolume: () => {
+                        // Qualquer nível marca o item, pelo mesmo motivo do
+                        // monitor: o objeto cicla, e ciclar conta uma vez.
+                        marcarCoisa('caixa-de-som');
+                        setVolume((atual) => {
+                            const proximo = (atual + 1) % NIVEIS_DE_VOLUME.length;
+                            trackRoomObjectClick('caixa-de-som', NIVEIS_DE_VOLUME[proximo].id);
+                            return proximo;
+                        });
+                    },
                     tocando: estadoAtual !== 'desligada' && !radio.foraDoAr,
                     lerEspectro: radio.lerEspectro,
                     isMobile,

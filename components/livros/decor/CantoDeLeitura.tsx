@@ -1,7 +1,8 @@
 'use client';
 
-import Poltrona from '@/components/livros/decor/Poltrona';
+import Poltrona, {ALTURA_POLTRONA} from '@/components/livros/decor/Poltrona';
 import MesaDeCentro, {ALTURA_MESA_CENTRO} from '@/components/livros/decor/MesaDeCentro';
+import {bracoEmMetros} from '@/lib/poltrona-model.mjs';
 
 /**
  * **CONGELADO** — aprovado pelo dono do acervo em 06/08/2026, e vale para as
@@ -59,6 +60,50 @@ export function pontoNoTampo(lx: number, lz: number): [number, number, number] {
         MESA_ANCHOR.position[0] + lx * cos + lz * sin,
         MESA_ANCHOR.position[1],
         MESA_ANCHOR.position[2] - lx * sin + lz * cos,
+    ];
+}
+
+/** O braço da poltrona, medido do `.glb` — ver `lib/poltrona-model.mjs`. */
+const BRACO = bracoEmMetros(ALTURA_POLTRONA);
+
+/**
+ * A rotação que alinha uma peça com o EIXO do braço.
+ *
+ * É a da poltrona sem correção nenhuma, ao contrário de `MESA_ROT_Y`, que
+ * desconta o meio giro. A diferença: o meio giro existe para o modelo do
+ * Furniture Kit olhar para a câmera em vez de mostrar as costas, e quem se apoia
+ * no braço — um caderno de primitivas e uma caneta deitada — não tem frente. Meio
+ * giro a mais ou a menos aqui é o mesmo eixo.
+ */
+export const BRACO_ROT_Y = POLTRONA_ROT_Y;
+
+/**
+ * Ponto sobre o braço da poltrona, dado um deslocamento no espaço local do móvel
+ * (já rotacionado). Irmão de `pontoNoTampo`, e publicado pela mesma razão: o
+ * conjunto está congelado, o que se apoia nele não.
+ *
+ * O `y` devolvido é a face de CIMA do braço — o mesmo contrato de posicionamento
+ * do `KenneyModel`, em que `position` é o ponto de apoio e quem sabe a espessura
+ * da peça é quem a desenha.
+ *
+ * **A ordem dos parâmetros é a mesma de `pontoNoTampo`, `(lx, lz)`**, e não a
+ * "natural" para um braço, que seria o comprimento primeiro. Duas funções irmãs,
+ * uma ao lado da outra, com a ordem trocada é como se erra sem nem desconfiar —
+ * o resultado seria um objeto atravessado no braço em vez de deitado nele, e
+ * nada quebraria.
+ *
+ * @param lx atravessado no braço (largura útil em `BRACO.largura`).
+ * @param lz ao longo dele (comprimento útil em `BRACO.comprimento`).
+ */
+export function pontoNoBraco(lx = 0, lz = 0): [number, number, number] {
+    const cos = Math.cos(POLTRONA_ROT_Y);
+    const sin = Math.sin(POLTRONA_ROT_Y);
+    const x = BRACO.x + lx;
+    const z = BRACO.z + lz;
+    return [
+        POLTRONA_CHAO[0] + x * cos + z * sin,
+        BRACO.y,
+        POLTRONA_CHAO[2] - x * sin + z * cos,
     ];
 }
 

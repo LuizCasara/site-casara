@@ -201,6 +201,24 @@ ficou de fora do V1 está em `docs/livros-proximos-passos.md`.
 - Skoob **não** é uma fonte: a API pública foi desligada em setembro de 2025 e
   não há exportação nativa. `lib/book-sources/index.mjs` existe como gancho caso
   isso mude
+- **"Coisas que ninguém repara" é uma camada de descoberta, não uma fechadura.**
+  A folha da bancada de estudo abre a lista dos 17 objetos clicáveis da sala
+  (`lib/coisas-da-sala.mjs` é a fonte única — dela saem o contador E as linhas);
+  achar todos faz aparecer um caderno no braço da poltrona. **Nada fica trancado
+  em momento nenhum**, e o conteúdo do caderno é servido por `GET /api/caderno`,
+  que qualquer um pode chamar: é ritmo, não segurança — a mesma nota do pódio do
+  quiz. O progresso vive só no `localStorage`, e **`premiadoEm` é o campo que
+  impede o prêmio de ser retirado**: gravado uma vez, o caderno fica na sala para
+  sempre, mesmo que um item 18 entre depois e o contador volte a `17 de 18`.
+  `marcarCoisa(id)` é **função de módulo importada direto**, nunca prop nem
+  contexto — metade dos objetos se marca de dentro do próprio componente, e
+  `Room.tsx` é cenário burro que não pode saber que existe um jogo. Fechar a
+  lista toca `reveal.mp3` — a única exceção da sala a `lib/sound.ts`, ver "Sound
+  effects" abaixo. Um evento só (`caderno_desbloqueado`), nenhum por item.
+  Detalhes e as recusas em
+  `docs/livros-sala-3d.md`; as páginas do caderno são `.md` em `content/caderno/`
+  (**fora de `public/`**, e listadas em `outputFileTracingIncludes` no
+  `next.config.ts`, senão a rota devolve zero páginas em produção)
 - **O som da sala não passa por `lib/sound.ts`** (ver "Sound effects" abaixo):
   ele toca efeitos curtos por `<audio>`, e aqui é preciso um grafo de Web Audio
   — ganho, analisador de espectro, síntese de ruído. O monitor da direita
@@ -229,11 +247,15 @@ A second forced-choice personality-style test, `apps/desenvolvimento-pessoal/des
 
 ### Sound effects
 
-**Scope: the three live dynamics only.** `/livros` has its own, unrelated audio
-stack (Web Audio graph, live radio stream, synthesized rain) in
-`components/livros/decor/use-radio.ts` — see "Acervo de Livros" above. Don't
-route one through the other: this file plays short one-shot clips through plain
-`<audio>` elements, which is not what a gain/analyser graph needs.
+**Scope: the three live dynamics, plus exactly one clip in `/livros`.** The room
+has its own, unrelated audio stack (Web Audio graph, live radio stream,
+synthesized rain) in `components/livros/decor/use-radio.ts` — see "Acervo de
+Livros" above. Don't route *that* through this file: a gain/analyser graph is not
+what plain `<audio>` one-shots are for, and vice versa. The one crossing is
+`playSound('reveal', 0.45)` when someone completes the 17 items of "Coisas que
+ninguém repara" — a half-second clip played once, which is precisely what
+`playSound` exists for. It is edge-triggered off a ref, so returning to the room
+with the list already complete is silent.
 
 Shared across all three live dynamics — `lib/sound.ts` exports `playSound(name)` (fire-and-forget, cached `HTMLAudioElement` per name) and `startLoop(name)` (returns a stop function, used only by Sorteio's spin). Every `.play()` is `.catch(() => {})`'d, same spirit as `toggleFullscreen`: a browser autoplay-policy rejection just means "no sound this time," never a thrown error. Effect files live in `public/sounds/*.mp3` — short (12-110KB) clips from [Mixkit's free SFX library](https://mixkit.co/free-sound-effects/) (no attribution required). Swapping a sound is a one-file replacement, no code change needed as long as the filename stays the same.
 
