@@ -638,9 +638,19 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
      * chega na página e gira a roda vê a sala se apresentar sem precisar
      * descobrir botão nenhum e sem ficar preso em lugar nenhum.
      *
-     * Dois amortecedores, porque um gesto de trackpad dispara dezenas de
-     * eventos: um limiar por evento, que ignora o arrastar de dedo fino, e um
-     * intervalo mínimo entre passos, que impede pular três paradas num gesto só.
+     * Um mouse de roda física dispara UM evento por clique, com `deltaY` na
+     * casa de 100 — cruza qualquer limiar sozinho. Trackpad e Magic Mouse
+     * fazem o oposto: dezenas de eventos por gesto, muitos deles de poucos
+     * pixels cada. Um limiar por evento (o que havia antes) filtra o segundo
+     * caso inteiro fora — um gesto lento nunca produz um único evento grande o
+     * bastante, e a sala simplesmente não anda. Por isso o limiar é sobre a
+     * SOMA do gesto, não sobre cada evento: acumula `deltaY` e só decide ao
+     * cruzar o limiar. `PAUSA_RESET_MS` zera o acumulador entre gestos, para
+     * que o resto de um giro que não chegou a virar passo não se some ao
+     * próximo, sem relação, minutos depois.
+     *
+     * O intervalo mínimo entre passos continua por cima disso, para impedir
+     * pular três paradas num gesto só.
      *
      * `passive: true` e sem preventDefault de propósito: nada aqui bloqueia a
      * rolagem da página. Fica de fora quando há livro ou índice abertos — ali a
@@ -658,14 +668,22 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
 
         const LIMIAR_PX = 24;
         const INTERVALO_MS = 550;
+        const PAUSA_RESET_MS = 300;
         let ultimaTroca = 0;
+        let ultimoEvento = 0;
+        let acumulado = 0;
 
         const aoRolar = (e: WheelEvent) => {
-            if (Math.abs(e.deltaY) < LIMIAR_PX) return;
             const agora = Date.now();
+            if (agora - ultimoEvento > PAUSA_RESET_MS) acumulado = 0;
+            ultimoEvento = agora;
+            acumulado += e.deltaY;
+
+            if (Math.abs(acumulado) < LIMIAR_PX) return;
             if (agora - ultimaTroca < INTERVALO_MS) return;
             ultimaTroca = agora;
-            andarNoTrilho(e.deltaY > 0 ? 1 : -1);
+            andarNoTrilho(acumulado > 0 ? 1 : -1);
+            acumulado = 0;
         };
 
         window.addEventListener('wheel', aoRolar, {passive: true});
@@ -1050,6 +1068,43 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
                         ))}
                     </div>
                 </div>
+            )}
+            {/*
+              Chevrons de cena, só no touch. Roda do mouse e setas do teclado já
+              andam o trilho no desktop; no toque não existe nem uma coisa nem
+              outra, então sem isto a única forma de mudar de cena seria pular
+              direto para uma das 5 paradas nomeadas na barra de baixo — as
+              sub-paradas (cada ano do acervo, os focos do canto do PC) ficariam
+              inalcançáveis fora de um clique no próprio objeto 3D.
+
+              Chamam o MESMO `andarNoTrilho` da roda e do teclado, então andam
+              cena e sub-parada juntas, no mesmo caminho, em loop — nunca
+              somem por falta de vizinho, ao contrário das setas de folhear
+              livro logo abaixo. `!indiceAberto` copia a regra da barra de
+              cena: os outros overlays (retrato, bilhete, carteira, folha,
+              caderno, reveal) já cobrem a tela por cima quando abertos.
+            */}
+            {mode.kind === 'sala' && !indiceAberto && isMobile && (
+                <>
+                    <button
+                        onClick={() => andarNoTrilho(-1)}
+                        aria-label="Cena anterior"
+                        className="fixed left-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center
+                                   justify-center rounded-full bg-black/60 text-xl text-white shadow-lg
+                                   transition hover:bg-black/80"
+                    >
+                        ‹
+                    </button>
+                    <button
+                        onClick={() => andarNoTrilho(1)}
+                        aria-label="Próxima cena"
+                        className="fixed right-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center
+                                   justify-center rounded-full bg-black/60 text-xl text-white shadow-lg
+                                   transition hover:bg-black/80"
+                    >
+                        ›
+                    </button>
+                </>
             )}
             {/*
               Folhear o acervo com o livro aberto. z-40 para ficar acima do
