@@ -1304,7 +1304,7 @@ function RSVPSection() {
             }}
           >
             Confirme até{" "}
-            <strong style={{ color: G }}>30 de junho de 2026</strong>
+            <strong style={{ color: G }}>01 de outubro de 2026</strong>
           </p>
 
           <motion.a
