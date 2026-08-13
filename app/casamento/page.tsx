@@ -520,7 +520,7 @@ function EnvelopeSection() {
                 letterSpacing: "0.2em",
               }}
             >
-              11 DE JULHO DE 2026
+              17 DE OUTUBRO DE 2026
             </p>
           </motion.div>
 
@@ -1251,7 +1251,7 @@ function RSVPSection() {
   const inView = useInView(ref, { once: true, amount: 0.3 });
 
   const waMsg = encodeURIComponent(
-    `Olá Luiz! \nConfirmo minha presença no seu casamento com a Kátia em 11/07/2026!`,
+    `Olá Luiz! \nConfirmo minha presença no seu casamento com a Kátia em 17/10/2026!`,
   );
   const waUrl = `https://wa.me/${WHATSAPP_NUM}?text=${waMsg}`;
 
@@ -1485,7 +1485,7 @@ export default function CasamentoPage() {
               textTransform: "uppercase",
             }}
           >
-            Com amor · Luiz &amp; Kátia · 11.07.2026
+            Com amor · Luiz &amp; Kátia · 17.10.2026
           </p>
         </footer>
       </div>
