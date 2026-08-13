@@ -154,7 +154,7 @@ export default function Image() {
               fontWeight: 300,
             }}
           >
-            11 · 07 · 2026
+            17 · 10 · 2026
           </div>
         </div>
 
