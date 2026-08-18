@@ -21,6 +21,10 @@ const INTENSIDADE_ABAJUR = 7;
 const CUPULA_ACESA = '#ffe0b0';
 const CUPULA_APAGADA = '#6b6157';
 
+/** Só a cúpula (`lamp`); o pé (`metal`) projeta sempre. Vale apenas enquanto o
+ *  abajur é a fonte de sombra — ver o uso, mais abaixo. */
+const SEM_SOMBRA_ABAJUR = ['lamp'];
+
 // Medidas de móvel de verdade, em metros.
 /** Exportada porque `lib/poltrona-model.mjs` converte as medidas do `.glb` a
  *  partir dela: sem a altura pedida, os números do braço não viram metros. */
@@ -88,10 +92,19 @@ export default function Poltrona({position, rotationY = 0, abajurAceso = true, p
                     onAlternarAbajur?.();
                 }}
             >
+                {/*
+                  A cúpula só deixa de projetar quando a fonte é a luz DAQUI:
+                  sendo lowpoly e com a lâmpada dentro, cada aresta do cone se
+                  desenhava em leque na parede. Sob a luz do teto ela projeta
+                  normalmente — é o volume maior da peça, e sem ela a luminária
+                  lançava só a haste. Dá para decidir por estado porque as duas
+                  fontes se revezam e nunca projetam juntas (ver Room.tsx).
+                */}
                 <KenneyModel
                     url={MODELOS.abajur}
                     alturaAlvo={ALTURA_ABAJUR}
                     cores={{metal: '#2b2320', lamp: abajurAceso ? CUPULA_ACESA : CUPULA_APAGADA}}
+                    semSombra={projetaSombra ? SEM_SOMBRA_ABAJUR : undefined}
                 />
                 {/*
                   A luz é nossa, não do modelo: um GLB carrega geometria e

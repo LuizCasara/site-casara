@@ -87,6 +87,19 @@ type KenneyModelProps = {
      */
     ocultos?: string[];
     /**
+     * Materiais que não PROJETAM sombra, por nome — mesmo endereçamento dos
+     * `ocultos`, mas a peça continua visível.
+     *
+     * Existe pela cúpula do abajur, que tem a pointLight dentro dela: a cúpula
+     * é lowpoly, então cada aresta do tronco de cone virava uma linha reta de
+     * sombra desenhada em leque na parede.
+     *
+     * É relativo à fonte, não à peça: a mesma cúpula deve projetar sob a luz do
+     * teto, senão a luminária lança só a haste. Quem passa isto costuma passar
+     * condicionado ao estado — ver `Poltrona.tsx`.
+     */
+    semSombra?: string[];
+    /**
      * Nós internos do `.glb` entregues ao pai para ANIMAR, por nome de nó.
      *
      * É a única porta deste componente endereçada por NÓ, e não por material —
@@ -140,7 +153,7 @@ type KenneyModelProps = {
  * centro da peça**, sempre, para qualquer modelo.
  */
 export default function KenneyModel({
-    url, cores, emissivos, texturas, ocultos, articulados, position, rotation,
+    url, cores, emissivos, texturas, ocultos, semSombra, articulados, position, rotation,
     alturaAlvo, larguraAlvo,
 }: KenneyModelProps) {
     const {scene} = useGLTF(url);
@@ -160,6 +173,7 @@ export default function KenneyModel({
         cores ?? null,
         emissivos ?? null,
         ocultos ?? null,
+        semSombra ?? null,
         Object.entries(texturas ?? {}).map(([nome, t]) => [nome, t.uuid]),
     ]);
     const {objeto, descartaveis} = useMemo(() => {
@@ -224,7 +238,7 @@ export default function KenneyModel({
             // Transparente não projeta — o mapa de sombra é binário e ignora
             // alfa, então o vidro da janela lançaria um retângulo preto sólido.
             mesh.receiveShadow = true;
-            mesh.castShadow = !material.transparent;
+            mesh.castShadow = !material.transparent && !semSombra?.includes(material.name);
 
             mesh.material = material;
         });
