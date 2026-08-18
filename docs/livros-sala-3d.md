@@ -87,8 +87,10 @@ imprevisível e o pivô raramente está no centro, então "escala 1.9" não
 significa nada sem abrir o arquivo.
 
 **Regra aprendida três vezes:** objeto de parede precisa de volume próprio
-atrás (uma placa, um disco, mãos-francesas). Sem sombra projetada, imagem
-colada em parede escura lê como adesivo.
+atrás (uma placa, um disco, mãos-francesas). Nasceu de a sala não ter sombra
+projetada, o que fazia imagem colada em parede escura ler como adesivo — hoje
+tem (ver "Sombra projetada" abaixo), então a regra virou recomendação: o volume
+continua ajudando, mas não é mais a única coisa segurando a peça na parede.
 
 ### `Room.tsx` não sabe que livros existem
 
@@ -385,6 +387,36 @@ rádio não é um `setInterval`.
 
 Sem clique: um relógio já cumpre a regra de que toda função tem um objeto
 físico. A função dele é dizer a hora, e ele diz sozinho.
+
+## Sombra projetada
+
+A mobília projeta sombra desde 18/08/2026. O trabalho não estava nas luzes: está
+em `KenneyModel.tsx`, porque `castShadow` é propriedade de `Object3D` e **o three
+não a herda de pai para filho** — marcá-la no `<primitive>` não alcança a árvore
+que veio do `.glb`, que é a mobília inteira. Vai malha por malha, no traverse que
+já existia para clonar material. Material transparente fica de fora: o mapa de
+sombra ignora alfa e o vidro da janela lançaria um retângulo preto sólido.
+
+**Paredes e chão recebem, nunca projetam.** Uma parede projetora fica entre a luz
+do teto e metade da sala, e apaga a cena inteira.
+
+**As duas fontes se revezam, nunca somam**: com o teto aceso é ele quem sombreia;
+apagado, o abajur assume. No máximo um cubemap ativo por quadro. O revezamento
+não é só economia — é o que dá sombra ao modo escuro, que de outro jeito ficaria
+sem nenhuma, e a luz baixa do abajur projeta sombra longa na parede, bem mais
+dramática que a do teto. Detalhe que torna isso obrigatório: **o three renderiza
+o mapa de sombra de toda luz com `castShadow`, sem consultar `intensity`**, então
+`castShadow` fixo em `true` custaria seis passes de profundidade por quadro
+desenhando um mapa que ninguém vê com o teto apagado. Daí `castShadow={acesa}`.
+
+**A janela foi testada como fonte e descartada.** Um spotLight custaria um mapa
+só, contra as seis faces do cubemap de uma pointLight, mas a luz dela morre à
+noite e com a cortina fechada — a sala trocava de aparência sozinha. Não repita
+esse teste sem um motivo novo.
+
+Os LIVROS ficaram de fora, de propósito e por decidir: são meshes próprios em
+`Book.tsx`, fora do `KenneyModel`. Sombra sobre eles mexe na legibilidade da
+lombada, que é o assunto inteiro da página.
 
 ## O interruptor e a luz do teto
 

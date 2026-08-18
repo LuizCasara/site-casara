@@ -17,12 +17,25 @@ iluminação assada, no espírito do [My Room in 3D](https://my-room-in-3d.verce
 O contrato de `Room.tsx` (cenário burro, publica âncoras) existe justamente para
 permitir isso sem reescrever Bookshelf, DeskBooks e CameraRig. Exige Blender.
 
-### Sombras de verdade nas paredes
+**Meio-caminho, se um dia valer:** assar só um `aoMap` da casca (paredes, chão,
+teto) em vez da luz inteira. AO é multiplicativo e não carrega cor de luz, então
+escurece os cantos **sem** congelar o interruptor nem a janela por hora do dia —
+que é o que o baked completo custaria. Foi avaliado em 17/08/2026 e adiado: com
+a sombra projetada funcionando, o que sobra para ele é pouco.
 
-Hoje a sala não tem sombra projetada, e é por isso que todo objeto de parede
-precisa de volume próprio atrás. Com sombra, dava para pendurar coisas finas —
-mochila, lenços, bastão de trilha, que já foram tentados e removidos por
-parecerem flutuando.
+### Coisas finas na parede
+
+Feito em 18/08/2026: a sala projeta sombra (ver "Sombra projetada" em
+[livros-sala-3d.md](livros-sala-3d.md)). O que sobrou desta ideia é a
+consequência dela — mochila, lenços e bastão de trilha foram tentados e
+removidos por parecerem flutuando, e agora talvez se sustentem. Não foi testado.
+
+### Sombra nos livros
+
+Ficaram de fora da rodada de sombra: são meshes próprios em `Book.tsx`, e
+escurecer lombada mexe com a legibilidade que é o assunto da página. Duas
+opções, separáveis: só receber (escurece dentro do nicho) ou também projetar
+(cada livro sombreia o vizinho — mais bonito, mais caro).
 
 ### Objetos que ainda não têm lugar
 
@@ -108,7 +121,7 @@ colorido no card e na página.
 | 14  | `as-4-disciplinas-da-execucao`                             | As 4 Disciplinas da Execução — Chris McChesney                         | —                                       | ✅  |
 | 15  | `as-48-leis-do-poder`                                      | As 48 Leis do Poder — Robert Greene                                    | —                                       | ✅  |
 | 16  | `as-cavernas-de-aco`                                       | As Cavernas de Aço — Isaac Asimov                                      | —                                       | ✅  |
-| 17  | `bora-vender`                                              | Bora Vender — Alfredo Soares                                           | ISBN-13, ano, editora, resenha          | ⬜  |
+| 17  | `bora-vender`                                              | Bora Vender — Alfredo Soares                                           | —                                       | ✅  |
 | 18  | `biblia-sagrada-nvi`                                       | Bíblia Sagrada NVI                                                     | ISBN-13, ano, resenha                   | ⬜  |
 | 19  | `cada-homem-um-guerreiro`                                  | Cada Homem um Guerreiro — Lonnie Berger                                | ISBN-13, ano, editora, págs, resenha    | ⬜  |
 | 20  | `chaves-biblicas-para-o-homem-de-deus`                     | Chaves Bíblicas para o Homem de Deus — Sandro Antônio dos Santos       | ISBN-13, ano, editora, sinopse, resenha | ⬜  |

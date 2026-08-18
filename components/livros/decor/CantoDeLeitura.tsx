@@ -116,13 +116,14 @@ export function pontoNoBraco(lx = 0, lz = 0): [number, number, number] {
  * inferior do quadro e é cortado pela borda de baixo; em z=0.3 a poltrona
  * virava um borrão de primeiro plano tomando um quarto da tela.
  */
-export default function CantoDeLeitura({abajurAceso = true, onAlternarAbajur, isMobile = false}: {
+export default function CantoDeLeitura({abajurAceso = true, projetaSombra = false, onAlternarAbajur, isMobile = false}: {
     /**
-     * O abajur virou interruptor (ver Poltrona.tsx). Estes três props só
+     * O abajur virou interruptor (ver Poltrona.tsx). Estes props só
      * ATRAVESSAM este arquivo — o congelamento continua valendo para posição,
      * ângulo, escala e distância entre as peças, que é o que ele protege.
      */
     abajurAceso?: boolean;
+    projetaSombra?: boolean;
     onAlternarAbajur?: () => void;
     isMobile?: boolean;
 } = {}) {
@@ -132,6 +133,7 @@ export default function CantoDeLeitura({abajurAceso = true, onAlternarAbajur, is
                 position={POLTRONA_CHAO}
                 rotationY={POLTRONA_ROT_Y}
                 abajurAceso={abajurAceso}
+                projetaSombra={projetaSombra}
                 onAlternarAbajur={onAlternarAbajur}
                 isMobile={isMobile}
             />

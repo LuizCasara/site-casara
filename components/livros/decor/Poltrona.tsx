@@ -42,10 +42,13 @@ const CUPULA_Y = ALTURA_ABAJUR - 0.12;
  * RoomCanvas, como em todo controle da sala — aqui só chegam `aceso` e o que
  * fazer no clique.
  */
-export default function Poltrona({position, rotationY = 0, abajurAceso = true, onAlternarAbajur, isMobile = false}: {
+export default function Poltrona({position, rotationY = 0, abajurAceso = true, projetaSombra = false, onAlternarAbajur, isMobile = false}: {
     position: [number, number, number];
     rotationY?: number;
     abajurAceso?: boolean;
+    /** Se o abajur é a fonte de sombra da sala neste momento. Quem decide é
+     *  Room.tsx, que enxerga o interruptor do teto — daqui não dá para saber. */
+    projetaSombra?: boolean;
     /** Ausente = o abajur vira cenário: sem etiqueta e sem clique. Mesmo
      *  contrato do `onOpen` da lava lamp com um livro aberto. */
     onAlternarAbajur?: () => void;
@@ -100,6 +103,14 @@ export default function Poltrona({position, rotationY = 0, abajurAceso = true, o
                   o alvo, pelo mesmo motivo da luz do teto — corte seco parece
                   bug de renderização, não interruptor.
                 */}
+                {/*
+                  A sombra do modo escuro. Luz baixa e lateral projeta sombra
+                  longa na parede, ao contrário da do teto, que cai curta sob os
+                  móveis — é o que dá clima quando o teto apaga.
+
+                  `far` casado com o `distance` da lâmpada: o mapa não precisa
+                  cobrir mais do que a luz alcança.
+                */}
                 <pointLight
                     ref={luz}
                     position={[0, CUPULA_Y, 0]}
@@ -107,6 +118,12 @@ export default function Poltrona({position, rotationY = 0, abajurAceso = true, o
                     intensity={INTENSIDADE_ABAJUR}
                     distance={3.2}
                     decay={2}
+                    castShadow={projetaSombra}
+                    shadow-mapSize-width={1024}
+                    shadow-mapSize-height={1024}
+                    shadow-normalBias={0.02}
+                    shadow-camera-near={0.1}
+                    shadow-camera-far={3.2}
                 />
 
                 {/* Alvo de clique na CÚPULA, não no pé: é a cúpula que se

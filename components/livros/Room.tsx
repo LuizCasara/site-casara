@@ -309,7 +309,10 @@ export default function Room({
                 <meshStandardMaterial color={FLOOR_COLOR} roughness={0.9}/>
             </mesh>
 
-            <mesh position={[0, 1.5, -1.6]}>
+            {/* Recebe sombra, nunca projeta: a parede fica entre a luz do teto e
+                metade da sala, e como projetora apagaria a cena inteira. Mesma
+                regra nas laterais. */}
+            <mesh position={[0, 1.5, -1.6]} receiveShadow>
                 <planeGeometry args={[6, 3]}/>
                 <meshStandardMaterial color={WALL_COLOR} roughness={1}/>
             </mesh>
@@ -367,8 +370,12 @@ export default function Room({
             {/* Território congelado — ver o cabeçalho de CantoDeLeitura.tsx. O
                 abajur é a exceção: ele virou interruptor, e o congelamento vale
                 para posição, ângulo, escala e distância, não para acender. */}
+            {/* As duas projetoras se revezam, nunca somam: com o teto aceso é
+                ele quem sombreia (ver LuzDoTeto), no escuro é o abajur. Assim
+                há no máximo um cubemap de sombra ativo por quadro. */}
             <CantoDeLeitura
                 abajurAceso={luzes.abajur}
+                projetaSombra={!luzes.teto && luzes.abajur}
                 onAlternarAbajur={onAlternarLuz && (() => onAlternarLuz('abajur'))}
                 isMobile={isMobile}
             />
@@ -610,8 +617,25 @@ function LuzDoTeto({acesa}: {acesa: boolean}) {
 
     return (
         <>
+            {/*
+              A projetora da sala, e `castShadow` amarrado a `acesa` — não à
+              intensidade. O three renderiza o mapa de sombra de toda luz com
+              `castShadow`, sem consultar `intensity`, então deixá-lo fixo em
+              `true` custaria seis passes de profundidade por quadro (uma
+              pointLight sombreia em cubemap) para desenhar um mapa invisível
+              com o teto apagado. Quem projeta no escuro é o abajur — ver a
+              prop `projetaSombra` do CantoDeLeitura.
+
+              `normalBias` em vez de `bias`: o defeito aqui é acne nas paredes e
+              no chão, planos grandes vistos de raspão, e o normalBias resolve
+              sem descolar a sombra do pé do móvel.
+            */}
             <pointLight ref={quente} position={[1.3, 2.75, 0.6]} color="#ffb877"
-                        intensity={LUZ_ACESA.quente} distance={7} decay={2}/>
+                        intensity={LUZ_ACESA.quente} distance={7} decay={2}
+                        castShadow={acesa}
+                        shadow-mapSize-width={1024} shadow-mapSize-height={1024}
+                        shadow-normalBias={0.02} shadow-camera-near={0.1}
+                        shadow-camera-far={8}/>
             <pointLight ref={fria} position={[0, 2.75, -0.35]} color="#9fd8ff"
                         intensity={LUZ_ACESA.fria} distance={6} decay={2}/>
             <hemisphereLight ref={hemisferio} color="#8899aa" groundColor="#1a1410"

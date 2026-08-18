@@ -218,6 +218,14 @@ export default function KenneyModel({
                 // brilharia numa cor chapada por cima do print, apagando-o.
                 if (imagem) (m as unknown as {emissiveMap: THREE.Texture}).emissiveMap = imagem;
             }
+            // Malha por malha, e não no <primitive> lá embaixo: `castShadow` é
+            // propriedade de Object3D e o three não a herda de pai para filho.
+            //
+            // Transparente não projeta — o mapa de sombra é binário e ignora
+            // alfa, então o vidro da janela lançaria um retângulo preto sólido.
+            mesh.receiveShadow = true;
+            mesh.castShadow = !material.transparent;
+
             mesh.material = material;
         });
 
