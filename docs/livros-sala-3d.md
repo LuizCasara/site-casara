@@ -242,7 +242,14 @@ lendo de capa virada na mesa.
 
 **Todas as lombadas vão para um atlas único.** A estante inteira custa uma
 textura; a capa real só é baixada quando o livro abre (a API de covers da Open
-Library tem rate limit). Exceção: os "lendo agora", que são 1 a 3.
+Library tem rate limit). Exceção: os "lendo agora", que são poucos — eram
+declarados "1 a 3" porque a pilha da mesa tinha teto de três, e o teto caiu em
+28/08/2026, quando um quarto livro cadastrado como `lendo` simplesmente não
+apareceu na sala. **Ninguém some em silêncio**: os offsets da pilha passaram a
+ser derivados do slug, como já eram os da torre de "quero ler", e ela não tem
+mais tamanho máximo. Medido antes de tirar o teto: quatro livros dão 23,6cm de
+pilha, topo a 0,496m do chão — abaixo do braço da poltrona — e ocupam até 18cm
+do centro do tampo de 78cm, longe da xícara (0,27) e dos óculos (-0,25).
 
 **O texto não é renderizado dentro do 3D.** Texto como textura fica borrado, não
 é selecionável, leitor de tela não alcança. O livro 3D fornece o quadro; o
