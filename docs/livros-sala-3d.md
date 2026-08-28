@@ -214,6 +214,29 @@ mas é o ponto em que enquadrar o conjunto inteiro deixa de caber no cômodo, e 
 saída passa a ser enquadrar UMA estante por vez, navegando entre elas como já se
 faz com os nichos.
 
+### Folhear segue a ESTANTE, não a lista
+
+Com um livro aberto, ← e → trocam de livro. Cada lugar da sala é uma lista
+fechada: quem abriu um da mesa percorre a mesa, quem abriu um da torre percorre
+a fila de leitura, e quem abriu um da estante percorre a estante. Misturar faria
+a seta saltar de um móvel para outro sem que nada na tela explicasse o salto.
+
+**A da estante passa por `ordemNaEstante`, e por muito tempo não passava.** A
+lista visível é PLANA e chega do banco por `COALESCE(shelf_order, 32767), title`
+— na prática, alfabética no acervo inteiro. A estante reparte isso em nichos de
+ano. Os dois nunca coincidiram: com 51 livros a seta fazia **36 idas e vindas
+entre nichos**, contra as 4 do móvel (uma por nicho, o mínimo possível). O olho
+subia a prateleira e a seta seguia o alfabeto.
+
+A ordem é a do MUNDO — mais antigo embaixo, subindo —, e não a do trilho da
+câmera, que varre os anos de cima para baixo: aqui se está folheando o que está
+na prateleira, não sendo apresentado a ela.
+
+Dentro de um nicho que guarda DOIS anos eles se intercalam, porque a ordem de
+dentro é a da lista recebida. Isso é fiel: é exatamente assim que `Bookshelf`
+desenha aquele vão. Por isso a invariante que o teste guarda é troca de NICHO, e
+não troca de ano.
+
 **A câmera nunca se move ao abrir um livro.** Existiu um ponto de vista que
 recuava até o centro da sala, e o zoom dava um solavanco no mesmo instante em
 que o livro saía da prateleira: dois movimentos brigando. O livro se apresenta

@@ -24,7 +24,7 @@ import {useAlturaRodape, useAlturaDoElemento} from '@/components/livros/use-altu
 import {toShelfBooks} from '@/lib/book-dimensions.mjs';
 import type {BookStatus} from '@/lib/books';
 import {NICHO_CAPACIDADE_M} from '@/lib/bookshelf-model.mjs';
-import {agruparPorAnoDeLeitura} from '@/lib/shelf-years.mjs';
+import {agruparPorAnoDeLeitura, ordemNaEstante} from '@/lib/shelf-years.mjs';
 import {sortShelfBooks, filterShelfBooks, vizinhosDe} from '@/lib/livros-shelf.mjs';
 import {
     CENAS, subVizinha, paradaVizinha, subParadasDaCena, indiceDoFoco,
@@ -513,13 +513,22 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     // leitura, e o resto percorre a estante como ela está sendo vista (ordenada
     // e filtrada). Misturar faria a seta saltar de um móvel para outro sem que
     // nada na tela explicasse o salto.
+    //
+    // **A da estante passa por `ordemNaEstante`, e não é detalhe**: a lista
+    // visível é plana e vem alfabética do banco, enquanto a estante mostra os
+    // livros repartidos em nichos de ano. Sem essa passagem, a seta seguia o
+    // alfabeto do acervo inteiro e trocava de ano quase a cada passo — 39 vezes
+    // em 51 livros, contra as 4 do móvel. A mesa e a torre não precisam: uma
+    // pilha É a lista, na mesma ordem.
     const vizinhos = useMemo(() => {
         if (!openSlug) return {anterior: null, proximo: null};
         const daMesa = deskShelfBooks.some((b: {slug: string}) => b.slug === openSlug);
         const daTorre = torreBooks.some((b: {slug: string}) => b.slug === openSlug);
-        const lista = daMesa ? deskShelfBooks : (daTorre ? torreBooks : shelfBooksVisiveis);
+        const lista = daMesa
+            ? deskShelfBooks
+            : (daTorre ? torreBooks : ordemNaEstante(grupos, shelfBooksVisiveis));
         return vizinhosDe(lista, openSlug);
-    }, [openSlug, deskShelfBooks, torreBooks, shelfBooksVisiveis]);
+    }, [openSlug, deskShelfBooks, torreBooks, shelfBooksVisiveis, grupos]);
 
     // `replace`, não `push`: cada livro folheado viraria uma entrada no
     // histórico, e o "✕ fechar" (que é router.back()) passaria a voltar pro livro
