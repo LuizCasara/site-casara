@@ -25,6 +25,7 @@ import {buscarComRetentativa} from '../lib/book-sources/openlibrary-search.mjs';
 import {baixarCapa, capaDaAmazon} from '../lib/book-cover.mjs';
 import {slugify, normalizeTag, tagKey} from '../lib/book-utils.mjs';
 import {CATEGORY_IDS} from '../lib/book-categories.mjs';
+import {parseDataDeLeitura} from '../lib/reading-dates.mjs';
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -116,6 +117,50 @@ async function perguntarProgresso(io, padrao) {
 async function resolverProgresso(io, status, padrao) {
     if (status === 'lendo') return perguntarProgresso(io, padrao);
     return status === 'lido' ? 100 : null;
+}
+
+/**
+ * Pergunta quando o livro foi terminado e repete até a data ser válida.
+ *
+ * Não é um campo cosmético: `finished_at` é o que decide EM QUE PRATELEIRA o
+ * livro aparece na sala 3D (lib/shelf-years.mjs agrupa por ano). Até aqui o
+ * CLI não perguntava, e a única forma de preencher era SQL cru contra
+ * produção — exatamente o que este script existe para evitar.
+ */
+async function perguntarDataDeLeitura(io, padrao) {
+    let r = parseDataDeLeitura(await perguntar(io, 'Lido em (AAAA-MM-DD)', padrao));
+    while (!r.ok) {
+        r = parseDataDeLeitura(await perguntar(io, r.erro, ''));
+    }
+    return r.data;
+}
+
+/**
+ * Formata o `finished_at` que veio do banco como AAAA-MM-DD, para servir de
+ * padrão no prompt.
+ *
+ * Getters LOCAIS, não UTC — o oposto do que lib/shelf-years.mjs faz, e de
+ * propósito: lá o valor já atravessou o JSON e chega como string ISO de
+ * meia-noite UTC; aqui ele vem direto do driver, que monta a DATE do Postgres
+ * com `new Date(ano, mes, dia)` no fuso da máquina. Ler esse objeto em UTC
+ * devolveria o dia anterior em qualquer fuso positivo.
+ */
+function dataLocalISO(valor) {
+    if (!valor) return '';
+    const d = new Date(valor);
+    const p = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/**
+ * A data que corresponde ao status — só 'lido' tem uma. Mesma forma de
+ * `resolverProgresso` acima e pela mesma razão: um livro que você ainda quer
+ * ler, ou está lendo, não terminou em data nenhuma, e deixar a data antiga
+ * para trás faria a estante por ano continuar mostrando um livro que saiu de
+ * lá.
+ */
+async function resolverDataDeLeitura(io, status, padrao) {
+    return status === 'lido' ? perguntarDataDeLeitura(io, padrao) : null;
 }
 
 /**
@@ -336,6 +381,7 @@ async function comandoAdd(sql, isbn, dryRun) {
 
         const status = await perguntarStatus(io, 'lido');
         const progress = await resolverProgresso(io, status, '0');
+        const finishedAt = await resolverDataDeLeitura(io, status, '');
         const rating = await perguntarNota(io, '');
 
         // 2-3 frases, não uma: é o que docs/livros-proximos-passos.md definiu
@@ -377,6 +423,7 @@ async function comandoAdd(sql, isbn, dryRun) {
             tags,
             status,
             progress_pct: progress,
+            finished_at: finishedAt,
             review: resenha.alterado ? resenha.texto : null,
         };
 
@@ -396,12 +443,12 @@ async function comandoAdd(sql, isbn, dryRun) {
             INSERT INTO casara.books
                 (slug, isbn, title, author, year, publisher, pages, synopsis,
                  cover_path, spine_color, rating, category, tags, status,
-                 progress_pct, review)
+                 progress_pct, finished_at, review)
             VALUES (${linha.slug}, ${linha.isbn}, ${linha.title}, ${linha.author},
                     ${linha.year}, ${linha.publisher}, ${linha.pages}, ${linha.synopsis},
                     ${linha.cover_path}, ${linha.spine_color}, ${linha.rating},
                     ${linha.category}, ${linha.tags}, ${linha.status},
-                    ${linha.progress_pct}, ${linha.review})`;
+                    ${linha.progress_pct}, ${linha.finished_at}, ${linha.review})`;
 
         console.log(`✅ Gravado. Veja em /livros/${slug}`);
     } finally {
@@ -452,6 +499,7 @@ async function comandoEdit(sql, slug) {
         // CHECK do Postgres quando foi gravado), então aceitar com Enter
         // nunca cai em reprompt — só entradas novas e inválidas caem.
         const progress = await resolverProgresso(io, status, String(livro.progress_pct ?? 0));
+        const finishedAt = await resolverDataDeLeitura(io, status, dataLocalISO(livro.finished_at));
         const rating = await perguntarNota(io, livro.rating != null ? String(livro.rating) : '');
 
         const synopsis = await perguntar(io, 'Sinopse', livro.synopsis ?? '');
@@ -472,7 +520,7 @@ async function comandoEdit(sql, slug) {
         console.log('\n─── Será atualizado ───');
         console.table([{slug, title, author, ano: year, editora: publisher,
             páginas: pages, isbn, category, tags: tags.join(', '),
-            status, progress_pct: progress, rating,
+            status, progress_pct: progress, finished_at: finishedAt, rating,
             resenha: review ? `${review.length} caracteres` : '(vazia)'}]);
 
         if (!await confirmar(io, '\nAtualizar no banco de PRODUÇÃO?')) {
@@ -495,6 +543,7 @@ async function comandoEdit(sql, slug) {
                 tags         = ${tags},
                 status       = ${status},
                 progress_pct = ${progress},
+                finished_at  = ${finishedAt},
                 review       = ${review},
                 updated_at   = NOW()
             WHERE slug = ${slug}`;

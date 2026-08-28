@@ -97,6 +97,20 @@ próprio CLI (`resolverProgresso` em `scripts/livros.mjs`) — 100 para `lido`,
 perguntado só para `lendo`, nulo nos outros dois. Os 48 livros que já estavam
 lidos foram acertados de uma vez na mesma data.
 
+`finished_at` entrou no CLI em 23/08/2026 (`resolverDataDeLeitura`, mesma forma
+do progresso: perguntado só para `lido`, nulo nos outros três). Até então o
+campo que decide **em que prateleira o livro aparece na sala 3D**
+(`lib/shelf-years.mjs` agrupa por ano) era o único que só dava para escrever
+com SQL cru contra produção — exatamente o que este script existe para evitar.
+Aceita `AAAA-MM-DD` e `AAAA-MM`; a forma curta cai no dia 15, igual ao que o
+`distribuirMeses` gravou na importação em lote.
+
+**O `edit` não consegue APAGAR um campo** — `perguntar()` devolve
+`resposta || padrao`, então responder vazio significa "mantém", nunca "limpa".
+Um valor errado já gravado (o ano 2026 do livro 21, por exemplo) só sai com o
+valor certo por cima, ou com SQL. Não é defeito a consertar de qualquer jeito:
+Enter-mantém é o que torna seguro passar por 14 perguntas para mudar uma.
+
 **Pendência transversal, decidir no fim do mutirão**: a tag `ficção` nasceu
 durante ele e está em 3 dos 12 livros da categoria Ficção. Enquanto estiver
 assim, filtrar por ela devolve um subconjunto arbitrário — pior que não existir.
