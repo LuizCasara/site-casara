@@ -66,15 +66,47 @@ function faixaLivre(cobertoEmbaixoPx: number) {
     };
 }
 
-function enquadrar(alturaM: number, cobertoEmbaixoPx: number) {
+/**
+ * Proporção do canvas. Ele é `fixed inset-0`, então é a da janela inteira — e
+ * fora do browser cai num 16:9, que serve só para o render do servidor não
+ * dividir por indefinido.
+ */
+function proporcaoDaTela() {
+    if (typeof window === 'undefined') return 16 / 9;
+    return window.innerWidth / window.innerHeight;
+}
+
+/**
+ * Onde pôr a câmera e quanto baixar o alvo para caber o que se quer enquadrar.
+ *
+ * **`larguraM` é opcional, e por muito tempo não existiu**: enquadrar só pela
+ * altura funciona enquanto o que está em quadro é mais alto que largo, que é o
+ * caso de todos os móveis desta sala. A estante do acervo deixou de ser um deles
+ * no dia em que ganhou uma segunda cópia ao lado — 0,84m de largura viraram
+ * 1,73m contra 1,92m de altura, e num celular em retrato (proporção ~0,46) a
+ * conta da altura deixa ~1,27m visíveis na horizontal, cortando 27% do conjunto.
+ * Quem não passa largura continua com exatamente o comportamento de antes.
+ */
+function enquadrar(alturaM: number, cobertoEmbaixoPx: number, larguraM = 0) {
     const {fracaoVisivel, deslocamento} = faixaLivre(cobertoEmbaixoPx);
+    const tanMeioFov = Math.tan((FOV_GRAUS * Math.PI) / 360);
 
     // Se a faixa visível é 60% da tela, a câmera precisa enquadrar a altura
     // desejada dividida por 0,6 para que ela caiba inteira lá dentro.
     const alturaEnquadradaM = (alturaM / fracaoVisivel) * RESPIRO;
-    const distancia = alturaEnquadradaM / 2 / Math.tan((FOV_GRAUS * Math.PI) / 360);
+    // A largura NÃO passa por `fracaoVisivel`: header e rodapé cobrem em cima e
+    // embaixo, nunca dos lados. O que ela precisa é virar altura, porque é a
+    // altura que define a distância — e o câmbio entre as duas é a proporção da
+    // tela. Manda a que exigir mais recuo.
+    const alturaParaLargura = (larguraM * RESPIRO) / proporcaoDaTela();
+    const distancia = Math.max(alturaEnquadradaM, alturaParaLargura) / 2 / tanMeioFov;
 
-    return {distancia, alvoDeslocadoM: deslocamento * alturaEnquadradaM};
+    // O deslocamento sai do que a câmera de fato vê NESTA distância, e não de
+    // `alturaEnquadradaM`: quando quem manda é a largura, a altura visível é
+    // maior, e um deslocamento medido na outra escala desceria de menos. Sem
+    // largura as duas são o mesmo número, que é como isto era antes.
+    const alturaVisivelM = 2 * distancia * tanMeioFov;
+    return {distancia, alvoDeslocadoM: deslocamento * alturaVisivelM};
 }
 
 /**
@@ -208,25 +240,26 @@ function focoDeObjeto(
 }
 
 /**
- * As cinco sub-paradas do canto de trabalho, na ordem de FOCOS_DO_PC
- * (recomendações → gaveta → monitores → alto-falante → bíblia), varrendo o canto
- * da esquerda para a direita como o trilho principal varre a sala.
+ * As quatro sub-paradas do canto de trabalho, na ordem de FOCOS_DO_PC
+ * (gaveta → monitores → alto-falante → bíblia), varrendo o canto da esquerda
+ * para a direita como o trilho principal varre a sala.
  *
- * São cinco aqui e quatro no trilho: a gaveta tem enquadramento como qualquer
+ * São quatro aqui e três no trilho: a gaveta tem enquadramento como qualquer
  * outra, mas ninguém a atravessa navegando — só o clique nela leva a câmera até
  * aqui (ver `foraDoTrilho` em lib/livros-cenas.mjs). O índice dela continua
  * valendo, e é por isso que ela segue nesta lista em vez de ser removida.
  *
- * As distâncias são o que separa uma parada útil de um close inútil: o quadro
- * de recados e a bíblia pedem folga para se lerem inteiros, enquanto a caixa de
- * som tem 10cm e some se a câmera parar longe. Nenhuma delas tenta enquadrar
- * duas coisas ao mesmo tempo — foi justamente isso que a parada única do "PC"
- * fazia, e o custo era a tela do monitor pequena demais para se ler.
+ * **A lista abria no quadro de recados até 27/08/2026**, quando ele mudou para a
+ * parede lateral esquerda e virou décor clicável sem parada — ver
+ * `QUADRO_RECOMENDACOES` em Room.tsx.
+ *
+ * As distâncias são o que separa uma parada útil de um close inútil: a bíblia
+ * pede folga para se ler inteira, enquanto a caixa de som tem 10cm e some se a
+ * câmera parar longe. Nenhuma delas tenta enquadrar duas coisas ao mesmo tempo —
+ * foi justamente isso que a parada única do "PC" fazia, e o custo era a tela do
+ * monitor pequena demais para se ler.
  */
 const VIEWPOINTS_DO_PC: ViewpointConfig[] = [
-    // Quadro de recados: quase de frente, com um leve deslocamento lateral para
-    // não virar uma foto chapada de um retângulo branco.
-    focoDeObjeto(ANCORAS_DO_PC.recomendacoes, [0.18, -0.04, 0.98], 0.85),
     /*
       Gaveta: a única parada do canto que olha de BAIXO da linha do tampo. As
       outras quatro miram de cima, e qualquer uma delas esconderia a gaveta atrás
@@ -275,13 +308,51 @@ const VIEWPOINTS_DO_PC: ViewpointConfig[] = [
 const VIEWPOINT_DO_CADERNO = focoDeObjeto(ROOM_ANCHORS.caderno, [0.55, 0.75, 0.72], 0.55);
 
 /**
- * Nível 1: o móvel inteiro em quadro. A distância vem da altura dele e da
+ * Largura do conjunto de estantes, ponta a ponta.
+ *
+ * Sai das POSIÇÕES que `EstanteDoAcervo` já publica, e não de uma conta com o
+ * passo entre um móvel e o vizinho: a folga entre eles é privada daquele
+ * arquivo, que é território congelado, e reescrevê-la aqui seria a mesma
+ * duplicação que o teste da parede do fundo já carrega a contragosto.
+ */
+function larguraDoConjunto(totalEstantes: number) {
+    const meia = BOOKSHELF_SIZE_M.larguraM / 2;
+    const esquerda = posicaoDaEstante(0, totalEstantes)[0] - meia;
+    const direita = posicaoDaEstante(totalEstantes - 1, totalEstantes)[0] + meia;
+    return direita - esquerda;
+}
+
+/**
+ * Nível 1: o móvel inteiro em quadro. A distância vem das medidas dele e da
  * faixa livre da tela, não de um número calibrado à mão — trocar o modelo por
  * outro, ou abrir num celular de rodapé alto, reenquadra sozinho. Quem quer
  * ler lombada não para aqui: escolhe um ano e desce para o nível 2.
+ *
+ * **É a única cena que enquadra pela LARGURA além da altura**, e é por causa da
+ * segunda estante: com uma só, o móvel é bem mais alto que largo e a altura
+ * decide sozinha; com duas, o conjunto passa a 1,73m e num celular em retrato
+ * ficaria cortado nas pontas. `larguraDoConjunto` cresce junto com o acervo, e a
+ * câmera continua no x=0 porque o conjunto fica centrado na parede.
+ *
+ * Medido nas telas que importam: com UMA estante a largura nunca manda, em
+ * nenhuma delas — ou seja, esta cena continua exatamente como era. Com DUAS, só
+ * os retratos recuam (celular vai de 2,9m para ~4,4m de distância; desktop não
+ * se mexe).
+ *
+ * **Limite conhecido, com TRÊS**: num celular em retrato a distância chega a
+ * 6,6m, o que põe a câmera em z ≈ 5,1 — fora do piso de 6x6 da sala. Nada
+ * aparece quebrado (o frustum é estreito perto da câmera e nunca alcança a ponta
+ * das paredes laterais), mas é o ponto em que enquadrar o conjunto inteiro deixa
+ * de caber dentro do cômodo, e aí a saída é outra: enquadrar UMA estante por vez
+ * e navegar entre elas, como já se faz com os nichos. Mesma classe de aviso da
+ * colisão do Gorillaz em lib/parede-do-fundo.test.mjs — o acervo levaria uns
+ * cinco anos para chegar lá.
  */
-function viewpointDaEstante(cobertoEmbaixoPx: number): ViewpointConfig {
-    const {distancia, alvoDeslocadoM} = enquadrar(BOOKSHELF_SIZE_M.alturaM, cobertoEmbaixoPx);
+function viewpointDaEstante(cobertoEmbaixoPx: number, totalGrupos: number): ViewpointConfig {
+    const totalEstantes = contarEstantes(totalGrupos, NICHOS_POR_ESTANTE);
+    const {distancia, alvoDeslocadoM} = enquadrar(
+        BOOKSHELF_SIZE_M.alturaM, cobertoEmbaixoPx, larguraDoConjunto(totalEstantes),
+    );
     const alvoY = estanteCentroY + alvoDeslocadoM;
     return {
         camera: [0, alvoY, estanteZ + distancia],
@@ -380,7 +451,7 @@ export default function CameraRig({
     if (viewpoint === 'estante') {
         v = grupoFocado !== null
             ? viewpointDoGrupo(grupoFocado, totalGrupos, cobertoEmbaixoPx)
-            : viewpointDaEstante(cobertoEmbaixoPx);
+            : viewpointDaEstante(cobertoEmbaixoPx, totalGrupos);
     } else if (viewpoint === 'pc' && focoDoPC !== null && VIEWPOINTS_DO_PC[focoDoPC]) {
         // Sem `subirParaFaixaLivre`: essas paradas já miram o CENTRO de um
         // objeto pequeno com folga em volta, e empurrar o alvo para cima

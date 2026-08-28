@@ -135,7 +135,16 @@ ano, ou dois anos vizinhos quando os dois cabem juntos.
   sobre o que o nicho guarda; quem resolve espaço é a segunda estante.
 - **Cresce para o lado:** quando os grupos não cabem nos 5 nichos, uma segunda
   cópia do móvel aparece ao lado. É uma condição avaliada a cada render, não uma
-  tarefa agendada.
+  tarefa agendada. **Ela enche a primeira antes de começar a segunda** (5+1, não
+  3+3): é como uma pessoa de verdade enche estante, e o preço é a segunda nascer
+  quase vazia e assim ficar por uns dois anos.
+- **A segunda estante está a UM livro de acontecer** (medido em 27/08/2026): com
+  51 lidos, o nicho de 2025-26 está a 97% da capacidade — 0,576m de 0,5952m. A
+  folga que sobra é 1,9cm e a lombada mais fina possível ocupa 3,3cm, então
+  qualquer livro seguinte separa os dois anos e leva o acervo a 6 grupos. Não há
+  reempacotamento que evite isso: 2024+2025 dariam 0,713m, que também não cabe.
+  A sala foi preparada para essa virada em vez de esperar ela quebrar — ver
+  "A parede do fundo" e "Navegação" abaixo.
 - **Livro lido sem data** entra no nicho mais recente e a etiqueta ganha
   `+ s/ data`. Sumir seria o pior desfecho para um acervo pessoal.
 
@@ -162,8 +171,11 @@ Isso já foi dois eixos cruzados (laterais trocavam cena, verticais andavam nos
 anos) e o efeito era ficar preso: chegando na estante, rolar só circulava entre
 os nichos. O mesmo gesto significava coisas diferentes conforme onde se estava.
 
-**O trilho desce a estante: entra pelo ano mais RECENTE, no topo, e termina no
-mais antigo, na base.** É o único lugar em que a ordem do trilho não é a do
+**O trilho desce a estante: entra pelo ano mais RECENTE e termina no mais
+antigo.** Com uma estante só isso é literalmente descer, do nicho de cima para o
+de baixo. Com duas, o mais recente passa a ser o nicho de BAIXO da segunda — a
+promessa que o trilho cumpre é "começa pelo que foi lido por último", não "começa
+pelo alto". É o único lugar em que a ordem do trilho não é a do
 mundo, e a razão é que o trilho apresenta — quem chega quer ver primeiro o que
 foi lido por último, como uma linha do tempo que abre no post mais novo. A
 estante em si continua montada de baixo para cima (a cronologia sobe, ver
@@ -178,6 +190,29 @@ dentro de outro: fechá-lo devolve a gaveta aberta, e só o `Esc` seguinte fecha
 gaveta. A carteira é o oposto — camada única, e o `Esc` devolve a sala
 exatamente onde estava, porque a câmera nunca saiu do lugar para abri-la (ver
 "A carteira de caçador").
+
+### A cena "Livros" enquadra pela largura, e é a única
+
+Todo enquadramento da sala sai da ALTURA do que está em quadro, dividida pela
+faixa de tela que rodapé e header não cobrem (`enquadrar`, em `CameraRig.tsx`).
+Isso funciona enquanto o alvo é mais alto que largo, que é o caso de todo móvel
+daqui — **até a estante do acervo ganhar uma cópia ao lado**: 0,84m de largura
+viram 1,73m contra 1,92m de altura, e num celular em retrato a conta da altura
+deixa ~1,27m visíveis na horizontal, cortando 27% do conjunto.
+
+Então esta cena — e só ela — também mede a largura, e recua pelo eixo mais
+apertado. Medido: com **uma** estante a largura nunca manda em tela nenhuma, ou
+seja, nada mudou onde já funcionava; com **duas**, só os retratos recuam (celular
+de 2,9m para ~4,4m, desktop parado). A largura do conjunto sai das posições que
+`EstanteDoAcervo` publica, não de uma conta com a folga entre móveis, que é
+privada daquele arquivo congelado.
+
+**Limite conhecido, com três estantes:** num celular a distância chega a 6,6m e
+põe a câmera em z ≈ 5,1, fora do piso de 6x6 da sala. Nada aparece quebrado — o
+frustum é estreito perto da câmera e nunca alcança a ponta das paredes laterais —
+mas é o ponto em que enquadrar o conjunto inteiro deixa de caber no cômodo, e a
+saída passa a ser enquadrar UMA estante por vez, navegando entre elas como já se
+faz com os nichos.
 
 **A câmera nunca se move ao abrir um livro.** Existiu um ponto de vista que
 recuava até o centro da sala, e o zoom dava um solavanco no mesmo instante em
@@ -755,10 +790,39 @@ Dois motivos, e o segundo só apareceu depois de montado:
    1,71. As duas faixas se cruzam: 1,45m de abajur plantado no meio do quadro.
    Nenhuma conta de parede pega isso, porque a luminária não está NA parede.
 
-Na lateral esquerda o vão é de 1,15m, entre a estante amarela (que vai até
-z ≈ −0,35) e a quina do fundo, com ~34cm de folga de cada lado. **É a única
-faixa de parede da sala que nenhum móvel disputa**, e por isso o pôster de lá
-não passa por `parede-do-fundo.mjs`: não há o que colidir.
+Na lateral esquerda o vão é de 1,25m, entre a estante amarela (que vai até
+z ≈ −0,35) e a quina do fundo. **É a única faixa de parede da sala que nenhum
+móvel disputa**, e por isso o que mora lá não passa por `parede-do-fundo.mjs`:
+não há o que colidir.
+
+### O quadro de recados tomou o mesmo caminho, dois anos depois
+
+Em 27/08/2026 o quadro branco de canetão saiu da parede do fundo pelo motivo 1
+acima, agora consumado: a segunda estante do acervo avança até x = 0,87 e ele
+estava em x = 0,68, ou seja, 40 dos seus 44cm dentro da madeira. **Não havia
+para onde escorregar na horizontal** — entre a borda da segunda estante e a
+prateleira aérea do canto de trabalho sobram 8,5cm.
+
+Ele foi para a mesma faixa livre da lateral esquerda, e ali os dois **se
+empilham** em vez de dividirem a faixa lado a lado. Lado a lado caberia (0,56 +
+0,44 = 1,00m em 1,25m), mas deixaria ~8cm de folga em todos os lados e a faixa
+deixaria de respirar; na vertical sobra parede de sobra, com 3m de pé-direito.
+
+**Quem ficou embaixo foi o QUADRO, na altura de 1,36 que ele já tinha na parede
+do fundo, e quem subiu foi o pôster, para 1,885.** Dos dois, o quadro é o que se
+lê e se clica; o pôster só se olha. Pôr o objeto interativo a mais de dois metros
+de altura para preservar a posição do decorativo seria trocar a coisa certa pela
+mais fácil.
+
+**Ele deixou de ser parada de câmera na mudança.** Na parede do fundo abria
+`FOCOS_DO_PC` com um close próprio; agora é décor clicável como os dois pôsteres
+— aparece nas cenas "Sala" e "Mesinha", tem etiqueta no hover, e o clique leva
+direto ao WhatsApp. O canto do PC passou de cinco paradas para quatro, e as que
+sobraram são exatamente os objetos da MESA, o que é mais coerente do que um canto
+de trabalho cuja primeira parada ficava do outro lado da parede. Efeito colateral
+de navegação, registrado em `livros-cenas.test.mjs`: a gaveta virou a primeira da
+lista, então descer dela agora devolve o plano aberto do canto em vez de uma
+sub-parada.
 
 ### A parede do fundo tem um ocupante que cresce sozinho
 
@@ -767,25 +831,28 @@ que nada se sobrepõe; `Room.tsx` lê as medidas de lá, e o teste monta a lista
 ocupantes. **Um quadro enterrado em madeira não estoura exceção nem quebra
 build — só some**, exatamente como o facho da lanterna apontado para a quina.
 
-O teste registra três estados, e os dois últimos como asserção e não como falha
-(uma suíte vermelha por um estado futuro é ruído, não aviso):
+O teste registra três estados, e o último como asserção e não como falha (uma
+suíte vermelha por um estado futuro é ruído, não aviso):
 
 | estantes | o que acontece |
 |---|---|
 | 1 *(hoje)* | parede livre |
-| 2 | **o quadro de recados é engolido pela segunda estante** — 40cm dos 44 |
-| 3 | o Gorillaz também entra na primeira, por 11cm |
+| 2 *(a próxima)* | parede livre — desde que o quadro de recados saiu daqui |
+| 3 | o Gorillaz é engolido pela primeira estante, por 11cm |
 
-**O caso de duas estantes é um problema real e pendente, anterior a qualquer
-pôster:** o quadro de recados está em x = 0,68 desde que existe, e a segunda
-estante avança até 0,87. É o próximo passo do crescimento do acervo, não um
-cenário remoto. Quando chegar, o quadro de recados precisa subir ou mudar de
-faixa — a mesma saída que o pôster de Hunter x Hunter já tomou.
+**A linha de duas estantes já registrou o oposto.** Enquanto o quadro de recados
+morava em x = 0,68, a segunda estante comia 40 dos seus 44cm, e isso estava
+escrito aqui como problema pendente. Ele deixou de ser pendente em 27/08/2026,
+quando o acervo fechou 2025-26 a 97% do nicho e a segunda estante virou o próximo
+livro cadastrado — o quadro mudou de parede antes de o defeito aparecer na tela.
 
 A `FOLGA_MINIMA_M` de 3cm foi **medida, não escolhida**: o par mais apertado que
-a sala tem hoje e funciona é o quadro de recados contra a estante, a 4,2cm. Um
-limiar de 5cm reprovaria a sala como ela está. Um teste próprio guarda esse
-número, para ele não virar falso positivo em silêncio.
+a sala já teve e funcionava era o quadro de recados contra a estante, a 4,2cm, e
+um limiar de 5cm teria reprovado a sala como ela estava. Esse par não existe
+mais — o vizinho mais próximo que sobra é o Gorillaz contra a estante, a 33,5cm
+com duas —, então o número continua valendo mas já não tem uma medida real da
+sala segurando ele. Um teste próprio guarda isso, para não virar falso positivo
+em silêncio.
 
 O único valor duplicado em tudo isso é o `ESTANTE_GAP_M` dentro do teste. Ele
 mora em `EstanteDoAcervo.tsx`, que é território congelado e um `.tsx` que

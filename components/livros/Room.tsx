@@ -58,41 +58,62 @@ function abrirExterno(url: string, rotulo: string, coisa: string) {
     window.open(url, '_blank', 'noopener,noreferrer');
 }
 
-/** Centro do quadro de recados, na parede do fundo. Constante, e não escrito
- *  duas vezes, porque o CameraRig tem uma parada mirando nele. */
-const QUADRO_RECOMENDACOES: [number, number, number] = [
-    QUADROS_DO_FUNDO.recomendacoes.x, QUADROS_DO_FUNDO.recomendacoes.y, QUADRO_Z,
-];
-
 /**
- * Centro do pôster de Hunter x Hunter, na parede lateral ESQUERDA.
- *
- * **O z é o meio da faixa que sobra**, e não uma coordenada bonita: de um lado a
- * estante amarela, que ocupa até z ≈ -0,33; do outro a quina com a parede do
- * fundo, em -1,6. Centrado em -0,98, o pôster de 56cm fica com ~29cm de folga
- * para a quina e ~37cm para o móvel — por isso mexer na estante amarela obriga a
- * revisar este número, como já vale para a janela e o stand de espadas.
- *
- * O y de 1,5 põe a base dele em 1,29m, bem acima da planta de 94cm que fica
- * embaixo, e o topo em 1,71m, longe dos 3m de pé-direito.
- *
- * **Não passa por `lib/parede-do-fundo.mjs`**, e isso é a diferença que fez ele
- * mudar de parede: aquele arquivo existe porque a estante do acervo cresce e
- * come a parede do fundo. Esta faixa aqui não tem móvel nenhum disputando, então
- * não há colisão futura para prever.
+ * A faixa de parede lateral ESQUERDA entre a estante amarela (que ocupa até
+ * z ≈ -0,33) e a quina com a parede do fundo (z = -1,6). **É a única faixa de
+ * parede da sala que nenhum móvel disputa**, e por isso nada aqui passa por
+ * `lib/parede-do-fundo.mjs`: aquele arquivo existe porque a estante do acervo
+ * cresce e come a parede do fundo, e aqui não há o que colidir. Mexer na
+ * estante amarela obriga a revisar este z, como já vale para a janela e o stand
+ * de espadas.
  */
-const POSTER_HUNTER: [number, number, number] = [-PAREDE_LATERAL_X, 1.5, -0.98];
+const FAIXA_LIVRE_Z = -0.98;
 
 /**
- * Os quatro objetos COM AÇÃO do canto de trabalho, na ordem em que o trilho os
- * varre (ver FOCOS_DO_PC em lib/livros-cenas.mjs). O CameraRig monta uma parada
- * para cada um a partir daqui — Room continua sendo o mapa da sala, e nenhuma
+ * Centro do quadro de recados — o quadro branco de canetão que abre o WhatsApp.
+ *
+ * **Ele estava na parede do FUNDO, em x = 0,68, e mudou de parede em
+ * 27/08/2026.** O motivo é o mesmo que já tinha expulsado dali o pôster de
+ * Hunter x Hunter: quem fecha aquela parede é a estante do acervo, que ganha uma
+ * cópia a cada cinco grupos de ano com o conjunto sempre centrado. Com o acervo
+ * fechando 2025-26 a 97% do nicho, a segunda estante deixou de ser cenário
+ * remoto — ela avança até x = 0,87, por cima de 40 dos 44cm do quadro, e entre a
+ * borda dela e a prateleira aérea sobram 8,5cm. Não havia para onde escorregar
+ * na horizontal.
+ *
+ * **O y de 1,36 é o mesmo que ele tinha na parede do fundo**, e isso é a escolha
+ * central deste arranjo: dos dois que dividem a faixa, ele é o que se lê e se
+ * clica, então é ele que fica na altura de quem está de pé. Quem subiu foi o
+ * pôster — ver `POSTER_HUNTER`.
+ */
+const QUADRO_RECOMENDACOES: [number, number, number] = [-PAREDE_LATERAL_X, 1.36, FAIXA_LIVRE_Z];
+const QUADRO_RECOMENDACOES_TAMANHO = {larguraM: 0.44, alturaM: 0.43};
+
+/**
+ * Centro do pôster de Hunter x Hunter, logo ACIMA do quadro de recados, na mesma
+ * vertical.
+ *
+ * Empilhados, e não lado a lado: a faixa livre tem 1,25m e as duas peças somam
+ * 1,00m, o que caberia — mas deixaria ~8cm de folga em todos os lados, e a faixa
+ * deixaria de respirar. Na vertical sobra parede de sobra (o pé-direito é 3m).
+ *
+ * O y de 1,885 põe a base do pôster em 1,675m, 10cm acima do topo do quadro, e o
+ * topo em 2,095m. Antes ele estava em 1,5, que é onde o quadro está agora.
+ */
+const POSTER_HUNTER: [number, number, number] = [-PAREDE_LATERAL_X, 1.885, FAIXA_LIVRE_Z];
+
+/**
+ * Os objetos COM AÇÃO do canto de trabalho, na ordem em que o trilho os varre
+ * (ver FOCOS_DO_PC em lib/livros-cenas.mjs). O CameraRig monta uma parada para
+ * cada um a partir daqui — Room continua sendo o mapa da sala, e nenhuma
  * coordenada precisa ser copiada para dentro da câmera.
+ *
+ * **São só os objetos da MESA, e já foram cinco.** O quadro de recados abria a
+ * lista enquanto morava na parede do fundo, a 27cm da quina do canto; com ele na
+ * parede lateral esquerda não há mais o que o ligue a este canto, e ele virou
+ * décor clicável como os dois pôsteres — ver `QUADRO_RECOMENDACOES`.
  */
-export const ANCORAS_DO_PC = {
-    recomendacoes: QUADRO_RECOMENDACOES,
-    ...ancorasDoCantoDeTrabalho(QUINA_DO_PC),
-};
+export const ANCORAS_DO_PC = ancorasDoCantoDeTrabalho(QUINA_DO_PC);
 
 /**
  * O interruptor: parede lateral direita, na vertical do stand de espadas e bem
@@ -483,14 +504,15 @@ export default function Room({
 
               **Ele saiu da parede do fundo de propósito.** Lá ele dividia com o
               Gorillaz um vão de 78cm que a estante do acervo fecha sozinha
-              quando o acervo cresce; aqui o vão é de 1,15m e não depende de
+              quando o acervo cresce; aqui o vão é de 1,25m e não depende de
               quantos livros existem. É a única faixa de parede da sala que
               nenhum móvel disputa, e por isso não precisa de teste de colisão:
               não há o que colidir.
 
-              Ele fica acima da planta (0,94m de altura) e abaixo do topo da
-              parede, no campo das cenas "Sala" e "Mesa" — que são as duas que
-              olham para este lado do cômodo.
+              **Ele agora é o de CIMA de dois** — o quadro de recados chegou nesta
+              mesma faixa em 27/08/2026, fugindo da segunda estante, e ficou com a
+              altura de leitura. O pôster subiu porque dos dois é o que só se
+              olha; ver `QUADRO_RECOMENDACOES`.
             */}
             <Quadro
                 position={POSTER_HUNTER}
@@ -505,12 +527,19 @@ export default function Room({
             />
 
             {/*
-              Quadro branco de canetão, na faixa de parede entre a estante do
-              acervo (que termina em x=0.42) e a prateleira aérea (que começa em
-              x=0.95, com a mão-francesa descendo em 1.07). É um vão estreito, de
-              53cm, e o quadro tem 44 — daí ele estar centrado nele em vez de
-              numa coordenada redonda. Mais para a direita e o topo dele, que
-              fica a 1,58m, passa por baixo da prateleira e cruza com o suporte.
+              Quadro branco de canetão, logo abaixo do pôster, na mesma vertical.
+
+              **Ele passou a maior parte da vida na parede do fundo**, num vão de
+              53cm entre a estante do acervo e a prateleira aérea. Aquele vão não
+              existe mais: a segunda estante do acervo avança até x=0,87 e cobriria
+              40 dos 44cm dele. Ver `QUADRO_RECOMENDACOES` para a conta inteira.
+
+              **Deixou de ser parada de câmera na mudança.** Na parede do fundo ele
+              abria FOCOS_DO_PC, com um close próprio; aqui ele é décor clicável
+              como os dois pôsteres — se vê nas cenas "Sala" e "Mesinha", tem
+              etiqueta no hover, e o clique leva direto para fora. Um canto do PC
+              cujas paradas são só os objetos da mesa também é mais coerente do que
+              um que começava num quadro do outro lado da parede.
 
               A textura é a foto RECORTADA: a original inclui a moldura de
               alumínio e a parede da sala de verdade, e usá-la inteira seria pôr
@@ -526,9 +555,10 @@ export default function Room({
             <Quadro
                 position={QUADRO_RECOMENDACOES}
                 imagem="/livros/quadro-recomendacoes.jpg"
-                larguraM={QUADROS_DO_FUNDO.recomendacoes.larguraM}
-                alturaM={QUADROS_DO_FUNDO.recomendacoes.alturaM}
-                rotationY={QUADROS_DO_FUNDO.recomendacoes.rotationY}
+                larguraM={QUADRO_RECOMENDACOES_TAMANHO.larguraM}
+                alturaM={QUADRO_RECOMENDACOES_TAMANHO.alturaM}
+                parede={1}
+                rotationY={-0.03}
                 corMoldura="#b9c2cc"
                 comBandeja
                 onClick={() => {
