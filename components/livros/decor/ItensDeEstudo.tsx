@@ -29,7 +29,7 @@ const ROT_BIBLIA = -1.35;
  * banco como qualquer outro livro do acervo. Se o slug mudar lá, muda aqui —
  * não há chave estrangeira que proteja isso, é uma string acordada.
  */
-const SLUG_DA_BIBLIA = 'biblia-sagrada-nvi';
+const SLUG_DA_BIBLIA = 'biblia-king-james-1611-de-estudo-holman';
 
 const COR_PAGINAS = '#e8e0cd';
 const COR_CAPA = '#5a1f22';
