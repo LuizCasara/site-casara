@@ -21,6 +21,10 @@ const INTENSIDADE_ABAJUR = 7;
 const CUPULA_ACESA = '#ffe0b0';
 const CUPULA_APAGADA = '#6b6157';
 
+/** Só a cúpula (`lamp`); o pé (`metal`) projeta sempre. Vale apenas enquanto o
+ *  abajur é a fonte de sombra — ver o uso, mais abaixo. */
+const SEM_SOMBRA_ABAJUR = ['lamp'];
+
 // Medidas de móvel de verdade, em metros.
 /** Exportada porque `lib/poltrona-model.mjs` converte as medidas do `.glb` a
  *  partir dela: sem a altura pedida, os números do braço não viram metros. */
@@ -42,10 +46,13 @@ const CUPULA_Y = ALTURA_ABAJUR - 0.12;
  * RoomCanvas, como em todo controle da sala — aqui só chegam `aceso` e o que
  * fazer no clique.
  */
-export default function Poltrona({position, rotationY = 0, abajurAceso = true, onAlternarAbajur, isMobile = false}: {
+export default function Poltrona({position, rotationY = 0, abajurAceso = true, projetaSombra = false, onAlternarAbajur, isMobile = false}: {
     position: [number, number, number];
     rotationY?: number;
     abajurAceso?: boolean;
+    /** Se o abajur é a fonte de sombra da sala neste momento. Quem decide é
+     *  Room.tsx, que enxerga o interruptor do teto — daqui não dá para saber. */
+    projetaSombra?: boolean;
     /** Ausente = o abajur vira cenário: sem etiqueta e sem clique. Mesmo
      *  contrato do `onOpen` da lava lamp com um livro aberto. */
     onAlternarAbajur?: () => void;
@@ -85,10 +92,19 @@ export default function Poltrona({position, rotationY = 0, abajurAceso = true, o
                     onAlternarAbajur?.();
                 }}
             >
+                {/*
+                  A cúpula só deixa de projetar quando a fonte é a luz DAQUI:
+                  sendo lowpoly e com a lâmpada dentro, cada aresta do cone se
+                  desenhava em leque na parede. Sob a luz do teto ela projeta
+                  normalmente — é o volume maior da peça, e sem ela a luminária
+                  lançava só a haste. Dá para decidir por estado porque as duas
+                  fontes se revezam e nunca projetam juntas (ver Room.tsx).
+                */}
                 <KenneyModel
                     url={MODELOS.abajur}
                     alturaAlvo={ALTURA_ABAJUR}
                     cores={{metal: '#2b2320', lamp: abajurAceso ? CUPULA_ACESA : CUPULA_APAGADA}}
+                    semSombra={projetaSombra ? SEM_SOMBRA_ABAJUR : undefined}
                 />
                 {/*
                   A luz é nossa, não do modelo: um GLB carrega geometria e
@@ -100,6 +116,14 @@ export default function Poltrona({position, rotationY = 0, abajurAceso = true, o
                   o alvo, pelo mesmo motivo da luz do teto — corte seco parece
                   bug de renderização, não interruptor.
                 */}
+                {/*
+                  A sombra do modo escuro. Luz baixa e lateral projeta sombra
+                  longa na parede, ao contrário da do teto, que cai curta sob os
+                  móveis — é o que dá clima quando o teto apaga.
+
+                  `far` casado com o `distance` da lâmpada: o mapa não precisa
+                  cobrir mais do que a luz alcança.
+                */}
                 <pointLight
                     ref={luz}
                     position={[0, CUPULA_Y, 0]}
@@ -107,6 +131,12 @@ export default function Poltrona({position, rotationY = 0, abajurAceso = true, o
                     intensity={INTENSIDADE_ABAJUR}
                     distance={3.2}
                     decay={2}
+                    castShadow={projetaSombra}
+                    shadow-mapSize-width={1024}
+                    shadow-mapSize-height={1024}
+                    shadow-normalBias={0.02}
+                    shadow-camera-near={0.1}
+                    shadow-camera-far={3.2}
                 />
 
                 {/* Alvo de clique na CÚPULA, não no pé: é a cúpula que se

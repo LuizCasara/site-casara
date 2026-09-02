@@ -17,12 +17,25 @@ iluminação assada, no espírito do [My Room in 3D](https://my-room-in-3d.verce
 O contrato de `Room.tsx` (cenário burro, publica âncoras) existe justamente para
 permitir isso sem reescrever Bookshelf, DeskBooks e CameraRig. Exige Blender.
 
-### Sombras de verdade nas paredes
+**Meio-caminho, se um dia valer:** assar só um `aoMap` da casca (paredes, chão,
+teto) em vez da luz inteira. AO é multiplicativo e não carrega cor de luz, então
+escurece os cantos **sem** congelar o interruptor nem a janela por hora do dia —
+que é o que o baked completo custaria. Foi avaliado em 17/08/2026 e adiado: com
+a sombra projetada funcionando, o que sobra para ele é pouco.
 
-Hoje a sala não tem sombra projetada, e é por isso que todo objeto de parede
-precisa de volume próprio atrás. Com sombra, dava para pendurar coisas finas —
-mochila, lenços, bastão de trilha, que já foram tentados e removidos por
-parecerem flutuando.
+### Coisas finas na parede
+
+Feito em 18/08/2026: a sala projeta sombra (ver "Sombra projetada" em
+[livros-sala-3d.md](livros-sala-3d.md)). O que sobrou desta ideia é a
+consequência dela — mochila, lenços e bastão de trilha foram tentados e
+removidos por parecerem flutuando, e agora talvez se sustentem. Não foi testado.
+
+### Sombra nos livros
+
+Ficaram de fora da rodada de sombra: são meshes próprios em `Book.tsx`, e
+escurecer lombada mexe com a legibilidade que é o assunto da página. Duas
+opções, separáveis: só receber (escurece dentro do nicho) ou também projetar
+(cada livro sombreia o vizinho — mais bonito, mais caro).
 
 ### Objetos que ainda não têm lugar
 
@@ -84,6 +97,20 @@ próprio CLI (`resolverProgresso` em `scripts/livros.mjs`) — 100 para `lido`,
 perguntado só para `lendo`, nulo nos outros dois. Os 48 livros que já estavam
 lidos foram acertados de uma vez na mesma data.
 
+`finished_at` entrou no CLI em 23/08/2026 (`resolverDataDeLeitura`, mesma forma
+do progresso: perguntado só para `lido`, nulo nos outros três). Até então o
+campo que decide **em que prateleira o livro aparece na sala 3D**
+(`lib/shelf-years.mjs` agrupa por ano) era o único que só dava para escrever
+com SQL cru contra produção — exatamente o que este script existe para evitar.
+Aceita `AAAA-MM-DD` e `AAAA-MM`; a forma curta cai no dia 15, igual ao que o
+`distribuirMeses` gravou na importação em lote.
+
+**O `edit` não consegue APAGAR um campo** — `perguntar()` devolve
+`resposta || padrao`, então responder vazio significa "mantém", nunca "limpa".
+Um valor errado já gravado (o ano 2026 do livro 21, por exemplo) só sai com o
+valor certo por cima, ou com SQL. Não é defeito a consertar de qualquer jeito:
+Enter-mantém é o que torna seguro passar por 14 perguntas para mudar uma.
+
 **Pendência transversal, decidir no fim do mutirão**: a tag `ficção` nasceu
 durante ele e está em 3 dos 12 livros da categoria Ficção. Enquanto estiver
 assim, filtrar por ela devolve um subconjunto arbitrário — pior que não existir.
@@ -108,45 +135,45 @@ colorido no card e na página.
 | 14  | `as-4-disciplinas-da-execucao`                             | As 4 Disciplinas da Execução — Chris McChesney                         | —                                       | ✅  |
 | 15  | `as-48-leis-do-poder`                                      | As 48 Leis do Poder — Robert Greene                                    | —                                       | ✅  |
 | 16  | `as-cavernas-de-aco`                                       | As Cavernas de Aço — Isaac Asimov                                      | —                                       | ✅  |
-| 17  | `bora-vender`                                              | Bora Vender — Alfredo Soares                                           | ISBN-13, ano, editora, resenha          | ⬜  |
-| 18  | `biblia-sagrada-nvi`                                       | Bíblia Sagrada NVI                                                     | ISBN-13, ano, resenha                   | ⬜  |
-| 19  | `cada-homem-um-guerreiro`                                  | Cada Homem um Guerreiro — Lonnie Berger                                | ISBN-13, ano, editora, págs, resenha    | ⬜  |
-| 20  | `chaves-biblicas-para-o-homem-de-deus`                     | Chaves Bíblicas para o Homem de Deus — Sandro Antônio dos Santos       | ISBN-13, ano, editora, sinopse, resenha | ⬜  |
-| 21  | `como-fazer-amigos-e-influenciar-pessoas`                  | Como Fazer Amigos e Influenciar Pessoas — Dale Carnegie                | ISBN-13, editora, resenha               | ⬜  |
-| 22  | `decifre-e-influencie-pessoas`                             | Decifre e Influencie Pessoas — Paulo Vieira                            | ISBN-13, ano, editora, sinopse, resenha | ⬜  |
-| 23  | `disciplina-e-liberdade`                                   | Disciplina é Liberdade — Jocko Willink                                 | ISBN-13, ano, editora, resenha          | ⬜  |
-| 24  | `diario-estoico`                                           | Diário Estoico — Ryan Holiday                                          | resenha                                 | ⬜  |
-| 25  | `do-mil-ao-milhao`                                         | Do Mil ao Milhão — Thiago Nigro                                        | ISBN-13, editora, resenha               | ⬜  |
-| 26  | `em-busca-de-sentido`                                      | Em Busca de Sentido — Viktor E. Frankl                                 | ISBN-13, editora, resenha               | ⬜  |
-| 27  | `em-nome-do-povo`                                          | Em Nome do Povo — Bruno Perini                                         | ISBN-13, ano, editora, sinopse, resenha | ⬜  |
-| 28  | `escotismo-para-rapazes`                                   | Escotismo para Rapazes — Robert Baden-Powell                           | ISBN-13, ano, editora, resenha          | ⬜  |
-| 29  | `factfulness`                                              | Factfulness — Hans Rosling                                             | ISBN-13, editora, resenha               | ⬜  |
-| 30  | `forward`                                                  | Forward — Blake Crouch                                                 | ISBN-13, editora, resenha               | ⬜  |
-| 31  | `geracao-de-valor-1`                                       | Geração de Valor 1 — Flávio Augusto da Silva                           | ISBN-13, ano, editora, sinopse, resenha | ⬜  |
-| 32  | `geracao-de-valor-2`                                       | Geração de Valor 2 — Flávio Augusto da Silva                           | ISBN-13, ano, editora, sinopse, resenha | ⬜  |
-| 33  | `geracao-de-valor-3`                                       | Geração de Valor 3 — Flávio Augusto da Silva                           | ISBN-13, editora, sinopse, resenha      | ⬜  |
-| 34  | `leruth`                                                   | Leruth — Magno D'Azevedo                                               | ISBN-13, ano, editora, sinopse, resenha | ⬜  |
-| 35  | `mais-esperto-que-o-diabo`                                 | Mais Esperto que o Diabo — Napoleon Hill                               | ISBN-13, ano, editora, resenha          | ⬜  |
-| 36  | `o-almanaque-de-naval-ravikant`                            | O Almanaque de Naval Ravikant — Eric Jorgenson                         | ISBN-13, ano, editora, resenha          | ⬜  |
-| 37  | `o-codificador-limpo`                                      | O Codificador Limpo — Robert C. Martin                                 | ISBN-13, ano, editora, resenha          | ⬜  |
-| 38  | `o-hobbit`                                                 | O Hobbit — J.R.R. Tolkien                                              | ISBN-13, ano, editora, resenha          | ⬜  |
-| 39  | `o-homem-mais-rico-da-babilonia`                           | O Homem Mais Rico da Babilônia — George S. Clason                      | ISBN-13, editora, resenha               | ⬜  |
-| 40  | `o-homem-que-comprou-o-tempo`                              | O Homem que Comprou o Tempo — Thiago Nigro                             | ISBN-13, ano, editora, sinopse, resenha | ⬜  |
-| 41  | `o-jogo-interior-do-tenis`                                 | O Jogo Interior do Tênis — W. Timothy Gallwey                          | ISBN-13, ano, editora, resenha          | ⬜  |
-| 42  | `o-menino-que-descobriu-o-vento`                           | O Menino que Descobriu o Vento — William Kamkwamba                     | ISBN-13, ano, editora, resenha          | ⬜  |
-| 43  | `o-monge-e-o-executivo`                                    | O Monge e o Executivo — James C. Hunter                                | ISBN-13, ano, editora, resenha          | ⬜  |
-| 44  | `o-mitico-homem-mes`                                       | O Mítico Homem-Mês — Frederick P. Brooks Jr.                           | ISBN-13, ano, editora, resenha          | ⬜  |
-| 45  | `o-pequeno-principe`                                       | O Pequeno Príncipe — Antoine de Saint-Exupéry                          | ISBN-13, ano, editora, resenha          | ⬜  |
-| 46  | `o-pior-ano-da-minha-vida`                                 | O Pior Ano da Minha Vida — Pablo Marçal                                | ISBN-13, ano, editora, sinopse, resenha | ⬜  |
-| 47  | `o-segredo-de-todas-as-coisas`                             | O Segredo de Todas as Coisas — Anderson Luiz                           | ISBN-13, ano, editora, sinopse, resenha | ⬜  |
-| 48  | `pai-rico-pai-pobre`                                       | Pai Rico, Pai Pobre — Robert T. Kiyosaki                               | ISBN-13, ano, editora, resenha          | ⬜  |
-| 49  | `ponto-de-inflexao`                                        | Ponto de Inflexão — Flávio Augusto da Silva                            | ISBN-13, ano, editora, sinopse, resenha | ⬜  |
-| 50  | `por-que-fazemos-o-que-fazemos`                            | Por que Fazemos o que Fazemos? — Mario Sergio Cortella                 | ISBN-13, editora, resenha               | ⬜  |
-| 51  | `por-que-generalistas-vencem-em-um-mundo-de-especialistas` | Por que Generalistas Vencem… — David Epstein                           | ISBN-13, ano, editora, resenha          | ⬜  |
-| 52  | `quem-pensa-enriquece`                                     | Quem Pensa Enriquece — Napoleon Hill                                   | ISBN-13, ano, editora, resenha          | ⬜  |
-| 53  | `rapido-e-devagar`                                         | Rápido e Devagar — Daniel Kahneman                                     | ISBN-13, editora, resenha               | ⬜  |
-| 54  | `sapiens-uma-breve-historia-da-humanidade`                 | Sapiens — Yuval Noah Harari                                            | ISBN-13, ano, editora, págs, resenha    | ⬜  |
-| 55  | `sou-puta-doutor`                                          | Sou Puta, Doutor! — Yuri Marques Peçanha                               | ISBN-13, ano, editora, sinopse, resenha | ⬜  |
+| 17  | `bora-vender`                                              | Bora Vender — Alfredo Soares                                           | —                                       | ✅  |
+| 18  | `biblia-king-james-1611-de-estudo-holman`                  | Bíblia King James 1611 de Estudo Holman                                | —                                       | ✅  |
+| 19  | `cada-homem-um-guerreiro`                                  | Cada Homem um Guerreiro — Lonnie Berger                                | ano, editora, págs, resenha             | ⬜  |
+| 20  | `chaves-biblicas-para-o-homem-de-deus`                     | Chaves Bíblicas para o Homem de Deus — Sandro Antônio dos Santos       | ano, editora                            | ⬜  |
+| 21  | `como-fazer-amigos-e-influenciar-pessoas`                  | Como Fazer Amigos e Influenciar Pessoas — Dale Carnegie                | ano, editora                            | ⬜  |
+| 22  | `decifre-e-influencie-pessoas`                             | Decifre e Influencie Pessoas — Paulo Vieira                            | ano                                     | ⬜  |
+| 23  | `disciplina-e-liberdade`                                   | Disciplina é Liberdade — Jocko Willink                                 | —                                       | ✅  |
+| 24  | `diario-estoico`                                           | Diário Estoico — Ryan Holiday                                          | —                                       | ✅  |
+| 25  | `do-mil-ao-milhao`                                         | Do Mil ao Milhão — Thiago Nigro                                        | —                                       | ✅  |
+| 26  | `em-busca-de-sentido`                                      | Em Busca de Sentido — Viktor E. Frankl                                 | —                                       | ✅  |
+| 27  | `em-nome-do-povo`                                          | Em Nome do Povo — Bruno Perini                                         | ano, editora                            | ⬜  |
+| 28  | `escotismo-para-rapazes`                                   | Escotismo para Rapazes — Robert Baden-Powell                           | ISBN-13, ano, editora                   | ⬜  |
+| 29  | `factfulness`                                              | Factfulness — Hans Rosling                                             | ISBN-13, editora                        | ⬜  |
+| 30  | `forward`                                                  | Forward — Blake Crouch                                                 | ISBN-13, editora                        | ⬜  |
+| 31  | `geracao-de-valor-1`                                       | Geração de Valor 1 — Flávio Augusto da Silva                           | ano, editora                            | ⬜  |
+| 32  | `geracao-de-valor-2`                                       | Geração de Valor 2 — Flávio Augusto da Silva                           | ano, editora                            | ⬜  |
+| 33  | `geracao-de-valor-3`                                       | Geração de Valor 3 — Flávio Augusto da Silva                           | editora                                 | ⬜  |
+| 34  | `leruth`                                                   | Leruth — Magno D'Azevedo                                               | ano                                     | ⬜  |
+| 35  | `mais-esperto-que-o-diabo`                                 | Mais Esperto que o Diabo — Napoleon Hill                               | ISBN-13, ano, editora                   | ⬜  |
+| 36  | `o-almanaque-de-naval-ravikant`                            | O Almanaque de Naval Ravikant — Eric Jorgenson                         | ISBN-13, ano, editora                   | ⬜  |
+| 37  | `o-codificador-limpo`                                      | O Codificador Limpo — Robert C. Martin                                 | ISBN-13, ano, editora                   | ⬜  |
+| 38  | `o-hobbit`                                                 | O Hobbit — J.R.R. Tolkien                                              | ISBN-13, ano, editora                   | ⬜  |
+| 39  | `o-homem-mais-rico-da-babilonia`                           | O Homem Mais Rico da Babilônia — George S. Clason                      | ISBN-13, editora                        | ⬜  |
+| 40  | `o-homem-que-comprou-o-tempo`                              | O Homem que Comprou o Tempo — Thiago Nigro                             | ISBN-13, ano, editora                   | ⬜  |
+| 41  | `o-jogo-interior-do-tenis`                                 | O Jogo Interior do Tênis — W. Timothy Gallwey                          | ISBN-13, ano, editora                   | ⬜  |
+| 42  | `o-menino-que-descobriu-o-vento`                           | O Menino que Descobriu o Vento — William Kamkwamba                     | ISBN-13, ano, editora                   | ⬜  |
+| 43  | `o-monge-e-o-executivo`                                    | O Monge e o Executivo — James C. Hunter                                | ISBN-13, ano, editora                   | ⬜  |
+| 44  | `o-mitico-homem-mes`                                       | O Mítico Homem-Mês — Frederick P. Brooks Jr.                           | ISBN-13, ano, editora                   | ⬜  |
+| 45  | `o-pequeno-principe`                                       | O Pequeno Príncipe — Antoine de Saint-Exupéry                          | ISBN-13, ano, editora                   | ⬜  |
+| 46  | `o-pior-ano-da-minha-vida`                                 | O Pior Ano da Minha Vida — Pablo Marçal                                | ISBN-13, ano, editora                   | ⬜  |
+| 47  | `o-segredo-de-todas-as-coisas`                             | O Segredo de Todas as Coisas — Anderson Luiz                           | ISBN-13, ano, editora, tags             | ⬜  |
+| 48  | `pai-rico-pai-pobre`                                       | Pai Rico, Pai Pobre — Robert T. Kiyosaki                               | ISBN-13, ano, editora                   | ⬜  |
+| 49  | `ponto-de-inflexao`                                        | Ponto de Inflexão — Flávio Augusto da Silva                            | ISBN-13, ano, editora                   | ⬜  |
+| 50  | `por-que-fazemos-o-que-fazemos`                            | Por que Fazemos o que Fazemos? — Mario Sergio Cortella                 | ISBN-13, editora                        | ⬜  |
+| 51  | `por-que-generalistas-vencem-em-um-mundo-de-especialistas` | Por que Generalistas Vencem… — David Epstein                           | ISBN-13, ano, editora                   | ⬜  |
+| 52  | `quem-pensa-enriquece`                                     | Quem Pensa Enriquece — Napoleon Hill                                   | ISBN-13, ano, editora                   | ⬜  |
+| 53  | `rapido-e-devagar`                                         | Rápido e Devagar — Daniel Kahneman                                     | ISBN-13, editora                        | ⬜  |
+| 54  | `sapiens-uma-breve-historia-da-humanidade`                 | Sapiens — Yuval Noah Harari                                            | ISBN-13, ano, editora, págs             | ⬜  |
+| 55  | `sou-puta-doutor`                                          | Sou Puta, Doutor! — Yuri Marques Peçanha                               | ISBN-13, ano, editora, tags             | ⬜  |
 
 ### Data de leitura na UI
 

@@ -255,14 +255,14 @@ export default function Janela({position, aberta, onAlternar, isMobile = false}:
 
             {/*
               A luz do lado de fora. Fica logo DENTRO do vidro, apontada para o
-              chão da sala: um `spotLight` do outro lado da parede funcionaria
-              igual (nada aqui projeta sombra), mas deixaria o cone dependendo de
-              a parede continuar sem `castShadow` para sempre.
+              chão da sala — do outro lado da parede o cone dependeria de a
+              parede continuar sem `castShadow` para sempre.
 
-              Sem `castShadow` de propósito: a mancha no chão É o cone do
-              refletor, e um mapa de sombra a mais numa cena que já tem quatro
-              luzes gerais, o abajur e a lanterna se paga em quadros por segundo
-              sem mudar nada que se veja.
+              Sem `castShadow`, e foi decidido olhando: com a mobília já
+              projetando sombra, esta luz também sombreando foi testada e
+              descartada — ela some à noite e com a cortina fechada, então a
+              sala trocava de aparência sem que ninguém tivesse mexido em nada.
+              Quem sombreia é o teto, e o abajur quando o teto apaga.
             */}
             {/*
               O alvo é um objeto vazio na cena, e não uma coordenada: um

@@ -38,7 +38,11 @@ export default function DeskBooks({deskBooks, atlas, openSlug, animate, isMobile
             {deskBooks.map((book) => {
                 const slot = layout.find((l: {slug: string}) => l.slug === book.slug) as
                     {x: number; y: number; z: number; rotationY: number} | undefined;
-                if (!slot) return null; // acervo com mais de 3 'lendo' — ver layoutDeskBooks
+                // `layoutDeskBooks` dá lugar a TODO livro que recebe, então isto
+                // não deveria acontecer — é a mesma guarda do `if (!spine)` da
+                // estante. Já houve um teto de 3 aqui, e era por ele que um
+                // quarto 'lendo' sumia da sala em silêncio.
+                if (!slot) return null;
                 return (
                     <Book
                         key={book.slug}

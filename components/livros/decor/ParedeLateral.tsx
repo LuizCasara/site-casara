@@ -15,8 +15,10 @@ export const PAREDE_LATERAL_X = 2.6;
  */
 export default function ParedeLateral({lado}: {lado: 'esquerda' | 'direita'}) {
     const sinal = lado === 'esquerda' ? -1 : 1;
+    // Recebe sombra, nunca projeta — mesma razão da parede do fundo em Room.tsx.
     return (
-        <mesh position={[sinal * PAREDE_LATERAL_X, 1.5, 0]} rotation={[0, sinal * -Math.PI / 2, 0]}>
+        <mesh position={[sinal * PAREDE_LATERAL_X, 1.5, 0]} rotation={[0, sinal * -Math.PI / 2, 0]}
+              receiveShadow>
             <planeGeometry args={[4.2, 3]}/>
             <meshStandardMaterial color={WALL_COLOR} roughness={1}/>
         </mesh>
