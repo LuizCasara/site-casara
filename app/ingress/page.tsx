@@ -2,6 +2,7 @@ import {loadProfile} from '@/lib/ingress'
 import {computeAllBadges} from '@/lib/ingress-badges.mjs'
 import {computeRadarAxes} from '@/lib/ingress-radar.mjs'
 import Panel from '@/components/ingress/Panel'
+import AgentHeader from '@/components/ingress/AgentHeader'
 
 export default function IngressPage() {
   const profile = loadProfile()
@@ -24,16 +25,7 @@ export default function IngressPage() {
 
   return (
     <main className="ing-shell">
-      {/* T10: AgentHeader + HeroMesh */}
-      <header>
-        <h1 style={{fontSize: 32, color: 'var(--ing-green)', textShadow: 'var(--ing-glow)'}}>
-          {profile.agent.codename}
-        </h1>
-        <p style={{color: 'var(--ing-text-dim)'}}>
-          {profile.agent.faction === 'enlightened' ? 'Enlightened' : 'Resistance'} · Nível{' '}
-          {profile.agent.level} · {profile.agent.recursions} recursões
-        </p>
-      </header>
+      <AgentHeader profile={profile} />
 
       {/* T11: StatGroups */}
       <Panel label="Estatísticas">

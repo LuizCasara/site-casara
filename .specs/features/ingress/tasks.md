@@ -436,15 +436,19 @@ moldura). T10–T18 trocam cada placeholder pela seção real.
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] `AgentHeader` server-only; mostra os 5 campos de identidade
-- [ ] `HeroMesh` é o único `'use client'` do par; anima uma vez; reduced-motion →
-      render estático final
-- [ ] Sem scroll horizontal a 360px; hero legível no mobile
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] `AgentHeader` server-only; codinome + facção + nível (hexágono) + recursões
+      + meses; malha S2 real da região calculada no server
+- [x] `HeroMesh`: animação de draw-in **por CSS escalonado, sem JS** — ficou
+      server component (melhor que client leaf; reduced-motion já neutralizado no
+      theme.css, polígonos terminam visíveis via `forwards`)
+- [x] `/ingress` volta a 103 kB (sem framer-motion); sem scroll horizontal a
+      360px (`clamp()` no codinome, `flex-wrap` no meta)
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): cabeçalho de identidade e malha do hero`
+**Status**: ✅ Complete
 
 ---
 
