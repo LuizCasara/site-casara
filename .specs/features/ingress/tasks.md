@@ -612,14 +612,18 @@ controle "tocar para explorar as células" que monta o `S2Explorer`.
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Preview mostra a grade S2 do nível default centrada em `profile.s2.center`
-- [ ] Botão/área "tocar para explorar as células" (só o gatilho é client)
-- [ ] Sem scroll horizontal a 360px
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] Preview SVG da grade S2 do nível default centrada em `profile.s2.center`
+      (calculada no server via `coverViewport`), com marcador do centro
+- [x] `S2ExplorerLoader` (client, único do par) tem o botão "tocar para explorar
+      as células"; ao abrir cede espaço p/ o mapa (ligado em T17)
+- [x] `.ing-s2__grid` com `aspect-ratio`, caption, sem scroll horizontal a 360px;
+      `:focus-visible` no botão
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): preview estático da grade S2`
+**Status**: ✅ Complete
 
 ---
 

@@ -416,6 +416,73 @@
   background: var(--ing-accent);
 }
 
+/* --- explorador S2 --- */
+
+.ing-s2 {
+  position: relative;
+}
+
+.ing-s2__grid {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  background: var(--ing-bg-2);
+  border: 1px solid var(--ing-edge-soft);
+  display: block;
+}
+
+.ing-s2__grid polygon {
+  fill: transparent;
+  stroke: rgba(0, 230, 118, 0.32);
+  stroke-width: 0.25;
+}
+
+.ing-s2__center {
+  fill: var(--ing-cyan);
+}
+
+.ing-s2__caption {
+  color: var(--ing-text-dim);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0.8rem 0 0;
+}
+
+.ing-s2__cta {
+  margin-top: 0.9rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ing-bg);
+  background: var(--ing-accent);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: var(--ing-glow-tight);
+}
+
+.ing-s2__cta:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-s2__mount {
+  margin-top: 0.9rem;
+  border: 1px solid var(--ing-edge);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ing-s2__soon {
+  margin: 0;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: var(--ing-text-dim);
+  font-size: 0.88rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ingress-prime * {
     animation-duration: 0.001ms !important;

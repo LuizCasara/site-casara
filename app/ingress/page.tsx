@@ -7,6 +7,7 @@ import BadgeShelf from '@/components/ingress/BadgeShelf'
 import PendingSection from '@/components/ingress/PendingSection'
 import ProfileRadar from '@/components/ingress/ProfileRadar'
 import ActionsBreakdown from '@/components/ingress/ActionsBreakdown'
+import S2Preview from '@/components/ingress/S2Preview'
 
 export default function IngressPage() {
   const profile = loadProfile()
@@ -55,12 +56,7 @@ export default function IngressPage() {
         </Panel>
       )}
 
-      {/* T16 / T17: explorador S2 */}
-      <Panel label="Células S2">
-        <p style={{color: 'var(--ing-text-faint)'}}>
-          centro {profile.s2.center.lat.toFixed(3)}, {profile.s2.center.lng.toFixed(3)}
-        </p>
-      </Panel>
+      <S2Preview s2={profile.s2} />
     </main>
   )
 }
