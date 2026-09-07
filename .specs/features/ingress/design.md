@@ -117,6 +117,18 @@ herói: figuras grandes com brilho, a grade de glyphs atrás. Badges como medalh
 hexagonais (as badges do Ingress são hexagonais). Lê na hora como "perfil de
 Ingress", funciona bem no celular.
 
+**REVISÃO (2026-09-07, pós-Fase 2): "Prime" em vez de "Scanner clássico".** O
+primeiro corte ficou muito Ingress 2013 (terminal hacker, verde-em-preto, fios,
+cantos recortados). O Luiz quer o visual do **Ingress Prime** — o redesenho
+moderno: base carvão com fundo azulado (não verde-preto), painéis com cantos
+arredondados e leve transparência/lift, brilho (bloom) mais generoso e macio, um
+sistema de cor em **gradiente** verde → teal → ciano para acentos e gráficos,
+tipografia geométrica limpa (Sora no display, não a Chakra Petch retrô), mais
+respiro. O hexágono continua (Prime mantém), mas com preenchimento em gradiente e
+glow, não clip-path duro. Sem a grade de linhas repetida no fundo — só um brilho
+radial suave. É esta a direção a partir de T14; o theme.css e o hero de T8–T10
+foram retrabalhados no commit `refactor(ingress): direção visual Prime`.
+
 **Direção B — "Códex de glyphs" (mais ousada).** Menos HUD, mais documento
 traduzido de um texto antigo. Papel quase-preto, tinta verde. A identidade do
 agente aparece como uma sequência de glyphs que decodifica para o codinome; os

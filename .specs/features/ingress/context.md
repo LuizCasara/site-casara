@@ -83,6 +83,20 @@ simples; as seções que dependem do dump GDPR ficam em estado "aguardando dump"
 - Layout, hierarquia visual, paleta exata dentro do tema Enlightened,
   micro-interações (flip, hover, contadores animados).
 
+### Revisão visual — "Prime", não "Scanner clássico" (2026-09-07)
+
+Depois de ver a Fase 2, o Luiz pediu para puxar o visual para o **Ingress Prime**
+(o app moderno), não para o Ingress clássico de 2013. Mudanças de direção:
+
+- Base carvão com undertone azul (`#0b0f14`), não verde-preto.
+- Painéis com cantos arredondados e leve lift/transparência; **fora** os cantos
+  recortados em triângulo (clip-path) e a grade de linhas no fundo.
+- Bloom mais generoso e macio; sistema de acento em gradiente verde→teal→ciano.
+- Tipografia: **Sora** no display (geométrica moderna), Barlow no corpo — a
+  Chakra Petch (retrô-techy) sai.
+- Hexágono continua (nível, medalhas) mas com gradiente + glow.
+- Mais respiro entre seções.
+
 ### Declined / Undiscussed Gray Areas → Assumptions
 
 - **Centro do mapa S2** — RESOLVIDO: Luiz optou por centrar na cidade real dele.

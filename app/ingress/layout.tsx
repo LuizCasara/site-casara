@@ -1,16 +1,16 @@
 import type {Metadata} from 'next'
-import {Chakra_Petch, Barlow} from 'next/font/google'
+import {Sora, Barlow} from 'next/font/google'
 import './theme.css'
 
-// Display / números / labels — angular, leitura de HUD sem cair no Orbitron.
-const chakraPetch = Chakra_Petch({
+// Display / números / codinome — geométrica moderna, o registro do Ingress Prime.
+const sora = Sora({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-ingress-display',
   display: 'swap',
 })
 
-// Corpo — grotesca humanista, contraste claro com a Chakra Petch.
+// Corpo — grotesca humanista, contraste claro com a Sora.
 const barlow = Barlow({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
@@ -41,6 +41,6 @@ export const metadata: Metadata = {
 
 export default function IngressLayout({children}: {children: React.ReactNode}) {
   return (
-    <div className={`${chakraPetch.variable} ${barlow.variable} ingress-scanner`}>{children}</div>
+    <div className={`${sora.variable} ${barlow.variable} ingress-prime`}>{children}</div>
   )
 }
