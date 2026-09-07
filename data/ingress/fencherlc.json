@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "agent": {
+    "codename": "FencherLC",
+    "faction": "enlightened",
+    "level": 13,
+    "recursions": 2,
+    "monthsSubscribed": 5
+  },
+  "capturedAt": "2026-09-07T16:21:02",
+  "sources": {
+    "appExport": {
+      "capturedAt": "2026-09-07T16:21:02"
+    },
+    "gdprDump": null
+  },
+  "stats": {
+    "agentsRecruited": 3,
+    "apolloModBattlePoints": 789,
+    "apolloTokens": 8930,
+    "battleBeaconCombatant": 1,
+    "clearFieldsEvents": 2,
+    "completedHackstreaks": 35,
+    "controlFieldsCreated": 11981,
+    "currentAp": 13835748,
+    "distanceWalkedKm": 3977,
+    "droneHacks": 1047,
+    "dronesReturned": 5,
+    "enemyFieldsDestroyed": 9788,
+    "enemyLinksDestroyed": 16340,
+    "firstSaturdayEvents": 24,
+    "forcedDroneRecalls": 38,
+    "furthestDroneDistanceKm": 6,
+    "glyphHackPoints": 80953,
+    "hacks": 55542,
+    "kineticCapsulesCompleted": 151,
+    "largestControlFieldMus": 894825,
+    "largestFieldMusTimesDays": 3330600,
+    "lifetimeAp": 94990303,
+    "linksCreated": 22521,
+    "longestLinkKm": 347,
+    "longestSojournerStreak": 740,
+    "machinaLinksDestroyed": 1793,
+    "machinaPortalsNeutralized": 1365,
+    "machinaPortalsReclaimed": 765,
+    "machinaResonatorsDestroyed": 12430,
+    "maxLinkLengthTimesDays": 7700,
+    "maxTimeFieldHeldDays": 78,
+    "maxTimeLinkMaintainedDays": 128,
+    "maxTimePortalHeldDays": 281,
+    "mindUnitsCaptured": 19150217,
+    "missionDaysAttended": 4,
+    "modsDeployed": 16244,
+    "nl1331MeetupsAttended": 2,
+    "oprAgreements": 6775,
+    "portalScansUploaded": 18,
+    "portalsCaptured": 20330,
+    "portalsNeutralized": 12550,
+    "researchBountiesCompleted": 712,
+    "researchDaysCompleted": 150,
+    "resonatorsDeployed": 105886,
+    "resonatorsDestroyed": 80783,
+    "secondSundayEvents": 5,
+    "seerPoints": 225,
+    "uniqueMissionsCompleted": 869,
+    "uniquePortalsCaptured": 2263,
+    "uniquePortalsDroneVisited": 362,
+    "uniquePortalsVisited": 3486,
+    "uniquesScoutControlled": 22,
+    "xmCollected": 180207686,
+    "xmRecharged": 96946933
+  },
+  "s2": {
+    "center": {
+      "lat": -15.7939,
+      "lng": -47.8828
+    },
+    "defaultLevel": 12
+  },
+  "timeSeries": null,
+  "portals": null,
+  "pending": [
+    "apTimeline",
+    "portalMap"
+  ]
+}
