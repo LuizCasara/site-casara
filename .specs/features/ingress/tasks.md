@@ -210,22 +210,22 @@ próximo a partir de um valor de estatística.
 - Skill: NONE
 
 **Done when**:
-- [ ] `BADGES` cobre ao menos Builder, Connector, Mind Controller, Illuminator,
-      Liberator, Pioneer, Explorer, Trekker, Purifier, Hacker, Sojourner, com
-      `statKey` válido e `tiers` de 5 níveis
-- [ ] Cada limiar transcrito da wiki oficial (comentário com a URL da fonte)
-- [ ] `computeBadge` retorna `{ tier, atMax, next: {tier, remaining} | null }`;
+- [x] `BADGES` cobre 14 medalhas (Builder, Connector, Mind Controller,
+      Illuminator, Liberator, Pioneer, Explorer, Trekker, Purifier, Hacker,
+      Sojourner, Recharger, Engineer, SpecOps), `statKey` válido, `tiers` de 5
+- [x] Cada limiar transcrito da Fev Games (comentário com a URL da fonte)
+- [x] `computeBadge` retorna `{ tier, atMax, next: {tier, remaining} | null }`;
       valor 0 → `tier: 'none'`; valor ≥ Onyx → `atMax: true`, `next: null`
-- [ ] `computeAllBadges(stats)` omite badge cuja `statKey` não está em `stats`
-- [ ] Testes: valor exatamente no limiar de um tier → aquele tier; um a menos → o
-      anterior; valor acima de Onyx → `atMax`; `statKey` ausente → badge omitida;
-      os números reais do FencherLC → tiers conferidos manualmente no teste
-- [ ] Gate check passes: `npm test`
-- [ ] Test count: ≥8 tests pass
+- [x] `computeAllBadges(stats)` omite badge cuja `statKey` não está em `stats`
+- [x] Testes: limiar exato → aquele tier; um a menos → o anterior; acima de Onyx
+      → `atMax`; `statKey` ausente → omitida; números reais do FencherLC → tiers
+- [x] Gate check passes: `npm test` (274 testes ✔)
+- [x] Test count: 9 tests pass
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(ingress): tabela de badges e cálculo de tier`
+**Status**: ✅ Complete
 
 ---
 
