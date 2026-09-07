@@ -144,15 +144,16 @@ atualiza sem erro.
 - Skill: NONE
 
 **Done when**:
-- [ ] As 4 dependências aparecem em `package.json` com versão pinada (`s2js`,
-      `leaflet`, `react-leaflet@^5`, `@types/leaflet`)
-- [ ] `npm install` conclui sem erro; `package-lock.json` atualizado
-- [ ] `npm run build` ainda passa (nenhum import novo ainda)
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] As 4 dependências aparecem em `package.json` com versão pinada (`s2js@^1.44`,
+      `leaflet@^1.9`, `react-leaflet@^5`, `@types/leaflet@^1.9`)
+- [x] `npm install` conclui sem erro; `package-lock.json` atualizado
+- [x] `npm run build` ainda passa (nenhum import novo ainda)
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (lint ✔, 256 testes ✔, build ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `chore(ingress): adiciona s2js, leaflet e react-leaflet`
+**Status**: ✅ Complete
 
 ---
 
