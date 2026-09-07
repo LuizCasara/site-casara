@@ -13,10 +13,10 @@
 ## Handoff
 
 - **Feature**: ingress (`.specs/features/ingress/`)
-- **Phase / Task**: Execute — Fase 1 (T1–T7) COMPLETA. Próxima: Fase 2 (T8–T13), a UI.
-- **Completed**: Specify, Discuss, Design, Tasks. Execute: T1 (deps), T2 (ingress-stats), T3 (ingress-badges), T4 (ingress-radar), T5 (ingress-profile), T6 (ingress-s2), T7 (semente JSON + loader). Cada uma com commit atômico; 40 testes novos (295 no total); build ✔.
-- **In-progress** (file:line): nenhum — Fase 1 fechada em `28a3cb3`
-- **Next step**: T8 — `app/ingress/layout.tsx` (layout próprio, fontes, metadata; Direção "Scanner"). Depois T9 page.tsx, T10–T13 seções server. Usuário pediu para iniciar a Fase 2 às 19:30 de 2026-09-07.
-- **Blockers**: nenhum. `s2.center` já aponta para Cascavel - PR (-24.9573, -53.459).
-- **Uncommitted files**: nenhum (tudo commitado na branch)
-- **Branch**: `feat/ingress` (à frente de main: planejamento + Fase 1 + fix de coordenada)
+- **Phase / Task**: Execute — Fases 1 e 2 COMPLETAS (T1–T13). Próxima: Fase 3 (T14–T18).
+- **Completed**: Specify, Discuss, Design, Tasks. Execute Fase 1: T1–T7 (lib pura + semente JSON + loader). Fase 2: T8 (layout + theme.css "Scanner" + esconde Header/Footer), T9 (page.tsx + Panel), T10 (AgentHeader + HeroMesh), T11 (StatGroups + StatValue), T12 (BadgeShelf + BadgeMedal), T13 (PendingSection). Commits atômicos; 295 testes; build ✔; /ingress 103 kB estático.
+- **In-progress** (file:line): nenhum — Fase 2 fechada
+- **Next step**: T14 — `components/ingress/ProfileRadar.tsx` (SVG radar de `computeRadarAxes`). Depois T15 ActionsBreakdown, T16 S2Preview, T17 S2Explorer (client, Leaflet sob toque), T18 ApTimeline.
+- **Blockers**: nenhum. `s2.center` = Cascavel - PR (-24.9573, -53.459).
+- **Uncommitted files**: nenhum
+- **Branch**: `feat/ingress` (planejamento + Fase 1 + Fase 2 à frente de main; nada pushed)

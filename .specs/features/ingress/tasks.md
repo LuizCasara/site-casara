@@ -527,15 +527,17 @@ portais".
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Renderiza um card por entrada de `profile.pending` com texto explicando que
-      depende do dump GDPR
-- [ ] A decisão de mostrar vem de `profile.pending`, não de zero/null espalhados
-- [ ] Server-only; sem scroll horizontal a 360px
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] `PendingSection kind="apTimeline"|"portalMap"` → `Panel` com hint
+      "aguardando dump GDPR" e texto explicando a dependência
+- [x] A página decide por `profile.pending` (Set), não por zero/null espalhados
+- [x] Server-only; `.ing-pending` sem scroll horizontal a 360px
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔) —
+      **fim da Fase 2**
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): placeholder de seção aguardando dump GDPR`
+**Status**: ✅ Complete
 
 ---
 

@@ -5,6 +5,7 @@ import Panel from '@/components/ingress/Panel'
 import AgentHeader from '@/components/ingress/AgentHeader'
 import StatGroups from '@/components/ingress/StatGroups'
 import BadgeShelf from '@/components/ingress/BadgeShelf'
+import PendingSection from '@/components/ingress/PendingSection'
 
 export default function IngressPage() {
   const profile = loadProfile()
@@ -43,19 +44,22 @@ export default function IngressPage() {
         <p style={{color: 'var(--ing-text-faint)'}}>—</p>
       </Panel>
 
-      {/* T18 / T13: evolução de AP */}
-      <Panel label="Evolução de AP">
-        <p style={{color: 'var(--ing-text-faint)'}}>
-          {pending.has('apTimeline') ? 'aguardando dump GDPR' : 'série temporal'}
-        </p>
-      </Panel>
+      {/* T18 troca este slot pelo ApTimeline quando timeSeries.lifetimeAp existir */}
+      {pending.has('apTimeline') ? (
+        <PendingSection kind="apTimeline" />
+      ) : (
+        <Panel label="Evolução de AP">
+          <p style={{color: 'var(--ing-text-faint)'}}>série temporal</p>
+        </Panel>
+      )}
 
-      {/* T13: mapa de portais */}
-      <Panel label="Mapa de portais">
-        <p style={{color: 'var(--ing-text-faint)'}}>
-          {pending.has('portalMap') ? 'aguardando dump GDPR' : 'portais'}
-        </p>
-      </Panel>
+      {pending.has('portalMap') ? (
+        <PendingSection kind="portalMap" />
+      ) : (
+        <Panel label="Mapa de portais">
+          <p style={{color: 'var(--ing-text-faint)'}}>portais</p>
+        </Panel>
+      )}
 
       {/* T16 / T17: explorador S2 */}
       <Panel label="Células S2">
