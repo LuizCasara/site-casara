@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 3,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "spec_precision_gap::parser de arquivo externo um ac de contagem de colunas divergente nao cobre o arquivo nao e do tipo esperado exija tambem uma coluna ancora obrigatoria e teste o arquivo errado com contagem igual",
+      "text": "Parser de arquivo externo: um AC de 'contagem de colunas divergente' não cobre 'o arquivo não é do tipo esperado'; exija também uma coluna-âncora obrigatória e teste o arquivo-errado-com-contagem-igual.",
+      "signal": "spec_precision_gap",
+      "scope": "lib/parsers",
+      "status": "candidate",
+      "features": [
+        "ingress"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "INGR-07 (lib/parsers)"
+      ],
+      "created": "2026-09-07T23:31:24Z",
+      "last_seen": "2026-09-07T23:31:24Z"
+    },
+    {
+      "id": "L-002",
+      "key": "spec_deviation::regioncoverer com minlevel maxlevel trava numa bbox grande use maxlevel maxcells para a cobertura grossa e uma bfs com teto para subdividir ate o nivel alvo",
+      "text": "RegionCoverer com minLevel==maxLevel trava numa bbox grande; use maxLevel+maxCells para a cobertura grossa e uma BFS com teto para subdividir até o nível alvo.",
+      "signal": "spec_deviation",
+      "scope": "s2/geometry",
+      "status": "candidate",
+      "features": [
+        "ingress"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "lib/ingress-s2.mjs coverViewport (s2/geometry)"
+      ],
+      "created": "2026-09-07T23:31:24Z",
+      "last_seen": "2026-09-07T23:31:24Z"
+    }
+  ]
+}
