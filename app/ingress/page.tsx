@@ -1,11 +1,11 @@
 import {loadProfile} from '@/lib/ingress'
 import {computeAllBadges} from '@/lib/ingress-badges.mjs'
-import {computeRadarAxes} from '@/lib/ingress-radar.mjs'
 import Panel from '@/components/ingress/Panel'
 import AgentHeader from '@/components/ingress/AgentHeader'
 import StatGroups from '@/components/ingress/StatGroups'
 import BadgeShelf from '@/components/ingress/BadgeShelf'
 import PendingSection from '@/components/ingress/PendingSection'
+import ProfileRadar from '@/components/ingress/ProfileRadar'
 
 export default function IngressPage() {
   const profile = loadProfile()
@@ -23,7 +23,6 @@ export default function IngressPage() {
   }
 
   const badges = computeAllBadges(profile.stats)
-  const radar = computeRadarAxes(profile.stats)
   const pending = new Set(profile.pending)
 
   return (
@@ -34,10 +33,7 @@ export default function IngressPage() {
 
       <BadgeShelf badges={badges} />
 
-      {/* T14: ProfileRadar */}
-      <Panel label="Perfil de jogo">
-        <p style={{color: 'var(--ing-text-faint)'}}>{radar.length} eixos</p>
-      </Panel>
+      <ProfileRadar stats={profile.stats} />
 
       {/* T15: ActionsBreakdown */}
       <Panel label="Distribuição de ações">

@@ -555,14 +555,17 @@ normalizados por `computeRadarAxes`.
 - Skill: `nextjs-use-client`, `dataviz`
 
 **Done when**:
-- [ ] Polígono do radar com um vértice por eixo, escala 0..1, grade de fundo
-- [ ] Eixo com valor 0 → vértice no centro, sem quebrar o desenho
-- [ ] SVG responsivo (`viewBox`), server-only, legível a 360px
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] Polígono com um vértice por eixo (5), anéis 0.25/0.5/0.75/1, spokes
+      recessivos, série única sem legenda (título nomeia)
+- [x] Eixo com valor 0 → vértice quase no centro (clamp 0.02), desenho não quebra
+- [x] SVG responsivo (`viewBox`, `overflow:visible` p/ rótulos), server-only,
+      tooltip via `<title>` nativo, legível a 360px (`max-width:20rem`)
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): radar de perfil em SVG`
+**Status**: ✅ Complete
 
 ---
 

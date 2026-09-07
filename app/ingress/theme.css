@@ -332,6 +332,48 @@
   margin-top: 0.12rem;
 }
 
+/* --- radar --- */
+
+.ing-radar {
+  display: flex;
+  justify-content: center;
+}
+
+.ing-radar svg {
+  width: 100%;
+  max-width: 20rem;
+  height: auto;
+  overflow: visible;
+}
+
+.ing-radar__ring {
+  fill: none;
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+}
+
+.ing-radar__spoke {
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+}
+
+.ing-radar__shape {
+  fill: rgba(0, 230, 118, 0.14);
+  stroke: var(--ing-green);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.ing-radar__dot {
+  fill: var(--ing-green-soft);
+}
+
+.ing-radar__label {
+  fill: var(--ing-text-dim);
+  font-family: var(--ing-font-body);
+  font-size: 11px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ingress-prime * {
     animation-duration: 0.001ms !important;
