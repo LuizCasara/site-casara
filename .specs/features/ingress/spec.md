@@ -80,8 +80,8 @@ compartilhar meu perfil de Ingress com outros agentes.
    facção, nível, recursões e meses de assinatura lidos do JSON de perfil.
 2. WHEN a página monta a seção de estatísticas THEN o sistema SHALL exibir os
    valores numéricos do JSON agrupados por categoria (AP/XM, portais,
-   links/campos, hacking, drones, Machina, exploração/eventos), cada número
-   formatado em pt-BR.
+   links/campos, hacking, drones, Machina, exploração/eventos, scanner/OPR/Scout),
+   cada número formatado em pt-BR.
 3. The system SHALL servir `/ingress` em português com layout próprio (sem o
    header/footer padrão do site), fora do `LanguageProvider`.
 4. IF o JSON de perfil não contém uma chave de estatística esperada THEN o

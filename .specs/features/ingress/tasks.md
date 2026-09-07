@@ -173,23 +173,24 @@ converte a linha `ALL TIME` num objeto `{ agent, capturedAt, stats }`.
 - Skill: NONE
 
 **Done when**:
-- [ ] `STAT_COLUMNS` cobre as 62 colunas do cabeçalho do export, cada uma com
-      `col`, `key` (camelCase), `label`, `group`, `kind` (`identity`|`stat`)
-- [ ] `STAT_GROUPS` define AP/XM, portais, links/campos, hacking, drones,
-      Machina, exploração/eventos
-- [ ] `parseAppExport` casa colunas **por nome no cabeçalho** (não por posição);
+- [x] `STAT_COLUMNS` cobre as 62 colunas do cabeçalho do export, cada uma com
+      `col`, `key` (camelCase), `label`, `group`, `kind` (`meta`|`identity`|`stat`)
+- [x] `STAT_GROUPS` define AP/XM, portais, links/campos, hacking, drones,
+      Machina, exploração/eventos, scanner/OPR/Scout (8 grupos — spec AC atualizada)
+- [x] `parseAppExport` casa colunas **por nome no cabeçalho** (não por posição);
       normaliza números (separador de milhar, aspas); lança `Error` com
       linha/contagem se o nº de colunas diverge ou falta a linha de dados;
       coluna desconhecida vira warning, não erro
-- [ ] Testes: parsing do TSV real de 07/09 bate com `docs/ingress-perfil-fencherlc.md`;
+- [x] Testes: parsing do TSV real de 07/09 bate com `docs/ingress-perfil-fencherlc.md`;
       export com coluna faltando → erro; número com `.`/aspas → convertido;
       cabeçalho reordenado → ainda parseia
-- [ ] Gate check passes: `npm test`
-- [ ] Test count: ≥6 tests pass
+- [x] Gate check passes: `npm test` (265 testes ✔)
+- [x] Test count: 9 tests pass
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(ingress): mapa de estatísticas e parser do export do app`
+**Status**: ✅ Complete
 
 ---
 
