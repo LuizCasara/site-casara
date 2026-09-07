@@ -13,10 +13,10 @@
 ## Handoff
 
 - **Feature**: ingress (`.specs/features/ingress/`)
-- **Phase / Task**: Execute — Fases 1–3 COMPLETAS (T1–T18). Próxima: Fase 4 (T19–T23).
-- **Completed**: Specify, Discuss, Design, Tasks. Execute T1–T18 + `refactor(ingress): direção visual Prime` (Luiz pediu Ingress Prime, não o clássico 2013 — theme.css/fonte Sora/wrapper `.ingress-prime`). Fase 3: T14 ProfileRadar, T15 ActionsBreakdown, T16 S2Preview, T17 S2Explorer (Leaflet `dynamic ssr:false` no toque + MapErrorBoundary), T18 ApTimeline. Commits atômicos; 295 testes; build ✔; /ingress 105 kB.
-- **In-progress** (file:line): nenhum — Fase 3 fechada em `e78a9d9`
-- **Next step**: T19 — `scripts/ingress.mjs` (CLI build/gdpr/show). Depois T20 opengraph-image, T21 icon, T22 CountUp, T23 integração final → **Verifier obrigatório**.
-- **Blockers**: verificação visual do mapa S2 (T17) e da direção Prime pendente do Luiz.
+- **Phase / Task**: Execute COMPLETO. 23/23 tasks + revisão Prime + 2 fixes + Verifier. Feature pronta na branch.
+- **Completed**: Specify → Design → Tasks → Execute (T1–T23) → Verifier standalone. `validation.md`: 19/19 ACs de lógica com evidência, sensor 5/5 mortos, gate verde (296 testes/lint/build). `validate_state.py` → 0 erros. 2 lições registradas (L-001, L-002, status candidate).
+- **In-progress** (file:line): nenhum
+- **Next step**: (1) Luiz revisa `/ingress` no navegador (desktop + 360px) e o explorador S2 (tocar em "explorar as células"). (2) Se aprovado: `git push origin feat/ingress` + PR — **precisa de OK explícito do Luiz** (blast radius). (3) Dump GDPR quando chegar: `node scripts/ingress.mjs gdpr <pasta> --apply` (ajustar `GDPR_SERIES` no script contra o formato real).
+- **Blockers**: UAT visual pendente do Luiz (Leaflet, mobile 360px, direção Prime — riscos residuais em `validation.md`).
 - **Uncommitted files**: nenhum
-- **Branch**: `feat/ingress` (tudo à frente de main; nada pushed)
+- **Branch**: `feat/ingress`, 33 commits à frente de main. **Nada pushed.**

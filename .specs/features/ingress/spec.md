@@ -353,7 +353,10 @@ o script e ver a série temporal e os portais no JSON e o gráfico na página.
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 36 total, 0 mapped to tasks, 36 unmapped ⚠️ (mapping happens in Tasks)
+**Coverage:** 36 total, 36 mapped to tasks (T1–T23), todos implementados.
+Verificação: 19 ACs de lógica pura ✅ Verified (evidência `file:line` em
+`validation.md`); 17 ACs de UI implementados e com build-gate verde, UAT visual
+do Luiz pendente. Ver `.specs/features/ingress/validation.md`.
 
 ---
 
