@@ -6,6 +6,17 @@ export const contentType = "image/png";
 
 const TECHS = ["React", "TypeScript", "GraphQL", "Node.js", "Next.js"];
 
+// O mesmo mark "{C}" do favicon (ver scripts/gen-favicons.mjs), embutido como
+// data URI porque o Satori do next/og não lê arquivo de public/ em runtime.
+const ICON_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +
+  '<rect width="64" height="64" rx="14" fill="#0a0a0a"/>' +
+  '<path d="M20 12 C16 12 16 16 16 20 C16 25 15 28 12 32 C15 36 16 39 16 44 C16 48 16 52 20 52" fill="none" stroke="#15803d" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
+  '<path d="M44 12 C48 12 48 16 48 20 C48 25 49 28 52 32 C49 36 48 39 48 44 C48 48 48 52 44 52" fill="none" stroke="#15803d" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
+  '<path d="M39.68 24.84 A10.5 10.5 0 1 0 39.68 39.16" fill="none" stroke="#22c55e" stroke-width="7" stroke-linecap="round"/>' +
+  "</svg>";
+const ICON_DATA_URI = `data:image/svg+xml,${encodeURIComponent(ICON_SVG)}`;
+
 export default function Image() {
   return new ImageResponse(
     (
@@ -31,6 +42,15 @@ export default function Image() {
             height: "100%",
             background: "#22c55e",
           }}
+        />
+
+        {/* Brand mark */}
+        {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- Satori (next/og), não DOM */}
+        <img
+          src={ICON_DATA_URI}
+          width={76}
+          height={76}
+          style={{ position: "absolute", top: 60, right: 80 }}
         />
 
         {/* Location */}
