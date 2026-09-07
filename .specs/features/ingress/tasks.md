@@ -308,19 +308,23 @@ preservam `timeSeries`/`portals` já existentes, recalculam `pending`.
 - Skill: NONE
 
 **Done when**:
-- [ ] `coverViewport` fixa `minLevel = maxLevel = level` e devolve os anéis de
-      borda (lat/lng) de cada célula que intersecta a bbox
-- [ ] Nunca devolve mais que `cap` células (default 400)
-- [ ] `LEVEL_RANGE = { min, max, default }` exportado
-- [ ] Todo uso de `s2js` fica **só** neste arquivo
-- [ ] Testes: uma bbox pequena conhecida no nível N → conjunto determinístico de
-      tokens; bbox grande → nº de células ≤ `cap`; cada `ring` tem ≥3 vértices
-- [ ] Gate check passes: `npm test`
-- [ ] Test count: ≥4 tests pass
+- [x] `coverViewport` devolve células de nível `level` (RegionCoverer grosso +
+      BFS de subdivisão) com o anel de 4 vértices de cada uma
+- [x] Nunca devolve mais que `cap` células (default 400); bbox continental não
+      trava (BFS para no `cap`)
+- [x] `LEVEL_RANGE = { min, max, default }` exportado; nível fora da faixa é
+      clampeado
+- [x] Todo uso de `s2js` fica **só** neste arquivo
+- [x] Testes: bbox de cidade no nível 12 → conjunto determinístico de tokens;
+      bbox continental (cap 50) → ≤50 e rápido; nível 99/1 → clampeado; anel de 4
+      vértices na vizinhança da bbox
+- [x] Gate check passes: `npm test` (295 testes ✔)
+- [x] Test count: 6 tests pass
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(ingress): cobertura de células S2 para uma viewport`
+**Status**: ✅ Complete
 
 ---
 

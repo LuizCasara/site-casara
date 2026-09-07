@@ -239,8 +239,11 @@ de dado: os números usam o display técnico, os labels usam o corpo).
 - **Location**: `lib/ingress-s2.mjs` (+ `.test.mjs`)
 - **Interfaces**:
   - `coverViewport({ north, south, east, west }, level, { cap = 400 }): { token, ring: [lat, lng][] }[]`
-    — usa `s2js` `RegionCoverer` fixando `minLevel = maxLevel = level`; devolve os
-    anéis de borda para desenhar; nunca devolve mais que `cap` células.
+    — `s2js` `RegionCoverer` com `maxLevel = level` + `maxCells = cap` faz a
+    cobertura grossa (rápida mesmo numa bbox continental), depois uma BFS
+    subdivide até `level` parando no `cap`. (Fixar `minLevel = maxLevel` trava
+    numa bbox enorme — este é o fallback já previsto em Risks & Concerns.)
+    Devolve os anéis de borda; nunca mais que `cap` células.
   - `LEVEL_RANGE: { min, max, default }` — faixa do slider (ex.: 6–16, default
     12).
 - **Dependencies**: `s2js`.
