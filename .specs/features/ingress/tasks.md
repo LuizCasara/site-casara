@@ -792,15 +792,17 @@ final direto. Aplicado em `StatValue`.
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] `CountUp` é o único `'use client'`; recebe o valor final como prop e sempre
-      renderiza esse valor no fallback
-- [ ] `prefers-reduced-motion: reduce` → sem animação
-- [ ] `StatValue` usa `CountUp` sem virar client component ele mesmo (composição)
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] `CountUp` leaf `'use client'`; estado inicial = `value` (SSR mostra o número
+      final); anima de 0 só ao intersectar a viewport (ease-out cubic, 900ms)
+- [x] `prefers-reduced-motion: reduce` / sem `IntersectionObserver` → sem
+      animação, valor final
+- [x] `StatValue` continua server, usa `<CountUp>` por composição
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): contadores animados dos números`
+**Status**: ✅ Complete
 
 ---
 
