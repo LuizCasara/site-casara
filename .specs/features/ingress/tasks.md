@@ -676,16 +676,19 @@ não existe (INGR-20).
 - MCP: NONE
 - Skill: `nextjs-use-client`, `dataviz`
 
-**Done when**:
-- [ ] Recebe `{ t, v }[]` e desenha a linha com eixos e rótulos pt-BR
-- [ ] Série vazia/ausente → componente não é renderizado (a página cai no
-      `PendingSection`), sem erro
-- [ ] SVG responsivo, server-only, legível a 360px
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] Recebe `{ t, v }[]`, ordena, desenha linha 2px + área em gradiente +
+      rótulos de ano; pontos com tooltip `<title>`
+- [x] `< 2` pontos → `return null`; a página só renderiza `ApTimeline` quando
+      `timeSeries.lifetimeAp` existe, senão `PendingSection` (INGR-20 — sem
+      mudança de código entre os dois casos, só o dado)
+- [x] SVG responsivo (`viewBox`), server-only, legível a 360px
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔) —
+      **fim da Fase 3**
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): gráfico de evolução de AP`
+**Status**: ✅ Complete
 
 ---
 

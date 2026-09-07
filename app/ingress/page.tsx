@@ -8,6 +8,7 @@ import PendingSection from '@/components/ingress/PendingSection'
 import ProfileRadar from '@/components/ingress/ProfileRadar'
 import ActionsBreakdown from '@/components/ingress/ActionsBreakdown'
 import S2Preview from '@/components/ingress/S2Preview'
+import ApTimeline from '@/components/ingress/ApTimeline'
 
 export default function IngressPage() {
   const profile = loadProfile()
@@ -39,13 +40,10 @@ export default function IngressPage() {
 
       <ActionsBreakdown stats={profile.stats} />
 
-      {/* T18 troca este slot pelo ApTimeline quando timeSeries.lifetimeAp existir */}
-      {pending.has('apTimeline') ? (
+      {pending.has('apTimeline') || !profile.timeSeries?.lifetimeAp ? (
         <PendingSection kind="apTimeline" />
       ) : (
-        <Panel label="Evolução de AP">
-          <p style={{color: 'var(--ing-text-faint)'}}>série temporal</p>
-        </Panel>
+        <ApTimeline points={profile.timeSeries.lifetimeAp} />
       )}
 
       {pending.has('portalMap') ? (

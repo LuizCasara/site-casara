@@ -523,6 +523,31 @@
   color: var(--ing-text-dim);
 }
 
+/* --- linha do tempo --- */
+
+.ing-timeline {
+  width: 100%;
+  height: auto;
+}
+
+.ing-timeline__line {
+  fill: none;
+  stroke: var(--ing-green);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.ing-timeline__dot {
+  fill: var(--ing-green-soft);
+}
+
+.ing-timeline__label {
+  fill: var(--ing-text-faint);
+  font-family: var(--ing-font-body);
+  font-size: 10px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ingress-prime * {
     animation-duration: 0.001ms !important;
