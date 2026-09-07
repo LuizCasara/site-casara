@@ -3,6 +3,7 @@ import {computeAllBadges} from '@/lib/ingress-badges.mjs'
 import {computeRadarAxes} from '@/lib/ingress-radar.mjs'
 import Panel from '@/components/ingress/Panel'
 import AgentHeader from '@/components/ingress/AgentHeader'
+import StatGroups from '@/components/ingress/StatGroups'
 
 export default function IngressPage() {
   const profile = loadProfile()
@@ -27,10 +28,7 @@ export default function IngressPage() {
     <main className="ing-shell">
       <AgentHeader profile={profile} />
 
-      {/* T11: StatGroups */}
-      <Panel label="Estatísticas">
-        <p style={{color: 'var(--ing-text-faint)'}}>{Object.keys(profile.stats).length} métricas</p>
-      </Panel>
+      <StatGroups stats={profile.stats} />
 
       {/* T12: BadgeShelf */}
       <Panel label="Medalhas">

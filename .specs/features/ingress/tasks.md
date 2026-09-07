@@ -468,15 +468,17 @@ ausentes; `StatValue.tsx` é o item número+label.
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Renderiza os 7 grupos com os números do perfil, formatados pt-BR
-- [ ] Chave de stat ausente → item omitido, grupo não quebra
-- [ ] Server-only (sem `'use client'`)
-- [ ] Grade de stats sem scroll horizontal a 360px
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] Um `Panel` por grupo (8 grupos), números formatados `Intl.NumberFormat('pt-BR')`
+- [x] Chave de stat ausente → item omitido; grupo vazio → `Panel` não renderiza
+- [x] Server-only (sem `'use client'`)
+- [x] `.ing-grid` (2 col mobile / 3 col ≥32rem), `overflow-wrap:anywhere` nos
+      números grandes, sem scroll horizontal a 360px
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): seções de estatísticas agrupadas`
+**Status**: ✅ Complete
 
 ---
 
