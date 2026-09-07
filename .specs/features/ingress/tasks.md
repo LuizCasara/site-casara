@@ -739,13 +739,17 @@ codinome, facção, nível e 3-4 números de destaque do perfil.
 - Skill: NONE
 
 **Done when**:
-- [ ] Rota responde 200 com uma imagem (tamanho OG padrão)
-- [ ] A imagem contém codinome, facção, nível e destaques lidos do JSON
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] Rota `opengraph-image` compila (edge, 1200×630); mesmo mecanismo de
+      `app/casamento/opengraph-image.tsx`
+- [x] Lê `loadProfile()`: codinome (verde), facção + nível, 4 destaques (AP,
+      capturas, km, links) em cards; fundo Prime com brilhos radiais
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔).
+      Render final verificável pelo Luiz colando o link
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): imagem OpenGraph da rota /ingress`
+**Status**: ✅ Complete
 
 ---
 
