@@ -310,6 +310,17 @@
   font-size: 1.15rem;
 }
 
+.ing-medal__art {
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+}
+
+.ing-medal--onyx .ing-medal__art {
+  filter: drop-shadow(0 0 8px rgba(0, 230, 118, 0.4));
+}
+
 .ing-medal__text {
   min-width: 0;
 }

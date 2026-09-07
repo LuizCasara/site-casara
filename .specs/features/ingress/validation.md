@@ -149,3 +149,17 @@ UI (INGR-01,02,03,04,05,17,18,20,22,25,29,30,31,35,36): **Implementing → build
 4. `data/ingress/fencherlc.json` → `timeSeries`/`portals` seguem `null` até o dump GDPR; o mapa de nomes de arquivo em `scripts/ingress.mjs` (`GDPR_SERIES`) vai precisar de ajuste contra o dump real (já anotado no código e na spec como P3).
 
 **Próximos passos**: Luiz revisa `/ingress` no navegador (desktop + 360px) e o explorador S2. Depois: `git push` + PR (precisa de OK explícito). O dump GDPR, quando chegar, roda `node scripts/ingress.mjs gdpr <pasta> --apply`.
+
+---
+
+## Adendo — T24: arte real das medalhas (pós-Verifier, 2026-09-07)
+
+Enhancement aditivo pedido pelo Luiz depois da entrega. `BadgeMedal` passa a usar
+`public/ingress/medals/<key>-<tier>.png` quando o arquivo existe (checagem no
+server via `lib/ingress-medal-art.mjs`), com fallback total para o hexágono
+atual. Sem PNG nenhum, comportamento idêntico ao verificado acima.
+
+Gate re-rodado: lint ✔ · 296 testes ✔ · build ✔ (`/ingress` segue 105 kB, `<img>`
+local com `eslint-disable` pontual). Sem novo sensor — mudança puramente aditiva
+com fallback, coberta pelo build-gate. Copyright: arte da Niantic, uso tolerado
+pela comunidade Ingress, decisão do dono do site.

@@ -1,4 +1,5 @@
 import {TIER_LABELS} from '@/lib/ingress-badges.mjs'
+import {medalArt} from '@/lib/ingress-medal-art.mjs'
 
 const FMT = new Intl.NumberFormat('pt-BR')
 
@@ -10,14 +11,25 @@ type Badge = {
   next: {tier: string; remaining: number} | null
 }
 
-/** Medalha hexagonal com tier e o que falta pro próximo. Server component. */
+/**
+ * Medalha com tier e o que falta pro próximo. Se houver PNG da arte real em
+ * `public/ingress/medals/`, usa ela; senão, o hexágono com a inicial. Server.
+ */
 export default function BadgeMedal({badge}: {badge: Badge}) {
   const tierLabel = (TIER_LABELS as Record<string, string>)[badge.tier] ?? badge.tier
+  const art = medalArt(badge.key, badge.tier) as string | null
+
   return (
     <div className={`ing-medal ing-medal--${badge.tier}`}>
-      <div className="ing-medal__hex" aria-hidden="true">
-        <span className="ing-medal__initial">{badge.name.charAt(0)}</span>
-      </div>
+      {art ? (
+        // Ícone local pequeno e fixo — next/image não compensa o peso aqui.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={art} alt="" width={48} height={48} loading="lazy" className="ing-medal__art" />
+      ) : (
+        <div className="ing-medal__hex" aria-hidden="true">
+          <span className="ing-medal__initial">{badge.name.charAt(0)}</span>
+        </div>
+      )}
       <div className="ing-medal__text">
         <div className="ing-medal__name">{badge.name}</div>
         <div className="ing-medal__tier">{tierLabel}</div>

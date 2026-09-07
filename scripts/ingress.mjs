@@ -18,6 +18,8 @@ import {dirname, join} from 'node:path';
 import {createInterface} from 'node:readline/promises';
 import {parseAppExport} from '../lib/ingress-stats.mjs';
 import {buildProfile, mergeGdprDump} from '../lib/ingress-profile.mjs';
+import {computeAllBadges} from '../lib/ingress-badges.mjs';
+import {medalArt, expectedMedalFiles} from '../lib/ingress-medal-art.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PROFILE_PATH = join(ROOT, 'data', 'ingress', 'fencherlc.json');
@@ -151,6 +153,21 @@ async function commandBuild(tsvPath, apply) {
   await persist(profile, apply);
 }
 
+function commandMedals() {
+  const p = readProfile();
+  if (!p) return console.log('Rode `build` primeiro.');
+  const current = computeAllBadges(p.stats);
+  console.log('Medalhas no tier atual do FencherLC:\n');
+  for (const b of current) {
+    const ok = medalArt(b.key, b.tier);
+    console.log(`  ${ok ? '✓' : '·'} ${b.key}-${b.tier}.png   ${b.name} (${b.tier})`);
+  }
+  const missingAll = expectedMedalFiles().filter(
+    (f) => !existsSync(join(ROOT, 'public', 'ingress', 'medals', f)),
+  );
+  console.log(`\n${missingAll.length} de ${expectedMedalFiles().length} arquivos possíveis ainda não estão em public/ingress/medals/`);
+}
+
 async function commandGdpr(dir, apply) {
   if (!dir || !existsSync(dir)) throw new Error(`Pasta não encontrada: ${dir}`);
   const previous = readProfile();
@@ -167,10 +184,11 @@ const run = {
   show: () => commandShow(),
   build: () => commandBuild(arg, apply),
   gdpr: () => commandGdpr(arg, apply),
+  medals: () => commandMedals(),
 };
 
 if (!run[command]) {
-  console.log('Comandos: show | build <export.tsv> [--apply] | gdpr <pasta> [--apply]');
+  console.log('Comandos: show | build <export.tsv> [--apply] | gdpr <pasta> [--apply] | medals');
   process.exit(command ? 1 : 0);
 }
 

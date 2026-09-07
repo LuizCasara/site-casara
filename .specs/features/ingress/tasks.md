@@ -838,6 +838,23 @@ Direção Scanner, fiação de `ApTimeline` vs `PendingSection` por
 
 ---
 
+### T24: arte real das medalhas (enhancement pós-Verifier)
+
+**What**: `BadgeMedal` usa o PNG da medalha real em
+`public/ingress/medals/<key>-<tier>.png` quando existe; senão mantém o hexágono
+com a inicial. Fallback por checagem de arquivo no server, sem quebrar nada.
+**Where**: `lib/ingress-medal-art.mjs`, `components/ingress/BadgeMedal.tsx`,
+`app/ingress/theme.css`, `scripts/ingress.mjs` (comando `medals`),
+`public/ingress/medals/README.md`
+**Depends on**: T12, T19
+**Requirement**: INGR-12 (apresentação da badge) — pedido do Luiz depois da entrega
+**Status**: ✅ Complete — lint ✔ / 296 testes ✔ / build ✔ (`/ingress` segue 105 kB).
+O Luiz dropa os PNGs (14 arquivos no tier atual; `node scripts/ingress.mjs medals`
+lista o que falta). Copyright: arte da Niantic, uso tolerado pela comunidade,
+decisão do dono do site — o código funciona sem as imagens.
+
+---
+
 ## Phase Execution Map
 
 ```
