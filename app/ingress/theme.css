@@ -61,6 +61,111 @@
   color: var(--ing-bg);
 }
 
+/* --- primitivas de UI da direção Scanner --- */
+
+.ing-shell {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ing-panel {
+  position: relative;
+  background: linear-gradient(180deg, var(--ing-panel), var(--ing-panel-2));
+  border: 1px solid var(--ing-edge);
+  border-radius: 2px;
+  padding: 1rem;
+  /* canto recortado: o motivo do campo triangular */
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+}
+
+.ing-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--ing-line);
+  clip-path: inherit;
+  pointer-events: none;
+}
+
+.ing-panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--ing-line);
+}
+
+.ing-panel__label {
+  font-size: 0.95rem;
+  color: var(--ing-green-soft);
+  text-transform: none;
+}
+
+.ing-panel__hint {
+  font-size: 0.75rem;
+  color: var(--ing-text-faint);
+  font-family: var(--ing-font-body);
+}
+
+.ing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+@media (min-width: 32rem) {
+  .ing-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.ing-stat {
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge);
+  border-radius: 2px;
+  padding: 0.55rem 0.65rem;
+  min-width: 0;
+}
+
+.ing-stat__value {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  line-height: 1.1;
+  color: var(--ing-text);
+  overflow-wrap: anywhere;
+}
+
+.ing-stat__label {
+  font-size: 0.72rem;
+  color: var(--ing-text-dim);
+  margin-top: 0.15rem;
+}
+
+.ing-pending {
+  color: var(--ing-text-dim);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+
+.ing-pending__dot {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-top: 0.4rem;
+  border: 1px solid var(--ing-green-dim);
+  transform: rotate(45deg);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ingress-scanner * {
     animation-duration: 0.001ms !important;

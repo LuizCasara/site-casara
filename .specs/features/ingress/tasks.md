@@ -396,7 +396,8 @@ T9; + `components/Header.tsx` / `components/Footer.tsx`: esconder em `/ingress`)
 **What**: Página server que chama `loadProfile()`, renderiza estado vazio
 informativo se `null`, e monta o esqueleto das seções (ordem da Direção Scanner),
 computando badges/radar e passando como props.
-**Where**: `app/ingress/page.tsx`
+**Where**: `app/ingress/page.tsx` (+ `components/ingress/Panel.tsx` primitiva de
+moldura). T10–T18 trocam cada placeholder pela seção real.
 **Depends on**: T8
 **Reuses**: `lib/ingress.ts`, `lib/ingress-badges.mjs`, `lib/ingress-radar.mjs`
 **Requirement**: INGR-01, INGR-05
@@ -406,16 +407,16 @@ computando badges/radar e passando como props.
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] `loadProfile() === null` → estado vazio ("perfil ainda não publicado"), não
-      erro 500
-- [ ] Com perfil, renderiza placeholders/slots das seções na ordem definida
-- [ ] Nenhum `'use client'` no arquivo
-- [ ] Sem scroll horizontal a 360px
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] `loadProfile() === null` → estado vazio ("Sinal perdido"), não erro 500
+- [x] Com perfil, renderiza placeholders das 7 seções na ordem da Direção Scanner
+- [x] Nenhum `'use client'` (page nem Panel)
+- [x] `.ing-shell` centralizado, sem scroll horizontal a 360px
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): página server e composição das seções`
+**Status**: ✅ Complete
 
 ---
 
