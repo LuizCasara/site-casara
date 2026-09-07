@@ -13,7 +13,7 @@ without it.**
 ---
 
 **Design**: `.specs/features/ingress/design.md`
-**Status**: In Progress (aprovado 2026-09-07; execução inline, fase a fase)
+**Status**: Done — 23/23 tasks + revisão visual Prime + 2 fixes. Verifier a rodar.
 
 **Validação estrutural:** `validate_tasks.py` → 0 erros. Warnings restantes: 17×
 "Tests: none" (todos confirmados pela Test Coverage Matrix — camadas React/CLI/
@@ -821,17 +821,20 @@ Direção Scanner, fiação de `ApTimeline` vs `PendingSection` por
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Todas as seções renderizam na ordem: hero → stats → badges → radar →
-      distribuição → evolução AP (real ou pending) → mapa de portais (pending) →
-      explorador S2
-- [ ] `timeSeries.lifetimeAp` presente → `ApTimeline`; ausente → `PendingSection`
-      (sem mudança de código entre os dois casos além do dado)
-- [ ] `npm run build` sem warning novo; página sem scroll horizontal a 360px
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] Seções na ordem: hero → 8 painéis de stats → medalhas → radar →
+      construir/derrubar → evolução AP (ApTimeline ou PendingSection) → portais
+      (resumo ou PendingSection) → preview/explorador S2
+- [x] `timeSeries.lifetimeAp` presente → `ApTimeline`; ausente → `PendingSection`.
+      `portals` presente → resumo; ausente → `PendingSection`. Sem mudança de
+      código entre os casos, só o dado
+- [x] `npm run build` limpo, sem warning novo; `.ing-shell` sem scroll horizontal
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔) —
+      **fim da Fase 4 / todas as 23 tasks**
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): integração final da página /ingress`
+**Status**: ✅ Complete
 
 ---
 

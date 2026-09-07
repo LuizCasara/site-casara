@@ -46,11 +46,17 @@ export default function IngressPage() {
         <ApTimeline points={profile.timeSeries.lifetimeAp} />
       )}
 
-      {pending.has('portalMap') ? (
+      {pending.has('portalMap') || !profile.portals ? (
         <PendingSection kind="portalMap" />
       ) : (
-        <Panel label="Mapa de portais">
-          <p style={{color: 'var(--ing-text-faint)'}}>portais</p>
+        <Panel
+          label="Portais"
+          hint={`${profile.portals.visited.length} visitados · ${profile.portals.submitted.length} submetidos`}
+        >
+          <p className="ing-pending">
+            <span className="ing-pending__dot" aria-hidden="true" />O mapa de calor desses portais é
+            o próximo passo — por ora, os números vêm do dump GDPR.
+          </p>
         </Panel>
       )}
 
