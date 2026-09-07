@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard do agente — FencherLC (protótipo)</title>
+<!--
+  PROTÓTIPO herdado da conversa de pesquisa. NÃO está integrado ao Next.
+  Serve como ponto de partida visual para a fase de design da feature Ingress.
+
+  Limitação conhecida: o objeto `agentData.apByYear` (série temporal de AP) NÃO
+  existe no export de estatísticas atual — só viria do dump GDPR ou de exports
+  periódicos manuais. Ver docs/ingress-perfil-fencherlc.md.
+-->
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0b0b0b;
+    color: #f0efec;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
+  p.sub { color: #898781; font-size: 14px; margin-top: 0; margin-bottom: 2rem; }
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+  .metric {
+    background: #1a1a19;
+    border-radius: 8px;
+    padding: 1rem;
+  }
+  .metric p.label { font-size: 13px; color: #898781; margin: 0 0 4px; }
+  .metric p.value { font-size: 24px; font-weight: 500; margin: 0; }
+  .section-title { font-size: 14px; font-weight: 500; margin: 0 0 8px; }
+  .chart-wrap { position: relative; height: 240px; margin-bottom: 2rem; }
+  .s2-box {
+    background: #1a1a19;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  input[type="range"] { width: 100%; }
+  .s2-out { text-align: right; min-width: 90px; }
+  .s2-out p.label { font-size: 13px; color: #898781; margin: 0; }
+  .s2-out p.value { font-size: 20px; font-weight: 500; margin: 0; }
+  .note { font-size: 12px; color: #6b6a66; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>Agente FencherLC</h1>
+<p class="sub">Painel pessoal — construído a partir do dump GDPR + geometria S2 aberta (sem dados ao vivo da Niantic)</p>
+
+<div class="metrics">
+  <div class="metric">
+    <p class="label">Nível</p>
+    <p class="value" id="m-level">--</p>
+  </div>
+  <div class="metric">
+    <p class="label">AP total</p>
+    <p class="value" id="m-ap">--</p>
+  </div>
+  <div class="metric">
+    <p class="label">Portais capturados</p>
+    <p class="value" id="m-portals">--</p>
+  </div>
+  <div class="metric">
+    <p class="label">Medalhas ouro+</p>
+    <p class="value" id="m-medals">--</p>
+  </div>
+</div>
+
+<p class="section-title">Linha do tempo de progresso (AP acumulado)</p>
+<div class="chart-wrap">
+  <canvas id="timelineChart"></canvas>
+</div>
+
+<p class="section-title">Explorador de células S2</p>
+<div class="s2-box">
+  <div style="flex: 1;">
+    <p style="font-size: 13px; color: #898781; margin: 0 0 6px;">Nível da célula</p>
+    <input type="range" min="6" max="17" value="14" id="s2level" />
+  </div>
+  <div class="s2-out">
+    <p class="label">Nível</p>
+    <p class="value" id="s2out">14</p>
+  </div>
+</div>
+<p class="note">Ilustrativo. Numa versão completa, isso desenharia as bordas de célula S2 sobre um mapa real (ex.: com a lib s2-geometry-js), útil para planejar fields e anomalias.</p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+  // ------------------------------------------------------------------
+  // SUBSTITUA este objeto pelos dados reais extraídos do dump GDPR
+  // (arquivos como game_log.tsv). Estrutura mínima sugerida abaixo.
+  // ------------------------------------------------------------------
+  const agentData = {
+    level: 13,
+    totalAP: 94990303,     // Lifetime AP
+    portalsCaptured: 20330,
+    goldMedals: 9,
+    apByYear: {
+      "2019": 400000,
+      "2020": 1100000,
+      "2021": 2000000,
+      "2022": 3100000,
+      "2023": 4000000,
+      "2024": 4900000,
+      "2025": 5600000,
+      "2026": 6200000
+    }
+  };
+
+  function formatNumber(n) {
+    return new Intl.NumberFormat('pt-BR').format(n);
+  }
+
+  document.getElementById('m-level').textContent = agentData.level;
+  document.getElementById('m-ap').textContent = (agentData.totalAP / 1000000).toFixed(1) + 'M';
+  document.getElementById('m-portals').textContent = formatNumber(agentData.portalsCaptured);
+  document.getElementById('m-medals').textContent = agentData.goldMedals;
+
+  const years = Object.keys(agentData.apByYear);
+  const values = years.map(y => agentData.apByYear[y] / 1000000);
+
+  new Chart(document.getElementById('timelineChart'), {
+    type: 'line',
+    data: {
+      labels: years,
+      datasets: [{
+        label: 'AP acumulado (milhões)',
+        data: values,
+        borderColor: '#2a78d6',
+        backgroundColor: 'rgba(42,120,214,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { title: { display: true, text: 'AP (milhões)' }, grid: { color: '#2c2c2a' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  document.getElementById('s2level').addEventListener('input', function (e) {
+    document.getElementById('s2out').textContent = e.target.value;
+  });
+</script>
+
+</body>
+</html>
