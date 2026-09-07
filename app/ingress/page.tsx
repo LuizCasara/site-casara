@@ -6,6 +6,7 @@ import StatGroups from '@/components/ingress/StatGroups'
 import BadgeShelf from '@/components/ingress/BadgeShelf'
 import PendingSection from '@/components/ingress/PendingSection'
 import ProfileRadar from '@/components/ingress/ProfileRadar'
+import ActionsBreakdown from '@/components/ingress/ActionsBreakdown'
 
 export default function IngressPage() {
   const profile = loadProfile()
@@ -35,10 +36,7 @@ export default function IngressPage() {
 
       <ProfileRadar stats={profile.stats} />
 
-      {/* T15: ActionsBreakdown */}
-      <Panel label="Distribuição de ações">
-        <p style={{color: 'var(--ing-text-faint)'}}>—</p>
-      </Panel>
+      <ActionsBreakdown stats={profile.stats} />
 
       {/* T18 troca este slot pelo ApTimeline quando timeSeries.lifetimeAp existir */}
       {pending.has('apTimeline') ? (

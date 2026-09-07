@@ -374,6 +374,48 @@
   font-size: 11px;
 }
 
+/* --- barras --- */
+
+.ing-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.ing-bar__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.ing-bar__label {
+  color: var(--ing-text-dim);
+}
+
+.ing-bar__value {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  color: var(--ing-text);
+}
+
+.ing-bar__track {
+  height: 8px;
+  background: var(--ing-edge-soft);
+  border-radius: 4px;
+}
+
+.ing-bar__fill {
+  height: 100%;
+  min-width: 4px;
+  border-radius: 4px;
+  background: var(--ing-accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ingress-prime * {
     animation-duration: 0.001ms !important;

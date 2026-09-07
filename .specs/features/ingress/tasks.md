@@ -584,14 +584,16 @@ mods).
 - Skill: `nextjs-use-client`, `dataviz`
 
 **Done when**:
-- [ ] Desenha a distribuição de ao menos 4 contagens com rótulo e valor pt-BR
-- [ ] Contagem ausente → barra/fatia omitida
-- [ ] SVG responsivo, server-only, legível a 360px
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] 6 contagens (construir vs. derrubar), barras horizontais de série única,
+      rótulo + valor pt-BR, `border-radius` 4px na ponta
+- [x] Contagem ausente → linha omitida; nenhuma presente → não renderiza
+- [x] Barras CSS responsivas (rótulo acima da barra), server-only, 360px ok
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔)
 
 **Tests**: none
 **Gate**: build
-**Commit**: `feat(ingress): distribuição de ações em SVG`
+**Commit**: `feat(ingress): distribuição de ações em barras`
+**Status**: ✅ Complete
 
 ---
 
