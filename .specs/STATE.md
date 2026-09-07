@@ -16,7 +16,7 @@
 - **Phase / Task**: Execute — Fase 1 (T1–T7) COMPLETA. Próxima: Fase 2 (T8–T13), a UI.
 - **Completed**: Specify, Discuss, Design, Tasks. Execute: T1 (deps), T2 (ingress-stats), T3 (ingress-badges), T4 (ingress-radar), T5 (ingress-profile), T6 (ingress-s2), T7 (semente JSON + loader). Cada uma com commit atômico; 40 testes novos (295 no total); build ✔.
 - **In-progress** (file:line): nenhum — Fase 1 fechada em `28a3cb3`
-- **Next step**: T8 — `app/ingress/layout.tsx` (layout próprio, fontes, metadata; Direção "Scanner"). Depois T9 page.tsx, T10–T13 seções server.
-- **Blockers**: coordenada real da cidade do Luiz para `data/ingress/fencherlc.json` → `s2.center` (hoje: placeholder Brasília -15.7939,-47.8828). Trocar com `node scripts/ingress.mjs` quando o script existir (T19) ou à mão no JSON.
+- **Next step**: T8 — `app/ingress/layout.tsx` (layout próprio, fontes, metadata; Direção "Scanner"). Depois T9 page.tsx, T10–T13 seções server. Usuário pediu para iniciar a Fase 2 às 19:30 de 2026-09-07.
+- **Blockers**: nenhum. `s2.center` já aponta para Cascavel - PR (-24.9573, -53.459).
 - **Uncommitted files**: nenhum (tudo commitado na branch)
-- **Branch**: `feat/ingress` (7 commits de planejamento/docs + 8 de execução à frente de main)
+- **Branch**: `feat/ingress` (à frente de main: planejamento + Fase 1 + fix de coordenada)
