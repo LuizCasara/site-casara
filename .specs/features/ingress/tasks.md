@@ -243,19 +243,20 @@ próximo a partir de um valor de estatística.
 - Skill: NONE
 
 **Done when**:
-- [ ] `RADAR_AXES` define ao menos: construção, destruição, exploração, hacking,
+- [x] `RADAR_AXES` define construção, destruição, exploração, hacking,
       links/campos — cada um com `statKeys` e `reference`
-- [ ] `computeRadarAxes` satura `value` em 1; stat ausente conta como 0 sem
+- [x] `computeRadarAxes` satura `value` em 1; stat ausente conta como 0 sem
       quebrar os demais eixos
-- [ ] Testes: valores altos → `value` 1 (saturado); valores zero → 0; um
-      `statKey` ausente → aquele eixo usa 0 e os outros continuam; soma de
-      múltiplas stats num eixo confere
-- [ ] Gate check passes: `npm test`
-- [ ] Test count: ≥5 tests pass
+- [x] Testes: valores altos → `value` 1; zero → 0; `statKey` ausente → eixo usa 0
+      e os outros continuam finitos; soma de múltiplas stats confere; perfil real
+      → eixos variados em (0,1)
+- [x] Gate check passes: `npm test`
+- [x] Test count: 6 tests pass
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(ingress): normalização dos eixos do radar de perfil`
+**Status**: ✅ Complete
 
 ---
 
