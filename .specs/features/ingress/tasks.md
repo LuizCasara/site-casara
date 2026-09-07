@@ -753,12 +753,13 @@ codinome, facção, nível e 3-4 números de destaque do perfil.
 
 ---
 
-### T21: `app/ingress/icon.tsx` — favicon da rota
+### T21: `app/ingress/icon.svg` — favicon da rota
 
-**What**: Ícone próprio de `/ingress` (hexágono Enlightened) via `ImageResponse`.
-**Where**: `app/ingress/icon.tsx`
+**What**: Ícone próprio de `/ingress` — hexágono Enlightened sobre o fundo Prime.
+**Where**: `app/ingress/icon.svg` (estático, como `app/casamento/icon.svg` — não
+`.tsx`; o App Router serve automaticamente)
 **Depends on**: T8
-**Reuses**: `app/casamento/icon.tsx`
+**Reuses**: `app/casamento/icon.svg`
 **Requirement**: INGR-03
 
 **Tools**:
@@ -766,12 +767,13 @@ codinome, facção, nível e 3-4 números de destaque do perfil.
 - Skill: NONE
 
 **Done when**:
-- [ ] Rota `icon` responde com o ícone; aparece na aba do navegador em `/ingress`
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] `app/ingress/icon.svg` compila como `/ingress/icon.svg`; hexágono verde
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): favicon da rota /ingress`
+**Status**: ✅ Complete
 
 ---
 
