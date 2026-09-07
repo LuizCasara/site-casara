@@ -708,18 +708,20 @@ novo é mais antigo que o atual.
 - Skill: NONE
 
 **Done when**:
-- [ ] `build` sem `--apply` imprime o que gravaria e não escreve
-- [ ] `build --apply` mostra diff vs. JSON atual e grava só após confirmação
-- [ ] `gdpr <dir>` lê os `.tsv` de série temporal + listas de portais e chama
-      `mergeGdprDump`; arquivo ausente → warning, não aborta
-- [ ] `capturedAt` retrocedendo → confirmação extra
-- [ ] `node scripts/ingress.mjs build <tsv>` roda a partir do TSV real de 07/09 e
-      reproduz o `data/ingress/fencherlc.json` de T7 (idempotência ponta a ponta)
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] `build` sem `--apply` imprime os campos que mudam e não escreve
+- [x] `build --apply` mostra o diff e grava só após confirmação (s/N)
+- [x] `gdpr <dir>` lê os `.tsv` de série temporal + listas de portais e chama
+      `mergeGdprDump`; arquivo ausente → linha "· ausente", não aborta
+- [x] `capturedAt` retrocedendo → confirmação extra antes da confirmação normal
+- [x] `node scripts/ingress.mjs build <tsv>` com o TSV real de 07/09 reproduz o
+      `data/ingress/fencherlc.json` atual byte a byte ("Nada muda") — idempotência
+      ponta a ponta; `show` imprime o resumo
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): CLI de ingestão do export e do dump GDPR`
+**Status**: ✅ Complete
 
 ---
 
