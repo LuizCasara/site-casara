@@ -364,7 +364,9 @@ retorna `Profile | null`.
 **What**: Layout próprio de `/ingress` — fontes via `next/font/google` (display
 técnico p/ números + corpo), `metadata` (título/descrição OG/Twitter próprios),
 tema "Scanner", sem header/footer do site, fora do `LanguageProvider`.
-**Where**: `app/ingress/layout.tsx`
+**Where**: `app/ingress/layout.tsx` (+ `app/ingress/theme.css` tokens da direção
+Scanner; + stub mínimo `app/ingress/page.tsx` p/ o gate de build, substituído em
+T9; + `components/Header.tsx` / `components/Footer.tsx`: esconder em `/ingress`)
 **Depends on**: T7
 **Reuses**: `app/casamento/layout.tsx` (estrutura de fonte + metadata)
 **Requirement**: INGR-03, INGR-31
@@ -374,15 +376,18 @@ tema "Scanner", sem header/footer do site, fora do `LanguageProvider`.
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Layout carrega 2 fontes com `variable`, aplica no wrapper, sem
-      `'use client'`
-- [ ] `metadata` exporta OG + Twitter com título/descrição da rota
-- [ ] Nenhum header/footer/`LanguageProvider` herdado
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] Layout carrega Chakra Petch + Barlow com `variable`, aplica no wrapper
+      `.ingress-scanner`, sem `'use client'`
+- [x] `metadata` exporta OG + Twitter com título/descrição da rota
+- [x] Header e Footer retornam `null` em `/ingress` (LanguageProvider fica no
+      root mas nenhum componente da rota o consome e o toggle vive no Header)
+- [x] `/ingress` compila como rota estática; `npm run build` ✔
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): layout e metadados da rota /ingress`
+**Status**: ✅ Complete
 
 ---
 

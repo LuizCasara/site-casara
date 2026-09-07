@@ -1,0 +1,70 @@
+/*
+ * Direção "Scanner" — o HUD do scanner do Ingress Prime. Verde-XM sobre um
+ * quase-preto esverdeado (não preto puro), painéis com um fio de 1px que brilha
+ * de leve. Tokens escopados em `.ingress-scanner` (o wrapper do layout) para não
+ * vazar no resto do site.
+ */
+
+.ingress-scanner {
+  /* base */
+  --ing-bg: #060a07;
+  --ing-bg-2: #0a1109;
+  --ing-panel: #0c140f;
+  --ing-panel-2: #10190f;
+  --ing-edge: #1c3a26;
+  --ing-line: rgba(38, 240, 122, 0.22);
+
+  /* facção Enlightened */
+  --ing-green: #26f07a;
+  --ing-green-soft: #5cf7a0;
+  --ing-green-dim: #0f7a3d;
+  --ing-green-ghost: rgba(38, 240, 122, 0.08);
+
+  /* texto */
+  --ing-text: #d7ffe9;
+  --ing-text-dim: #7ba98c;
+  --ing-text-faint: #4d6f5b;
+
+  /* efeitos */
+  --ing-glow: 0 0 14px rgba(38, 240, 122, 0.28);
+  --ing-glow-strong: 0 0 22px rgba(38, 240, 122, 0.45);
+
+  /* tipografia */
+  --ing-font-display: var(--font-ingress-display), 'Chakra Petch', ui-sans-serif, system-ui, sans-serif;
+  --ing-font-body: var(--font-ingress-body), 'Barlow', ui-sans-serif, system-ui, sans-serif;
+
+  background-color: var(--ing-bg);
+  color: var(--ing-text);
+  font-family: var(--ing-font-body);
+  min-height: 100vh;
+  min-height: 100dvh;
+  /* fundo: leve grade de células + brilho central, como olhar pelo scanner */
+  background-image:
+    radial-gradient(120% 90% at 50% -10%, rgba(38, 240, 122, 0.10), transparent 60%),
+    linear-gradient(var(--ing-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ing-line) 1px, transparent 1px);
+  background-size: 100% 100%, 44px 44px, 44px 44px;
+  background-position: 0 0, 0 0, 0 0;
+}
+
+.ingress-scanner h1,
+.ingress-scanner h2,
+.ingress-scanner h3 {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.ingress-scanner ::selection {
+  background: var(--ing-green);
+  color: var(--ing-bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ingress-scanner * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
