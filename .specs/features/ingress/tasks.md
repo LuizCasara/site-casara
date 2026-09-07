@@ -643,18 +643,22 @@ não carregar.
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] `'use client'`; importado por `dynamic` com `ssr: false`; CSS do Leaflet
-      importado aqui
-- [ ] Slider (faixa `LEVEL_RANGE`) redesenha a grade; arrastar o mapa recalcula
-      as células da nova viewport
-- [ ] Erro ao carregar mapa/tiles → mensagem de fallback; o preview de T16
-      permanece; resto da página intacto
-- [ ] Mapa utilizável a 360px
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] `'use client'`; `dynamic(() => import('./S2Explorer'), {ssr:false})` no
+      Loader; `import 'leaflet/dist/leaflet.css'` no componente
+- [x] Slider `LEVEL_RANGE` → `S2Layer` recalcula via `useEffect([level])`;
+      `useMapEvents({moveend, zoomend})` recalcula ao arrastar/zoom (cap 300)
+- [x] `MapErrorBoundary` no Loader → mensagem de fallback se o Leaflet quebrar; o
+      preview de T16 fica acima, intacto
+- [x] `.ing-s2__map` 20rem de altura, tiles escurecidos por filtro CSS, slider
+      full-width — utilizável a 360px. Chunk do Leaflet code-split (base +2 kB)
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔).
+      **Verificação visual do mapa pendente do Luiz** (memória: sem verificação
+      visual automática)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): explorador de células S2 sobre mapa`
+**Status**: ✅ Complete
 
 ---
 

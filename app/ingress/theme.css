@@ -483,6 +483,46 @@
   font-size: 0.88rem;
 }
 
+.ing-s2__slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+  background: var(--ing-bg-2);
+}
+
+.ing-s2__slider strong {
+  font-family: var(--ing-font-display);
+  color: var(--ing-green-soft);
+}
+
+.ing-s2__slider input[type='range'] {
+  width: 100%;
+  accent-color: var(--ing-green);
+}
+
+.ing-s2__map {
+  width: 100%;
+  height: 20rem;
+  background: var(--ing-bg-2);
+}
+
+/* Leaflet controla o tema claro por padrão — encaixa no escuro da rota. */
+.ing-s2__map .leaflet-tile {
+  filter: brightness(0.72) saturate(0.85) hue-rotate(6deg);
+}
+
+.ing-s2__map .leaflet-control-attribution {
+  background: rgba(11, 15, 20, 0.8);
+  color: var(--ing-text-faint);
+}
+
+.ing-s2__map .leaflet-control-attribution a {
+  color: var(--ing-text-dim);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ingress-prime * {
     animation-duration: 0.001ms !important;
