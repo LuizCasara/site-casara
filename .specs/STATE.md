@@ -13,10 +13,10 @@
 ## Handoff
 
 - **Feature**: ingress (`.specs/features/ingress/`)
-- **Phase / Task**: Execute — Fases 1 e 2 COMPLETAS (T1–T13). Próxima: Fase 3 (T14–T18).
-- **Completed**: Specify, Discuss, Design, Tasks. Execute Fase 1: T1–T7 (lib pura + semente JSON + loader). Fase 2: T8 (layout + theme.css "Scanner" + esconde Header/Footer), T9 (page.tsx + Panel), T10 (AgentHeader + HeroMesh), T11 (StatGroups + StatValue), T12 (BadgeShelf + BadgeMedal), T13 (PendingSection). Commits atômicos; 295 testes; build ✔; /ingress 103 kB estático.
-- **In-progress** (file:line): nenhum — Fase 2 fechada
-- **Next step**: T14 — `components/ingress/ProfileRadar.tsx` (SVG radar de `computeRadarAxes`). Depois T15 ActionsBreakdown, T16 S2Preview, T17 S2Explorer (client, Leaflet sob toque), T18 ApTimeline.
-- **Blockers**: nenhum. `s2.center` = Cascavel - PR (-24.9573, -53.459).
+- **Phase / Task**: Execute — Fases 1–3 COMPLETAS (T1–T18). Próxima: Fase 4 (T19–T23).
+- **Completed**: Specify, Discuss, Design, Tasks. Execute T1–T18 + `refactor(ingress): direção visual Prime` (Luiz pediu Ingress Prime, não o clássico 2013 — theme.css/fonte Sora/wrapper `.ingress-prime`). Fase 3: T14 ProfileRadar, T15 ActionsBreakdown, T16 S2Preview, T17 S2Explorer (Leaflet `dynamic ssr:false` no toque + MapErrorBoundary), T18 ApTimeline. Commits atômicos; 295 testes; build ✔; /ingress 105 kB.
+- **In-progress** (file:line): nenhum — Fase 3 fechada em `e78a9d9`
+- **Next step**: T19 — `scripts/ingress.mjs` (CLI build/gdpr/show). Depois T20 opengraph-image, T21 icon, T22 CountUp, T23 integração final → **Verifier obrigatório**.
+- **Blockers**: verificação visual do mapa S2 (T17) e da direção Prime pendente do Luiz.
 - **Uncommitted files**: nenhum
-- **Branch**: `feat/ingress` (planejamento + Fase 1 + Fase 2 à frente de main; nada pushed)
+- **Branch**: `feat/ingress` (tudo à frente de main; nada pushed)
