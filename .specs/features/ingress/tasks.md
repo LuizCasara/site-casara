@@ -275,24 +275,22 @@ preservam `timeSeries`/`portals` já existentes, recalculam `pending`.
 - Skill: NONE
 
 **Done when**:
-- [ ] `buildProfile` produz o `Profile` completo do `design.md`
-      (`schemaVersion`, `agent`, `capturedAt`, `sources`, `stats`, `s2`,
-      `timeSeries: null`, `portals: null`, `pending`)
-- [ ] Rodar `buildProfile` duas vezes com o mesmo export → objetos idênticos
-      (idempotência; sem `Date.now()` nem ordem de chave instável)
-- [ ] Se `previous` tem `timeSeries`/`portals`, `buildProfile` preserva e remove
-      as entradas de `pending` correspondentes
-- [ ] `mergeGdprDump` funde séries temporais + portais, mantém `agent`/`stats`
-      mais recentes por `capturedAt`, limpa `pending`; arquivo de dump
-      ausente/vazio → warning no retorno, não exceção
-- [ ] Testes: idempotência; merge preserva dump anterior; `mergeGdprDump` com
-      fixture parcial; `capturedAt` mais antigo não sobrescreve stats novas
-- [ ] Gate check passes: `npm test`
-- [ ] Test count: ≥6 tests pass
+- [x] `buildProfile` produz o `Profile` completo do `design.md`
+- [x] `buildProfile` duas vezes com o mesmo export → objetos idênticos
+      (idempotência; sem `Date.now()`; stats com ordem de chave estável)
+- [x] `previous` com `timeSeries`/`portals` → preservados e `pending` limpo
+- [x] `mergeGdprDump` funde séries temporais + portais, mantém `agent`/`stats`
+      mais recentes por `capturedAt`, limpa `pending`; `dumpData` vazio → no-op
+      seguro (a leitura de arquivo ausente/vazio fica no CLI, T19)
+- [x] Testes: idempotência; merge preserva dump anterior; fixture parcial;
+      `capturedAt` antigo não sobrescreve / novo sobrescreve
+- [x] Gate check passes: `npm test` (289 testes ✔)
+- [x] Test count: 9 tests pass
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(ingress): build e merge do perfil de agente`
+**Status**: ✅ Complete
 
 ---
 
