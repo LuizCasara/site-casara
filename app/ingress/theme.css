@@ -250,6 +250,86 @@
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
 }
 
+/* --- medalhas --- */
+
+.ing-medals {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: 0.6rem;
+}
+
+.ing-medal {
+  --tier: var(--ing-text-faint);
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.6rem;
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge);
+  border-left: 2px solid var(--tier);
+  border-radius: 2px;
+  min-width: 0;
+}
+
+.ing-medal--bronze {
+  --tier: #cd7f32;
+}
+.ing-medal--silver {
+  --tier: #cdd6d0;
+}
+.ing-medal--gold {
+  --tier: #ffcf40;
+}
+.ing-medal--platinum {
+  --tier: #b9f2ff;
+}
+.ing-medal--onyx {
+  --tier: var(--ing-green);
+}
+
+.ing-medal__hex {
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: grid;
+  place-items: center;
+  background: var(--tier);
+  color: var(--ing-bg);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+
+.ing-medal--onyx .ing-medal__hex {
+  box-shadow: var(--ing-glow);
+}
+
+.ing-medal__initial {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.ing-medal__text {
+  min-width: 0;
+}
+
+.ing-medal__name {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  color: var(--ing-text);
+}
+
+.ing-medal__tier {
+  font-size: 0.8rem;
+  color: var(--tier);
+  font-family: var(--ing-font-display);
+}
+
+.ing-medal__next {
+  font-size: 0.72rem;
+  color: var(--ing-text-dim);
+  margin-top: 0.1rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ingress-scanner * {
     animation-duration: 0.001ms !important;

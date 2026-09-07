@@ -497,15 +497,18 @@ ausentes; `StatValue.tsx` é o item número+label.
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Cada medalha mostra nome, tier atual e o restante para o próximo tier
-- [ ] Badge em Onyx → indica tier máximo, sem "falta para o próximo"
-- [ ] Badge sem stat de origem não aparece (já filtrada por T3)
-- [ ] Server-only; fileira de medalhas sem scroll horizontal a 360px
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] Cada medalha: hexágono, nome, tier (cor por tier) e "faltam X para <tier>"
+- [x] Badge em Onyx → "tier máximo", hexágono com brilho, sem "falta para"
+- [x] Badge sem stat de origem não aparece (filtrada em T3); `badges` vazio →
+      `BadgeShelf` não renderiza
+- [x] Server-only; grade `auto-fill minmax(min(100%,15rem),1fr))` sem scroll
+      horizontal a 360px
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ ✔ ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): prateleira de medalhas com tier`
+**Status**: ✅ Complete
 
 ---
 
