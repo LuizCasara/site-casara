@@ -564,13 +564,24 @@
 /* --- página de detalhe da medalha --- */
 
 .ing-back {
+  align-self: flex-start;
   color: var(--ing-text-dim);
   text-decoration: none;
   font-size: 0.85rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .ing-back:hover {
   color: var(--ing-green-soft);
+}
+
+.ing-back:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
 }
 
 .ing-medal-hero {

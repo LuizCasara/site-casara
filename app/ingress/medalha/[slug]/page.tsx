@@ -1,7 +1,7 @@
-import Link from 'next/link'
 import {notFound} from 'next/navigation'
 import type {Metadata} from 'next'
 import {loadProfile} from '@/lib/ingress'
+import BackLink from '@/components/ingress/BackLink'
 import {BADGES, computeBadge, TIER_LABELS} from '@/lib/ingress-badges.mjs'
 import {projectNextTier} from '@/lib/ingress-history.mjs'
 import {catalogEntry, coreBadges} from '@/lib/ingress-catalog.mjs'
@@ -57,9 +57,7 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
 
   return (
     <main className="ing-shell">
-      <Link href="/ingress" className="ing-back">
-        ← Perfil de FencherLC
-      </Link>
+      <BackLink fallback="/ingress">← Perfil de FencherLC</BackLink>
 
       <header className="ing-medal-hero">
         {art ? (
