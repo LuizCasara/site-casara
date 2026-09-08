@@ -1461,12 +1461,14 @@ nome, tier, valor da stat.
 **Tools**: MCP NONE · Skill NONE
 
 **Done when**:
-- [ ] Rota compila; usa nome e tier da badge
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] `opengraph-image.tsx` (nodejs — usa `readFileSync` do catálogo), `generateStaticParams` = 26; build prerendera 26 OG
+- [x] Cartão com "Medalha de FencherLC", nome (verde), tier + valor
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ 323 ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): OpenGraph por medalha`
+**Status**: ✅ Complete
 
 ---
 
