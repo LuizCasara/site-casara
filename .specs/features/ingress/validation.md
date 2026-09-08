@@ -163,3 +163,9 @@ Gate re-rodado: lint ✔ · 296 testes ✔ · build ✔ (`/ingress` segue 105 kB
 local com `eslint-disable` pontual). Sem novo sensor — mudança puramente aditiva
 com fallback, coberta pelo build-gate. Copyright: arte da Niantic, uso tolerado
 pela comunidade Ingress, decisão do dono do site.
+
+Os 14 PNGs do tier atual foram baixados de **ingress.plus** (API PocketBase
+aberta). O `tier_values` da API conferiu com `lib/ingress-badges.mjs` em 13 de 14
+badges — a exceção foi o **bronze do Illuminator** (ingress.plus 2000 vs. Fev
+Games 5000); corrigido para 2000 (fonte viva). Não afeta o resultado do FencherLC
+(Illuminator = Onyx nos dois casos), então nenhum teste mudou de veredito.
