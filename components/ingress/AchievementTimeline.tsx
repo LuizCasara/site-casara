@@ -1,6 +1,6 @@
 'use client'
 
-import {useMemo, useRef, useState} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
 import {annotateLaneGaps, formatGap, groupLanes} from '@/lib/ingress-timeline.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import Panel from './Panel'
@@ -175,6 +175,45 @@ function Resumo({rows}: {rows: Row[]}) {
   )
 }
 
+/** Mini gráfico: os tiers desta medalha nas datas reais, no vão de tempo dela. */
+function MiniSpark({tiers}: {tiers: TierEntry[]}) {
+  const W = 210
+  const H = 58
+  const pad = 12
+  const cy = 26
+  const ds = tiers.map((t) => Date.parse(t.date))
+  const min = Math.min(...ds)
+  const max = Math.max(...ds)
+  const x = (t: number) => pad + (max === min ? 0.5 : (t - min) / (max - min)) * (W - 2 * pad)
+  const yr = (iso: string) => new Date(`${iso}T00:00:00Z`).getUTCFullYear()
+  return (
+    <svg className="ing-tl__detail-spark" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Progressão no tempo">
+      <line x1={pad} y1={cy} x2={W - pad} y2={cy} className="ing-tl__lane-track" />
+      {tiers.length > 1 ? (
+        <polyline className="ing-tl__line" points={tiers.map((t) => `${x(Date.parse(t.date))},${cy}`).join(' ')} />
+      ) : null}
+      {tiers.map((t) => (
+        <circle
+          key={t.tier}
+          cx={x(Date.parse(t.date))}
+          cy={cy}
+          r={4.5}
+          fill={TIER_COLOR[t.tier] ?? '#26b6ff'}
+          className={`ing-tl__dot${t.tier === 'onyx' ? ' is-onyx' : ''}`}
+        />
+      ))}
+      <text x={pad} y={H - 5} textAnchor="start" className="ing-tl__year">
+        {yr(tiers[0].date)}
+      </text>
+      {tiers.length > 1 ? (
+        <text x={W - pad} y={H - 5} textAnchor="end" className="ing-tl__year">
+          {yr(tiers[tiers.length - 1].date)}
+        </text>
+      ) : null}
+    </svg>
+  )
+}
+
 function DetailPanel({
   sel,
   onClose,
@@ -183,42 +222,62 @@ function DetailPanel({
   onClose: () => void
 }) {
   const {lane, idx} = sel
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    ref.current?.scrollIntoView({block: 'nearest', behavior: 'smooth'})
+  }, [])
+
   const entry = lane.tiers[idx]
-  const gap = formatGap(entry.gapDays)
+  const first = lane.tiers[0]
+  const last = lane.tiers[lane.tiers.length - 1]
+  const totalDays = Math.round((Date.parse(last.date) - Date.parse(first.date)) / 86_400_000)
+  const totalSpan = formatGap(totalDays)
+  const range =
+    lane.tiers.length > 1
+      ? `${TIER_LABEL[first.tier] ?? first.tier} → ${TIER_LABEL[last.tier] ?? last.tier}${totalSpan ? ` · ${totalSpan}` : ''}`
+      : `${TIER_LABEL[entry.tier] ?? entry.tier} · tier único`
+
   return (
-    <div className="ing-tl__detail" role="dialog" aria-label={`Detalhe de ${lane.name}`}>
+    <div className="ing-tl__detail" role="dialog" aria-label={`Detalhe de ${lane.name}`} ref={ref}>
       <button type="button" className="ing-tl__detail-close" onClick={onClose} aria-label="Fechar">
         ✕
       </button>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        className="ing-tl__detail-art"
-        src={artPath(lane.slug, lane.group === 'core' ? entry.tier : 'single')}
-        alt=""
-        width={72}
-        height={72}
-        onError={hideBrokenImg}
-      />
-      <div className="ing-tl__detail-body">
-        <b>{lane.name}</b>
-        <span className="ing-tl__detail-sub">
-          {TIER_LABEL[entry.tier] ?? entry.tier} · {fmtDate(entry.date)}
-          {gap && entry.prevTier ? ` · +${gap} depois de ${TIER_LABEL[entry.prevTier] ?? entry.prevTier}` : ''}
-        </span>
-        <ul className="ing-tl__detail-ladder">
-          {lane.tiers.map((t, i) => (
-            <li key={t.tier} className={i === idx ? 'is-current' : undefined}>
-              <span className="ing-tl__detail-dot" style={{background: TIER_COLOR[t.tier] ?? '#26b6ff'}} />
-              {TIER_LABEL[t.tier] ?? t.tier}
-              <time>{fmtDate(t.date)}</time>
-            </li>
-          ))}
-        </ul>
-        {lane.group === 'core' ? (
-          <a className="ing-tl__detail-link" href={`/ingress/medalha/${lane.slug}`}>
-            abrir página da {lane.name} →
-          </a>
-        ) : null}
+      <div className="ing-tl__detail-head">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className="ing-tl__detail-art"
+          src={artPath(lane.slug, lane.group === 'core' ? entry.tier : 'single')}
+          alt=""
+          width={64}
+          height={64}
+          onError={hideBrokenImg}
+        />
+        <div>
+          <b>{lane.name}</b>
+          <span className="ing-tl__detail-sub">{range}</span>
+          {lane.group === 'core' ? (
+            <a className="ing-tl__detail-link" href={`/ingress/medalha/${lane.slug}`}>
+              abrir página da {lane.name} →
+            </a>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="ing-tl__detail-grid">
+        <MiniSpark tiers={lane.tiers} />
+        <ol className="ing-tl__detail-ladder">
+          {lane.tiers.map((t, i) => {
+            const g = formatGap(t.gapDays)
+            return (
+              <li key={t.tier} className={i === idx ? 'is-current' : undefined}>
+                <span className="ing-tl__detail-dot" style={{background: TIER_COLOR[t.tier] ?? '#26b6ff'}} />
+                <span className="ing-tl__detail-tier">{TIER_LABEL[t.tier] ?? t.tier}</span>
+                {g ? <span className="ing-tl__detail-gap">+{g}</span> : null}
+                <time>{fmtDate(t.date)}</time>
+              </li>
+            )
+          })}
+        </ol>
       </div>
     </div>
   )
@@ -394,6 +453,8 @@ function Completo({rows}: {rows: Row[]}) {
         )}
       </p>
 
+      {selected ? <DetailPanel sel={selected} onClose={() => setSelected(null)} /> : null}
+
       <div className="ing-tl__swim">
         <ul className="ing-tl__swim-labels" style={{paddingTop: AXIS_TOP}}>
           {lanes.map((lane) => (
@@ -481,8 +542,6 @@ function Completo({rows}: {rows: Row[]}) {
           </svg>
         </div>
       </div>
-
-      {selected ? <DetailPanel sel={selected} onClose={() => setSelected(null)} /> : null}
 
       {hover ? (
         <div
