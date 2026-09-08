@@ -1300,14 +1300,15 @@ fallback.
 **Tools**: MCP NONE · Skill `nextjs-use-client`
 
 **Done when**:
-- [ ] 26 badges na grade; resumo de tiers; "próxima medalha" com % de progresso
-- [ ] Badge sem stat aparece como "Sem medalha", não some
-- [ ] Server-only; sem scroll horizontal a 360px
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] 26 badges na grade (conquistadas primeiro, por tier desc; `--locked` apagada); resumo "7 Onyx · 5 Platina · …"; card "próxima medalha" com barra de % e "faltam X"
+- [x] Badge sem stat aparece como "Sem medalha" (tier none), não some
+- [x] Server-only; `.ing-medals` grade fluida, 360px ok
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ 323 ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): prateleira com as 26 badges, resumo e próxima medalha`
+**Status**: ✅ Complete
 
 ---
 
