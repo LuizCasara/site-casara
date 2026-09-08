@@ -43,12 +43,31 @@ export interface PortalPoint {
   name?: string
 }
 
+/** Um snapshot de estatísticas por export (ou ponto histórico do dump). */
+export interface StatSnapshot {
+  t: string
+  stats: Record<string, number>
+}
+
+/** `{ <slug de badge>: { <tier>: 'YYYY-MM-DD' } }` — datas de conquista, esparsas. */
+export type MedalDates = Record<string, Record<string, string>>
+
+export interface EventBadge {
+  slug: string
+  count?: number
+  tier?: string
+  dates?: Record<string, string>
+}
+
 export interface Profile {
   schemaVersion: number
   agent: AgentIdentity
   capturedAt: string
   sources: ProfileSources
   stats: Record<string, number>
+  history: StatSnapshot[]
+  medalDates: MedalDates
+  eventBadges: EventBadge[]
   s2: S2Config
   timeSeries: Record<string, TimePoint[]> | null
   portals: { visited: PortalPoint[]; submitted: PortalPoint[] } | null

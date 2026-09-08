@@ -1203,16 +1203,17 @@ do catálogo.
 **Tools**: MCP NONE · Skill NONE
 
 **Done when**:
-- [ ] `buildProfile` idempotente com os campos novos; `history` nasce com o snapshot atual; perfil sem `history` é migrado
-- [ ] `mergeGdprDump` insere snapshot anterior ao primeiro sem quebrar a ordem
-- [ ] `data/ingress/fencherlc.json` válido contra o novo shape
-- [ ] `lib/ingress.ts`: `Profile` ganha `history`, `medalDates`, `eventBadges`
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
-- [ ] Test count: ≥12 tests pass (profile)
+- [x] `buildProfile` mantém `history` via `appendSnapshot`; `medalDates`/`eventBadges` nascem vazios, preservados de `previous`; idempotente
+- [x] `mergeGdprDump` insere `dumpData.snapshots` no `history`, inclusive antes do primeiro
+- [x] `data/ingress/fencherlc.json` regravado pelo `build`, válido contra o shape novo; idempotente ("Nada muda")
+- [x] `lib/ingress.ts`: `Profile` ganha `history`, `medalDates`, `eventBadges` + tipos `StatSnapshot`/`MedalDates`/`EventBadge`
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ 323 ✔)
+- [x] Test count: 13 tests pass (profile)
 
 **Tests**: unit
 **Gate**: build
 **Commit**: `feat(ingress): history, medalDates e eventBadges no perfil`
+**Status**: ✅ Complete
 
 ---
 
