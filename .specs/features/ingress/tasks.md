@@ -1104,14 +1104,15 @@ badges de `stat_line` mapeável do ingress.plus e escreve
 **Tools**: MCP NONE · Skill NONE
 
 **Done when**:
-- [ ] Todas as funções cobertas por teste; `slugForStatKey` é a inversa de `catalogEntry(...).statKey` para os 26
-- [ ] `catalogEntry` de slug inexistente devolve `null`
-- [ ] Gate check passes: `npm test`
-- [ ] Test count: ≥5 tests pass
+- [x] `loadCatalog`/`catalogEntry`/`coreBadges`/`slugForStatKey`/`artPath` cobertas; `slugForStatKey` é a inversa para os 26
+- [x] `catalogEntry` de slug inexistente devolve `null`
+- [x] Gate check passes: `npm test`
+- [x] Test count: 6 tests pass
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(ingress): acesso ao catálogo de badges`
+**Status**: ✅ Complete
 
 ---
 
