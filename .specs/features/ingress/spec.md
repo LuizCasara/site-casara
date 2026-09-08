@@ -38,7 +38,9 @@ enriquecer depois sem retrabalho.
 | Foto/avatar e bio longa do agente | Luiz escolheu "só o essencial" para identidade no MVP |
 | Edição via navegador / rota de admin | Mesmo princípio de `/livros`: sem superfície de escrita pública |
 | Alternância de facção / temas de cor | Só o Luiz (Enlightened) no MVP |
-| Cálculo de recursão / projeção de AP futuro | Nice-to-have sem valor claro agora |
+| Projeção de AP futuro | Nice-to-have sem valor claro agora (projeção de tier de badge foi feita — MED-08; progresso além do Onyx — MED-10) |
+| Recursão por medalha ("Onyx ×N" com os chevrons vermelhos do scanner) | Precisa de dado que nem o export nem os prints trazem — fila em `docs/ingress-proximos-passos.md`, aguarda o dump GDPR |
+| Colecionáveis e Personagens no catálogo | Não dá pra identificar com segurança pelos thumbnails; `MedalGrid` já tem os grupos prontos, populados quando o dump GDPR chegar |
 
 ---
 
@@ -505,6 +507,138 @@ plausível; `history` com 1 ponto → mensagem de "precisa de mais um export".
 
 ---
 
+## User Stories — Iteração de UI (09/09/2026)
+
+Rodadas de feedback do Luiz sobre o visual, depois da feature original + expansão.
+Cada uma foi tratada como mudança BOUNDED (brainstorming → design curto no chat →
+aprovação → implementação). Substituem/estendem MED-06.
+
+### MED-09: Linha do tempo estruturada e navegável ⭐ P2
+
+**User Story**: Como agente, quero uma linha do tempo que dê pra tirar informação
+— com hover, filtros, zoom e drill-down — não só um enxame de pontos.
+
+**Why**: A timeline é um diferencial do biocard; a versão de MED-06 era ilegível.
+
+**Acceptance Criteria**:
+
+1. WHEN o perfil tem 2+ datas de conquista THEN o sistema SHALL renderizar em
+   `/ingress/linha-do-tempo` uma visão "combo": uma curva acumulada do total no
+   topo e uma swimlane com uma raia por medalha embaixo.
+2. WHEN o usuário arrasta na curva acumulada THEN o sistema SHALL recortar a
+   janela de tempo da swimlane (zoom por brush) e SHALL oferecer um controle para
+   voltar ao período inteiro.
+3. WHEN o usuário aciona os filtros de categoria (estatística / anomalia /
+   evento) ou de tier THEN o sistema SHALL restringir as raias e pontos exibidos
+   sem repintar os demais.
+4. WHERE a viewport é estreita (mobile) THEN o sistema SHALL manter os rótulos
+   das raias fixos à esquerda e rolar apenas a área do gráfico na horizontal,
+   nunca a página.
+5. WHEN o usuário toca num ponto THEN o sistema SHALL abrir um painel de detalhe
+   acima do gráfico com a arte da medalha, um mini gráfico dos tiers nas datas
+   reais, a escada de tiers com o intervalo entre cada data, e — para badge de
+   estatística — o valor exigido em cada tier, o valor atual e o link para a
+   página da medalha.
+6. WHEN a página `/ingress` monta THEN o sistema SHALL exibir um resumo da linha
+   do tempo (curva acumulada + as medalhas mais recentes) que leva para
+   `/ingress/linha-do-tempo`.
+7. The system SHALL gerar uma imagem OpenGraph própria para `/ingress/linha-do-tempo`.
+
+**Independent Test**: `/ingress/linha-do-tempo` com o perfil real → combo com
+brush funcional, filtros, e toque num ponto abre o painel; a 360px o gráfico rola
+só na horizontal dentro do card. `groupLanes`/`annotateLaneGaps`/`formatGap`
+cobertos por teste.
+
+---
+
+### MED-10: Progresso além do Onyx ⭐ P2
+
+**User Story**: Como agente recursado, quero ver o % até a próxima "dobra" de uma
+Onyx, não só "tier máximo".
+
+**Acceptance Criteria**:
+
+1. WHILE uma badge está em Onyx o sistema SHALL calcular a próxima dobra
+   (`Onyx ×2`, `×3`, …) como o próximo múltiplo do limiar de Onyx, com o quanto
+   falta e o percentual de progresso.
+2. WHEN a home e as telas de detalhe exibem uma badge THEN o sistema SHALL
+   mostrar o percentual até o próximo tier ou, se em Onyx, até a próxima dobra.
+3. The system SHALL manter o cálculo de `beyond` em `lib/ingress-badges.mjs` e
+   cobri-lo com testes (inclusive no limiar exato de Onyx).
+
+**Independent Test**: `computeBadge` de uma badge com valor = 2,5× o limiar Onyx →
+`beyond` = `Onyx ×3` em 50%.
+
+---
+
+### MED-11: "Plus" editorial por medalha de estatística ⭐ P3
+
+**User Story**: Como agente, na página de uma medalha de estatística quero ver o
+número reenquadrado em algo humano — "andei X maratonas", "Y voltas ao planeta".
+
+**Acceptance Criteria**:
+
+1. WHERE existe uma entrada para o slug em `data/ingress/medal-lore.json` THEN a
+   página `/ingress/medalha/[slug]` SHALL exibir a frase que descreve a métrica e
+   as comparações calculadas a partir do valor atual (razão por referência e/ou
+   média por dia desde a primeira conquista).
+2. WHERE não há entrada de lore para o slug THEN o sistema SHALL simplesmente não
+   renderizar a seção, sem espaço vazio.
+3. IF uma comparação resulta em valor não-finito ou ≤ 0 THEN o sistema SHALL
+   descartá-la.
+4. The system SHALL manter a matemática das comparações em `lib/ingress-lore.mjs`
+   com testes; o arquivo de lore é conteúdo editável sem mudança de código.
+
+**Independent Test**: `/ingress/medalha/trekker` mostra "≈ 94 maratonas" e
+"0,88 km por dia"; `medalLore` cobre razão, média por dia e descarte.
+
+---
+
+### MED-12: Home como grade hexagonal de medalhas ⭐ P2
+
+**User Story**: Como agente, quero que a home mostre as medalhas como o app —
+uma grade densa só com a arte, e o detalhe aparece no clique.
+
+**Acceptance Criteria**:
+
+1. WHEN a página `/ingress` monta THEN o sistema SHALL renderizar uma seção única
+   "Medalhas" — uma grade de hexágonos exibindo só a arte de cada medalha —, no
+   lugar das seções separadas de badges de contagem e de conquistas.
+2. WHEN o usuário alterna o modo de ordenação THEN o sistema SHALL reordenar a
+   grade por cronologia (primeira conquista) ou agrupá-la por categoria.
+3. WHEN o usuário toca num hexágono THEN o sistema SHALL abrir o mesmo painel de
+   detalhe usado na linha do tempo (MED-09.5).
+4. WHERE ainda não há dado de Colecionáveis e Personagens THEN o sistema SHALL
+   exibir esses grupos como um estado "chegam com o dump GDPR", não omiti-los.
+5. WHEN a seção monta THEN o sistema SHALL destacar a "próxima medalha" com barra
+   de progresso e projeção, acima da grade.
+6. IF a estatística de origem de uma badge está ausente THEN o sistema SHALL
+   exibir o hexágono esmaecido, não omiti-lo.
+
+**Independent Test**: `/ingress` → grade de hexágonos, toggle Cronologia↔Categoria
+reordena, toque abre o painel; os grupos Colecionáveis/Personagens aparecem como
+placeholder.
+
+---
+
+### MED-13: Tokens de tier neutros ⭐ P3
+
+**User Story**: Como Luiz, quero que Onyx e Platina não usem o verde e o azul do
+tema — atrapalha a leitura das facções e dos acentos.
+
+**Acceptance Criteria**:
+
+1. The system SHALL renderizar o tier Onyx com um grafite escuro e o tier Platina
+   com um cinza, em `/ingress` e nas telas de detalhe, sem reutilizar
+   `--ing-green` / `--ing-cyan` para esses tiers.
+2. WHILE uma badge Onyx tem arte THEN o sistema SHALL NOT aplicar brilho verde
+   sobre ela.
+
+**Independent Test**: Inspecionar `.ing-medal--onyx` / `.ing-medal--platinum` e a
+grade — cores neutras, sem verde/azul.
+
+---
+
 ## Edge Cases (expansão)
 
 - IF a arte de um tier específico não existe em `public/ingress/medals/` THEN a
@@ -579,18 +713,29 @@ plausível; `history` com 1 ponto → mensagem de "precisa de mais um export".
 | MED-03 | P1: Seção "Conquistas" (eventBadges por categoria) | Tasks | Pending |
 | MED-04 | P1: Histórico de snapshots (`history[]` no build) | Tasks | Pending |
 | MED-05 | P1: CLI `badges` + `medals --fetch` | Tasks | Pending |
-| MED-06 | P2: Timeline de conquistas | Tasks | Pending |
-| MED-07 | P2: Hover no KPI mostra a badge | Tasks | Pending |
-| MED-08 | P3: Projeção de próximo tier | Tasks | Pending |
+| MED-06 | P2: Timeline de conquistas (versão simples) | Tasks | Superada por MED-09 |
+| MED-07 | P2: Hover no KPI mostra a badge | Tasks | Implementado |
+| MED-08 | P3: Projeção de próximo tier | Tasks | Implementado |
+| MED-09 | P2: Linha do tempo estruturada (`/ingress/linha-do-tempo`, combo, brush, filtros, painel) | Iteração UI | Implementado — lógica pura testada, UAT visual pendente |
+| MED-10 | P2: Progresso além do Onyx (`beyond`) | Iteração UI | Implementado + testado |
+| MED-11 | P3: "Plus" editorial por medalha (`medal-lore.json` + `lib/ingress-lore.mjs`) | Iteração UI | Implementado + testado (math), conteúdo a calibrar |
+| MED-12 | P2: Home como grade hexagonal (`MedalGrid`, substitui BadgeShelf/AchievementsShelf) | Iteração UI | Implementado — UAT visual pendente |
+| MED-13 | P3: Tokens de tier neutros (Onyx grafite, Platina cinza) | Iteração UI | Implementado |
 
-**ID format:** `INGR-[NUMBER]` (feature original) · `INGR-MED-[NUMBER]` (expansão)
+**ID format:** `INGR-[NUMBER]` (feature original) · `MED-[NUMBER]` (expansão de
+medalhas + iteração de UI)
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 36 total, 36 mapped to tasks (T1–T23), todos implementados.
-Verificação: 19 ACs de lógica pura ✅ Verified (evidência `file:line` em
-`validation.md`); 17 ACs de UI implementados e com build-gate verde, UAT visual
-do Luiz pendente. Ver `.specs/features/ingress/validation.md`.
+**Coverage:** 36 `INGR-*` + 13 `MED-*` = 49 requisitos, todos implementados no
+branch `feat/ingress`. Verificação: as ACs de lógica pura estão ✅ Verified com
+evidência `file:line` em `validation.md` (parsing, badges incl. `beyond`, S2,
+history, timeline `collectAcquisitions`/`annotateLaneGaps`/`groupLanes`/`formatGap`,
+lore `medalLore`/`formatLoreNumber`); 338 testes, 2 passagens de Verifier
+(feature + expansão). As ACs de UI (grade hexagonal, painel de detalhe, brush,
+filtros, toggle, "plus", tokens de cor) estão implementadas com `npm run build` /
+`npm run lint` verdes mas **sem teste automatizado e sem UAT visual do Luiz** —
+esse é o gate aberto. Ver `.specs/features/ingress/validation.md`.
 
 ---
 

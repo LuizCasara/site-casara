@@ -281,3 +281,45 @@ e `.../opengraph-image` prerenderizados (26 cada).
    formato real do dump (mapa de nomes de arquivo).
 4. **`history` com 1 ponto** — a projeção mostra "mande um 2º export"; liga
    sozinha no próximo `build`.
+
+---
+
+## Adendo — iteração de UI (09/09/2026)
+
+Rodadas de feedback do Luiz depois do PR aberto. Cada mudança foi BOUNDED
+(brainstorming → design curto no chat → aprovação → implementação). Sem passagem
+de Verifier formal — a lógica nova é coberta por testes de unidade; as interações
+são visuais e dependem do UAT do Luiz.
+
+### Requisitos novos (spec MED-09..MED-13)
+
+| Req | Evidência (lógica pura) | ACs de UI |
+| --- | --- | --- |
+| MED-09 (linha do tempo combo) | `lib/ingress-timeline.test.mjs` — `annotateLaneGaps` (gapDays/prevTier, lista vazia), `groupLanes` (raia por medalha, ordem, maior tier), `formatGap` (buckets d/m/a) | brush, filtros, swimlane com rótulo fixo + scroll-x, painel ao toque, resumo no `/ingress`, OG — **UAT pendente** |
+| MED-10 (`beyond` do Onyx) | `lib/ingress-badges.test.mjs` — `computeBadge` atMax → `beyond` (×3 em 50% a 2,5× o limiar; ×2 em 0% no limiar exato) | % exibido na grade / detalhe / painel — visual |
+| MED-11 ("plus" editorial) | `lib/ingress-lore.test.mjs` — `medalLore` (razão por `per`, média por `rate`, div-por-zero, slug sem lore, descarte ≤0), `formatLoreNumber` (buckets pt-BR) | render de `MedalLore` na página da medalha — visual; conteúdo de `medal-lore.json` a calibrar com o Luiz |
+| MED-12 (grade hexagonal) | reusa `computeAllBadges` + `groupLanes` (testados) | grade, toggle Cronologia/Categoria, "próxima medalha", toque → `MedalDetail`, placeholders Colecionáveis/Personagens — **UAT pendente** |
+| MED-13 (tokens de tier neutros) | — | inspeção de `.ing-medal--onyx/--platinum` e da grade — visual |
+
+### Correção de hidratação
+
+`<title>` de SVG com filhos JSX adjacentes → hydration mismatch (React 19 não
+insere marcador de fronteira de nó dentro de `<title>`). Corrigido para uma única
+string interpolada em `ProfileRadar`, `ApTimeline`, `AchievementTimeline`
+(commit `fix(ingress): <title> de SVG com um único filho string (hydration)`).
+
+### Gate
+
+`npm run lint` ✔ · `npm test` **338 testes ✔** (era 325) · `npm run build` ✔ —
+`/ingress` ~2,8 kB / 115 kB, `/ingress/linha-do-tempo` + OG prerenderizados, 29
+rotas `/ingress/medalha/[slug]` + OG.
+
+### Dívida / pendências
+
+1. **UAT visual** de tudo da iteração — nada olhado num browser.
+2. **Sem teste** para grade, toggle, painéis, brush, filtros — só a lógica pura.
+3. **CSS morto** em `theme.css` (`.ing-medal*`, `.ing-next-medal*`, `.ing-achv*`)
+   dos 3 componentes removidos — limpar depois.
+4. **`medal-lore.json`** — referências de comparação a calibrar com o Luiz.
+5. **Colecionáveis / Personagens** — `MedalGrid` tem os grupos; populados quando
+   o dump GDPR chegar (ou o Luiz passar a lista). Ver `docs/ingress-proximos-passos.md`.

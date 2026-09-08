@@ -526,9 +526,38 @@ Feito num passo do `medals --fetch` ou um rename explícito na primeira task.
 | Detalhe = rota estática | `generateStaticParams` | 26 páginas pequenas, SEO, compartilhável, sem custo de runtime |
 | Datas de conquista | Campo esparso, transcrito de prints agora, completado pelo dump | O jogo mostra as datas; esperar o dump seria desperdício |
 
+## Iteração de UI (09/09/2026) — componentes
+
+Rodadas de feedback do Luiz. Cada mudança BOUNDED (brainstorming → design curto
+no chat → aprovação). Ver stories MED-09..MED-13 no `spec.md`.
+
+| Arquivo | Papel |
+| --- | --- |
+| `lib/ingress-art.mjs` (NOVO) | Só `artPath(slug, tier)` — sem `node:fs`, importável por client component. `ingress-catalog.mjs` re-exporta. |
+| `lib/ingress-timeline.mjs` (+test) | +`annotateLaneGaps(rows)` (gapDays/prevTier por raia, JSDoc genérico), +`groupLanes(rows)` (raia por medalha: tiers ordenados, maior tier, 1ª data), +`formatGap(days)` (`"1a 3m"`). `collectAcquisitions` passa a propagar `group`. |
+| `lib/ingress-badges.mjs` (+test) | `computeBadge` retorna `beyond` (progresso além do Onyx: próxima dobra ×N, `remaining`, `pct`). |
+| `lib/ingress-lore.mjs` (NOVO, +test) | `loadLore()`, `medalLore(slug, value, daysPlaying)` (razão por `per` / média por `rate`, descarta ≤0), `formatLoreNumber(n)`. |
+| `data/ingress/medal-lore.json` (NOVO) | Conteúdo: `{ slug: { blurb, facts:[{per|rate, label}] } }` para 17 medalhas de estatística. Editável sem código. |
+| `components/ingress/MedalSpark.tsx` (NOVO) | Mini gráfico dos tiers de uma medalha nas datas reais. Sem estado — server-safe. Usado no painel de detalhe e na página da medalha. |
+| `components/ingress/MedalDetail.tsx` (NOVO, client leaf) | Painel de detalhe compartilhado: arte, faixa de progresso, `MedalSpark`, escada (limiar/data/intervalo para estatística, só data para evento), `beyond`, link. `scrollIntoView` ao abrir. |
+| `components/ingress/MedalGrid.tsx` (NOVO, client leaf) | Grade de hexágonos da home; toggle Cronologia\|Categoria; "próxima medalha"; toque → `MedalDetail`; grupos Colecionáveis/Personagens = placeholder. |
+| `components/ingress/AchievementTimeline.tsx` (rewrite) | `variant="resumo"` (curva + medalhas recentes no `/ingress`) e `variant="completo"` (combo: overview + brush de zoom + filtros + swimlane com rótulos fixos e scroll-x + `MedalDetail`). `medalStats` prop traz limiar/valor/`beyond` por slug. |
+| `app/ingress/linha-do-tempo/page.tsx` + `opengraph-image.tsx` (NOVO) | Rota dedicada da linha do tempo; monta `medalStats` via `computeBadge`. |
+| `app/ingress/medalha/[slug]/page.tsx` (rewrite) | Ordem: herói (com %) → `MedalLore` → requisito → `MedalSpark` → `TierLadder` (agora com intervalo entre datas + % do próximo) → projeção. |
+| `components/ingress/TierLadder.tsx` (refactor) | +coluna de intervalo (`formatGap`), +`value` prop para o % do primeiro tier não alcançado, data formatada pt-BR. |
+| `app/ingress/page.tsx` (rewrite) | `MedalGrid` no lugar de `BadgeShelf` + `AchievementsShelf`; monta a lista via `computeAllBadges` + `groupLanes` + `medalArt`. |
+| **Removidos** | `BadgeShelf.tsx`, `AchievementsShelf.tsx`, `BadgeMedal.tsx` (substituídos por `MedalGrid` + `MedalDetail`). CSS morto desses no `theme.css` — limpar depois. |
+| `app/ingress/theme.css` | Tokens Onyx `#626873` / Platina `#8d949d` (neutros); `.ing-tl__*` (combo, painel, swimlane), `.ing-mgrid__*`, `.ing-spark__*`, `.ing-lore__*`, `.ing-ladder__gap`. |
+
+**Hidratação:** `<title>` de SVG recebe um único filho string (React 19 não
+insere marcador de fronteira de nó de texto dentro de `<title>`) — corrigido em
+`ProfileRadar`, `ApTimeline`, `AchievementTimeline`.
+
 ## Design Questions — resolvidas (2026-09-07)
 
-1. **Direção visual:** A — "Scanner" (HUD do Ingress Prime).
+1. **Direção visual:** A — "Scanner" (HUD do Ingress Prime). *(Revisado depois
+   para "Prime" — carvão + gradiente verde→teal→ciano, Sora/Barlow; tema em
+   `app/ingress/theme.css`, wrapper `.ingress-prime`.)*
 2. **Dependências:** aprovadas — `s2js`, `leaflet`, `react-leaflet`,
    `@types/leaflet` (dev).
 3. **Mapa S2:** carrega **sob toque**. A seção mostra um preview estático
