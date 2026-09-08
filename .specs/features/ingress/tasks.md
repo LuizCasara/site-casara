@@ -1253,14 +1253,15 @@ commitar as ~130 imagens + o README atualizado.
 **Tools**: MCP NONE · Skill NONE
 
 **Done when**:
-- [ ] `<slug>-<tier>.png` para os 26 × 5 tiers presentes
-- [ ] os 14 antigos renomeados; nenhum órfão camelCase
-- [ ] `node scripts/ingress.mjs medals` reporta tudo presente
-- [ ] Gate check passes: `npm run build`
+- [x] `<slug>-<tier>.png` para os 26 × 5 = 130 presentes (~2,3 MB, thumbs 128px)
+- [x] `mindController-platinum.png` → `mind-controller-platinum.png` (os outros 13 já batiam o slug); nenhum órfão camelCase
+- [x] `node scripts/ingress.mjs medals` → "130 de 130 imagens presentes"
+- [x] Gate check passes: `npm run build` (✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): arte das 26 badges (5 tiers) do ingress.plus`
+**Status**: ✅ Complete — fim da Fase 6
 
 ---
 
