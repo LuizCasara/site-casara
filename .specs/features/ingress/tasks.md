@@ -1345,14 +1345,16 @@ desconhecido, `TierLadder` + requisito + valor + posição + datas.
 **Tools**: MCP NONE · Skill `nextjs-use-client`
 
 **Done when**:
-- [ ] `generateStaticParams` gera as 26 rotas; slug fora devolve `notFound()`
-- [ ] `/ingress/medalha/trekker` mostra 10/100/300/1000/2500 com Onyx marcado e o requisito
-- [ ] `metadata` própria; herda o layout `/ingress`
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] `generateStaticParams` = 26 rotas (build mostra `● /ingress/medalha/[slug]` prerenderizada); `catalogEntry(slug)` null → `notFound()`
+- [x] `/ingress/medalha/trekker` → hero (arte + tier Onyx + valor), requisito com `{0}` substituído, `TierLadder` 10/100/300/1000/2500
+- [x] `generateMetadata` (título = nome da badge); herda `app/ingress/layout.tsx` (.ingress-prime)
+- [x] link "← Perfil de FencherLC" de volta
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ 323 ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): página de detalhe da medalha`
+**Status**: ✅ Complete
 
 ---
 

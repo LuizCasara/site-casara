@@ -499,6 +499,74 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* --- página de detalhe da medalha --- */
+
+.ing-back {
+  color: var(--ing-text-dim);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.ing-back:hover {
+  color: var(--ing-green-soft);
+}
+
+.ing-medal-hero {
+  display: flex;
+  gap: 1.1rem;
+  align-items: center;
+  padding: 1.25rem;
+  border: 1px solid var(--ing-edge);
+  border-radius: 16px;
+  background: radial-gradient(120% 120% at 12% 0%, rgba(0, 230, 118, 0.12), transparent 60%), var(--ing-panel-solid);
+}
+
+.ing-medal-hero__art {
+  flex: none;
+  width: 5rem;
+  height: 5rem;
+  object-fit: contain;
+}
+
+.ing-medal-hero__art--placeholder {
+  display: grid;
+  place-items: center;
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 2rem;
+  color: var(--ing-green);
+  border: 1px dashed var(--ing-edge);
+  border-radius: 10px;
+}
+
+.ing-medal-hero__name {
+  font-size: clamp(1.6rem, 7vw, 2.2rem);
+  color: var(--ing-green);
+}
+
+.ing-medal-hero__tier {
+  margin: 0.25rem 0 0;
+  color: var(--ing-green-soft);
+  font-family: var(--ing-font-display);
+}
+
+.ing-medal-hero__value {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-medal-req {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-left: 2px solid var(--ing-green-dim);
+  color: var(--ing-text-dim);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  background: var(--ing-green-ghost);
+  border-radius: 0 8px 8px 0;
+}
+
 /* --- radar --- */
 
 .ing-radar {
