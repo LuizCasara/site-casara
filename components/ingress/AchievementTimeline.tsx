@@ -1,10 +1,10 @@
 'use client'
 
-import {useEffect, useMemo, useRef, useState} from 'react'
+import {useMemo, useRef, useState} from 'react'
 import {annotateLaneGaps, formatGap, groupLanes} from '@/lib/ingress-timeline.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import Panel from './Panel'
-import MedalSpark from './MedalSpark'
+import MedalDetail, {type DetailMedal} from './MedalDetail'
 
 type Acq = {slug: string; name: string; group: string; tier: string; date: string}
 type Row = Acq & {gapDays: number | null; prevTier: string | null}
@@ -27,8 +27,6 @@ type MedalStat = {
 type MedalStats = Record<string, MedalStat>
 type Variant = 'resumo' | 'completo'
 
-const FMT = new Intl.NumberFormat('pt-BR')
-const CORE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'onyx']
 
 const RIGHT = 14
 const LEFT_PAD = 14
@@ -187,127 +185,14 @@ function Resumo({rows}: {rows: Row[]}) {
   )
 }
 
-/** Escada dos 5 tiers de uma medalha de estatística: limiar, data e progresso. */
-function CoreLadder({lane, idx, stat}: {lane: Lane; idx: number; stat: MedalStat}) {
-  const gotByTier = new Map(lane.tiers.map((t, i) => [t.tier, {entry: t, i}]))
-  const firstLocked = stat.thresholds.findIndex((thr) => stat.value < thr)
-  return (
-    <div className="ing-tl__detail-stat">
-      <p className="ing-tl__detail-total">
-        Seu total: <b>{FMT.format(stat.value)}</b>
-      </p>
-      <ol className="ing-tl__detail-ladder ing-tl__detail-ladder--stat">
-        {CORE_TIERS.map((tn, i) => {
-          const thr = stat.thresholds[i]
-          const got = gotByTier.get(tn)
-          const reached = stat.value >= thr
-          const g = got ? formatGap(got.entry.gapDays) : null
-          return (
-            <li key={tn} className={got?.i === idx ? 'is-current' : reached ? undefined : 'is-locked'}>
-              <span className="ing-tl__detail-dot" style={{background: TIER_COLOR[tn]}} />
-              <span className="ing-tl__detail-tier">{TIER_LABEL[tn]}</span>
-              <span className="ing-tl__detail-thr">{FMT.format(thr)}</span>
-              <time>
-                {got
-                  ? fmtDate(got.entry.date)
-                  : reached
-                    ? '✓'
-                    : i === firstLocked
-                      ? `${Math.round((stat.pct ?? 0) * 100)}%`
-                      : '—'}
-              </time>
-              <span className="ing-tl__detail-gap">{g ? `+${g}` : ''}</span>
-            </li>
-          )
-        })}
-      </ol>
-      {stat.beyond ? (
-        <p className="ing-tl__detail-foot">
-          {stat.beyond.label} · {Math.round(stat.beyond.pct * 100)}% · faltam {FMT.format(stat.beyond.remaining)}
-        </p>
-      ) : stat.next ? (
-        <p className="ing-tl__detail-foot">
-          faltam {FMT.format(stat.next.remaining)} para {TIER_LABEL[stat.next.tier] ?? stat.next.tier}
-        </p>
-      ) : null}
-    </div>
-  )
-}
-
-function DetailPanel({
-  sel,
-  medalStats,
-  onClose,
-}: {
-  sel: {lane: Lane; idx: number}
-  medalStats?: MedalStats
-  onClose: () => void
-}) {
-  const {lane, idx} = sel
-  const stat = lane.group === 'core' ? medalStats?.[lane.slug] : undefined
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    ref.current?.scrollIntoView({block: 'nearest', behavior: 'smooth'})
-  }, [])
-
-  const entry = lane.tiers[idx]
-  const first = lane.tiers[0]
-  const last = lane.tiers[lane.tiers.length - 1]
-  const totalDays = Math.round((Date.parse(last.date) - Date.parse(first.date)) / 86_400_000)
-  const totalSpan = formatGap(totalDays)
-  const range =
-    lane.tiers.length > 1
-      ? `${TIER_LABEL[first.tier] ?? first.tier} → ${TIER_LABEL[last.tier] ?? last.tier}${totalSpan ? ` · ${totalSpan}` : ''}`
-      : `${TIER_LABEL[entry.tier] ?? entry.tier} · tier único`
-
-  return (
-    <div className="ing-tl__detail" role="dialog" aria-label={`Detalhe de ${lane.name}`} ref={ref}>
-      <button type="button" className="ing-tl__detail-close" onClick={onClose} aria-label="Fechar">
-        ✕
-      </button>
-      <div className="ing-tl__detail-head">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          className="ing-tl__detail-art"
-          src={artPath(lane.slug, lane.group === 'core' ? entry.tier : 'single')}
-          alt=""
-          width={64}
-          height={64}
-          onError={hideBrokenImg}
-        />
-        <div>
-          <b>{lane.name}</b>
-          <span className="ing-tl__detail-sub">{range}</span>
-          {lane.group === 'core' ? (
-            <a className="ing-tl__detail-link" href={`/ingress/medalha/${lane.slug}`}>
-              abrir página da {lane.name} →
-            </a>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="ing-tl__detail-grid">
-        <MedalSpark tiers={lane.tiers} />
-        {stat ? (
-          <CoreLadder lane={lane} idx={idx} stat={stat} />
-        ) : (
-          <ol className="ing-tl__detail-ladder ing-tl__detail-ladder--event">
-            {lane.tiers.map((t, i) => {
-              const g = formatGap(t.gapDays)
-              return (
-                <li key={t.tier} className={i === idx ? 'is-current' : undefined}>
-                  <span className="ing-tl__detail-dot" style={{background: TIER_COLOR[t.tier] ?? '#26b6ff'}} />
-                  <span className="ing-tl__detail-tier">{TIER_LABEL[t.tier] ?? t.tier}</span>
-                  <time>{fmtDate(t.date)}</time>
-                  <span className="ing-tl__detail-gap">{g ? `+${g}` : ''}</span>
-                </li>
-              )
-            })}
-          </ol>
-        )}
-      </div>
-    </div>
-  )
+function laneToDetailMedal(lane: Lane, medalStats?: MedalStats): DetailMedal {
+  return {
+    slug: lane.slug,
+    name: lane.name,
+    group: lane.group,
+    tiers: lane.tiers,
+    stat: lane.group === 'core' ? medalStats?.[lane.slug] : undefined,
+  }
 }
 
 function Completo({rows, medalStats}: {rows: Row[]; medalStats?: MedalStats}) {
@@ -481,7 +366,11 @@ function Completo({rows, medalStats}: {rows: Row[]; medalStats?: MedalStats}) {
       </p>
 
       {selected ? (
-        <DetailPanel sel={selected} medalStats={medalStats} onClose={() => setSelected(null)} />
+        <MedalDetail
+          medal={laneToDetailMedal(selected.lane, medalStats)}
+          focusTier={selected.lane.tiers[selected.idx]?.tier}
+          onClose={() => setSelected(null)}
+        />
       ) : null}
 
       <div className="ing-tl__swim">
