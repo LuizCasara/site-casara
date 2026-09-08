@@ -426,6 +426,79 @@
   color: var(--ing-text-dim);
 }
 
+/* --- escada de tiers (página de detalhe) --- */
+
+.ing-ladder {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ing-ladder__step {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 10px;
+  opacity: 0.45;
+}
+
+.ing-ladder__step.is-reached {
+  opacity: 1;
+}
+
+.ing-ladder__step.is-current {
+  border-color: var(--ing-green);
+  background: rgba(0, 230, 118, 0.08);
+}
+
+.ing-ladder__art {
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  object-fit: contain;
+}
+
+.ing-ladder__art--placeholder {
+  border: 1px dashed var(--ing-edge);
+  border-radius: 6px;
+}
+
+.ing-ladder__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ing-ladder__tier {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  color: var(--ing-text);
+}
+
+.ing-ladder__badge-atual {
+  color: var(--ing-green-soft);
+  font-weight: 400;
+  font-size: 0.8rem;
+}
+
+.ing-ladder__req {
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-ladder__date {
+  flex: none;
+  font-size: 0.78rem;
+  color: var(--ing-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
 /* --- radar --- */
 
 .ing-radar {

@@ -1322,14 +1322,15 @@ fallback.
 **Tools**: MCP NONE · Skill `nextjs-use-client`
 
 **Done when**:
-- [ ] 5 degraus com arte + limiar pt-BR; degrau atual destacado; tier sem arte usa placeholder
-- [ ] Data de conquista onde existe, traço onde não
-- [ ] Server-only, legível a 360px
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] 5 degraus (arte ou placeholder tracejado + limiar pt-BR); degraus alcançados opacos 1, os demais 0.45; degrau atual com borda verde e "· atual"
+- [x] Data de conquista de `dates[tier]` onde existe, traço onde não
+- [x] Server-only, `.ing-ladder` legível a 360px
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ 323 ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): escada de tiers da medalha`
+**Status**: ✅ Complete
 
 ---
 
