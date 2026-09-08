@@ -1,9 +1,13 @@
 import {loadProfile} from '@/lib/ingress'
 import {computeAllBadges} from '@/lib/ingress-badges.mjs'
+import {loadCatalog} from '@/lib/ingress-catalog.mjs'
+import {collectAcquisitions} from '@/lib/ingress-timeline.mjs'
 import Panel from '@/components/ingress/Panel'
 import AgentHeader from '@/components/ingress/AgentHeader'
 import StatGroups from '@/components/ingress/StatGroups'
 import BadgeShelf from '@/components/ingress/BadgeShelf'
+import AchievementsShelf from '@/components/ingress/AchievementsShelf'
+import AchievementTimeline from '@/components/ingress/AchievementTimeline'
 import PendingSection from '@/components/ingress/PendingSection'
 import ProfileRadar from '@/components/ingress/ProfileRadar'
 import ActionsBreakdown from '@/components/ingress/ActionsBreakdown'
@@ -26,15 +30,20 @@ export default function IngressPage() {
   }
 
   const badges = computeAllBadges(profile.stats)
+  const acquisitions = collectAcquisitions(profile, loadCatalog())
   const pending = new Set(profile.pending)
 
   return (
     <main className="ing-shell">
       <AgentHeader profile={profile} />
 
-      <StatGroups stats={profile.stats} />
-
       <BadgeShelf badges={badges} />
+
+      <AchievementsShelf eventBadges={profile.eventBadges} />
+
+      <AchievementTimeline acquisitions={acquisitions} />
+
+      <StatGroups stats={profile.stats} />
 
       <ProfileRadar stats={profile.stats} />
 
