@@ -13,10 +13,10 @@
 ## Handoff
 
 - **Feature**: ingress (`.specs/features/ingress/`)
-- **Phase / Task**: Execute COMPLETO. 23 tasks + T24 (medalhas) + revisão Prime + 3 fixes + Verifier. Feature pronta.
-- **Completed**: Specify → Design → Tasks → Execute (T1–T24) → Verifier standalone. `validation.md` + adendos. T24: `BadgeMedal` usa arte real de `public/ingress/medals/` (14 PNGs baixados de ingress.plus, fallback pro hexágono). Bronze do Illuminator corrigido (5000→2000, ingress.plus). Gate verde (296 testes/lint/build), `/ingress` 105 kB. 2 lições (L-001, L-002).
-- **In-progress** (file:line): nenhum
-- **Next step**: (1) Luiz revisa `/ingress` no navegador (desktop + 360px), o explorador S2 e as medalhas. (2) Se aprovado: `git push origin feat/ingress` + PR — **precisa de OK explícito do Luiz**. (3) Dump GDPR: `node scripts/ingress.mjs gdpr <pasta> --apply`. (4) Mais tiers de medalha: baixar de ingress.plus (README em `public/ingress/medals/`).
-- **Blockers**: UAT visual pendente do Luiz.
+- **Phase / Task**: Feature original COMPLETA (T1–T24 + Verifier). **Expansão de medalhas** aprovada (MED-01..MED-08, T25–T43). Executando **Fases 5-6 (T25–T32)** agora, para no fim delas.
+- **Completed**: feature original + Verifier + T24. Expansão: brainstorming → spec/design/tasks (`6f10ef9`), catálogo `data/ingress/badge-catalog.json` (26 badges) gerado do ingress.plus.
+- **In-progress** (file:line): iniciando T25
+- **Next step**: T25 (script gerador do catálogo) → T26–T30 (libs `ingress-catalog/-history/-timeline`, badges data-driven, migração do perfil) → T31 (CLI) → T32 (baixar ~130 PNGs). **Parar aí.** Fases 7-8 (UI) depois que o Luiz mandar os prints (amanhã, 1 por medalha — trazem arte + datas de cada tier → alimentam `eventBadges` + `medalDates`).
+- **Blockers**: prints do perfil pendentes do Luiz (para Conquistas + timeline). UAT visual pendente.
 - **Uncommitted files**: nenhum
-- **Branch**: `feat/ingress`, 35 commits à frente de main. **Nada pushed.**
+- **Branch**: `feat/ingress`, 36 commits à frente de main. **Nada pushed.**

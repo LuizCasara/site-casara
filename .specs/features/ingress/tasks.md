@@ -992,7 +992,8 @@ Todos os 36 requisitos mapeados para ≥1 task.
 # Expansão — Medalhas (Onda 1) — Tasks
 
 **Design**: seção "Expansão — Medalhas" em `design.md`
-**Status**: Draft — aguardando aprovação
+**Status**: In Progress — Fases 5-6 (T25–T32) aprovadas p/ execução inline; Fases
+7-8 (UI) esperam os prints do Luiz.
 
 Mesma Test Coverage Matrix e Gate Check Commands da feature original. Lógica pura
 nova (`lib/ingress-catalog.mjs`, `lib/ingress-history.mjs`,
