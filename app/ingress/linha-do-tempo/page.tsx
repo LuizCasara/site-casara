@@ -1,10 +1,29 @@
+import type {ComponentProps} from 'react'
 import type {Metadata} from 'next'
 import {loadProfile} from '@/lib/ingress'
 import {loadCatalog} from '@/lib/ingress-catalog.mjs'
 import {collectAcquisitions} from '@/lib/ingress-timeline.mjs'
+import {BADGES, computeBadge} from '@/lib/ingress-badges.mjs'
 import BackLink from '@/components/ingress/BackLink'
 import AchievementTimeline from '@/components/ingress/AchievementTimeline'
 import Panel from '@/components/ingress/Panel'
+
+type BadgeDef = {key: string; name: string; statKey: string; tiers: Record<string, number>}
+
+function buildMedalStats(stats: Record<string, number>) {
+  const out: Record<string, unknown> = {}
+  for (const def of BADGES as BadgeDef[]) {
+    const b = computeBadge(def, stats[def.statKey] ?? 0)
+    out[def.key] = {
+      value: b.value,
+      thresholds: [def.tiers.bronze, def.tiers.silver, def.tiers.gold, def.tiers.platinum, def.tiers.onyx],
+      pct: b.pct,
+      next: b.next,
+      beyond: b.beyond,
+    }
+  }
+  return out
+}
 
 export const metadata: Metadata = {
   title: 'Linha do tempo — FencherLC',
@@ -15,6 +34,7 @@ export const metadata: Metadata = {
 export default function TimelinePage() {
   const profile = loadProfile()
   const acquisitions = profile ? collectAcquisitions(profile, loadCatalog()) : []
+  const medalStats = buildMedalStats(profile?.stats ?? {})
   const anos = acquisitions.length
     ? [
         new Date(`${acquisitions[0].date}T00:00:00Z`).getUTCFullYear(),
@@ -36,7 +56,11 @@ export default function TimelinePage() {
       </header>
 
       {acquisitions.length >= 2 ? (
-        <AchievementTimeline acquisitions={acquisitions} variant="completo" />
+        <AchievementTimeline
+          acquisitions={acquisitions}
+          variant="completo"
+          medalStats={medalStats as ComponentProps<typeof AchievementTimeline>['medalStats']}
+        />
       ) : (
         <Panel label="Linha do tempo">
           <p className="ing-pending">

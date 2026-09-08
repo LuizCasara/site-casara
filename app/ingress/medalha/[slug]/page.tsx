@@ -76,7 +76,11 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
           </p>
           <p className="ing-medal-hero__value">
             {FMT.format(value)}
-            {badge.next ? ` · faltam ${FMT.format(badge.next.remaining)} para ${TIER_LABELS[badge.next.tier] ?? badge.next.tier}` : ''}
+            {badge.next
+              ? ` · ${Math.round((badge.pct ?? 0) * 100)}% · faltam ${FMT.format(badge.next.remaining)} para ${TIER_LABELS[badge.next.tier] ?? badge.next.tier}`
+              : badge.beyond
+                ? ` · ${badge.beyond.label} · ${Math.round(badge.beyond.pct * 100)}% · faltam ${FMT.format(badge.beyond.remaining)}`
+                : ''}
           </p>
         </div>
       </header>

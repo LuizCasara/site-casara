@@ -423,6 +423,34 @@
   margin-top: 0.12rem;
 }
 
+.ing-medal__prog {
+  margin-top: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.ing-medal__prog-bar {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--ing-edge-soft);
+  overflow: hidden;
+}
+
+.ing-medal__prog-bar > span {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: 2px;
+  background: var(--tier);
+}
+
+.ing-medal__prog-txt {
+  font-size: 0.68rem;
+  color: var(--ing-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
 .ing-next-medal {
   display: flex;
   gap: 0.85rem;
@@ -1076,6 +1104,39 @@
 
 .ing-tl__detail-link:hover {
   color: var(--ing-green-soft);
+}
+
+.ing-tl__detail-stat {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.ing-tl__detail-total {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-tl__detail-total b {
+  color: var(--ing-text);
+  font-family: var(--ing-font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-tl__detail-thr {
+  font-variant-numeric: tabular-nums;
+  color: var(--ing-text-faint);
+}
+
+.ing-tl__detail-ladder li.is-locked {
+  opacity: 0.5;
+}
+
+.ing-tl__detail-foot {
+  margin: 0.5rem 0 0;
+  font-size: 0.76rem;
+  color: var(--ing-teal);
+  font-variant-numeric: tabular-nums;
 }
 
 /* tooltip rápido (desktop) */

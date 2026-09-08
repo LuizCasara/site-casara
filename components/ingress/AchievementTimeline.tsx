@@ -16,7 +16,18 @@ type Lane = {
   firstDate: string
   tiers: TierEntry[]
 }
+type MedalStat = {
+  value: number
+  thresholds: number[]
+  pct: number | null
+  next: {tier: string; remaining: number} | null
+  beyond: {label: string; pct: number; remaining: number} | null
+}
+type MedalStats = Record<string, MedalStat>
 type Variant = 'resumo' | 'completo'
+
+const FMT = new Intl.NumberFormat('pt-BR')
+const CORE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'onyx']
 
 const RIGHT = 14
 const LEFT_PAD = 14
@@ -214,14 +225,64 @@ function MiniSpark({tiers}: {tiers: TierEntry[]}) {
   )
 }
 
+/** Escada dos 5 tiers de uma medalha de estatística: limiar, data e progresso. */
+function CoreLadder({lane, idx, stat}: {lane: Lane; idx: number; stat: MedalStat}) {
+  const gotByTier = new Map(lane.tiers.map((t, i) => [t.tier, {entry: t, i}]))
+  const firstLocked = stat.thresholds.findIndex((thr) => stat.value < thr)
+  return (
+    <div className="ing-tl__detail-stat">
+      <p className="ing-tl__detail-total">
+        Seu total: <b>{FMT.format(stat.value)}</b>
+      </p>
+      <ol className="ing-tl__detail-ladder">
+        {CORE_TIERS.map((tn, i) => {
+          const thr = stat.thresholds[i]
+          const got = gotByTier.get(tn)
+          const reached = stat.value >= thr
+          const g = got ? formatGap(got.entry.gapDays) : null
+          return (
+            <li key={tn} className={got?.i === idx ? 'is-current' : reached ? undefined : 'is-locked'}>
+              <span className="ing-tl__detail-dot" style={{background: TIER_COLOR[tn]}} />
+              <span className="ing-tl__detail-tier">{TIER_LABEL[tn]}</span>
+              <span className="ing-tl__detail-thr">{FMT.format(thr)}</span>
+              <time>
+                {got
+                  ? fmtDate(got.entry.date)
+                  : reached
+                    ? '✓'
+                    : i === firstLocked
+                      ? `${Math.round((stat.pct ?? 0) * 100)}%`
+                      : '—'}
+              </time>
+              {g ? <span className="ing-tl__detail-gap">+{g}</span> : null}
+            </li>
+          )
+        })}
+      </ol>
+      {stat.beyond ? (
+        <p className="ing-tl__detail-foot">
+          {stat.beyond.label} · {Math.round(stat.beyond.pct * 100)}% · faltam {FMT.format(stat.beyond.remaining)}
+        </p>
+      ) : stat.next ? (
+        <p className="ing-tl__detail-foot">
+          faltam {FMT.format(stat.next.remaining)} para {TIER_LABEL[stat.next.tier] ?? stat.next.tier}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 function DetailPanel({
   sel,
+  medalStats,
   onClose,
 }: {
   sel: {lane: Lane; idx: number}
+  medalStats?: MedalStats
   onClose: () => void
 }) {
   const {lane, idx} = sel
+  const stat = lane.group === 'core' ? medalStats?.[lane.slug] : undefined
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     ref.current?.scrollIntoView({block: 'nearest', behavior: 'smooth'})
@@ -265,25 +326,29 @@ function DetailPanel({
 
       <div className="ing-tl__detail-grid">
         <MiniSpark tiers={lane.tiers} />
-        <ol className="ing-tl__detail-ladder">
-          {lane.tiers.map((t, i) => {
-            const g = formatGap(t.gapDays)
-            return (
-              <li key={t.tier} className={i === idx ? 'is-current' : undefined}>
-                <span className="ing-tl__detail-dot" style={{background: TIER_COLOR[t.tier] ?? '#26b6ff'}} />
-                <span className="ing-tl__detail-tier">{TIER_LABEL[t.tier] ?? t.tier}</span>
-                {g ? <span className="ing-tl__detail-gap">+{g}</span> : null}
-                <time>{fmtDate(t.date)}</time>
-              </li>
-            )
-          })}
-        </ol>
+        {stat ? (
+          <CoreLadder lane={lane} idx={idx} stat={stat} />
+        ) : (
+          <ol className="ing-tl__detail-ladder">
+            {lane.tiers.map((t, i) => {
+              const g = formatGap(t.gapDays)
+              return (
+                <li key={t.tier} className={i === idx ? 'is-current' : undefined}>
+                  <span className="ing-tl__detail-dot" style={{background: TIER_COLOR[t.tier] ?? '#26b6ff'}} />
+                  <span className="ing-tl__detail-tier">{TIER_LABEL[t.tier] ?? t.tier}</span>
+                  {g ? <span className="ing-tl__detail-gap">+{g}</span> : null}
+                  <time>{fmtDate(t.date)}</time>
+                </li>
+              )
+            })}
+          </ol>
+        )}
       </div>
     </div>
   )
 }
 
-function Completo({rows}: {rows: Row[]}) {
+function Completo({rows, medalStats}: {rows: Row[]; medalStats?: MedalStats}) {
   const [cat, setCat] = useState('all')
   const [tierF, setTierF] = useState('all')
   const [sel, setSel] = useState<[number, number] | null>(null)
@@ -453,7 +518,9 @@ function Completo({rows}: {rows: Row[]}) {
         )}
       </p>
 
-      {selected ? <DetailPanel sel={selected} onClose={() => setSelected(null)} /> : null}
+      {selected ? (
+        <DetailPanel sel={selected} medalStats={medalStats} onClose={() => setSelected(null)} />
+      ) : null}
 
       <div className="ing-tl__swim">
         <ul className="ing-tl__swim-labels" style={{paddingTop: AXIS_TOP}}>
@@ -568,11 +635,13 @@ function Completo({rows}: {rows: Row[]}) {
 export default function AchievementTimeline({
   acquisitions,
   variant = 'completo',
+  medalStats,
 }: {
   acquisitions: Acq[]
   variant?: Variant
+  medalStats?: MedalStats
 }) {
   const rows = useMemo(() => annotateLaneGaps(acquisitions) as Row[], [acquisitions])
   if (!rows || rows.length < 2) return <Placeholder variant={variant} />
-  return variant === 'resumo' ? <Resumo rows={rows} /> : <Completo rows={rows} />
+  return variant === 'resumo' ? <Resumo rows={rows} /> : <Completo rows={rows} medalStats={medalStats} />
 }
