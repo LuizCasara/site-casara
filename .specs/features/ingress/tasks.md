@@ -1178,15 +1178,16 @@ do catálogo.
 **Tools**: MCP NONE · Skill NONE
 
 **Done when**:
-- [ ] Junta as duas fontes, ordena por data ascendente
-- [ ] Data inválida ignorada sem quebrar; slug fora do catálogo ignorado
-- [ ] `< 2` datas devolve o array curto
-- [ ] Gate check passes: `npm test`
-- [ ] Test count: ≥5 tests pass
+- [x] Junta `medalDates` + `eventBadges[].dates`, ordena por data ascendente, embute o `name` do catálogo
+- [x] Data inválida (`"não sei"`, `""`, `null`) ignorada; slug fora do catálogo ignorado
+- [x] `< 2` datas devolve o array curto (o componente decide o placeholder)
+- [x] Gate check passes: `npm test` (319 testes ✔)
+- [x] Test count: 5 tests pass
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(ingress): coleta de datas de conquista`
+**Status**: ✅ Complete
 
 ---
 
