@@ -41,7 +41,7 @@ export default function IngressPage() {
 
       <AchievementsShelf eventBadges={profile.eventBadges} />
 
-      <AchievementTimeline acquisitions={acquisitions} />
+      <AchievementTimeline acquisitions={acquisitions} variant="resumo" />
 
       <StatGroups stats={profile.stats} />
 

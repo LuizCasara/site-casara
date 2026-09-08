@@ -708,25 +708,236 @@
   font-family: var(--ing-font-display);
 }
 
-.ing-achv-timeline {
-  width: 100%;
-  height: auto;
+/* --- linha do tempo de conquistas (combo: overview + brush + swimlane) --- */
+
+.ing-tl-hero h1 {
+  font-size: clamp(1.7rem, 7vw, 2.4rem);
+  color: var(--ing-green);
 }
 
-.ing-achv-timeline__axis {
+.ing-tl-hero p {
+  margin: 0.5rem 0 0;
+  max-width: 44rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--ing-text-dim);
+}
+
+.ing-tl__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--ing-font-body);
+}
+
+.ing-tl__axis {
   stroke: var(--ing-edge-soft);
   stroke-width: 1;
 }
 
-.ing-achv-timeline__stem {
-  stroke: rgba(0, 230, 118, 0.14);
+.ing-tl__grid {
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+
+.ing-tl__year {
+  fill: var(--ing-text-faint);
+  font-size: 10px;
+}
+
+/* resumo (teaser no /ingress) */
+.ing-tl__teaser {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 10px;
+}
+
+.ing-tl__teaser:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 3px;
+}
+
+.ing-tl__teaser-cta {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ing-teal);
+}
+
+.ing-tl__teaser:hover .ing-tl__teaser-cta {
+  color: var(--ing-green-soft);
+}
+
+/* filtros */
+.ing-tl__filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.ing-tl__chipset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ing-tl__chip {
+  font-family: var(--ing-font-body);
+  font-size: 0.76rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--ing-edge);
+  background: transparent;
+  color: var(--ing-text-dim);
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+
+.ing-tl__chip[aria-pressed='true'] {
+  background: rgba(0, 230, 118, 0.12);
+  border-color: var(--ing-green);
+  color: var(--ing-green-soft);
+}
+
+.ing-tl__chip:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+/* overview + brush */
+.ing-tl__overview {
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.ing-tl__brush {
+  fill: rgba(38, 182, 255, 0.12);
+  stroke: var(--ing-cyan);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  cursor: grab;
+}
+
+.ing-tl__hint-line {
+  margin: 0.3rem 0 0.9rem;
+  font-size: 0.75rem;
+  color: var(--ing-text-faint);
+}
+
+.ing-tl__reset {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--ing-teal);
+  cursor: pointer;
+}
+
+.ing-tl__reset:hover {
+  color: var(--ing-green-soft);
+}
+
+/* swimlane */
+.ing-tl__lanes {
+  max-height: 26rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 10px;
+  background: var(--ing-bg-2);
+}
+
+.ing-tl__lane-track {
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+}
+
+.ing-tl__lane-label {
+  fill: var(--ing-text-dim);
+  font-size: 10px;
+}
+
+.ing-tl__lane-label.is-hover {
+  fill: var(--ing-green-soft);
+}
+
+.ing-tl__line {
+  fill: none;
+  stroke: rgba(0, 230, 118, 0.35);
+  stroke-width: 1.25;
+}
+
+.ing-tl__seg {
+  fill: var(--ing-text-faint);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-tl__dot {
+  stroke: var(--ing-bg);
   stroke-width: 0.75;
 }
 
-.ing-achv-timeline__year {
-  fill: var(--ing-text-faint);
-  font-family: var(--ing-font-body);
-  font-size: 10px;
+.ing-tl__dot.is-drill {
+  cursor: pointer;
+}
+
+.ing-tl__dot.is-drill:hover {
+  stroke: var(--ing-text);
+}
+
+/* tooltip */
+.ing-tl__tip {
+  position: fixed;
+  z-index: 40;
+  pointer-events: none;
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  max-width: 15rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--ing-green);
+  border-radius: 8px;
+  box-shadow: var(--ing-lift);
+}
+
+.ing-tl__tip-art {
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  object-fit: contain;
+}
+
+.ing-tl__tip-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ing-tl__tip-body b {
+  font-family: var(--ing-font-display);
+  font-size: 0.85rem;
+  color: var(--ing-text);
+}
+
+.ing-tl__tip-body span {
+  font-size: 0.75rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-tl__tip-gap {
+  color: var(--ing-teal) !important;
+}
+
+.ing-tl__tip-drill {
+  color: var(--ing-green-soft) !important;
+  margin-top: 0.15rem;
 }
 
 /* --- radar --- */
