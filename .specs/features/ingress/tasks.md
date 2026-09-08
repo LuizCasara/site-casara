@@ -1392,12 +1392,15 @@ fora do catálogo omitido; vazio vira convite ao CLI.
 **Tools**: MCP NONE · Skill `nextjs-use-client`
 
 **Done when**:
-- [ ] Medalhas vêm antes dos KPIs; build sem warning; 360px sem scroll horizontal
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] Ordem: hero → BadgeShelf → AchievementsShelf → AchievementTimeline → StatGroups → radar → distribuição → resto
+- [x] `collectAcquisitions(profile, loadCatalog())` passa para a timeline
+- [x] build sem warning novo; 360px sem scroll horizontal
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ 323 ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): medalhas assumem o topo da página`
+**Status**: ✅ Complete
 
 ---
 
@@ -1412,13 +1415,14 @@ tooltip `<title>`. `< 2` datas devolve placeholder.
 **Tools**: MCP NONE · Skill `nextjs-use-client`, `dataviz`
 
 **Done when**:
-- [ ] ≥2 datas devolve timeline com marcadores ordenados e tooltip; `< 2` devolve placeholder
-- [ ] SVG responsivo, server-only, 360px ok
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] ≥2 datas → SVG com um marcador por (badge, tier) na data, cor por tier, ano no eixo, tooltip `<title>`; `< 2` → placeholder explicando que cresce com os prints/dump
+- [x] SVG responsivo (`viewBox`), server-only, 360px ok
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ 323 ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): timeline de conquistas`
+**Status**: ✅ Complete
 
 ---
 

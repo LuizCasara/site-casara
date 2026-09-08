@@ -629,6 +629,27 @@
   font-family: var(--ing-font-display);
 }
 
+.ing-achv-timeline {
+  width: 100%;
+  height: auto;
+}
+
+.ing-achv-timeline__axis {
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+}
+
+.ing-achv-timeline__stem {
+  stroke: var(--ing-edge);
+  stroke-width: 1;
+}
+
+.ing-achv-timeline__year {
+  fill: var(--ing-text-faint);
+  font-family: var(--ing-font-body);
+  font-size: 10px;
+}
+
 /* --- radar --- */
 
 .ing-radar {
