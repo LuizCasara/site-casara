@@ -17,10 +17,10 @@ const ROW_H = 18
 
 const TIER_COLOR: Record<string, string> = {
   bronze: '#d08a4e',
-  silver: '#cfdad4',
+  silver: '#9aa4ac',
   gold: '#ffd24a',
   platinum: '#7fe9ff',
-  onyx: '#00e676',
+  onyx: '#0c0f14',
   single: '#26b6ff',
 }
 const TIER_LABEL: Record<string, string> = {
@@ -386,7 +386,7 @@ function Completo({rows}: {rows: Row[]}) {
                       cy={cy}
                       r={hoverLane === lane.slug ? 4 : 3.4}
                       fill={TIER_COLOR[p.tier] ?? '#26b6ff'}
-                      className={`ing-tl__dot${drill ? ' is-drill' : ''}`}
+                      className={`ing-tl__dot${drill ? ' is-drill' : ''}${p.tier === 'onyx' ? ' is-onyx' : ''}`}
                       onMouseEnter={(e) => showTip(e, p)}
                       onMouseMove={(e) => showTip(e, p)}
                       onMouseLeave={() => setTip(null)}
@@ -414,7 +414,7 @@ function Completo({rows}: {rows: Row[]}) {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={artPath(tip.row.slug, tip.row.tier)}
+            src={artPath(tip.row.slug, tip.row.group === 'core' ? tip.row.tier : 'single')}
             alt=""
             width={44}
             height={44}
