@@ -13,10 +13,10 @@
 ## Handoff
 
 - **Feature**: ingress (`.specs/features/ingress/`)
-- **Phase / Task**: Feature original COMPLETA (T1–T24 + Verifier). **Expansão de medalhas** aprovada (MED-01..MED-08, T25–T43). Executando **Fases 5-6 (T25–T32)** agora, para no fim delas.
-- **Completed**: feature original + Verifier + T24. Expansão: brainstorming → spec/design/tasks (`6f10ef9`), catálogo `data/ingress/badge-catalog.json` (26 badges) gerado do ingress.plus.
-- **In-progress** (file:line): iniciando T25
-- **Next step**: T25 (script gerador do catálogo) → T26–T30 (libs `ingress-catalog/-history/-timeline`, badges data-driven, migração do perfil) → T31 (CLI) → T32 (baixar ~130 PNGs). **Parar aí.** Fases 7-8 (UI) depois que o Luiz mandar os prints (amanhã, 1 por medalha — trazem arte + datas de cada tier → alimentam `eventBadges` + `medalDates`).
-- **Blockers**: prints do perfil pendentes do Luiz (para Conquistas + timeline). UAT visual pendente.
+- **Phase / Task**: Feature original + expansão de medalhas COMPLETAS (T1–T43 + 2 Verifiers). Luiz pediu p/ adiantar tudo enquanto dormia — Fases 7-8 (UI) feitas com o snapshot; Conquistas/timeline em estado convite/placeholder até os prints.
+- **Completed**: T1–T24 (feature) + T25–T43 (expansão). Fase 5-6: catálogo das 26 badges do ingress.plus, `lib/ingress-catalog/-history/-timeline.mjs`, `ingress-badges` data-driven, `history[]`/`medalDates`/`eventBadges` no perfil, CLI `badges`/`medals --fetch`, 130 PNGs baixados. Fase 7-8: BadgeShelf 26 + resumo + próxima medalha, `/ingress/medalha/[slug]` (detalhe + TierLadder + OG por badge, 26 rotas prerender), AchievementsShelf, AchievementTimeline, hover KPI→badge (CSS puro), projeção. 325 testes, 8/8 mutantes mortos, gate verde.
+- **In-progress** (file:line): nenhum
+- **Next step (quando o Luiz voltar)**: (1) ele manda os prints (1 por medalha) → eu transcrevo com `node scripts/ingress.mjs badges add <slug> [count=] [<tier>=<data>] --apply` + `medaldate` para as core → `medals --fetch` baixa a arte de evento → commit. (2) UAT visual (`localhost:3000/ingress` desktop + 360px, `/ingress/medalha/trekker`, hover nos KPI). (3) Se aprovado: `git push origin feat/ingress` + PR (**precisa OK dele**).
+- **Blockers**: prints do perfil (Conquistas + timeline). UAT visual. GDPR_SERIES a ajustar quando o dump chegar.
 - **Uncommitted files**: nenhum
-- **Branch**: `feat/ingress`, 36 commits à frente de main. **Nada pushed.**
+- **Branch**: `feat/ingress`, 59 commits à frente de main. **Nada pushed.**
