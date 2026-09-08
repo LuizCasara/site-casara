@@ -1,19 +1,27 @@
 'use client'
 
 import {useMemo, useRef, useState} from 'react'
-import {useRouter} from 'next/navigation'
-import {annotateLaneGaps, formatGap} from '@/lib/ingress-timeline.mjs'
+import {annotateLaneGaps, formatGap, groupLanes} from '@/lib/ingress-timeline.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import Panel from './Panel'
 
 type Acq = {slug: string; name: string; group: string; tier: string; date: string}
 type Row = Acq & {gapDays: number | null; prevTier: string | null}
+type TierEntry = {tier: string; date: string; gapDays: number | null; prevTier: string | null}
+type Lane = {
+  slug: string
+  name: string
+  group: string
+  latestTier: string
+  firstDate: string
+  tiers: TierEntry[]
+}
 type Variant = 'resumo' | 'completo'
 
-const W = 760
-const LEFT = 116
-const RIGHT = 12
-const ROW_H = 18
+const RIGHT = 14
+const LEFT_PAD = 14
+const ROW_H = 26
+const AXIS_TOP = 18
 
 const TIER_COLOR: Record<string, string> = {
   bronze: '#d08a4e',
@@ -59,8 +67,12 @@ function fmtDate(iso: string) {
   })
 }
 
-function truncate(s: string, n: number) {
-  return s.length > n ? `${s.slice(0, n - 1)}…` : s
+function laneArt(lane: {slug: string; group: string; latestTier: string}) {
+  return artPath(lane.slug, lane.group === 'core' ? lane.latestTier : 'single')
+}
+
+function hideBrokenImg(e: React.SyntheticEvent<HTMLImageElement>) {
+  e.currentTarget.style.visibility = 'hidden'
 }
 
 /** Área acumulada do total de conquistas (step-after), da esquerda à direita. */
@@ -84,6 +96,12 @@ function cumulativePath(
   return `M${firstX},${yBase} L${parts.join(' L')} L${lastX},${yBase} Z`
 }
 
+function yearList(minTs: number, maxTs: number) {
+  const out: number[] = []
+  for (let y = new Date(minTs).getUTCFullYear(); y <= new Date(maxTs).getUTCFullYear(); y += 1) out.push(y)
+  return out
+}
+
 function Placeholder({variant}: {variant: Variant}) {
   return (
     <Panel label="Linha do tempo" hint="quando cada medalha caiu">
@@ -97,18 +115,26 @@ function Placeholder({variant}: {variant: Variant}) {
   )
 }
 
-/** Curva acumulada pequena no /ingress, que leva para a página completa. */
+/** Curva acumulada + tira das medalhas mais recentes, que leva à página completa. */
 function Resumo({rows}: {rows: Row[]}) {
+  const W = 760
   const H = 96
-  const pad = {t: 10, b: 20}
+  const pad = {t: 10, b: 18}
   const ts = rows.map((r) => Date.parse(r.date))
   const min = Math.min(...ts)
   const max = Math.max(...ts)
   const xOf = (t: number) => 8 + ((t - min) / (max - min || 1)) * (W - 16)
   const yOf = (v: number) => H - pad.b - (v / rows.length) * (H - pad.t - pad.b)
-  const years: number[] = []
-  for (let y = new Date(min).getUTCFullYear(); y <= new Date(max).getUTCFullYear(); y += 1) years.push(y)
+  const years = yearList(min, max)
   const step = years.length > 16 ? 3 : years.length > 8 ? 2 : 1
+
+  const recent: Row[] = []
+  const seen = new Set<string>()
+  for (let i = rows.length - 1; i >= 0 && recent.length < 8; i -= 1) {
+    if (seen.has(rows[i].slug)) continue
+    seen.add(rows[i].slug)
+    recent.push(rows[i])
+  }
 
   return (
     <Panel label="Linha do tempo" hint={`${rows.length} conquistas`}>
@@ -123,26 +149,87 @@ function Resumo({rows}: {rows: Row[]}) {
           <line x1={8} y1={H - pad.b} x2={W - 8} y2={H - pad.b} className="ing-tl__axis" />
           {years.map((y, i) =>
             i % step === 0 ? (
-              <text key={y} x={xOf(Date.UTC(y, 0, 1))} y={H - 6} textAnchor="middle" className="ing-tl__year">
+              <text key={y} x={xOf(Date.UTC(y, 0, 1))} y={H - 5} textAnchor="middle" className="ing-tl__year">
                 {y}
               </text>
             ) : null,
           )}
           <path d={cumulativePath(rows, xOf, yOf, H - pad.b)} fill="url(#ing-tl-fill)" stroke="#00e676" strokeWidth={1.5} />
         </svg>
-        <span className="ing-tl__teaser-cta">abrir linha do tempo navegável →</span>
+        <span className="ing-tl__recent">
+          {recent.map((r) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={r.slug}
+              src={artPath(r.slug, r.group === 'core' ? r.tier : 'single')}
+              alt={r.name}
+              width={30}
+              height={30}
+              onError={hideBrokenImg}
+            />
+          ))}
+        </span>
+        <span className="ing-tl__teaser-cta">abrir linha do tempo →</span>
       </a>
     </Panel>
   )
 }
 
+function DetailPanel({
+  sel,
+  onClose,
+}: {
+  sel: {lane: Lane; idx: number}
+  onClose: () => void
+}) {
+  const {lane, idx} = sel
+  const entry = lane.tiers[idx]
+  const gap = formatGap(entry.gapDays)
+  return (
+    <div className="ing-tl__detail" role="dialog" aria-label={`Detalhe de ${lane.name}`}>
+      <button type="button" className="ing-tl__detail-close" onClick={onClose} aria-label="Fechar">
+        ✕
+      </button>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className="ing-tl__detail-art"
+        src={artPath(lane.slug, lane.group === 'core' ? entry.tier : 'single')}
+        alt=""
+        width={72}
+        height={72}
+        onError={hideBrokenImg}
+      />
+      <div className="ing-tl__detail-body">
+        <b>{lane.name}</b>
+        <span className="ing-tl__detail-sub">
+          {TIER_LABEL[entry.tier] ?? entry.tier} · {fmtDate(entry.date)}
+          {gap && entry.prevTier ? ` · +${gap} depois de ${TIER_LABEL[entry.prevTier] ?? entry.prevTier}` : ''}
+        </span>
+        <ul className="ing-tl__detail-ladder">
+          {lane.tiers.map((t, i) => (
+            <li key={t.tier} className={i === idx ? 'is-current' : undefined}>
+              <span className="ing-tl__detail-dot" style={{background: TIER_COLOR[t.tier] ?? '#26b6ff'}} />
+              {TIER_LABEL[t.tier] ?? t.tier}
+              <time>{fmtDate(t.date)}</time>
+            </li>
+          ))}
+        </ul>
+        {lane.group === 'core' ? (
+          <a className="ing-tl__detail-link" href={`/ingress/medalha/${lane.slug}`}>
+            abrir página da {lane.name} →
+          </a>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 function Completo({rows}: {rows: Row[]}) {
-  const router = useRouter()
   const [cat, setCat] = useState('all')
   const [tierF, setTierF] = useState('all')
   const [sel, setSel] = useState<[number, number] | null>(null)
-  const [hoverLane, setHoverLane] = useState<string | null>(null)
-  const [tip, setTip] = useState<{x: number; y: number; row: Row} | null>(null)
+  const [selected, setSelected] = useState<{lane: Lane; idx: number} | null>(null)
+  const [hover, setHover] = useState<{x: number; y: number; text: string} | null>(null)
   const overviewRef = useRef<SVGSVGElement>(null)
   const dragRef = useRef<{mode: 'new' | 'pan'; startT: number; origin: [number, number]} | null>(null)
 
@@ -151,21 +238,27 @@ function Completo({rows}: {rows: Row[]}) {
   const domainMax = Math.max(...ts)
   const [t0, t1] = sel ?? [domainMin, domainMax]
 
+  // --- overview (full width, scaled) ---
+  const OW = 760
+  const OH = 76
+  const oPad = {t: 8, b: 18}
+  const oxOf = (t: number) => 8 + ((t - domainMin) / (domainMax - domainMin || 1)) * (OW - 16)
+  const oyOf = (v: number) => OH - oPad.b - (v / rows.length) * (OH - oPad.t - oPad.b)
+  const overviewYears = yearList(domainMin, domainMax)
+  const oStep = overviewYears.length > 16 ? 3 : overviewYears.length > 8 ? 2 : 1
+
   const tAtClientX = (clientX: number) => {
     const svg = overviewRef.current
     if (!svg) return domainMin
     const rect = svg.getBoundingClientRect()
     const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-    const px = ratio * W
-    const inner = (px - 8) / (W - 16)
+    const inner = (ratio * OW - 8) / (OW - 16)
     return domainMin + Math.max(0, Math.min(1, inner)) * (domainMax - domainMin)
   }
-
   const onDown = (e: React.PointerEvent<SVGSVGElement>) => {
     const t = tAtClientX(e.clientX)
-    if (sel && t >= sel[0] && t <= sel[1]) {
-      dragRef.current = {mode: 'pan', startT: t, origin: [sel[0], sel[1]]}
-    } else {
+    if (sel && t >= sel[0] && t <= sel[1]) dragRef.current = {mode: 'pan', startT: t, origin: [sel[0], sel[1]]}
+    else {
       dragRef.current = {mode: 'new', startT: t, origin: [t, t]}
       setSel([t, t])
     }
@@ -175,9 +268,8 @@ function Completo({rows}: {rows: Row[]}) {
     const d = dragRef.current
     if (!d) return
     const t = tAtClientX(e.clientX)
-    if (d.mode === 'new') {
-      setSel([Math.min(d.startT, t), Math.max(d.startT, t)])
-    } else {
+    if (d.mode === 'new') setSel([Math.min(d.startT, t), Math.max(d.startT, t)])
+    else {
       const shift = t - d.startT
       let a = d.origin[0] + shift
       let b = d.origin[1] + shift
@@ -199,68 +291,45 @@ function Completo({rows}: {rows: Row[]}) {
     if (d && sel && sel[1] - sel[0] < (domainMax - domainMin) * 0.02) setSel(null)
   }
 
-  const visible = useMemo(
-    () =>
-      rows.filter(
-        (r) =>
-          (cat === 'all' || r.group === cat) &&
-          (tierF === 'all' || r.tier === tierF) &&
-          Date.parse(r.date) >= t0 &&
-          Date.parse(r.date) <= t1,
-      ),
-    [rows, cat, tierF, t0, t1],
-  )
-
+  // --- filtered lanes for the swimlane ---
   const lanes = useMemo(() => {
-    const map = new Map<string, {name: string; group: string; pts: Row[]}>()
-    for (const r of visible) {
-      const l = map.get(r.slug) ?? {name: r.name, group: r.group, pts: []}
-      l.pts.push(r)
-      map.set(r.slug, l)
-    }
-    return [...map.entries()]
-      .map(([slug, l]) => ({slug, ...l}))
-      .sort((a, b) => Date.parse(a.pts[0].date) - Date.parse(b.pts[0].date))
-  }, [visible])
+    const visible = rows.filter(
+      (r) =>
+        (cat === 'all' || r.group === cat) &&
+        (tierF === 'all' || r.tier === tierF) &&
+        Date.parse(r.date) >= t0 &&
+        Date.parse(r.date) <= t1,
+    )
+    return groupLanes(visible) as Lane[]
+  }, [rows, cat, tierF, t0, t1])
 
-  // --- overview ---
-  const OH = 76
-  const oPad = {t: 8, b: 18}
-  const oxOf = (t: number) => 8 + ((t - domainMin) / (domainMax - domainMin || 1)) * (W - 16)
-  const oyOf = (v: number) => OH - oPad.b - (v / rows.length) * (OH - oPad.t - oPad.b)
-  const overviewYears: number[] = []
-  for (let y = new Date(domainMin).getUTCFullYear(); y <= new Date(domainMax).getUTCFullYear(); y += 1) overviewYears.push(y)
-  const oStep = overviewYears.length > 16 ? 3 : overviewYears.length > 8 ? 2 : 1
+  const totalVisible = lanes.reduce((n, l) => n + l.tiers.length, 0)
 
-  // --- swimlane ---
-  const SH = ROW_H * Math.max(lanes.length, 1) + 24
-  const sxOf = (t: number) => LEFT + ((t - t0) / (t1 - t0 || 1)) * (W - LEFT - RIGHT)
-  const laneYears: number[] = []
-  for (let y = new Date(t0).getUTCFullYear(); y <= new Date(t1).getUTCFullYear(); y += 1) laneYears.push(y)
-  const laneSpanYears = (t1 - t0) / YEAR
-  const laneStep = laneSpanYears > 16 ? 3 : laneSpanYears > 8 ? 2 : 1
+  // --- swimlane plot (real px width, horizontal scroll) ---
+  const spanYears = (t1 - t0) / YEAR
+  const plotW = Math.max(680, Math.round(spanYears * 58))
+  const SH = AXIS_TOP + Math.max(lanes.length, 1) * ROW_H + 20
+  const sxOf = (t: number) => LEFT_PAD + ((t - t0) / (t1 - t0 || 1)) * (plotW - LEFT_PAD - RIGHT)
+  const laneYears = yearList(t0, t1)
+  const laneStep = spanYears > 16 ? 3 : spanYears > 8 ? 2 : 1
 
-  const showTip = (e: React.MouseEvent, row: Row) => setTip({x: e.clientX, y: e.clientY, row})
+  const yearTicks = laneYears
+    .map((y, i) => ({y, x: sxOf(Date.UTC(y, 0, 1)), show: i % laneStep === 0}))
+    .filter((t) => t.show && t.x >= LEFT_PAD - 1 && t.x <= plotW - RIGHT + 1)
 
   return (
     <section className="ing-panel ing-tl">
       <div className="ing-panel__head">
         <h2 className="ing-panel__label">Linha do tempo</h2>
         <span className="ing-panel__hint">
-          {visible.length} de {rows.length}
+          {totalVisible} de {rows.length}
         </span>
       </div>
 
       <div className="ing-tl__filters" role="group" aria-label="Filtros da linha do tempo">
         <div className="ing-tl__chipset">
           {CATEGORIES.map((c) => (
-            <button
-              key={c.k}
-              type="button"
-              className="ing-tl__chip"
-              aria-pressed={cat === c.k}
-              onClick={() => setCat(c.k)}
-            >
+            <button key={c.k} type="button" className="ing-tl__chip" aria-pressed={cat === c.k} onClick={() => setCat(c.k)}>
               {c.label}
             </button>
           ))}
@@ -283,12 +352,12 @@ function Completo({rows}: {rows: Row[]}) {
       <svg
         ref={overviewRef}
         className="ing-tl__svg ing-tl__overview"
-        viewBox={`0 0 ${W} ${OH}`}
+        viewBox={`0 0 ${OW} ${OH}`}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
         role="img"
-        aria-label="Total de conquistas ao longo do tempo — arraste para dar zoom"
+        aria-label="Total de conquistas — arraste para dar zoom num período"
       >
         <defs>
           <linearGradient id="ing-tl-fill-c" x1="0" y1="0" x2="0" y2="1">
@@ -296,7 +365,7 @@ function Completo({rows}: {rows: Row[]}) {
             <stop offset="100%" stopColor="#26b6ff" stopOpacity="0.06" />
           </linearGradient>
         </defs>
-        <line x1={8} y1={OH - oPad.b} x2={W - 8} y2={OH - oPad.b} className="ing-tl__axis" />
+        <line x1={8} y1={OH - oPad.b} x2={OW - 8} y2={OH - oPad.b} className="ing-tl__axis" />
         {overviewYears.map((y, i) =>
           i % oStep === 0 ? (
             <text key={y} x={oxOf(Date.UTC(y, 0, 1))} y={OH - 5} textAnchor="middle" className="ing-tl__year">
@@ -321,118 +390,109 @@ function Completo({rows}: {rows: Row[]}) {
             ↺ ver período inteiro
           </button>
         ) : (
-          'Arraste na curva acima para dar zoom · passe o mouse nos pontos'
+          'Arraste na curva para dar zoom · toque numa medalha para ver o detalhe'
         )}
       </p>
 
-      <div className="ing-tl__lanes">
-        <svg className="ing-tl__svg" viewBox={`0 0 ${W} ${SH}`} role="img" aria-label={`${lanes.length} medalhas na linha do tempo`}>
-          {laneYears.map((y, i) => {
-            const x = sxOf(Date.UTC(y, 0, 1))
-            if (i % laneStep !== 0 || x < LEFT || x > W - RIGHT) return null
-            return (
-              <g key={y}>
-                <line x1={x} y1={4} x2={x} y2={SH - 16} className="ing-tl__grid" />
-                <text x={x} y={SH - 4} textAnchor="middle" className="ing-tl__year">
-                  {y}
+      <div className="ing-tl__swim">
+        <ul className="ing-tl__swim-labels" style={{paddingTop: AXIS_TOP}}>
+          {lanes.map((lane) => (
+            <li key={lane.slug} style={{height: ROW_H}}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={laneArt(lane)} alt="" width={18} height={18} onError={hideBrokenImg} />
+              <span>{lane.name}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="ing-tl__swim-plot">
+          <svg width={plotW} height={SH} role="img" aria-label={`${lanes.length} medalhas na linha do tempo`}>
+            {yearTicks.map((t) => (
+              <g key={t.y}>
+                <line x1={t.x} y1={AXIS_TOP - 6} x2={t.x} y2={SH - 16} className="ing-tl__grid" />
+                <text x={t.x} y={12} textAnchor="middle" className="ing-tl__year">
+                  {t.y}
+                </text>
+                <text x={t.x} y={SH - 4} textAnchor="middle" className="ing-tl__year">
+                  {t.y}
                 </text>
               </g>
-            )
-          })}
-          {lanes.map((lane, i) => {
-            const cy = 10 + i * ROW_H + ROW_H / 2
-            const pts = lane.pts
-            return (
-              <g
-                key={lane.slug}
-                onMouseEnter={() => setHoverLane(lane.slug)}
-                onMouseLeave={() => setHoverLane((s) => (s === lane.slug ? null : s))}
-              >
-                <line x1={LEFT} y1={cy} x2={W - RIGHT} y2={cy} className="ing-tl__lane-track" />
-                <text
-                  x={LEFT - 8}
-                  y={cy + 3}
-                  textAnchor="end"
-                  className={`ing-tl__lane-label${hoverLane === lane.slug ? ' is-hover' : ''}`}
-                >
-                  {truncate(lane.name, 18)}
-                </text>
-                {pts.length > 1 ? (
-                  <polyline
-                    className="ing-tl__line"
-                    points={pts.map((p) => `${sxOf(Date.parse(p.date))},${cy}`).join(' ')}
-                  />
-                ) : null}
-                {hoverLane === lane.slug
-                  ? pts.slice(1).map((p, k) => {
-                      const gap = formatGap(p.gapDays)
-                      if (!gap) return null
-                      const xa = sxOf(Date.parse(pts[k].date))
-                      const xb = sxOf(Date.parse(p.date))
-                      return (
-                        <text key={`${p.tier}-seg`} x={(xa + xb) / 2} y={cy - 6} textAnchor="middle" className="ing-tl__seg">
-                          {gap}
-                        </text>
-                      )
-                    })
-                  : null}
-                {pts.map((p) => {
-                  const cx = sxOf(Date.parse(p.date))
-                  const drill = p.group === 'core'
-                  return (
-                    <circle
-                      key={`${p.tier}-${p.date}`}
-                      cx={cx}
-                      cy={cy}
-                      r={hoverLane === lane.slug ? 4 : 3.4}
-                      fill={TIER_COLOR[p.tier] ?? '#26b6ff'}
-                      className={`ing-tl__dot${drill ? ' is-drill' : ''}${p.tier === 'onyx' ? ' is-onyx' : ''}`}
-                      onMouseEnter={(e) => showTip(e, p)}
-                      onMouseMove={(e) => showTip(e, p)}
-                      onMouseLeave={() => setTip(null)}
-                      onClick={() => drill && router.push(`/ingress/medalha/${p.slug}`)}
-                    >
-                      <title>{`${p.name} — ${TIER_LABEL[p.tier] ?? p.tier} · ${fmtDate(p.date)}`}</title>
-                    </circle>
-                  )
-                })}
-              </g>
-            )
-          })}
-        </svg>
+            ))}
+            {lanes.map((lane, i) => {
+              const cy = AXIS_TOP + i * ROW_H + ROW_H / 2
+              const active = selected?.lane.slug === lane.slug
+              return (
+                <g key={lane.slug}>
+                  <line x1={LEFT_PAD} y1={cy} x2={plotW - RIGHT} y2={cy} className="ing-tl__lane-track" />
+                  {lane.tiers.length > 1 ? (
+                    <polyline
+                      className="ing-tl__line"
+                      points={lane.tiers.map((t) => `${sxOf(Date.parse(t.date))},${cy}`).join(' ')}
+                    />
+                  ) : null}
+                  {active
+                    ? lane.tiers.slice(1).map((t, k) => {
+                        const g = formatGap(t.gapDays)
+                        if (!g) return null
+                        const xa = sxOf(Date.parse(lane.tiers[k].date))
+                        const xb = sxOf(Date.parse(t.date))
+                        return (
+                          <text key={`${t.tier}-seg`} x={(xa + xb) / 2} y={cy - 8} textAnchor="middle" className="ing-tl__seg">
+                            {g}
+                          </text>
+                        )
+                      })
+                    : null}
+                  {lane.tiers.map((t, k) => {
+                    const cx = sxOf(Date.parse(t.date))
+                    return (
+                      <g key={`${t.tier}-${t.date}`}>
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={active ? 6 : 5}
+                          fill={TIER_COLOR[t.tier] ?? '#26b6ff'}
+                          className={`ing-tl__dot${t.tier === 'onyx' ? ' is-onyx' : ''}`}
+                        />
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={13}
+                          fill="transparent"
+                          className="ing-tl__hit"
+                          onClick={() => setSelected({lane, idx: k})}
+                          onMouseEnter={(e) =>
+                            setHover({
+                              x: e.clientX,
+                              y: e.clientY,
+                              text: `${lane.name} — ${TIER_LABEL[t.tier] ?? t.tier} · ${fmtDate(t.date)}`,
+                            })
+                          }
+                          onMouseMove={(e) => setHover((h) => (h ? {...h, x: e.clientX, y: e.clientY} : h))}
+                          onMouseLeave={() => setHover(null)}
+                        >
+                          <title>{`${lane.name} — ${TIER_LABEL[t.tier] ?? t.tier} · ${fmtDate(t.date)}`}</title>
+                        </circle>
+                      </g>
+                    )
+                  })}
+                </g>
+              )
+            })}
+          </svg>
+        </div>
       </div>
 
-      {tip ? (
+      {selected ? <DetailPanel sel={selected} onClose={() => setSelected(null)} /> : null}
+
+      {hover ? (
         <div
           className="ing-tl__tip"
           style={{
-            left: Math.min(tip.x + 14, (typeof window !== 'undefined' ? window.innerWidth : 400) - 220),
-            top: tip.y + 14,
+            left: Math.min(hover.x + 14, (typeof window !== 'undefined' ? window.innerWidth : 400) - 220),
+            top: hover.y + 14,
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={artPath(tip.row.slug, tip.row.group === 'core' ? tip.row.tier : 'single')}
-            alt=""
-            width={44}
-            height={44}
-            className="ing-tl__tip-art"
-            onError={(e) => {
-              e.currentTarget.style.visibility = 'hidden'
-            }}
-          />
-          <div className="ing-tl__tip-body">
-            <b>{tip.row.name}</b>
-            <span>
-              {TIER_LABEL[tip.row.tier] ?? tip.row.tier} · {fmtDate(tip.row.date)}
-            </span>
-            {tip.row.gapDays && tip.row.prevTier ? (
-              <span className="ing-tl__tip-gap">
-                +{formatGap(tip.row.gapDays)} depois de {TIER_LABEL[tip.row.prevTier] ?? tip.row.prevTier}
-              </span>
-            ) : null}
-            {tip.row.group === 'core' ? <span className="ing-tl__tip-drill">clique para abrir a medalha →</span> : null}
-          </div>
+          {hover.text}
         </div>
       ) : null}
     </section>
@@ -440,10 +500,11 @@ function Completo({rows}: {rows: Row[]}) {
 }
 
 /**
- * Linha do tempo das conquistas. `variant="resumo"` (no /ingress) mostra só a
- * curva acumulada e leva para a página completa; `variant="completo"` (rota
- * dedicada) tem overview + brush de zoom, filtros, swimlane por medalha, hover
- * com a arte da medalha e o intervalo desde o tier anterior, e drill-down.
+ * Linha do tempo das conquistas. `variant="resumo"` (no /ingress) mostra a curva
+ * acumulada + as medalhas mais recentes e leva à página completa;
+ * `variant="completo"` (rota dedicada) tem overview + brush de zoom, filtros,
+ * swimlane por medalha com o hexágono da medalha e rótulos fixos, e um painel de
+ * detalhe ao tocar num ponto (arte, tiers com datas, intervalo, drill-down).
  */
 export default function AchievementTimeline({
   acquisitions,
