@@ -164,6 +164,36 @@ local com `eslint-disable` pontual). Sem novo sensor — mudança puramente adit
 com fallback, coberta pelo build-gate. Copyright: arte da Niantic, uso tolerado
 pela comunidade Ingress, decisão do dono do site.
 
+---
+
+## Adendo — transcrição dos 56 prints (2026-09-08)
+
+O Luiz mandou 56 prints do scanner (52 popups de detalhe + 4 telas). Transcrito
+via `scratchpad/apply-prints.mjs` (one-off, gravou `data/ingress/*.json`):
+
+- **27 `medalDates`** — data de cada tier conquistado (2014-04-10 → 2026-09-05).
+- **3 badges core novas** (Maverick / Reclaimer / Epoch) — `stat_line` mapeável;
+  catálogo de core 26 → 29; `generateStaticParams` = 29 rotas de detalhe + OG.
+- **2 correções de limiar** (o scanner é a fonte da verdade): Illuminator bronze
+  5000 (ingress.plus dizia 2000), Guardian [3,10,20,90,150] (dizia 80/140).
+  `TIER_OVERRIDES` no gerador; `ingress-catalog-gen` passa a preservar non-core.
+- **25 `eventBadges`** (anomalias, Global Ops, challenges, XM anomalies) —
+  catálogo + datas.
+- 40 PNGs novos via `medals --fetch` (170 no total, ~3,2 MB).
+
+Testes atualizados: `ingress-badges.test.mjs` / `ingress-catalog.test.mjs` (26 →
+29; mapa de tiers do FencherLC; `tierCounts` {onyx:7, platinum:6, gold:7,
+silver:2, bronze:5, none:2}). Gate: lint ✔ · **325 testes ✔** · build ✔. Sem
+novo sensor — os dados passam pelo `computeBadge`/`collectAcquisitions` já
+cobertos; só o conteúdo mudou.
+
+`collectAcquisitions` agora devolve **126 marcadores** → a `AchievementTimeline`
+saiu do placeholder. Dots menores + espalhamento vertical por hash para os
+clusters (2014, 2018). UAT visual disso pendente do Luiz.
+
+Também: `fix(ingress): "voltar" da página de medalha preserva a rolagem` —
+`BackLink` (client) usa `router.back()`.
+
 Os 14 PNGs do tier atual foram baixados de **ingress.plus** (API PocketBase
 aberta). O `tier_values` da API conferiu com `lib/ingress-badges.mjs` em 13 de 14
 badges — a exceção foi o **bronze do Illuminator** (ingress.plus 2000 vs. Fev
