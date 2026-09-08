@@ -234,7 +234,7 @@ function CoreLadder({lane, idx, stat}: {lane: Lane; idx: number; stat: MedalStat
       <p className="ing-tl__detail-total">
         Seu total: <b>{FMT.format(stat.value)}</b>
       </p>
-      <ol className="ing-tl__detail-ladder">
+      <ol className="ing-tl__detail-ladder ing-tl__detail-ladder--stat">
         {CORE_TIERS.map((tn, i) => {
           const thr = stat.thresholds[i]
           const got = gotByTier.get(tn)
@@ -254,7 +254,7 @@ function CoreLadder({lane, idx, stat}: {lane: Lane; idx: number; stat: MedalStat
                       ? `${Math.round((stat.pct ?? 0) * 100)}%`
                       : '—'}
               </time>
-              {g ? <span className="ing-tl__detail-gap">+{g}</span> : null}
+              <span className="ing-tl__detail-gap">{g ? `+${g}` : ''}</span>
             </li>
           )
         })}
@@ -329,15 +329,15 @@ function DetailPanel({
         {stat ? (
           <CoreLadder lane={lane} idx={idx} stat={stat} />
         ) : (
-          <ol className="ing-tl__detail-ladder">
+          <ol className="ing-tl__detail-ladder ing-tl__detail-ladder--event">
             {lane.tiers.map((t, i) => {
               const g = formatGap(t.gapDays)
               return (
                 <li key={t.tier} className={i === idx ? 'is-current' : undefined}>
                   <span className="ing-tl__detail-dot" style={{background: TIER_COLOR[t.tier] ?? '#26b6ff'}} />
                   <span className="ing-tl__detail-tier">{TIER_LABEL[t.tier] ?? t.tier}</span>
-                  {g ? <span className="ing-tl__detail-gap">+{g}</span> : null}
                   <time>{fmtDate(t.date)}</time>
+                  <span className="ing-tl__detail-gap">{g ? `+${g}` : ''}</span>
                 </li>
               )
             })}

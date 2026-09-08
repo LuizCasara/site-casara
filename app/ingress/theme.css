@@ -1060,11 +1060,19 @@
 }
 
 .ing-tl__detail-ladder li {
-  display: flex;
+  display: grid;
   align-items: center;
-  gap: 0.5rem;
+  column-gap: 0.65rem;
   font-size: 0.76rem;
   color: var(--ing-text-dim);
+}
+
+.ing-tl__detail-ladder--event li {
+  grid-template-columns: 0.5rem 1fr auto 3.2rem;
+}
+
+.ing-tl__detail-ladder--stat li {
+  grid-template-columns: 0.5rem 3.3rem auto 1fr 3.2rem;
 }
 
 .ing-tl__detail-ladder li.is-current {
@@ -1080,19 +1088,16 @@
   transform: rotate(45deg);
 }
 
-.ing-tl__detail-tier {
-  min-width: 3.2rem;
-}
-
 .ing-tl__detail-gap {
   color: var(--ing-teal);
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .ing-tl__detail-ladder time {
-  margin-left: auto;
   font-variant-numeric: tabular-nums;
   color: var(--ing-text-faint);
+  text-align: right;
 }
 
 .ing-tl__detail-link {
@@ -1126,6 +1131,7 @@
 .ing-tl__detail-thr {
   font-variant-numeric: tabular-nums;
   color: var(--ing-text-faint);
+  text-align: right;
 }
 
 .ing-tl__detail-ladder li.is-locked {
