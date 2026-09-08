@@ -13,12 +13,17 @@
 ## Handoff
 
 - **Feature**: ingress (`.specs/features/ingress/`)
-- **Phase / Task**: Feature original + expansão de medalhas COMPLETAS (T1–T43 + 2 Verifiers). Luiz pediu p/ adiantar tudo enquanto dormia — Fases 7-8 (UI) feitas com o snapshot; Conquistas/timeline em estado convite/placeholder até os prints.
+- **Phase / Task**: Feature COMPLETA no código (T1–T43 + 2 Verifiers + transcrição dos 56 prints + redesign da linha do tempo). Branch pushado, PR aberto contra `main`. Falta só UAT visual do Luiz + merge.
 - **Completed**: T1–T24 (feature) + T25–T43 (expansão). Fase 5-6: catálogo das 26 badges do ingress.plus, `lib/ingress-catalog/-history/-timeline.mjs`, `ingress-badges` data-driven, `history[]`/`medalDates`/`eventBadges` no perfil, CLI `badges`/`medals --fetch`, 130 PNGs baixados. Fase 7-8: BadgeShelf 26 + resumo + próxima medalha, `/ingress/medalha/[slug]` (detalhe + TierLadder + OG por badge, 26 rotas prerender), AchievementsShelf, AchievementTimeline, hover KPI→badge (CSS puro), projeção. 325 testes, 8/8 mutantes mortos, gate verde.
 - **In-progress** (file:line): nenhum
 - **Prints TRANSCRITOS (08/09)**: 56 prints → 27 `medalDates`, 25 `eventBadges`, 3 badges core novas (Maverick/Reclaimer/Epoch, core = 29), 2 correções de limiar (Illuminator/Guardian), 40 PNGs. Timeline de conquistas com 126 marcadores. + `fix` do "voltar" (BackLink). 325 testes, gate verde. Ver adendo em `validation.md`.
 - **Linha do tempo REDESENHADA (08/09)**: brainstorming (bounded) → combo. `components/ingress/AchievementTimeline.tsx` agora client, com `variant="resumo"` (curva no `/ingress`) e `variant="completo"` (nova rota `/ingress/linha-do-tempo`: overview+brush de zoom, filtros categoria/tier, swimlane por medalha, tooltip com arte PNG + intervalo desde o tier anterior, drill-down). `lib/ingress-timeline.mjs` +`annotateLaneGaps`/`formatGap` (+testes, 329). `artPath` → `lib/ingress-art.mjs` (sem `node:fs`). Fix: cor prata/onyx dos pontos; arte de badge de evento no tooltip (usa `<slug>.png` único). Commits `09dfa1c`, `3609362`. Lint/build verdes.
-- **Next step (quando o Luiz voltar)**: (1) UAT visual — inclui agora `localhost:3000/ingress/linha-do-tempo` (brush, filtros, scroll da swimlane, tooltip, drill) desktop + 360px, e o teaser novo no `/ingress`. (2) Se aprovado: `git push origin feat/ingress` + PR (**precisa OK dele**).
-- **Blockers**: UAT visual. GDPR_SERIES a ajustar quando o dump chegar. Fila em `docs/ingress-proximos-passos.md`: recursão/"Onyx ×N" com chevrons + ênfase na medalha Recursion (precisa de dado novo), badges decorativas/colecionáveis/aniversário (precisa prints/lista do Luiz).
+- **Pushed + PR (08/09)**: `git push -u origin feat/ingress` feito; Luiz abriu o PR contra `main` no GitHub. `gh` CLI não está instalado nesta máquina (PR aberto pelo navegador).
+- **Next step**: (1) UAT visual do Luiz — `/ingress`, `/ingress/linha-do-tempo` (brush, filtros, scroll da swimlane, tooltip com arte, drill), `/ingress/medalha/[slug]`, desktop + 360px. Nada foi renderizado/olhado num browser ainda. (2) Se aprovado: revisar + mergear o PR → deploy Vercel automático.
+- **Blockers**:
+  - UAT visual (só Luiz — memória: não abrir browser pra conferir).
+  - Cobertura: brush/filtros/tooltip da linha do tempo são só visuais, sem teste — dependem do UAT. Lógica pura (`annotateLaneGaps`/`formatGap`) tem teste.
+  - Dado externo: dump GDPR (série de AP, mapa de portais, recursão por medalha) + `GDPR_SERIES` a calibrar; 2º export do app (projeção de tier real, hoje `history` = 1 snapshot).
+  - Fila em `docs/ingress-proximos-passos.md`: recursão/"Onyx ×N" com chevrons + ênfase na medalha Recursion (precisa dado); badges decorativas/colecionáveis/aniversário e Personagens/Anniversaries/Limited Editions (precisa prints/lista do Luiz — sem popup nos 56 prints).
 - **Uncommitted files**: nenhum
-- **Branch**: `feat/ingress`, ~65 commits à frente de main. **Nada pushed.**
+- **Branch**: `feat/ingress`, 66 commits à frente de `main`, **pushed**, PR aberto contra `main`.
