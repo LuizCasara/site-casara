@@ -1369,14 +1369,15 @@ fora do catálogo omitido; vazio vira convite ao CLI.
 **Tools**: MCP NONE · Skill `nextjs-use-client`
 
 **Done when**:
-- [ ] Agrupa por categoria; `count` exibido; slug inválido omitido
-- [ ] `eventBadges` vazio devolve convite, não seção vazia
-- [ ] Server-only, 360px ok
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] Agrupa por `group` do catálogo (anomaly/event/prestige/character/collectible/other), na ordem definida; `×count` exibido; slug fora do catálogo omitido
+- [x] `eventBadges` vazio ou sem nenhum resolvido → convite ao `badges add`, não seção vazia
+- [x] Server-only, `.ing-achv` grade fluida, 360px ok
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ 323 ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): seção de conquistas`
+**Status**: ✅ Complete
 
 ---
 

@@ -567,6 +567,68 @@
   border-radius: 0 8px 8px 0;
 }
 
+/* --- conquistas (badges de evento) --- */
+
+.ing-achv-group + .ing-achv-group {
+  margin-top: 1rem;
+}
+
+.ing-achv-group__label {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ing-teal);
+  margin: 0 0 0.5rem;
+}
+
+.ing-achv {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
+  gap: 0.5rem;
+}
+
+.ing-achv__item {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 10px;
+  min-width: 0;
+}
+
+.ing-achv__art {
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  object-fit: contain;
+}
+
+.ing-achv__art--placeholder {
+  display: grid;
+  place-items: center;
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-green);
+  border: 1px dashed var(--ing-edge);
+  border-radius: 6px;
+}
+
+.ing-achv__name {
+  font-size: 0.85rem;
+  color: var(--ing-text);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ing-achv__count {
+  color: var(--ing-green-soft);
+  font-family: var(--ing-font-display);
+}
+
 /* --- radar --- */
 
 .ing-radar {
