@@ -1,0 +1,86 @@
+{
+  "trekker": {
+    "blurb": "Distância a pé que o scanner registrou desde 2014 — só conta o que você andou com o app aberto.",
+    "facts": [
+      {"per": 42.195, "label": "maratonas"},
+      {"per": 140, "label": "vezes a estrada Cascavel–Foz do Iguaçu"},
+      {"rate": "km por dia, em média"}
+    ]
+  },
+  "builder": {
+    "blurb": "Resonadores plantados — a base de todo portal Enlightened que você levantou.",
+    "facts": [
+      {"per": 8, "label": "portais montados do zero (8 resonadores cada)"},
+      {"rate": "resonadores por dia"}
+    ]
+  },
+  "connector": {
+    "blurb": "Links criados entre portais — cada linha verde no mapa saiu de um hack seu.",
+    "facts": [
+      {"rate": "links por dia"},
+      {"per": 3, "label": "campos que dariam (3 links cada)"}
+    ]
+  },
+  "mind-controller": {
+    "blurb": "Campos de controle — cada triângulo verde que cobriu o mapa.",
+    "facts": [{"rate": "campos por dia"}]
+  },
+  "illuminator": {
+    "blurb": "Mind Units: a soma da população estimada sob todos os campos que você fechou.",
+    "facts": [
+      {"per": 332000, "label": "vezes a população de Cascavel"},
+      {"per": 12300000, "label": "vezes a cidade de São Paulo inteira"}
+    ]
+  },
+  "liberator": {
+    "blurb": "Capturas de portal — contando recapturas do mesmo lugar.",
+    "facts": [{"rate": "capturas por dia"}]
+  },
+  "pioneer": {
+    "blurb": "Portais diferentes onde você foi o primeiro Enlightened a fincar bandeira.",
+    "facts": []
+  },
+  "explorer": {
+    "blurb": "Portais distintos que você visitou pelo menos uma vez.",
+    "facts": []
+  },
+  "purifier": {
+    "blurb": "Resonadores inimigos derrubados — o trabalho sujo antes da captura.",
+    "facts": [{"per": 8, "label": "portais adversários zerados por completo"}]
+  },
+  "hacker": {
+    "blurb": "Cada vez que você encostou num portal pra puxar itens ou girar glifos.",
+    "facts": [
+      {"rate": "hacks por dia, desde 2014"},
+      {"per": 900, "label": "horas de scanner só hackeando (a ~4s cada)"}
+    ]
+  },
+  "translator": {
+    "blurb": "Pontos de glifo — ganhos por desenhar as sequências no hack em vez de pular.",
+    "facts": [{"per": 50000, "label": "vezes o limiar máximo da medalha"}]
+  },
+  "engineer": {
+    "blurb": "Mods instalados em portais: escudos, multi-hacks, turrets, links amp.",
+    "facts": [{"rate": "mods por dia"}]
+  },
+  "recharger": {
+    "blurb": "XM devolvido a portais aliados pra segurá-los de pé.",
+    "facts": [{"per": 25000000, "label": "vezes o limiar máximo da medalha"}]
+  },
+  "specops": {
+    "blurb": "Missões concluídas — as trilhas guiadas de portais.",
+    "facts": [{"per": 6, "label": "banners de 6 missões"}]
+  },
+  "sojourner": {
+    "blurb": "Sua maior sequência de dias seguidos hackeando ao menos um portal.",
+    "facts": [{"per": 365, "label": "anos seguidos sem furar um dia"}]
+  },
+  "guardian": {
+    "blurb": "O recorde de dias que um portal seu ficou de pé sem ninguém derrubar.",
+    "facts": [{"per": 30.44, "label": "meses intocado, o recorde"}]
+  },
+  "recon": {
+    "blurb": "Análises no Wayfarer que bateram com a decisão da maioria.",
+    "facts": [{"rate": "análises por dia"}]
+  }
+}

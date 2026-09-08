@@ -4,6 +4,7 @@ import {useEffect, useMemo, useRef, useState} from 'react'
 import {annotateLaneGaps, formatGap, groupLanes} from '@/lib/ingress-timeline.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import Panel from './Panel'
+import MedalSpark from './MedalSpark'
 
 type Acq = {slug: string; name: string; group: string; tier: string; date: string}
 type Row = Acq & {gapDays: number | null; prevTier: string | null}
@@ -186,45 +187,6 @@ function Resumo({rows}: {rows: Row[]}) {
   )
 }
 
-/** Mini gráfico: os tiers desta medalha nas datas reais, no vão de tempo dela. */
-function MiniSpark({tiers}: {tiers: TierEntry[]}) {
-  const W = 210
-  const H = 58
-  const pad = 12
-  const cy = 26
-  const ds = tiers.map((t) => Date.parse(t.date))
-  const min = Math.min(...ds)
-  const max = Math.max(...ds)
-  const x = (t: number) => pad + (max === min ? 0.5 : (t - min) / (max - min)) * (W - 2 * pad)
-  const yr = (iso: string) => new Date(`${iso}T00:00:00Z`).getUTCFullYear()
-  return (
-    <svg className="ing-tl__detail-spark" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Progressão no tempo">
-      <line x1={pad} y1={cy} x2={W - pad} y2={cy} className="ing-tl__lane-track" />
-      {tiers.length > 1 ? (
-        <polyline className="ing-tl__line" points={tiers.map((t) => `${x(Date.parse(t.date))},${cy}`).join(' ')} />
-      ) : null}
-      {tiers.map((t) => (
-        <circle
-          key={t.tier}
-          cx={x(Date.parse(t.date))}
-          cy={cy}
-          r={4.5}
-          fill={TIER_COLOR[t.tier] ?? '#26b6ff'}
-          className={`ing-tl__dot${t.tier === 'onyx' ? ' is-onyx' : ''}`}
-        />
-      ))}
-      <text x={pad} y={H - 5} textAnchor="start" className="ing-tl__year">
-        {yr(tiers[0].date)}
-      </text>
-      {tiers.length > 1 ? (
-        <text x={W - pad} y={H - 5} textAnchor="end" className="ing-tl__year">
-          {yr(tiers[tiers.length - 1].date)}
-        </text>
-      ) : null}
-    </svg>
-  )
-}
-
 /** Escada dos 5 tiers de uma medalha de estatística: limiar, data e progresso. */
 function CoreLadder({lane, idx, stat}: {lane: Lane; idx: number; stat: MedalStat}) {
   const gotByTier = new Map(lane.tiers.map((t, i) => [t.tier, {entry: t, i}]))
@@ -325,7 +287,7 @@ function DetailPanel({
       </div>
 
       <div className="ing-tl__detail-grid">
-        <MiniSpark tiers={lane.tiers} />
+        <MedalSpark tiers={lane.tiers} />
         {stat ? (
           <CoreLadder lane={lane} idx={idx} stat={stat} />
         ) : (

@@ -583,6 +583,13 @@
   color: var(--ing-text-dim);
 }
 
+.ing-ladder__gap {
+  flex: none;
+  font-size: 0.75rem;
+  color: var(--ing-teal);
+  font-variant-numeric: tabular-nums;
+}
+
 .ing-ladder__date {
   flex: none;
   font-size: 0.78rem;
@@ -673,6 +680,80 @@
   margin: 0;
   font-size: 0.85rem;
   color: var(--ing-teal);
+}
+
+/* --- "plus" da medalha de estatística + mini gráfico --- */
+
+.ing-lore {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--ing-edge);
+  border-radius: 12px;
+  background: linear-gradient(150deg, rgba(0, 230, 118, 0.07), rgba(38, 182, 255, 0.04));
+}
+
+.ing-lore__blurb {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ing-text);
+}
+
+.ing-lore__facts {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.ing-lore__facts li {
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge-soft);
+  font-size: 0.82rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-lore__facts b {
+  font-family: var(--ing-font-display);
+  color: var(--ing-green-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-spark {
+  display: block;
+  width: 100%;
+  max-width: 16rem;
+  height: auto;
+  font-family: var(--ing-font-body);
+}
+
+.ing-spark__track {
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+}
+
+.ing-spark__line {
+  fill: none;
+  stroke: rgba(0, 230, 118, 0.4);
+  stroke-width: 1.5;
+}
+
+.ing-spark__dot {
+  stroke: var(--ing-bg);
+  stroke-width: 1;
+}
+
+.ing-spark__dot--onyx {
+  stroke: var(--ing-green);
+  stroke-width: 1.5;
+}
+
+.ing-spark__yr {
+  fill: var(--ing-text-faint);
+  font-size: 10px;
 }
 
 /* --- conquistas (badges de evento) --- */
@@ -1041,11 +1122,10 @@
   margin-top: 0.75rem;
 }
 
-.ing-tl__detail-spark {
+.ing-tl__detail-grid > .ing-spark {
   flex: none;
   width: 13rem;
   max-width: 100%;
-  height: auto;
 }
 
 .ing-tl__detail-ladder {

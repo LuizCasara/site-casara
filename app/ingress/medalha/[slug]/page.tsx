@@ -7,8 +7,11 @@ import {projectNextTier} from '@/lib/ingress-history.mjs'
 import {catalogEntry, coreBadges} from '@/lib/ingress-catalog.mjs'
 import {medalArt} from '@/lib/ingress-medal-art.mjs'
 import TierLadder from '@/components/ingress/TierLadder'
+import MedalSpark from '@/components/ingress/MedalSpark'
+import MedalLore from '@/components/ingress/MedalLore'
 
 const FMT = new Intl.NumberFormat('pt-BR')
+const CORE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'onyx']
 
 type BadgeDef = {key: string; name: string; statKey: string; tiers: Record<string, number>}
 type CatalogEntry = {name: string; requirement?: string; tiers: number[]}
@@ -40,8 +43,17 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
   const profile = loadProfile()
   const value = profile?.stats?.[def.statKey] ?? 0
   const badge = computeBadge(def, value)
-  const dates = profile?.medalDates?.[slug] ?? {}
+  const dates: Record<string, string> = profile?.medalDates?.[slug] ?? {}
   const art = medalArt(slug, badge.tier) as string | null
+
+  const allTs = Object.values(profile?.medalDates ?? {})
+    .flatMap((t) => Object.values(t ?? {}))
+    .map((d) => Date.parse(d as string))
+    .filter(Number.isFinite)
+  const since = allTs.length ? Math.min(...allTs) : Date.parse('2014-01-01')
+  const capturedTs = profile?.capturedAt ? Date.parse(profile.capturedAt) : since
+  const daysPlaying = Math.max(1, Math.round((capturedTs - since) / 86_400_000))
+  const sparkTiers = CORE_TIERS.filter((t) => dates[t]).map((t) => ({tier: t, date: dates[t]}))
   const projection = projectNextTier(profile?.history ?? [], def, value) as
     | {tier: string; date: string}
     | {reason: string}
@@ -85,6 +97,8 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
         </div>
       </header>
 
+      <MedalLore slug={slug} value={value} daysPlaying={daysPlaying} />
+
       {entry.requirement ? (
         <p className="ing-medal-req">
           {entry.requirement.replace(
@@ -94,14 +108,29 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
         </p>
       ) : null}
 
-      {projectionText ? <p className="ing-projection">{projectionText}</p> : null}
+      {sparkTiers.length > 1 ? (
+        <section>
+          <h2 className="ing-panel__label" style={{marginBottom: '0.5rem'}}>
+            Sua linha do tempo nesta medalha
+          </h2>
+          <MedalSpark tiers={sparkTiers} />
+        </section>
+      ) : null}
 
       <section>
         <h2 className="ing-panel__label" style={{marginBottom: '0.75rem'}}>
           Escada de tiers
         </h2>
-        <TierLadder slug={slug} currentTier={badge.tier} tiers={entry.tiers} dates={dates} />
+        <TierLadder
+          slug={slug}
+          currentTier={badge.tier}
+          tiers={entry.tiers}
+          dates={dates}
+          value={value}
+        />
       </section>
+
+      {projectionText ? <p className="ing-projection">{projectionText}</p> : null}
     </main>
   )
 }
