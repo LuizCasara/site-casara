@@ -1229,14 +1229,16 @@ ingress.plus a arte que falta.
 **Tools**: MCP NONE · Skill NONE
 
 **Done when**:
-- [ ] `build` com o export real produz `history` de 1 ponto; 2ª vez diz "Nada muda"
-- [ ] `badges` adiciona/remove; slug inválido avisa e não grava
-- [ ] `medals --fetch` baixa o que falta e reporta o total; 2ª vez baixa 0; download inválido avisa e segue
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] `build` produz `history` de 1 ponto (via buildProfile); 2ª vez "Nada muda"
+- [x] `badges list/add/rm/medaldate`, dry-run/`--apply`; slug fora do catálogo E do ingress.plus → avisa e não grava; catálogo só é estendido no `--apply`
+- [x] `medals --fetch` baixa (thumb 128) o que falta (core: 5 tiers, evento: 1); pula existente; valida magic bytes PNG; download inválido avisa e segue
+- [x] `medals` (sem fetch) lista presente/ausente das 130 + o tier atual
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ 323 ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): CLI com snapshot no build, comando badges e medals --fetch`
+**Status**: ✅ Complete
 
 ---
 
