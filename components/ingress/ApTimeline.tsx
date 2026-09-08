@@ -48,9 +48,7 @@ export default function ApTimeline({points}: {points: TimePoint[]}) {
         <path d={line} className="ing-timeline__line" />
         {sorted.map((p, i) => (
           <circle key={p.t} cx={x(ts[i])} cy={y(p.v)} r={2.5} className="ing-timeline__dot">
-            <title>
-              {p.t}: {FMT.format(p.v)} AP
-            </title>
+            <title>{`${p.t}: ${FMT.format(p.v)} AP`}</title>
           </circle>
         ))}
         {years.map((yr) => {

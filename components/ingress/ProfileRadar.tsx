@@ -52,9 +52,7 @@ export default function ProfileRadar({stats}: {stats: Profile['stats']}) {
             const [x, y] = point(i, n, R * Math.max(a.value, 0.02))
             return (
               <circle key={a.id} cx={x} cy={y} r={4} className="ing-radar__dot">
-                <title>
-                  {a.label}: {FMT.format(a.raw)}
-                </title>
+                <title>{`${a.label}: ${FMT.format(a.raw)}`}</title>
               </circle>
             )
           })}

@@ -392,9 +392,7 @@ function Completo({rows}: {rows: Row[]}) {
                       onMouseLeave={() => setTip(null)}
                       onClick={() => drill && router.push(`/ingress/medalha/${p.slug}`)}
                     >
-                      <title>
-                        {p.name} — {TIER_LABEL[p.tier] ?? p.tier} · {fmtDate(p.date)}
-                      </title>
+                      <title>{`${p.name} — ${TIER_LABEL[p.tier] ?? p.tier} · ${fmtDate(p.date)}`}</title>
                     </circle>
                   )
                 })}
