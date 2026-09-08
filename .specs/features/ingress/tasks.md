@@ -1081,13 +1081,14 @@ badges de `stat_line` mapeável do ingress.plus e escreve
 **Tools**: MCP NONE · Skill NONE
 
 **Done when**:
-- [ ] `data/ingress/badge-catalog.json` tem as 26 badges; `statKey` de cada existe em `STAT_COLUMNS`; `tiers` com 5 inteiros crescentes
-- [ ] o script é idempotente (rodar de novo produz o mesmo arquivo) e documenta que só o Luiz roda
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] `data/ingress/badge-catalog.json` tem as 26 badges; `statKey` de cada existe em `STAT_COLUMNS`; `tiers` com 5 inteiros crescentes (verificado por script inline)
+- [x] `ingress-catalog-gen.mjs` é idempotente ("já está atualizado" na 2ª vez); dry-run por padrão, `--apply` grava; cabeçalho diz que só o Luiz roda
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ 296 ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): gerador e catálogo das 26 badges de estatística`
+**Status**: ✅ Complete
 
 ---
 
