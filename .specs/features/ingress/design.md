@@ -413,6 +413,119 @@ origem).
 
 ---
 
+# Expansão — Medalhas (Onda 1) — Design
+
+**Spec**: seção "Expansão — Medalhas" em `spec.md` (MED-01..MED-08)
+**Análise**: `docs/ingress-medalhas-analise.md`
+**Status**: Approved (2026-09-07)
+
+## Pesquisa
+
+`https://ingress.plus/api/collections/i37o5ykupb5voix/records?perPage=400` — API
+PocketBase aberta, 391 badges. Para 26 delas o `stat_line` casa com uma coluna do
+export (as 14 atuais + Translator, Seer, Recruiter, Guardian, Recon, Scout, Scout
+Controller, NL-1331 Meetups, Mission Day, First Saturday, Second Sunday, Operation
+Clear Field). Cada uma traz `tier_values`, `requirement` e 5 nomes de arquivo de
+arte. Todas computáveis pelo mesmo mecanismo que já existe.
+
+## Modelo de dados
+
+### `data/ingress/badge-catalog.json` (NOVO, versionado)
+
+Gerado do ingress.plus, editado por CLI. Uma entrada por badge:
+
+```jsonc
+{
+  "builder": {
+    "name": "Builder", "group": "core", "statKey": "resonatorsDeployed",
+    "tiers": [2000, 10000, 30000, 100000, 200000],
+    "requirement": "Deploy {0} Resonators…",
+    "ipId": "lfwvt6ivbrgzsro",
+    "ipArt": ["badge_builder_bronze_yrWPmTbc6W.png", "…silver…", "…gold…", "…platinum…", "…black…"]
+  },
+  "recursion": { "name": "Recursion", "group": "anomaly", "count": true,
+    "ipId": "n19lc27gub8e3v2", "ipArt": ["anomaly_recursion_E8dbh90c19.png"] }
+}
+```
+
+`group`: `core` (stat, 5 tiers) · `anomaly` · `event` · `character` · `collectible` · `other`.
+`ipId`/`ipArt` só servem ao `medals --fetch`. A arte no site é
+`public/ingress/medals/<slug>-<tier>.png` (core) ou `<slug>.png` (single).
+
+### `data/ingress/fencherlc.json` — campos novos
+
+```jsonc
+{
+  // … campos atuais …
+  "history": [ { "t": "2026-09-07T16:21:02", "stats": { …54… } } ],
+  "medalDates": { "trekker": { "gold": "2021-08-01", "onyx": "2024-03-12" } },
+  "eventBadges": [
+    { "slug": "recursion", "count": 2 },
+    { "slug": "darsana-prime", "dates": { "single": "2019-07-20" } }
+  ]
+}
+```
+
+`timeSeries` (modelo antigo, para o dump) fica; `history` é a fonte para
+projeção/evolução e é preenchido também por exports periódicos. Na migração,
+`history` nasce com o snapshot atual.
+
+## Componentes
+
+| Arquivo | Papel |
+| --- | --- |
+| `data/ingress/badge-catalog.json` | Catálogo (dado) |
+| `lib/ingress-catalog.mjs` (+test) | `loadCatalog()`, `catalogEntry(slug)`, `coreBadges()`, `slugForStatKey(key)`, `artPath(slug, tier)` |
+| `lib/ingress-badges.mjs` (refactor) | `BADGES` passa a derivar do catálogo (26 core); `computeBadge`/`computeAllBadges` inalterados na assinatura; `nextMedal(badges)` (maior % até o próximo tier, desempate por ordem do catálogo); `tierCounts(badges)` |
+| `lib/ingress-history.mjs` (+test) | `appendSnapshot(history, snap)` (dedupe por `t`, ordena); `ratePerDay(history, statKey)`; `projectNextTier(history, badgeDef, value)` → `{tier, date}` \| `{reason}` \| `null` |
+| `lib/ingress-timeline.mjs` (+test) | `collectAcquisitions(profile, catalog)` → `[{slug, name, tier, date}]` ordenado; ignora data inválida |
+| `lib/ingress-medal-art.mjs` (refactor) | passa a resolver por slug+tier via catálogo; fallback continua |
+| `app/ingress/medalha/[slug]/page.tsx` | Detalhe: `generateStaticParams` do catálogo; `notFound()` para slug desconhecido; escada de tiers, requisito, posição, datas |
+| `app/ingress/medalha/[slug]/opengraph-image.tsx` | OG por badge (P2) |
+| `components/ingress/BadgeShelf.tsx` (refactor) | 26 badges (grid), resumo de tiers, "próxima medalha"; cada badge é `<Link href="/ingress/medalha/<slug>">` |
+| `components/ingress/BadgeMedal.tsx` (refactor) | vira link; variante compacta |
+| `components/ingress/TierLadder.tsx` | os 5 degraus (arte + limiar) com o atual marcado — usado no detalhe |
+| `components/ingress/AchievementsShelf.tsx` | `eventBadges` agrupadas por `group`; convite se vazio |
+| `components/ingress/AchievementTimeline.tsx` | SVG da timeline de `collectAcquisitions`; placeholder se `< 2` datas |
+| `components/ingress/KpiBadgeHint.tsx` (client leaf) | hover/focus num KPI → mini-arte + tier da badge; no touch, ícone pequeno sempre visível |
+| `components/ingress/StatValue.tsx` (refactor) | recebe `badge?` e envolve o valor no `KpiBadgeHint` |
+| `app/ingress/page.tsx` (refactor) | nova ordem: hero → BadgeShelf → AchievementsShelf → AchievementTimeline → StatGroups → radar → … |
+| `scripts/ingress.mjs` (refactor) | `build` faz `appendSnapshot`; comando `badges` (editar `eventBadges` + `medalDates`, dry-run/`--apply`); `medals --fetch` (baixa `ipArt` do catálogo p/ slugs faltando) |
+| `scripts/ingress-catalog-gen.mjs` (NOVO, one-off) | regera `badge-catalog.json` do ingress.plus (histórico, como a migração do `casara`) |
+
+## Reuso
+
+- SVG à mão (radar/timeline já fazem) para `AchievementTimeline`.
+- `PendingSection` como base do placeholder da timeline.
+- Padrão `generateStaticParams` + `notFound` — igual `app/livros/[slug]/page.tsx`.
+- `medals --fetch` reusa `baixarCapa`-style de `scripts/ingress.mjs` (download + valida PNG).
+- `history` no `build` reusa `mergeGdprDump` para inserção ordenada.
+
+## Migração dos 14 PNGs existentes
+
+`mindController-platinum.png` → `mind-controller-platinum.png` etc. (slug kebab).
+Feito num passo do `medals --fetch` ou um rename explícito na primeira task.
+
+## Risks & Concerns (expansão)
+
+| Concern | Local | Impacto | Mitigação |
+| --- | --- | --- | --- |
+| `lib/ingress-badges.mjs` é arquivo Verified; refatorar para data-driven | `lib/ingress-badges.mjs` | Regressão nos 14 badges já verificados | Testes atuais (`ingress-badges.test.mjs`) ficam como contrato; catálogo tem os mesmos limiares; sensor re-roda no Verifier |
+| Arte: 26 × 5 = 130 imagens (~1 MB) no repo | `public/ingress/medals/` | Repo cresce | thumbs ~96px; `medals --fetch` incremental; documentado (como `public/livros/capas/`) |
+| ingress.plus pode sair do ar / mudar o schema | `scripts/ingress-catalog-gen.mjs` | Não dá pra regerar o catálogo | O `badge-catalog.json` é versionado — uma vez gerado, o site não depende do ingress.plus em runtime nem em build |
+| `eventBadges` dependem de transcrição manual de prints | `data/ingress/fencherlc.json` | Trabalhoso, sujeito a erro | CLI `badges` valida slug contra o catálogo; datas inválidas são ignoradas na timeline |
+| `history` com 1 ponto (hoje) | projeção | Projeção não funciona no lançamento | MED-08 é P3, com placeholder explícito ("precisa de mais um export") |
+
+## Tech Decisions (expansão)
+
+| Decisão | Escolha | Racional |
+| --- | --- | --- |
+| Catálogo | Arquivo JSON versionado, gerado uma vez do ingress.plus | Zero dependência de runtime/build; mesmo princípio do resto da feature |
+| Slugs | kebab-case, canônicos, = chave do catálogo e do `/medalha/[slug]` | URL limpa, um identificador só |
+| 26 badges (não 14) | Todas as de `stat_line` mapeável entram | Custo marginal zero, perfil muito mais rico |
+| Detalhe = rota estática | `generateStaticParams` | 26 páginas pequenas, SEO, compartilhável, sem custo de runtime |
+| Datas de conquista | Campo esparso, transcrito de prints agora, completado pelo dump | O jogo mostra as datas; esperar o dump seria desperdício |
+
 ## Design Questions — resolvidas (2026-09-07)
 
 1. **Direção visual:** A — "Scanner" (HUD do Ingress Prime).

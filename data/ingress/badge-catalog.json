@@ -1,0 +1,574 @@
+{
+  "builder": {
+    "name": "Builder",
+    "group": "core",
+    "statKey": "resonatorsDeployed",
+    "tiers": [
+      2000,
+      10000,
+      30000,
+      100000,
+      200000
+    ],
+    "requirement": "Deploy {0} Resonators on friendly or neutral Portals. Upgrading Resonators also count!",
+    "unobtainable": false,
+    "ipId": "lfwvt6ivbrgzsro",
+    "ipArt": [
+      "badge_builder_bronze_yrWPmTbc6W.png",
+      "badge_builder_silver_7ULhtBMlBc.png",
+      "badge_builder_gold_q9H7BQu9no.png",
+      "badge_builder_platinum_Lf1soEAYFg.png",
+      "badge_builder_black_c3XIHk96qV.png"
+    ]
+  },
+  "connector": {
+    "name": "Connector",
+    "group": "core",
+    "statKey": "linksCreated",
+    "tiers": [
+      50,
+      1000,
+      5000,
+      25000,
+      100000
+    ],
+    "requirement": "Create {0} Links between Portals.",
+    "unobtainable": false,
+    "ipId": "y5yz33i2pr36mlm",
+    "ipArt": [
+      "badge_connector_bronze_pdBnVNS5EU.png",
+      "badge_connector_silver_84n9SyuEDA.png",
+      "badge_connector_gold_x95Yorb3dN.png",
+      "badge_connector_platinum_5fw35PJN2y.png",
+      "badge_connector_black_TFbZoy8sYe.png"
+    ]
+  },
+  "mind-controller": {
+    "name": "Mind Controller",
+    "group": "core",
+    "statKey": "controlFieldsCreated",
+    "tiers": [
+      100,
+      500,
+      2000,
+      10000,
+      40000
+    ],
+    "requirement": "Create {0} Control Fields by linking three Portals together into a triangle.",
+    "unobtainable": false,
+    "ipId": "5it9rhgc0vtym4g",
+    "ipArt": [
+      "badge_mind_controller_bronze_TCGe5Lwk1c.png",
+      "badge_mind_controller_silver_iEy5zZnnv3.png",
+      "badge_mind_controller_gold_2htGljEZo4.png",
+      "badge_mind_controller_platinum_Vfr9OOsI14.png",
+      "badge_mind_controller_black_xaP7PVZ5CC.png"
+    ]
+  },
+  "illuminator": {
+    "name": "Illuminator",
+    "group": "core",
+    "statKey": "mindUnitsCaptured",
+    "tiers": [
+      2000,
+      50000,
+      250000,
+      1000000,
+      4000000
+    ],
+    "requirement": "Gain a total of {0} MU while creating fields. Fields over more populated areas give more MU!",
+    "unobtainable": false,
+    "ipId": "twdzwrdnejufmna",
+    "ipArt": [
+      "badge_illuminator_bronze_WfDzvjChYL.png",
+      "badge_illuminator_silver_rkbdSb17i5.png",
+      "badge_illuminator_gold_Ir8YxxAmIn.png",
+      "badge_illuminator_platinum_QOn38WWPUd.png",
+      "badge_illuminator_black_7eYIPEU5aj.png"
+    ]
+  },
+  "liberator": {
+    "name": "Liberator",
+    "group": "core",
+    "statKey": "portalsCaptured",
+    "tiers": [
+      100,
+      1000,
+      5000,
+      15000,
+      40000
+    ],
+    "requirement": "Capture Portals {0} times.",
+    "unobtainable": false,
+    "ipId": "vmmha2xc4ddanzn",
+    "ipArt": [
+      "badge_liberator_bronze_NT8ozhwwjB.png",
+      "badge_liberator_silver_iOKaX4lwLA.png",
+      "badge_liberator_gold_88MWj1umSF.png",
+      "badge_liberator_platinum_Pb0ugpIgdL.png",
+      "badge_liberator_black_RZmDIFTGst.png"
+    ]
+  },
+  "pioneer": {
+    "name": "Pioneer",
+    "group": "core",
+    "statKey": "uniquePortalsCaptured",
+    "tiers": [
+      20,
+      200,
+      1000,
+      5000,
+      20000
+    ],
+    "requirement": "Capture {0} different Portals. Each captured Portal only counts once.",
+    "unobtainable": false,
+    "ipId": "fdcevluslovoowk",
+    "ipArt": [
+      "badge_pioneer_bronze_rsPjGBkg2m.png",
+      "badge_pioneer_silver_3YucOWs06r.png",
+      "badge_pioneer_gold_t8StA6j9UO.png",
+      "badge_pioneer_platinum_vVlpsbHekM.png",
+      "badge_pioneer_black_1xgVTAPBHu.png"
+    ]
+  },
+  "explorer": {
+    "name": "Explorer",
+    "group": "core",
+    "statKey": "uniquePortalsVisited",
+    "tiers": [
+      100,
+      1000,
+      2000,
+      10000,
+      30000
+    ],
+    "requirement": "Visit {0} different Portals. Contrary to the medal's description a Portal does not need to be hacked, rather any local interaction should count.",
+    "unobtainable": false,
+    "ipId": "4ozvwpr87hivthe",
+    "ipArt": [
+      "badge_explorer_bronze_RBdR6y187g.png",
+      "badge_explorer_silver_zxQo95IFgJ.png",
+      "badge_explorer_gold_dPxUw4CBMA.png",
+      "badge_explorer_platinum_SukaP4gjxf.png",
+      "badge_explorer_black_Wv6HXf1zH9.png"
+    ]
+  },
+  "trekker": {
+    "name": "Trekker",
+    "group": "core",
+    "statKey": "distanceWalkedKm",
+    "tiers": [
+      10,
+      100,
+      300,
+      1000,
+      2500
+    ],
+    "requirement": "Walk {0} kilometers while your game is open or while Adventure Sync is enabled.",
+    "unobtainable": false,
+    "ipId": "pph5xyv2yxwwqhe",
+    "ipArt": [
+      "badge_trekker_bronze_VkXBdyKzAW.png",
+      "badge_trekker_silver_FSmKZniKED.png",
+      "badge_trekker_gold_EPXhMpXScA.png",
+      "badge_trekker_platinum_aXqsq9UomA.png",
+      "badge_trekker_black_k35EZlWl0W.png"
+    ]
+  },
+  "purifier": {
+    "name": "Purifier",
+    "group": "core",
+    "statKey": "resonatorsDestroyed",
+    "tiers": [
+      2000,
+      10000,
+      30000,
+      100000,
+      300000
+    ],
+    "requirement": "Destroy {0} enemy Resonators.",
+    "unobtainable": false,
+    "ipId": "mraozki2ge7teqf",
+    "ipArt": [
+      "badge_purifier_bronze_ROvSPH7CSA.png",
+      "badge_purifier_silver_JesgMO6Ixa.png",
+      "badge_purifier_gold_mDyOVZ4IiZ.png",
+      "badge_purifier_platinum_Azs28uLi7i.png",
+      "badge_purifier_black_LYKuFDz7jN.png"
+    ]
+  },
+  "hacker": {
+    "name": "Hacker",
+    "group": "core",
+    "statKey": "hacks",
+    "tiers": [
+      2000,
+      10000,
+      30000,
+      100000,
+      200000
+    ],
+    "requirement": "Hack Portals {0} times.",
+    "unobtainable": false,
+    "ipId": "1m8jtcl46xjfcov",
+    "ipArt": [
+      "badge_hacker_bronze_hxwgS0nJaM.png",
+      "badge_hacker_silver_eYzdodZ8t2.png",
+      "badge_hacker_gold_0Jz3JsqXAl.png",
+      "badge_hacker_platinum_bRMtigGMGH.png",
+      "badge_hacker_black_tKvTfrbXoD.png"
+    ]
+  },
+  "sojourner": {
+    "name": "Sojourner",
+    "group": "core",
+    "statKey": "longestSojournerStreak",
+    "tiers": [
+      15,
+      30,
+      60,
+      180,
+      360
+    ],
+    "requirement": "Hack a Portal for {0} consecutive 24 hour periods. Hacks via the Dronenet also count!",
+    "unobtainable": false,
+    "ipId": "7kgswlr6vifcr80",
+    "ipArt": [
+      "badge_sojourner_bronze_mjKp7qktv9.png",
+      "badge_sojourner_silver_yw2VWqXhU9.png",
+      "badge_sojourner_gold_YKQlNEuzc5.png",
+      "badge_sojourner_platinum_YwGFNy82WP.png",
+      "badge_sojourner_black_A6qMF5XW8N.png"
+    ]
+  },
+  "recharger": {
+    "name": "Recharger",
+    "group": "core",
+    "statKey": "xmRecharged",
+    "tiers": [
+      100000,
+      1000000,
+      3000000,
+      10000000,
+      25000000
+    ],
+    "requirement": "Recharge Portals with {0} XM. Recharging remotely via a Portal Key also counts!",
+    "unobtainable": false,
+    "ipId": "rlo70k0sowg0feu",
+    "ipArt": [
+      "badge_recharger_bronze_PNMckURetS.png",
+      "badge_recharger_silver_l7YVXn1KTC.png",
+      "badge_recharger_gold_SF16I2RLge.png",
+      "badge_recharger_platinum_hqTk5g8Oau.png",
+      "badge_recharger_black_Vq1uzM3hDb.png"
+    ]
+  },
+  "engineer": {
+    "name": "Engineer",
+    "group": "core",
+    "statKey": "modsDeployed",
+    "tiers": [
+      150,
+      1500,
+      5000,
+      20000,
+      50000
+    ],
+    "requirement": "Deploy {0} Portal Mods on friendly Portals.",
+    "unobtainable": false,
+    "ipId": "jap4jfsjtwy9un5",
+    "ipArt": [
+      "badge_engineer_bronze_raYzHNvpBo.png",
+      "badge_engineer_silver_rLS79y62lU.png",
+      "badge_engineer_gold_36xKy1Vb9o.png",
+      "badge_engineer_platinum_V2L3efNlqS.png",
+      "badge_engineer_black_klirRpEXBb.png"
+    ]
+  },
+  "specops": {
+    "name": "SpecOps",
+    "group": "core",
+    "statKey": "uniqueMissionsCompleted",
+    "tiers": [
+      5,
+      25,
+      100,
+      200,
+      500
+    ],
+    "requirement": "Complete {0} Unique Missions.",
+    "unobtainable": false,
+    "ipId": "x418t022hkadfko",
+    "ipArt": [
+      "badge_spec_ops_bronze_aw2S35BfQm.png",
+      "badge_spec_ops_silver_C5nMjEVlq7.png",
+      "badge_spec_ops_gold_y40nURZO5O.png",
+      "badge_spec_ops_platinum_nm4ZMThvBd.png",
+      "badge_spec_ops_black_e3KzTbW5j3.png"
+    ]
+  },
+  "translator": {
+    "name": "Translator",
+    "group": "core",
+    "statKey": "glyphHackPoints",
+    "tiers": [
+      200,
+      2000,
+      6000,
+      20000,
+      50000
+    ],
+    "requirement": "Gain {0} Glyph Points by correctly repeating the sequence shown while Glyph Hacking without errors.",
+    "unobtainable": false,
+    "ipId": "6nrlejujltxcj8u",
+    "ipArt": [
+      "badge_translator_bronze_wfi1ukEKVy.png",
+      "badge_translator_silver_FqitJaeSWD.png",
+      "badge_translator_gold_fwJcyoU1WV.png",
+      "badge_translator_platinum_NQMvqECYgE.png",
+      "badge_translator_black_VzxVhTxxl9.png"
+    ]
+  },
+  "recon": {
+    "name": "Recon",
+    "group": "core",
+    "statKey": "oprAgreements",
+    "tiers": [
+      100,
+      750,
+      2500,
+      5000,
+      10000
+    ],
+    "requirement": "Gain {0} Agreements while reviewing in Niantic Spatial Recon.",
+    "unobtainable": false,
+    "ipId": "55maxo4yqswelwi",
+    "ipArt": [
+      "badge_opr_bronze_ub1aJmMKMH.png",
+      "badge_opr_silver_8J10BwQTNn.png",
+      "badge_opr_gold_kv1G06e9Nr.png",
+      "badge_opr_platinum_56Mf7OAfvy.png",
+      "badge_opr_black_mX4IwbAJ2O.png"
+    ]
+  },
+  "scout": {
+    "name": "Scout",
+    "group": "core",
+    "statKey": "portalScansUploaded",
+    "tiers": [
+      50,
+      250,
+      1000,
+      3000,
+      6000
+    ],
+    "requirement": "Upload {0} Portal Scans.",
+    "unobtainable": false,
+    "ipId": "pi8tg56nggjercq",
+    "ipArt": [
+      "badge_scout_bronze_3EUk2KsSQL.png",
+      "badge_scout_silver_EhQ5eILA8C.png",
+      "badge_scout_gold_Zk7jCEz0k3.png",
+      "badge_scout_platinum_KuM9yLonah.png",
+      "badge_scout_black_KkVJk7QQbu.png"
+    ]
+  },
+  "scout-controller": {
+    "name": "Scout Controller",
+    "group": "core",
+    "statKey": "uniquesScoutControlled",
+    "tiers": [
+      100,
+      500,
+      1000,
+      5000,
+      12000
+    ],
+    "requirement": "Become Scout Controller on {0} different Portals. Each Portal only counts once.",
+    "unobtainable": false,
+    "ipId": "vaczfvyxnxpogxl",
+    "ipArt": [
+      "badge_scout_controller_bronze_Q2y3Olurqn.png",
+      "badge_scout_controller_silver_cFXjAqv50Z.png",
+      "badge_scout_controller_gold_BQamvqOfSH.png",
+      "badge_scout_controller_platinum_ohlxuPdnBt.png",
+      "badge_scout_controller_black_4QuQmeAAYu.png"
+    ]
+  },
+  "seer": {
+    "name": "Seer",
+    "group": "core",
+    "statKey": "seerPoints",
+    "tiers": [
+      10,
+      50,
+      200,
+      500,
+      5000
+    ],
+    "requirement": "Have {0} of your submitted Portal Nominations accepted into the game.",
+    "unobtainable": false,
+    "ipId": "n468latcwwfohb0",
+    "ipArt": [
+      "badge_seer_bronze_nWEyboWnEK.png",
+      "badge_seer_silver_s3iCRNjPTD.png",
+      "badge_seer_gold_ltTKUrq2ZU.png",
+      "badge_seer_platinum_xawSgetqlo.png",
+      "badge_seer_black_P59bUWoDsB.png"
+    ]
+  },
+  "recruiter": {
+    "name": "Recruiter",
+    "group": "core",
+    "statKey": "agentsRecruited",
+    "tiers": [
+      2,
+      10,
+      25,
+      50,
+      100
+    ],
+    "requirement": "Invited {0} Agents via the \"Recruit\" feature to the game and help them reach Level 3. (This badge has been retired)",
+    "unobtainable": false,
+    "ipId": "0rhyvpspmd3i3ui",
+    "ipArt": [
+      "badge_recruiter_bronze_lscdWvgZX7.png",
+      "badge_recruiter_silver_qLdYes5C1h.png",
+      "badge_recruiter_gold_4lJlHyyHpA.png",
+      "badge_recruiter_platinum_yAAkPQadSI.png",
+      "badge_recruiter_black_rBUVIAuxro.png"
+    ]
+  },
+  "guardian": {
+    "name": "Guardian",
+    "group": "core",
+    "statKey": "maxTimePortalHeldDays",
+    "tiers": [
+      3,
+      10,
+      20,
+      80,
+      140
+    ],
+    "requirement": "Was the owner of a Portal for {0} consecutive days without it being destroyed. (Retired in April 2018)",
+    "unobtainable": false,
+    "ipId": "boe2jm8rnptaboe",
+    "ipArt": [
+      "badge_guardian_bronze_Z8eFixexAs.png",
+      "badge_guardian_silver_74TPHsYyd3.png",
+      "badge_guardian_gold_Gx2LReI6UN.png",
+      "badge_guardian_platinum_90zY2EKbIw.png",
+      "badge_guardian_black_1QWMzSWs31.png"
+    ]
+  },
+  "first-saturday": {
+    "name": "First Saturday",
+    "group": "core",
+    "statKey": "firstSaturdayEvents",
+    "tiers": [
+      1,
+      6,
+      12,
+      24,
+      36
+    ],
+    "requirement": "Successfully attend {0} First Saturday event(s). (Note: Online events do not count anymore)",
+    "unobtainable": false,
+    "ipId": "jraohuaswstkuvj",
+    "ipArt": [
+      "badge_fs_bronze_5CDP32M0E8.png",
+      "badge_fs_silver_LVmD4Myd2P.png",
+      "badge_fs_gold_EGFOp00GrK.png",
+      "badge_fs_platinum_E4q4QC7ykA.png",
+      "badge_fs_black_9iXZMWkiTP.png"
+    ]
+  },
+  "second-sunday": {
+    "name": "Second Sunday",
+    "group": "core",
+    "statKey": "secondSundayEvents",
+    "tiers": [
+      1,
+      6,
+      12,
+      24,
+      36
+    ],
+    "requirement": "Successfully complete {0} Second Sunday event(s).",
+    "unobtainable": false,
+    "ipId": "hf6es3k9wfij5dd",
+    "ipArt": [
+      "badge_second_sunday_bronze_v5O7QJcZGa.png",
+      "badge_second_sunday_silver_YuqAxrHUM9.png",
+      "badge_second_sunday_gold_MeHxHO1fCv.png",
+      "badge_second_sunday_platinum_NiMEZ0MPo3.png",
+      "badge_second_sunday_black_hDWoDw8SmH.png"
+    ]
+  },
+  "mission-day": {
+    "name": "Mission Day",
+    "group": "core",
+    "statKey": "missionDaysAttended",
+    "tiers": [
+      1,
+      3,
+      6,
+      10,
+      20
+    ],
+    "requirement": "Attend {0} Mission Day(s) by completing at least 6 special Mission Day missions.",
+    "unobtainable": false,
+    "ipId": "m3ld0u5dsil1p5l",
+    "ipArt": [
+      "badge_mission_day_prime_bronze_s8CgbzgC2E.png",
+      "badge_mission_day_prime_silver_FakKlcbRrX.png",
+      "badge_mission_day_prime_gold_bGA1gRhbVX.png",
+      "badge_mission_day_prime_platinum_UXEEQW3f1B.png",
+      "badge_mission_day_prime_black_xk39yCJnKt.png"
+    ]
+  },
+  "nl-1331-meetups": {
+    "name": "NL-1331 Meetups",
+    "group": "core",
+    "statKey": "nl1331MeetupsAttended",
+    "tiers": [
+      1,
+      5,
+      10,
+      25,
+      50
+    ],
+    "requirement": "Attend {0} NL-1331 Meetups and complete the requirements for the badge tick (mostly hacking the NL-1331 portal in a specific time frame).",
+    "unobtainable": false,
+    "ipId": "7rb4lm03rz079re",
+    "ipArt": [
+      "badge_nl1331_bronze_PoRuLjcfJo.png",
+      "badge_nl1331_silver_UUWUXsoHjH.png",
+      "badge_nl1331_gold_XkcdTgKygX.png",
+      "badge_nl1331_platinum_wiUZDRZ8Y7.png",
+      "badge_nl1331_black_MncrBkKcZD.png"
+    ]
+  },
+  "operation-clear-field": {
+    "name": "Operation Clear Field",
+    "group": "core",
+    "statKey": "clearFieldsEvents",
+    "tiers": [
+      1,
+      3,
+      6,
+      10,
+      20
+    ],
+    "requirement": "Successfully complete {0} Operation Clear Field event(s).",
+    "unobtainable": false,
+    "ipId": "yy9xvxw3s2lejn8",
+    "ipArt": [
+      "badge_operation_clear_field_bronze_CHfhb7VHba.png",
+      "badge_operation_clear_field_silver_VWkfeDzsLq.png",
+      "badge_operation_clear_field_gold_8t9rEoRNxm.png",
+      "badge_operation_clear_field_platinum_0HAvXNGUSk.png",
+      "badge_operation_clear_field_black_okhbwjUN1N.png"
+    ]
+  }
+}

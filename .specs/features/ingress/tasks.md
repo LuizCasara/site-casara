@@ -843,15 +843,23 @@ Direção Scanner, fiação de `ApTimeline` vs `PendingSection` por
 **What**: `BadgeMedal` usa o PNG da medalha real em
 `public/ingress/medals/<key>-<tier>.png` quando existe; senão mantém o hexágono
 com a inicial. Fallback por checagem de arquivo no server, sem quebrar nada.
-**Where**: `lib/ingress-medal-art.mjs`, `components/ingress/BadgeMedal.tsx`,
-`app/ingress/theme.css`, `scripts/ingress.mjs` (comando `medals`),
-`public/ingress/medals/README.md`
-**Depends on**: T12, T19
-**Requirement**: INGR-12 (apresentação da badge) — pedido do Luiz depois da entrega
-**Status**: ✅ Complete — lint ✔ / 296 testes ✔ / build ✔ (`/ingress` segue 105 kB).
-O Luiz dropa os PNGs (14 arquivos no tier atual; `node scripts/ingress.mjs medals`
-lista o que falta). Copyright: arte da Niantic, uso tolerado pela comunidade,
-decisão do dono do site — o código funciona sem as imagens.
+**Where**: `lib/ingress-medal-art.mjs` (+ `BadgeMedal.tsx`, `theme.css`,
+`scripts/ingress.mjs`, `public/ingress/medals/README.md`)
+**Depends on**: None (enhancement isolado, pós-Verifier)
+**Requirement**: INGR-12
+
+**Tools**: MCP NONE · Skill NONE
+
+**Done when**:
+- [x] `BadgeMedal` usa `public/ingress/medals/<key>-<tier>.png` quando existe; senão o hexágono
+- [x] `node scripts/ingress.mjs medals` lista presente/ausente
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (296 testes ✔, `/ingress` 105 kB)
+
+**Tests**: none
+**Gate**: build
+**Commit**: `feat(ingress): arte real das medalhas quando o PNG existe (T24)`
+**Status**: ✅ Complete — os 14 PNGs do tier atual já baixados de ingress.plus.
+Copyright: arte da Niantic, uso tolerado pela comunidade, decisão do dono.
 
 ---
 
@@ -978,3 +986,574 @@ Todas as camadas de lógica pura têm `Tests: unit` na task que as cria. Nenhum
 | INGR-18 | T13 | INGR-36 | T9-T18, T22, T23 |
 
 Todos os 36 requisitos mapeados para ≥1 task.
+
+---
+
+# Expansão — Medalhas (Onda 1) — Tasks
+
+**Design**: seção "Expansão — Medalhas" em `design.md`
+**Status**: Draft — aguardando aprovação
+
+Mesma Test Coverage Matrix e Gate Check Commands da feature original. Lógica pura
+nova (`lib/ingress-catalog.mjs`, `lib/ingress-history.mjs`,
+`lib/ingress-timeline.mjs`, refactor de `lib/ingress-badges.mjs`) = unit; UI e CLI
+= build gate.
+
+## Execution Plan (expansão)
+
+### Phase 5: Catálogo e lógica pura
+
+Ordem: T25 · T26 · T27 · T28 · T29 · T30
+
+```
+T2 -> T25
+T25 -> T26
+T25 -> T27
+T26 -> T27
+T28 -> T30
+T27 -> T30
+```
+
+### Phase 6: CLI e arte
+
+Ordem: T31 · T32
+
+```
+T27 -> T31
+T29 -> T31
+T30 -> T31
+T25 -> T32
+T31 -> T32
+```
+
+### Phase 7: Seção de medalhas e detalhe
+
+Ordem: T33 · T34 · T35 · T36 · T37 · T38
+
+```
+T26 -> T33
+T32 -> T33
+T27 -> T34
+T33 -> T34
+T33 -> T35
+T34 -> T36
+T35 -> T36
+T26 -> T37
+T30 -> T37
+T34 -> T38
+T37 -> T38
+```
+
+### Phase 8: Timeline, hover, projeção, integração
+
+Ordem: T39 · T40 · T41 · T42 · T43
+
+```
+T29 -> T39
+T38 -> T39
+T33 -> T40
+T38 -> T40
+T36 -> T41
+T28 -> T42
+T34 -> T42
+T36 -> T42
+T39 -> T43
+T40 -> T43
+T41 -> T43
+T42 -> T43
+```
+
+---
+
+## Task Breakdown (expansão)
+
+### T25: gerador do catálogo + `badge-catalog.json`
+
+**What**: `scripts/ingress-catalog-gen.mjs` (one-off, histórico) que puxa as 26
+badges de `stat_line` mapeável do ingress.plus e escreve
+`data/ingress/badge-catalog.json` (`name`, `group:"core"`, `statKey`, `tiers`,
+`requirement`, `ipId`, `ipArt`).
+**Where**: `scripts/ingress-catalog-gen.mjs`
+**Depends on**: T2
+**Requirement**: MED-01, MED-02
+
+**Tools**: MCP NONE · Skill NONE
+
+**Done when**:
+- [ ] `data/ingress/badge-catalog.json` tem as 26 badges; `statKey` de cada existe em `STAT_COLUMNS`; `tiers` com 5 inteiros crescentes
+- [ ] o script é idempotente (rodar de novo produz o mesmo arquivo) e documenta que só o Luiz roda
+- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `feat(ingress): gerador e catálogo das 26 badges de estatística`
+
+---
+
+### T26: `lib/ingress-catalog.mjs`
+
+**What**: Acesso ao catálogo — `loadCatalog()`, `catalogEntry(slug)`,
+`coreBadges()` (só `group core`, na ordem do arquivo), `slugForStatKey(key)`,
+`artPath(slug, tier)`.
+**Where**: `lib/ingress-catalog.mjs`
+**Depends on**: T25
+**Requirement**: MED-01, MED-02, MED-03
+
+**Tools**: MCP NONE · Skill NONE
+
+**Done when**:
+- [ ] Todas as funções cobertas por teste; `slugForStatKey` é a inversa de `catalogEntry(...).statKey` para os 26
+- [ ] `catalogEntry` de slug inexistente devolve `null`
+- [ ] Gate check passes: `npm test`
+- [ ] Test count: ≥5 tests pass
+
+**Tests**: unit
+**Gate**: quick
+**Commit**: `feat(ingress): acesso ao catálogo de badges`
+
+---
+
+### T27: `lib/ingress-badges.mjs` data-driven
+
+**What**: `BADGES` passa a derivar do catálogo (`coreBadges()`). `computeBadge` /
+`computeAllBadges` mantêm a assinatura. Adiciona `nextMedal(badges)` e
+`tierCounts(badges)`.
+**Where**: `lib/ingress-badges.mjs`
+**Depends on**: T25, T26
+**Requirement**: MED-01
+
+**Tools**: MCP NONE · Skill NONE
+
+**Done when**:
+- [ ] `BADGES.length` é 26; os 14 casos atuais de `ingress-badges.test.mjs` continuam verdes
+- [ ] `nextMedal` e `tierCounts` testados, incluindo desempate determinístico e "todas em Onyx"
+- [ ] `computeAllBadges(stats)` inclui badge sem a stat como `tier none` (não omite) — MED-01 AC4; teste ajustado
+- [ ] Gate check passes: `npm test`
+- [ ] Test count: ≥18 tests pass
+
+**Tests**: unit
+**Gate**: quick
+**Commit**: `feat(ingress): badges data-driven do catálogo e próxima medalha`
+
+---
+
+### T28: `lib/ingress-history.mjs`
+
+**What**: `appendSnapshot(history, snap)` (dedupe por `t`, ordenado),
+`ratePerDay(history, statKey)`, `projectNextTier(history, badgeDef, value)`.
+**Where**: `lib/ingress-history.mjs`
+**Depends on**: None
+**Requirement**: MED-04, MED-08
+
+**Tools**: MCP NONE · Skill NONE
+
+**Done when**:
+- [ ] `appendSnapshot`: `t` novo adiciona ordenado; `t` igual ao último é no-op; ponto anterior ao primeiro não quebra a ordem
+- [ ] `ratePerDay`: 1 ponto devolve `null`; 2+ devolve valor por dia; taxa ≤ 0 tratada
+- [ ] `projectNextTier`: 2 pontos + taxa conhecida devolve data plausível; 1 ponto devolve `null`; taxa ≤ 0 devolve `{reason}`
+- [ ] Gate check passes: `npm test`
+- [ ] Test count: ≥7 tests pass
+
+**Tests**: unit
+**Gate**: quick
+**Commit**: `feat(ingress): histórico de snapshots, taxa e projeção`
+
+---
+
+### T29: `lib/ingress-timeline.mjs`
+
+**What**: `collectAcquisitions(profile, catalog)` juntando `medalDates` e
+`eventBadges[].dates`, ordenado por data, descartando data inválida e slug fora
+do catálogo.
+**Where**: `lib/ingress-timeline.mjs`
+**Depends on**: None
+**Requirement**: MED-06
+
+**Tools**: MCP NONE · Skill NONE
+
+**Done when**:
+- [ ] Junta as duas fontes, ordena por data ascendente
+- [ ] Data inválida ignorada sem quebrar; slug fora do catálogo ignorado
+- [ ] `< 2` datas devolve o array curto
+- [ ] Gate check passes: `npm test`
+- [ ] Test count: ≥5 tests pass
+
+**Tests**: unit
+**Gate**: quick
+**Commit**: `feat(ingress): coleta de datas de conquista`
+
+---
+
+### T30: migração do perfil + `ingress-profile.mjs` + tipos
+
+**What**: `buildProfile` mantém `history` via `appendSnapshot` e cria
+`medalDates` / `eventBadges` se ausentes. `data/ingress/fencherlc.json` regravado.
+`lib/ingress.ts` ganha os tipos.
+**Where**: `lib/ingress-profile.mjs`
+**Depends on**: T27, T28
+**Requirement**: MED-04
+
+**Tools**: MCP NONE · Skill NONE
+
+**Done when**:
+- [ ] `buildProfile` idempotente com os campos novos; `history` nasce com o snapshot atual; perfil sem `history` é migrado
+- [ ] `mergeGdprDump` insere snapshot anterior ao primeiro sem quebrar a ordem
+- [ ] `data/ingress/fencherlc.json` válido contra o novo shape
+- [ ] `lib/ingress.ts`: `Profile` ganha `history`, `medalDates`, `eventBadges`
+- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [ ] Test count: ≥12 tests pass (profile)
+
+**Tests**: unit
+**Gate**: build
+**Commit**: `feat(ingress): history, medalDates e eventBadges no perfil`
+
+---
+
+### T31: `scripts/ingress.mjs` — snapshot, badges, medals --fetch
+
+**What**: `build` chama `appendSnapshot`. Comando `badges` (edita `eventBadges` +
+`medalDates`, valida slug, dry-run/`--apply`). `medals --fetch` baixa do
+ingress.plus a arte que falta.
+**Where**: `scripts/ingress.mjs`
+**Depends on**: T27, T29, T30
+**Requirement**: MED-04, MED-05
+
+**Tools**: MCP NONE · Skill NONE
+
+**Done when**:
+- [ ] `build` com o export real produz `history` de 1 ponto; 2ª vez diz "Nada muda"
+- [ ] `badges` adiciona/remove; slug inválido avisa e não grava
+- [ ] `medals --fetch` baixa o que falta e reporta o total; 2ª vez baixa 0; download inválido avisa e segue
+- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `feat(ingress): CLI com snapshot no build, comando badges e medals --fetch`
+
+---
+
+### T32: baixar a arte das 26 badges
+
+**What**: Rodar `medals --fetch`, renomear os 14 PNGs atuais para o slug kebab,
+commitar as ~130 imagens + o README atualizado.
+**Where**: `public/ingress/medals/`
+**Depends on**: T25, T31
+**Requirement**: MED-01, MED-02
+
+**Tools**: MCP NONE · Skill NONE
+
+**Done when**:
+- [ ] `<slug>-<tier>.png` para os 26 × 5 tiers presentes
+- [ ] os 14 antigos renomeados; nenhum órfão camelCase
+- [ ] `node scripts/ingress.mjs medals` reporta tudo presente
+- [ ] Gate check passes: `npm run build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `feat(ingress): arte das 26 badges (5 tiers) do ingress.plus`
+
+---
+
+### T33: `BadgeMedal` como link + `medal-art` por slug
+
+**What**: `BadgeMedal` vira `<Link>` com variante `compact`.
+`lib/ingress-medal-art.mjs` resolve por slug+tier via catálogo, mantendo o
+fallback.
+**Where**: `components/ingress/BadgeMedal.tsx`
+**Depends on**: T26, T32
+**Requirement**: MED-01, MED-02
+
+**Tools**: MCP NONE · Skill `nextjs-use-client`
+
+**Done when**:
+- [ ] Clicar navega para o detalhe; server component
+- [ ] `medalArt(slug, tier)` acha `<slug>-<tier>.png`; ausente devolve o hexágono
+- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `feat(ingress): medalha vira link para o detalhe`
+
+---
+
+### T34: `BadgeShelf` — 26 badges, resumo, próxima medalha
+
+**What**: Grade das 26 (conquistadas em destaque, "Sem medalha" apagada),
+`tierCounts` no cabeçalho, card "próxima medalha" (`nextMedal`).
+**Where**: `components/ingress/BadgeShelf.tsx`
+**Depends on**: T27, T33
+**Requirement**: MED-01
+
+**Tools**: MCP NONE · Skill `nextjs-use-client`
+
+**Done when**:
+- [ ] 26 badges na grade; resumo de tiers; "próxima medalha" com % de progresso
+- [ ] Badge sem stat aparece como "Sem medalha", não some
+- [ ] Server-only; sem scroll horizontal a 360px
+- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `feat(ingress): prateleira com as 26 badges, resumo e próxima medalha`
+
+---
+
+### T35: `TierLadder`
+
+**What**: Escada de 5 tiers (arte + limiar, atual marcado, datas onde houver).
+**Where**: `components/ingress/TierLadder.tsx`
+**Depends on**: T33
+**Requirement**: MED-02
+
+**Tools**: MCP NONE · Skill `nextjs-use-client`
+
+**Done when**:
+- [ ] 5 degraus com arte + limiar pt-BR; degrau atual destacado; tier sem arte usa placeholder
+- [ ] Data de conquista onde existe, traço onde não
+- [ ] Server-only, legível a 360px
+- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `feat(ingress): escada de tiers da medalha`
+
+---
+
+### T36: `/ingress/medalha/[slug]` — detalhe
+
+**What**: Rota estática (`generateStaticParams`), `notFound()` p/ slug
+desconhecido, `TierLadder` + requisito + valor + posição + datas.
+**Where**: `app/ingress/medalha/[slug]/page.tsx`
+**Depends on**: T34, T35
+**Requirement**: MED-02
+
+**Tools**: MCP NONE · Skill `nextjs-use-client`
+
+**Done when**:
+- [ ] `generateStaticParams` gera as 26 rotas; slug fora devolve `notFound()`
+- [ ] `/ingress/medalha/trekker` mostra 10/100/300/1000/2500 com Onyx marcado e o requisito
+- [ ] `metadata` própria; herda o layout `/ingress`
+- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `feat(ingress): página de detalhe da medalha`
+
+---
+
+### T37: `AchievementsShelf` — badges de evento
+
+**What**: `profile.eventBadges` agrupadas por `group`, com arte e `count`; slug
+fora do catálogo omitido; vazio vira convite ao CLI.
+**Where**: `components/ingress/AchievementsShelf.tsx`
+**Depends on**: T26, T30
+**Requirement**: MED-03
+
+**Tools**: MCP NONE · Skill `nextjs-use-client`
+
+**Done when**:
+- [ ] Agrupa por categoria; `count` exibido; slug inválido omitido
+- [ ] `eventBadges` vazio devolve convite, não seção vazia
+- [ ] Server-only, 360px ok
+- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `feat(ingress): seção de conquistas`
+
+---
+
+### T38: `app/ingress/page.tsx` — nova ordem
+
+**What**: hero → `BadgeShelf` → `AchievementsShelf` → `AchievementTimeline` →
+`StatGroups` → radar → distribuição → resto.
+**Where**: `app/ingress/page.tsx`
+**Depends on**: T34, T37
+**Requirement**: MED-01
+
+**Tools**: MCP NONE · Skill `nextjs-use-client`
+
+**Done when**:
+- [ ] Medalhas vêm antes dos KPIs; build sem warning; 360px sem scroll horizontal
+- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `feat(ingress): medalhas assumem o topo da página`
+
+---
+
+### T39: `AchievementTimeline`
+
+**What**: SVG da timeline de `collectAcquisitions`, marcador por (badge, tier),
+tooltip `<title>`. `< 2` datas devolve placeholder.
+**Where**: `components/ingress/AchievementTimeline.tsx`
+**Depends on**: T29, T38
+**Requirement**: MED-06
+
+**Tools**: MCP NONE · Skill `nextjs-use-client`, `dataviz`
+
+**Done when**:
+- [ ] ≥2 datas devolve timeline com marcadores ordenados e tooltip; `< 2` devolve placeholder
+- [ ] SVG responsivo, server-only, 360px ok
+- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `feat(ingress): timeline de conquistas`
+
+---
+
+### T40: `KpiBadgeHint` + `StatValue`
+
+**What**: Leaf client que no hover/focus de um KPI com badge mostra mini-arte +
+tier; no touch, ícone pequeno sempre visível. `StatValue`/`StatGroups` passam a
+badge.
+**Where**: `components/ingress/KpiBadgeHint.tsx`
+**Depends on**: T33, T38
+**Requirement**: MED-07
+
+**Tools**: MCP NONE · Skill `nextjs-use-client`
+
+**Done when**:
+- [ ] Hover/focus num KPI com badge mostra mini-arte + tier; KPI sem badge não mostra nada extra
+- [ ] `StatGroups` passa a badge de cada stat
+- [ ] `KpiBadgeHint` é o único `'use client'`; `StatValue`/`StatGroups` seguem server
+- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `feat(ingress): hover no KPI mostra a badge`
+
+---
+
+### T41: OG por badge
+
+**What**: `app/ingress/medalha/[slug]/opengraph-image.tsx` — arte do tier atual,
+nome, tier, valor da stat.
+**Where**: `app/ingress/medalha/[slug]/opengraph-image.tsx`
+**Depends on**: T36
+**Requirement**: MED-02
+
+**Tools**: MCP NONE · Skill NONE
+
+**Done when**:
+- [ ] Rota compila; usa nome e tier da badge
+- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `feat(ingress): OpenGraph por medalha`
+
+---
+
+### T42: projeção na UI
+
+**What**: `projectNextTier` alimenta o card "próxima medalha" e a página de
+detalhe. `history < 2` devolve "precisa de mais um export".
+**Where**: `app/ingress/medalha/[slug]/page.tsx`
+**Depends on**: T28, T34, T36
+**Requirement**: MED-08
+
+**Tools**: MCP NONE · Skill `nextjs-use-client`
+
+**Done when**:
+- [ ] `history ≥ 2` mostra data estimada; `< 2` mostra a mensagem; taxa ≤ 0 mostra "sem progresso recente"
+- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `feat(ingress): projeção do próximo tier na UI`
+
+---
+
+### T43: integração final + Verifier
+
+**What**: Revisão da página (ordem, 360px, build), `validation.md` atualizado,
+dispatch do Verifier (sensor nas libs novas + refactor de badges).
+**Where**: `.specs/features/ingress/validation.md`
+**Depends on**: T39, T40, T41, T42
+**Requirement**: MED-01, MED-06, MED-07
+
+**Tools**: MCP NONE · Skill `tlc-spec-driven`
+
+**Done when**:
+- [ ] `npm run lint && npm test && npm run build` verde
+- [ ] Verifier standalone: sensor mata mutações em `ingress-catalog` / `-history` / `-timeline` / `-badges`
+- [ ] `validation.md` atualizado; `validate_state.py ingress` devolve 0 erros
+- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `docs(ingress): validação da expansão de medalhas`
+
+---
+
+## Phase Execution Map (expansão)
+
+```
+Fase 5:  T25  T26  T27  T28  T29  T30
+Fase 6:  T31  T32
+Fase 7:  T33  T34  T35  T36  T37  T38
+Fase 8:  T39  T40  T41  T42  T43
+```
+
+19 tasks (T25–T43) → ~3 batches nas fronteiras de fase: `[T25-T30]` · `[T31-T38]` · `[T39-T43]`.
+
+## Task Granularity Check (expansão)
+
+| Task | Scope | Status |
+| --- | --- | --- |
+| T25 | script + JSON coesos | ✅ Granular |
+| T26 | 1 módulo lib + teste | ✅ Granular |
+| T27 | 1 módulo lib + teste | ✅ Granular |
+| T28 | 1 módulo lib + teste | ✅ Granular |
+| T29 | 1 módulo lib + teste | ✅ Granular |
+| T30 | profile.mjs + JSON + tipos (migração coesa) | ✅ Granular |
+| T31 | 1 arquivo (`scripts/ingress.mjs`) | ✅ Granular |
+| T32 | só assets | ✅ Granular |
+| T33 | 1 componente + helper de arte | ✅ Granular |
+| T34 | 1 componente | ✅ Granular |
+| T35 | 1 componente | ✅ Granular |
+| T36 | 1 arquivo (`page.tsx`) | ✅ Granular |
+| T37 | 1 componente | ✅ Granular |
+| T38 | 1 arquivo (`page.tsx`) | ✅ Granular |
+| T39 | 1 componente | ✅ Granular |
+| T40 | 1 leaf client (+ 2 consumidores coesos) | ✅ Granular |
+| T41 | 1 arquivo | ✅ Granular |
+| T42 | 1 arquivo (`page.tsx` do detalhe) | ✅ Granular |
+| T43 | revisão + validação | ✅ Granular |
+
+## Diagram-Definition Cross-Check (expansão)
+
+Todas as arestas dos blocos das fases 5-8 correspondem 1:1 aos `Depends on` das
+tasks T25-T43; nenhuma aponta para fase posterior. (Conferido: T25←T2, T26←T25,
+T27←T25,T26, T28←(nada), T29←(nada), T30←T27,T28, T31←T27,T29,T30, T32←T25,T31,
+T33←T26,T32, T34←T27,T33, T35←T33, T36←T34,T35, T37←T26,T30, T38←T34,T37,
+T39←T29,T38, T40←T33,T38, T41←T36, T42←T28,T34,T36, T43←T39,T40,T41,T42.)
+
+## Test Co-location Validation (expansão)
+
+| Task | Camada | Matriz exige | Task diz | Status |
+| --- | --- | --- | --- | --- |
+| T26 `ingress-catalog.mjs` | lógica pura | unit | unit | ✅ OK |
+| T27 `ingress-badges.mjs` | lógica pura | unit | unit | ✅ OK |
+| T28 `ingress-history.mjs` | lógica pura | unit | unit | ✅ OK |
+| T29 `ingress-timeline.mjs` | lógica pura | unit | unit | ✅ OK |
+| T30 (`ingress-profile.mjs`) | lógica pura | unit | unit | ✅ OK |
+| T25, T31-T43 | script / JSON / tipos / React | none (build gate) | none | ✅ OK |
+
+## Requirement Traceability (expansão)
+
+| Req | Tasks |
+| --- | --- |
+| MED-01 | T25, T26, T27, T33, T34, T38, T43 |
+| MED-02 | T25, T26, T33, T35, T36, T41, T42 |
+| MED-03 | T26, T30, T37 |
+| MED-04 | T28, T30, T31 |
+| MED-05 | T31, T32 |
+| MED-06 | T29, T39, T43 |
+| MED-07 | T40, T43 |
+| MED-08 | T28, T42 |
+
+Todos os 8 requisitos da expansão mapeados para ≥1 task.

@@ -292,6 +292,232 @@ o script e ver a série temporal e os portais no JSON e o gráfico na página.
 
 ---
 
+# Expansão — Medalhas (Onda 1)
+
+Segunda rodada, em cima da feature entregue. Objetivo: as medalhas viram o centro
+da rota `/ingress`, com página de detalhe própria, seção de conquistas
+(anomalias/eventos/colecionáveis), timeline de quando cada uma foi conquistada, e
+o hover no KPI mostrando a badge relacionada. Análise completa e as ondas
+seguintes: `docs/ingress-medalhas-analise.md`.
+
+Fatos que mudam o desenho:
+- O catálogo de badges do **ingress.plus** (API PocketBase aberta) traz, para 26
+  medalhas de contagem, o `stat_line` (que casa com uma coluna do export),
+  `tier_values` e o texto do requisito. Ou seja, além das 14 atuais entram mais
+  12 (Translator, Seer, Recruiter, Guardian, Recon, Scout, Scout Controller,
+  NL-1331 Meetups, Mission Day, First Saturday, Second Sunday, Operation Clear
+  Field) — **todas pelo mesmo mecanismo** (`stat` → tier).
+- O scanner do jogo mostra a **data de conquista de cada tier**. O Luiz manda
+  prints; a transcrição vai para o perfil. A timeline de conquistas já renderiza
+  com o que houver, sem esperar o dump.
+- Badges que não são de contagem (anomalias, personagens, colecionáveis,
+  Recursion, Founder, Verified) vêm de um print do perfil para um campo
+  `eventBadges`.
+
+## Assumptions & Open Questions (expansão)
+
+| Assumption / decisão | Chosen default | Rationale | Confirmed? |
+| --- | --- | --- | --- |
+| Fonte dos limiares e do catálogo | ingress.plus (`/api/collections/i37o5ykupb5voix/records`), conferido contra o Fev Games | Fonte viva, atualizada em 2026-03, bateu em 13/14 no cruzamento anterior | y |
+| Forma do detalhe da badge | Rota própria `/ingress/medalha/[slug]`, server-rendered, `generateStaticParams` do catálogo | Compartilhável ("peguei Trekker Onyx"), combina com o propósito da feature | y |
+| Badges de contagem no MVP | As 26 com `stat_line` mapeável; badge sem a stat no perfil aparece com tier "Sem medalha" | Mesmo mecanismo, custo marginal zero | y |
+| Datas de conquista | Campo esparso no perfil (`medalDates` para as de stat, `eventBadges[].dates` para eventos); transcritas de prints, completadas pelo dump depois | O jogo mostra as datas; não faz sentido esperar o dump para começar | y |
+| Catálogo navegável das ~391 badges | Fora da Onda 1 — onda futura, com a arte linkada do ingress.plus | Não inchar; a maioria não é do Luiz | y |
+| Arte das 26 badges (5 tiers cada) | Baixada do ingress.plus por `scripts/ingress.mjs medals --fetch` (thumbs ~96px), versionada em `public/ingress/medals/` | A página de detalhe precisa da escada de tiers offline; ~1 MB é aceitável (comparável a `public/livros/capas/`) | y |
+| `history[]` no perfil | `build` adiciona um snapshot `{t, stats}` por export com `capturedAt` novo | Destrava a projeção (Onda 2) sem retrabalho | y |
+| Projeção de próximo tier | Estruturada agora (P3), só calcula com ≥2 snapshots em `history` | Precisa de taxa; hoje só há 1 ponto | y |
+| Ordem das seções | hero → medalhas → conquistas → timeline → KPIs (com hint de badge) → radar → distribuição → resto | Medalhas na frente foi o pedido central | y |
+
+## User Stories (expansão)
+
+### MED-01: Medalhas como centro da página ⭐ P1
+
+**User Story**: Como agente, quero que minhas medalhas sejam a primeira coisa
+depois do meu codinome, porque elas dão vida aos números.
+
+**Acceptance Criteria**:
+
+1. WHEN a página `/ingress` monta THEN o sistema SHALL renderizar a seção de
+   medalhas imediatamente após o hero e antes dos painéis de estatística.
+2. WHEN a seção de medalhas monta THEN o sistema SHALL exibir as 26 badges de
+   contagem, cada uma com a arte do tier atual (ou um estado "Sem medalha"), e um
+   resumo de contagem por tier (ex.: "6 Onyx · 4 Platina · …").
+3. WHEN a seção de medalhas monta THEN o sistema SHALL destacar a "próxima
+   medalha": a badge não-máxima com o maior percentual de progresso até o próximo
+   tier.
+4. IF a estatística de origem de uma badge está ausente no perfil THEN o sistema
+   SHALL exibir a badge com tier "Sem medalha", não omiti-la.
+
+**Independent Test**: Abrir `/ingress`; a seção de medalhas vem antes dos KPIs,
+mostra 26 badges, o resumo de tiers e a "próxima medalha".
+
+---
+
+### MED-02: Página de detalhe da medalha ⭐ P1
+
+**User Story**: Como agente, quero clicar numa medalha e ver a escada de tiers,
+o requisito, onde estou e quando peguei cada tier.
+
+**Acceptance Criteria**:
+
+1. WHEN o usuário acessa `/ingress/medalha/[slug]` de uma badge do catálogo THEN
+   o sistema SHALL renderizar a escada dos 5 tiers (arte + limiar de cada), o
+   tier atual do agente, o valor exato da estatística, o texto do requisito e o
+   que falta para o próximo tier.
+2. IF o slug não corresponde a nenhuma badge do catálogo THEN o sistema SHALL
+   responder com `notFound()` (404).
+3. WHERE o perfil tem data de conquista de um tier THEN o sistema SHALL exibi-la;
+   caso contrário SHALL exibir um traço.
+4. WHEN o usuário clica numa badge na seção de medalhas THEN o sistema SHALL
+   navegar para a página de detalhe correspondente.
+5. The system SHALL gerar as rotas de detalhe estaticamente
+   (`generateStaticParams`) a partir do catálogo.
+
+**Independent Test**: `/ingress/medalha/trekker` mostra os 5 tiers de Trekker com
+limiares 10/100/300/1000/2500, marca Onyx como atual; `/ingress/medalha/xpto` dá
+404.
+
+---
+
+### MED-03: Seção "Conquistas" (badges que não são de contagem) ⭐ P1
+
+**User Story**: Como agente, quero que minhas anomalias, badges de evento e
+colecionáveis apareçam no perfil.
+
+**Acceptance Criteria**:
+
+1. WHERE o perfil tem `eventBadges` THEN o sistema SHALL exibi-las com a arte do
+   catálogo, agrupadas por categoria (anomalia / evento / personagem /
+   colecionável / outros).
+2. IF uma entrada de `eventBadges` referencia um slug fora do catálogo THEN o
+   sistema SHALL omiti-la sem quebrar a seção.
+3. WHERE uma `eventBadge` tem `count` THEN o sistema SHALL exibi-lo (ex.:
+   "Recursion ×2").
+4. WHEN não há nenhuma `eventBadge` THEN o sistema SHALL exibir um convite para
+   adicioná-las via `scripts/ingress.mjs badges`, não uma seção vazia.
+
+**Independent Test**: Com 2-3 `eventBadges` no perfil de teste, a seção mostra as
+artes agrupadas por categoria e as contagens.
+
+---
+
+### MED-04: Histórico de snapshots ⭐ P1
+
+**User Story**: Como Luiz, quero que cada export que eu mandar seja guardado,
+para destravar a evolução e a projeção depois.
+
+**Acceptance Criteria**:
+
+1. WHEN o `build` recebe um export cujo `capturedAt` difere do último snapshot em
+   `history` THEN o sistema SHALL adicionar `{t, stats}` a `history`, preservando
+   os anteriores.
+2. IF o `capturedAt` do export já é o último snapshot de `history` THEN o sistema
+   SHALL NÃO duplicar a entrada.
+3. The system SHALL manter `history` ordenado por `t` ascendente.
+4. WHEN o `gdpr` roda THEN o sistema SHALL poder inserir snapshots anteriores ao
+   primeiro `history` sem quebrar a ordem.
+
+**Independent Test**: Rodar `build` com dois exports de datas diferentes;
+`history` tem 2 entradas ordenadas. Rodar de novo com o mesmo; continua 2.
+
+---
+
+### MED-05: CLI para conquistas e arte ⭐ P1
+
+**User Story**: Como Luiz, quero um comando para registrar minhas badges de
+evento (e as datas dos tiers) e para baixar a arte que falta.
+
+**Acceptance Criteria**:
+
+1. WHEN o usuário roda `scripts/ingress.mjs badges` THEN o sistema SHALL listar
+   as `eventBadges` e as `medalDates` atuais e aceitar adicionar/remover
+   (slug do catálogo + `count`/`tier` + datas por tier), gravando com o mesmo
+   fluxo dry-run/`--apply` dos outros comandos.
+2. IF um slug informado não está no catálogo THEN o sistema SHALL avisar e não
+   gravar aquela entrada.
+3. WHEN o usuário roda `scripts/ingress.mjs medals --fetch` THEN o sistema SHALL
+   baixar do ingress.plus a arte ausente das 26 badges (5 tiers) e das
+   `eventBadges`, para `public/ingress/medals/`, pulando o que já existe.
+4. IF o download de uma imagem falha ou devolve algo que não é PNG THEN o sistema
+   SHALL avisar e seguir para a próxima, sem gravar arquivo inválido.
+
+**Independent Test**: `medals --fetch` baixa os PNGs que faltam e reporta o
+total; rodar de novo não baixa nada.
+
+---
+
+### MED-06: Timeline de conquistas — P2
+
+**User Story**: Como agente, quero uma linha do tempo mostrando quando conquistei
+cada medalha/tier.
+
+**Acceptance Criteria**:
+
+1. WHEN o perfil tem 2 ou mais datas de conquista (entre `medalDates` e
+   `eventBadges[].dates`) THEN o sistema SHALL renderizar uma linha do tempo com
+   um marcador por (badge, tier) na data respectiva, ordenada.
+2. WHILE há menos de 2 datas o sistema SHALL renderizar um placeholder explicando
+   que a timeline cresce conforme as datas forem transcritas dos prints ou vier o
+   dump.
+3. WHEN o usuário passa o mouse (ou foca) num marcador THEN o sistema SHALL
+   mostrar qual badge, tier e data.
+
+**Independent Test**: Perfil de teste com 4 datas → timeline com 4 marcadores
+ordenados; perfil sem datas → placeholder.
+
+---
+
+### MED-07: Hover no KPI mostra a badge — P2
+
+**User Story**: Como agente, quero que passar o mouse num número mostre a medalha
+que aquele número alimenta.
+
+**Acceptance Criteria**:
+
+1. WHEN o usuário passa o mouse ou foca num `StatValue` cuja `statKey` alimenta
+   uma badge THEN o sistema SHALL exibir a mini-arte e o tier daquela badge.
+2. WHERE não há badge para aquela `statKey` THEN o sistema SHALL não exibir nada
+   extra.
+3. The system SHALL, sem hover disponível (touch), exibir um indicador pequeno da
+   badge junto ao KPI.
+
+**Independent Test**: Hover em "Ressonadores implantados" mostra Builder no tier
+atual; hover em "XM coletado" (sem badge) não mostra nada.
+
+---
+
+### MED-08: Projeção de próximo tier — P3
+
+**User Story**: Como Luiz, quando eu tiver mandado 2+ exports, quero uma
+estimativa de quando bato os próximos tiers.
+
+**Acceptance Criteria**:
+
+1. WHEN `history` tem 2 ou mais snapshots THEN o sistema SHALL calcular a taxa
+   (por dia) de cada estatística com badge e estimar a data do próximo tier.
+2. WHILE `history` tem menos de 2 snapshots o sistema SHALL indicar que a
+   projeção precisa de mais um export.
+3. IF a taxa de uma estatística é zero ou negativa THEN o sistema SHALL indicar
+   "sem progresso recente" em vez de uma data.
+
+**Independent Test**: `history` com 2 pontos e uma taxa conhecida → data estimada
+plausível; `history` com 1 ponto → mensagem de "precisa de mais um export".
+
+---
+
+## Edge Cases (expansão)
+
+- IF a arte de um tier específico não existe em `public/ingress/medals/` THEN a
+  escada de tiers SHALL mostrar aquele degrau com um placeholder, não quebrar.
+- IF `history` está ausente no perfil (perfil antigo) THEN o `build` SHALL
+  criá-lo com o snapshot atual.
+- WHEN duas badges empatam no percentual de progresso THEN a "próxima medalha"
+  SHALL desempatar por ordem do catálogo (determinístico).
+- IF uma data em `medalDates`/`eventBadges` não é uma data válida THEN o sistema
+  SHALL ignorá-la na timeline sem quebrar.
+
+---
+
 ## Edge Cases
 
 - IF o export do app tem números com separador de milhar ou aspas THEN o parser
@@ -348,8 +574,16 @@ o script e ver a série temporal e os portais no JSON e o gráfico na página.
 | INGR-33 | P3: Dump — merge preserva o mais recente e limpa `pending` | - | Pending |
 | INGR-34 | P3: Dump — arquivo ausente/vazio não aborta | - | Pending |
 | INGR-35 | P3: Dump — gráfico de evolução de AP substitui o placeholder | - | Pending |
+| MED-01 | P1: Medalhas como centro da página (26 badges, resumo, próxima) | Tasks | Pending |
+| MED-02 | P1: Página de detalhe `/ingress/medalha/[slug]` | Tasks | Pending |
+| MED-03 | P1: Seção "Conquistas" (eventBadges por categoria) | Tasks | Pending |
+| MED-04 | P1: Histórico de snapshots (`history[]` no build) | Tasks | Pending |
+| MED-05 | P1: CLI `badges` + `medals --fetch` | Tasks | Pending |
+| MED-06 | P2: Timeline de conquistas | Tasks | Pending |
+| MED-07 | P2: Hover no KPI mostra a badge | Tasks | Pending |
+| MED-08 | P3: Projeção de próximo tier | Tasks | Pending |
 
-**ID format:** `INGR-[NUMBER]`
+**ID format:** `INGR-[NUMBER]` (feature original) · `INGR-MED-[NUMBER]` (expansão)
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
