@@ -18,12 +18,21 @@
 - **In-progress** (file:line): nenhum
 - **Prints TRANSCRITOS (08/09)**: 56 prints → 27 `medalDates`, 25 `eventBadges`, 3 badges core novas (Maverick/Reclaimer/Epoch, core = 29), 2 correções de limiar (Illuminator/Guardian), 40 PNGs. Timeline de conquistas com 126 marcadores. + `fix` do "voltar" (BackLink). 325 testes, gate verde. Ver adendo em `validation.md`.
 - **Linha do tempo REDESENHADA (08/09)**: brainstorming (bounded) → combo. `components/ingress/AchievementTimeline.tsx` agora client, com `variant="resumo"` (curva no `/ingress`) e `variant="completo"` (nova rota `/ingress/linha-do-tempo`: overview+brush de zoom, filtros categoria/tier, swimlane por medalha, tooltip com arte PNG + intervalo desde o tier anterior, drill-down). `lib/ingress-timeline.mjs` +`annotateLaneGaps`/`formatGap` (+testes, 329). `artPath` → `lib/ingress-art.mjs` (sem `node:fs`). Fix: cor prata/onyx dos pontos; arte de badge de evento no tooltip (usa `<slug>.png` único). Commits `09dfa1c`, `3609362`. Lint/build verdes.
-- **Pushed + PR (08/09)**: `git push -u origin feat/ingress` feito; Luiz abriu o PR contra `main` no GitHub. `gh` CLI não está instalado nesta máquina (PR aberto pelo navegador).
-- **Next step**: (1) UAT visual do Luiz — `/ingress`, `/ingress/linha-do-tempo` (brush, filtros, scroll da swimlane, tooltip com arte, drill), `/ingress/medalha/[slug]`, desktop + 360px. Nada foi renderizado/olhado num browser ainda. (2) Se aprovado: revisar + mergear o PR → deploy Vercel automático.
+- **Pushed + PR (08/09)**: branch pushado, Luiz abriu o PR contra `main`. `gh` CLI não instalado nesta máquina. PR acumula os commits novos automaticamente.
+- **Iteração de UI (09/09)** — várias rodadas de feedback do Luiz, tudo pushado:
+  - Progresso %: `computeBadge` +`beyond` (Onyx ×2/×3…); barra+% em toda medalha; tabela de limiares+valor atual no painel da linha do tempo.
+  - Painel de detalhe acima da swimlane, com faixa "Bronze→Onyx · Xa Ym", mini gráfico (`MedalSpark`) e escada com intervalo entre datas (colunas alinhadas).
+  - Cores: Onyx grafite `#626873`, Platina cinza `#8d949d` (sem verde/azul do tema) em `/ingress`.
+  - **"Plus" por medalha de estatística**: `data/ingress/medal-lore.json` (17 medalhas) + `lib/ingress-lore.mjs` (+testes) + `MedalLore`. Página `/ingress/medalha/[slug]` reorganizada (herói→plus→requisito→MedalSpark→TierLadder com gaps+%→projeção).
+  - **Home = grade hexagonal** (`MedalGrid`): substitui BadgeShelf+AchievementsShelf (removidos). Toggle Cronologia|Categoria, "próxima medalha", toque→`MedalDetail` (painel extraído e compartilhado com a linha do tempo). Grupos Colecionáveis/Personagens = placeholder "chegam com o dump GDPR".
+  - 338 testes, lint/build verdes.
+- **Next step**: (1) UAT visual do Luiz (nada renderizado num browser ainda) — `/ingress` (grade, toggle, próxima, detalhe), `/ingress/linha-do-tempo`, `/ingress/medalha/[slug]` (o plus, o spark, a escada), desktop + 360px. (2) Se aprovado: mergear o PR.
+- **Dívida técnica**: CSS morto em `theme.css` (`.ing-medal*`, `.ing-next-medal*`, `.ing-achv*` dos componentes removidos) — limpar depois. `scratchpad/` agora gitignored (dump da API do ingress.plus caiu no repo por engano no commit `5834abf`, removido no `3a663b5`).
 - **Blockers**:
-  - UAT visual (só Luiz — memória: não abrir browser pra conferir).
-  - Cobertura: brush/filtros/tooltip da linha do tempo são só visuais, sem teste — dependem do UAT. Lógica pura (`annotateLaneGaps`/`formatGap`) tem teste.
-  - Dado externo: dump GDPR (série de AP, mapa de portais, recursão por medalha) + `GDPR_SERIES` a calibrar; 2º export do app (projeção de tier real, hoje `history` = 1 snapshot).
-  - Fila em `docs/ingress-proximos-passos.md`: recursão/"Onyx ×N" com chevrons + ênfase na medalha Recursion (precisa dado); badges decorativas/colecionáveis/aniversário e Personagens/Anniversaries/Limited Editions (precisa prints/lista do Luiz — sem popup nos 56 prints).
+  - UAT visual (só Luiz — memória: não abrir browser).
+  - Interações novas (grade, toggle, painéis, brush) sem teste — só lógica pura testada.
+  - Dado externo: dump GDPR (AP, portais, recursão por medalha, lista de Colecionáveis/Personagens pra `MedalGrid`) + `GDPR_SERIES`; 2º export (projeção real).
+  - `docs/ingress-proximos-passos.md`: recursão/"Onyx ×N" com chevrons + ênfase na medalha Recursion.
+  - `medal-lore.json` a calibrar com o Luiz (referências de comparação).
 - **Uncommitted files**: nenhum
-- **Branch**: `feat/ingress`, 66 commits à frente de `main`, **pushed**, PR aberto contra `main`.
+- **Branch**: `feat/ingress`, ~74 commits à frente de `main`, **pushed**, PR aberto.
