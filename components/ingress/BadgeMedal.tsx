@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import {TIER_LABELS} from '@/lib/ingress-badges.mjs'
 import {medalArt} from '@/lib/ingress-medal-art.mjs'
 
@@ -12,15 +13,19 @@ type Badge = {
 }
 
 /**
- * Medalha com tier e o que falta pro próximo. Se houver PNG da arte real em
- * `public/ingress/medals/`, usa ela; senão, o hexágono com a inicial. Server.
+ * Medalha na grade — link para `/ingress/medalha/<slug>`. Arte real de
+ * `public/ingress/medals/` quando existe; senão o hexágono com a inicial.
+ * `compact` esconde o texto de "falta para o próximo tier". Server component.
  */
-export default function BadgeMedal({badge}: {badge: Badge}) {
+export default function BadgeMedal({badge, compact = false}: {badge: Badge; compact?: boolean}) {
   const tierLabel = (TIER_LABELS as Record<string, string>)[badge.tier] ?? badge.tier
   const art = medalArt(badge.key, badge.tier) as string | null
 
   return (
-    <div className={`ing-medal ing-medal--${badge.tier}`}>
+    <Link
+      href={`/ingress/medalha/${badge.key}`}
+      className={`ing-medal ing-medal--${badge.tier}${badge.tier === 'none' ? ' ing-medal--locked' : ''}`}
+    >
       {art ? (
         // Ícone local pequeno e fixo — next/image não compensa o peso aqui.
         // eslint-disable-next-line @next/next/no-img-element
@@ -33,15 +38,15 @@ export default function BadgeMedal({badge}: {badge: Badge}) {
       <div className="ing-medal__text">
         <div className="ing-medal__name">{badge.name}</div>
         <div className="ing-medal__tier">{tierLabel}</div>
-        {badge.atMax ? (
+        {!compact && badge.atMax ? (
           <div className="ing-medal__next">tier máximo</div>
-        ) : badge.next ? (
+        ) : !compact && badge.next ? (
           <div className="ing-medal__next">
             faltam {FMT.format(badge.next.remaining)} para{' '}
             {(TIER_LABELS as Record<string, string>)[badge.next.tier] ?? badge.next.tier}
           </div>
         ) : null}
       </div>
-    </div>
+    </Link>
   )
 }

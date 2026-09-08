@@ -270,6 +270,23 @@
   border: 1px solid var(--ing-edge-soft);
   border-radius: 12px;
   min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.ing-medal:hover {
+  border-color: var(--tier);
+  background: rgba(0, 230, 118, 0.1);
+}
+
+.ing-medal:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-medal--locked {
+  opacity: 0.5;
 }
 
 .ing-medal--bronze {

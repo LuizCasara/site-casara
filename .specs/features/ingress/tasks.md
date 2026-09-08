@@ -1277,13 +1277,15 @@ fallback.
 **Tools**: MCP NONE · Skill `nextjs-use-client`
 
 **Done when**:
-- [ ] Clicar navega para o detalhe; server component
-- [ ] `medalArt(slug, tier)` acha `<slug>-<tier>.png`; ausente devolve o hexágono
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] `BadgeMedal` é `<Link href="/ingress/medalha/<slug>">`, server; `compact` esconde o texto de progresso; `--locked` (opacidade) p/ tier none
+- [x] `medalArt(slug, tier)` via `artPath` do catálogo; `tier: 'none'` → null → hexágono
+- [x] hover/focus-visible no link
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ 323 ✔; /ingress 109 kB)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): medalha vira link para o detalhe`
+**Status**: ✅ Complete
 
 ---
 
