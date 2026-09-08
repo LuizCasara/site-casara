@@ -992,8 +992,8 @@ Todos os 36 requisitos mapeados para ≥1 task.
 # Expansão — Medalhas (Onda 1) — Tasks
 
 **Design**: seção "Expansão — Medalhas" em `design.md`
-**Status**: In Progress — Fases 5-6 (T25–T32) aprovadas p/ execução inline; Fases
-7-8 (UI) esperam os prints do Luiz.
+**Status**: Done — T25–T43 completas (Fases 5-8) + Verifier. Seção Conquistas /
+timeline em estado convite até o Luiz mandar os prints.
 
 Mesma Test Coverage Matrix e Gate Check Commands da feature original. Lógica pura
 nova (`lib/ingress-catalog.mjs`, `lib/ingress-history.mjs`,
@@ -1505,14 +1505,15 @@ dispatch do Verifier (sensor nas libs novas + refactor de badges).
 **Tools**: MCP NONE · Skill `tlc-spec-driven`
 
 **Done when**:
-- [ ] `npm run lint && npm test && npm run build` verde
-- [ ] Verifier standalone: sensor mata mutações em `ingress-catalog` / `-history` / `-timeline` / `-badges`
-- [ ] `validation.md` atualizado; `validate_state.py ingress` devolve 0 erros
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] `npm run lint && npm test && npm run build` verde (325 testes)
+- [x] Verifier standalone: 8 mutações injetadas, 8 mortas (2 exigiram fix — commit `test(ingress): mata 2 mutantes sobreviventes`); real-tree porcelain limpo
+- [x] `validation.md` atualizado com o adendo da expansão; `validate_state.py ingress` → 0 erros
+- [x] L-003 registrada (função que filtra precisa de fixture com dado fora do filtro)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `docs(ingress): validação da expansão de medalhas`
+**Status**: ✅ Complete — Fases 5-8 completas
 
 ---
 

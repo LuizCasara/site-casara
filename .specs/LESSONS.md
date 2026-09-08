@@ -26,6 +26,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: lib/ingress-s2.mjs coverViewport (s2/geometry)
 - last seen: 2026-09-07T23:31:24Z
 
+### L-003 - Função que filtra por um campo precisa de teste com fixture que TEM entradas fora do filtro; testar só contra o dado real (onde todas passam) não discrimina — injete o dado.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `lib/pure-logic` · harmful: 0
+- features: ingress
+- evidence: lib/ingress-catalog.mjs coreBadges (lib/pure-logic)
+- last seen: 2026-09-08T03:51:44Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

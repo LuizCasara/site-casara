@@ -169,3 +169,85 @@ aberta). O `tier_values` da API conferiu com `lib/ingress-badges.mjs` em 13 de 1
 badges — a exceção foi o **bronze do Illuminator** (ingress.plus 2000 vs. Fev
 Games 5000); corrigido para 2000 (fonte viva). Não afeta o resultado do FencherLC
 (Illuminator = Onyx nos dois casos), então nenhum teste mudou de veredito.
+
+---
+
+## Expansão — Medalhas (Onda 1), Fases 5-8 (T25–T43) — 2026-09-08
+
+Executada com o Luiz dormindo, na latitude "o que der pra adiantar, adiante". As
+Fases 7-8 (UI) foram construídas com o snapshot atual; a seção "Conquistas" e a
+timeline ficam no estado convite/placeholder até o Luiz transcrever os prints do
+scanner (que ele manda amanhã, 1 por medalha).
+
+**Diff range**: `main..feat/ingress` (T25–T43, ~30 commits da expansão)
+
+### Tasks
+
+| Fase | Tasks | Status |
+| --- | --- | --- |
+| 5 (catálogo + lógica) | T25–T30 | ✅ 5 libs `.mjs` novas/refatoradas com teste |
+| 6 (CLI + arte) | T31–T32 | ✅ comando `badges`, `medals --fetch`, 130 PNGs |
+| 7 (medalhas no topo) | T33–T38 | ✅ BadgeShelf 26, detalhe `/medalha/[slug]`, TierLadder, Conquistas, nova ordem |
+| 8 (timeline, hover, OG, projeção) | T39–T43 | ✅ timeline, hover KPI→badge (CSS), OG por badge, projeção |
+
+### Spec-Anchored Acceptance Criteria (lógica pura — evidência `file:line`)
+
+| Critério | `file:line` + asserção | Resultado |
+| --- | --- | --- |
+| MED-01 (26 badges do catálogo, statKey real, tiers crescentes) | `lib/ingress-badges.test.mjs:11` `assert.equal(BADGES.length, 26)` + loop `STAT_KEYS.has(b.statKey)` | ✅ |
+| MED-01 (badge sem stat → tier none, não some) | `lib/ingress-badges.test.mjs:54` `assert.equal(badges.length, 26)` + `:58` `builder → 'none'` | ✅ |
+| MED-01 (nextMedal: maior pct, desempate por ordem) | `lib/ingress-badges.test.mjs:89` `assert.equal(nextMedal(badges).key, 'builder')` | ✅ |
+| MED-01 (tierCounts) | `lib/ingress-badges.test.mjs:83` `assert.deepEqual(tierCounts(...), {onyx:7,...})` | ✅ |
+| MED-02 (catálogo: catalogEntry, coreBadges ordem, artPath) | `lib/ingress-catalog.test.mjs:22,29,43` | ✅ |
+| MED-02 (slugForStatKey inversa; filtro por group) | `lib/ingress-catalog.test.mjs:34` + `:41` (catálogo misto) | ✅ |
+| MED-04 (appendSnapshot ordenado, dedupe, imutável) | `lib/ingress-history.test.mjs:7` `assert.deepEqual(h2.map(t), [...])` + `:18` dedupe | ✅ |
+| MED-04 (buildProfile cria/preserva history/medalDates/eventBadges) | `lib/ingress-profile.test.mjs:26` + `:44` + `:60` (idempotência) | ✅ |
+| MED-04 (mergeGdprDump insere snapshot anterior ao primeiro) | `lib/ingress-profile.test.mjs:67` `assert.deepEqual(merged.history.map(t), ['2020..','2023..','2026..'])` | ✅ |
+| MED-06 (collectAcquisitions junta as 2 fontes, ordenado) | `lib/ingress-timeline.test.mjs:16` `assert.deepEqual(rows.map(...), [...])` | ✅ |
+| MED-06 (data inválida / slug fora do catálogo ignorados) | `lib/ingress-timeline.test.mjs:29` + `:36` | ✅ |
+| MED-08 (projectNextTier: {tier,date} / null / {reason}) | `lib/ingress-history.test.mjs:41` + `:57` + `:62` + `:36` (days===0 → null) | ✅ |
+
+### Camada React / CLI (build gate — matriz)
+
+MED-02 (rota `/ingress/medalha/[slug]`), MED-03 (AchievementsShelf), MED-05 (CLI
+`badges`/`medals --fetch`), MED-07 (hover KPI→badge, feito em CSS puro sem client
+component), OG por badge: **compilados, build prerendera as 26 rotas de detalhe +
+26 OG**. UAT visual pendente do Luiz.
+
+### Discrimination Sensor
+
+Scratch: `git worktree add ../ic-s3 HEAD`. Real-tree porcelain limpo antes e
+depois.
+
+| # | Arquivo | Mutação | Morto? |
+| --- | --- | --- | --- |
+| 1 | `lib/ingress-catalog.mjs` | `coreBadges` filter `group==='core'` → `() => true` | ✅ (após fix: teste com catálogo misto) |
+| 2 | `lib/ingress-badges.mjs` | `computeAllBadges` volta a omitir badge sem a stat | ✅ Morto (2 testes) |
+| 3 | `lib/ingress-badges.mjs` | `nextMedal` desempate `<` → `>` | ✅ Morto |
+| 4 | `lib/ingress-history.mjs` | `appendSnapshot` dedupe desligado | ✅ Morto |
+| 5 | `lib/ingress-history.mjs` | `ratePerDay` `days <= 0` → `days < 0` | ✅ (após fix: teste days===0) |
+| 6 | `lib/ingress-timeline.mjs` | `Date.parse` filter desligado | ✅ Morto |
+| 7 | `lib/ingress-timeline.mjs` | `sort` invertido | ✅ Morto |
+| 8 | `lib/ingress-profile.mjs` | `buildProfile` para de chamar `appendSnapshot` | ✅ Morto (4 testes) |
+
+**Depth**: lightweight (8 mutações). **Result**: 8/8 mortos (2 exigiram fix —
+commit `test(ingress): mata 2 mutantes sobreviventes do sensor`).
+
+### Gate
+
+`npm run lint` ✔ (0 warnings) · `npm test` **325 testes ✔** (era 256 no início da
+feature; +69) · `npm run build` ✔ — `/ingress` 109 kB, `/ingress/medalha/[slug]`
+e `.../opengraph-image` prerenderizados (26 cada).
+
+### Riscos residuais / pendente do Luiz
+
+1. **Prints do perfil** — a seção "Conquistas" (anomalias/eventos/colecionáveis)
+   e a timeline de datas ficam no estado convite/placeholder até o Luiz
+   transcrever (`node scripts/ingress.mjs badges add <slug> ...`). Tudo pronto
+   para receber: `medals --fetch` já baixa a arte de evento.
+2. **UAT visual** — a nova ordem da página, o detalhe da medalha, o hover no KPI,
+   a escada de tiers — nada verificado na tela.
+3. **`GDPR_SERIES`** em `scripts/ingress.mjs` ainda precisa de ajuste contra o
+   formato real do dump (mapa de nomes de arquivo).
+4. **`history` com 1 ponto** — a projeção mostra "mande um 2º export"; liga
+   sozinha no próximo `build`.

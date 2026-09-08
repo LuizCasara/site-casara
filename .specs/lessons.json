@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 3,
+  "next_id": 4,
   "lessons": [
     {
       "id": "L-001",
@@ -40,6 +40,24 @@
       ],
       "created": "2026-09-07T23:31:24Z",
       "last_seen": "2026-09-07T23:31:24Z"
+    },
+    {
+      "id": "L-003",
+      "key": "surviving_mutant::funcao que filtra por um campo precisa de teste com fixture que tem entradas fora do filtro testar so contra o dado real onde todas passam nao discrimina injete o dado",
+      "text": "Função que filtra por um campo precisa de teste com fixture que TEM entradas fora do filtro; testar só contra o dado real (onde todas passam) não discrimina — injete o dado.",
+      "signal": "surviving_mutant",
+      "scope": "lib/pure-logic",
+      "status": "candidate",
+      "features": [
+        "ingress"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "lib/ingress-catalog.mjs coreBadges (lib/pure-logic)"
+      ],
+      "created": "2026-09-08T03:51:44Z",
+      "last_seen": "2026-09-08T03:51:44Z"
     }
   ]
 }
