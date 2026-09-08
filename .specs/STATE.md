@@ -13,10 +13,10 @@
 ## Handoff
 
 - **Feature**: ingress (`.specs/features/ingress/`)
-- **Phase / Task**: Execute COMPLETO. 23/23 tasks + revisão Prime + 2 fixes + Verifier. Feature pronta na branch.
-- **Completed**: Specify → Design → Tasks → Execute (T1–T23) → Verifier standalone. `validation.md`: 19/19 ACs de lógica com evidência, sensor 5/5 mortos, gate verde (296 testes/lint/build). `validate_state.py` → 0 erros. 2 lições registradas (L-001, L-002, status candidate).
+- **Phase / Task**: Execute COMPLETO. 23 tasks + T24 (medalhas) + revisão Prime + 3 fixes + Verifier. Feature pronta.
+- **Completed**: Specify → Design → Tasks → Execute (T1–T24) → Verifier standalone. `validation.md` + adendos. T24: `BadgeMedal` usa arte real de `public/ingress/medals/` (14 PNGs baixados de ingress.plus, fallback pro hexágono). Bronze do Illuminator corrigido (5000→2000, ingress.plus). Gate verde (296 testes/lint/build), `/ingress` 105 kB. 2 lições (L-001, L-002).
 - **In-progress** (file:line): nenhum
-- **Next step**: (1) Luiz revisa `/ingress` no navegador (desktop + 360px) e o explorador S2 (tocar em "explorar as células"). (2) Se aprovado: `git push origin feat/ingress` + PR — **precisa de OK explícito do Luiz** (blast radius). (3) Dump GDPR quando chegar: `node scripts/ingress.mjs gdpr <pasta> --apply` (ajustar `GDPR_SERIES` no script contra o formato real).
-- **Blockers**: UAT visual pendente do Luiz (Leaflet, mobile 360px, direção Prime — riscos residuais em `validation.md`).
+- **Next step**: (1) Luiz revisa `/ingress` no navegador (desktop + 360px), o explorador S2 e as medalhas. (2) Se aprovado: `git push origin feat/ingress` + PR — **precisa de OK explícito do Luiz**. (3) Dump GDPR: `node scripts/ingress.mjs gdpr <pasta> --apply`. (4) Mais tiers de medalha: baixar de ingress.plus (README em `public/ingress/medals/`).
+- **Blockers**: UAT visual pendente do Luiz.
 - **Uncommitted files**: nenhum
-- **Branch**: `feat/ingress`, 33 commits à frente de main. **Nada pushed.**
+- **Branch**: `feat/ingress`, 35 commits à frente de main. **Nada pushed.**
