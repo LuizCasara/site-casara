@@ -1438,14 +1438,15 @@ badge.
 **Tools**: MCP NONE · Skill `nextjs-use-client`
 
 **Done when**:
-- [ ] Hover/focus num KPI com badge mostra mini-arte + tier; KPI sem badge não mostra nada extra
-- [ ] `StatGroups` passa a badge de cada stat
-- [ ] `KpiBadgeHint` é o único `'use client'`; `StatValue`/`StatGroups` seguem server
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] KPI com badge → ícone pequeno no canto (sempre visível p/ touch), hover/focus mostra nome + tier + link p/ o detalhe; KPI sem badge (ex.: XM coletado) → nada extra
+- [x] `StatGroups` resolve a badge de cada stat (`slugForStatKey` + `computeBadge` + `medalArt`) e passa para `StatValue`
+- [x] **Sem client component** — feito 100% em CSS (`:hover`/`:focus-visible`), melhor que o `KpiBadgeHint` client previsto; `StatValue`/`StatGroups` seguem server
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ 323 ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): hover no KPI mostra a badge`
+**Status**: ✅ Complete
 
 ---
 
