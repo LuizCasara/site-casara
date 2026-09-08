@@ -629,6 +629,12 @@
   border-radius: 0 8px 8px 0;
 }
 
+.ing-projection {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ing-teal);
+}
+
 /* --- conquistas (badges de evento) --- */
 
 .ing-achv-group + .ing-achv-group {

@@ -37,7 +37,7 @@ export default function IngressPage() {
     <main className="ing-shell">
       <AgentHeader profile={profile} />
 
-      <BadgeShelf badges={badges} />
+      <BadgeShelf badges={badges} history={profile.history} />
 
       <AchievementsShelf eventBadges={profile.eventBadges} />
 

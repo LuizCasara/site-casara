@@ -3,6 +3,7 @@ import {notFound} from 'next/navigation'
 import type {Metadata} from 'next'
 import {loadProfile} from '@/lib/ingress'
 import {BADGES, computeBadge, TIER_LABELS} from '@/lib/ingress-badges.mjs'
+import {projectNextTier} from '@/lib/ingress-history.mjs'
 import {catalogEntry, coreBadges} from '@/lib/ingress-catalog.mjs'
 import {medalArt} from '@/lib/ingress-medal-art.mjs'
 import TierLadder from '@/components/ingress/TierLadder'
@@ -41,6 +42,18 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
   const badge = computeBadge(def, value)
   const dates = profile?.medalDates?.[slug] ?? {}
   const art = medalArt(slug, badge.tier) as string | null
+  const projection = projectNextTier(profile?.history ?? [], def, value) as
+    | {tier: string; date: string}
+    | {reason: string}
+    | null
+
+  const projectionText = badge.atMax
+    ? null
+    : projection && 'date' in projection
+      ? `No ritmo dos últimos exports, ${TIER_LABELS[projection.tier] ?? projection.tier} por volta de ${new Date(projection.date).toLocaleDateString('pt-BR', {month: 'long', year: 'numeric'})}.`
+      : projection && 'reason' in projection
+        ? 'Sem progresso recente nessa estatística.'
+        : 'A projeção do próximo tier aparece quando houver um segundo export.'
 
   return (
     <main className="ing-shell">
@@ -78,6 +91,8 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
           )}
         </p>
       ) : null}
+
+      {projectionText ? <p className="ing-projection">{projectionText}</p> : null}
 
       <section>
         <h2 className="ing-panel__label" style={{marginBottom: '0.75rem'}}>

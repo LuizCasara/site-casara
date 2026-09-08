@@ -1,17 +1,25 @@
 import Link from 'next/link'
-import {TIER_LABELS, tierCounts, nextMedal} from '@/lib/ingress-badges.mjs'
+import {BADGES, TIER_LABELS, tierCounts, nextMedal} from '@/lib/ingress-badges.mjs'
+import {projectNextTier} from '@/lib/ingress-history.mjs'
 import {medalArt} from '@/lib/ingress-medal-art.mjs'
+import type {StatSnapshot} from '@/lib/ingress'
 import Panel from './Panel'
 import BadgeMedal from './BadgeMedal'
 
-type Badge = Parameters<typeof BadgeMedal>[0]['badge'] & {pct: number | null}
+type Badge = Parameters<typeof BadgeMedal>[0]['badge'] & {pct: number | null; value: number}
 
 const TIER_RANK: Record<string, number> = {onyx: 5, platinum: 4, gold: 3, silver: 2, bronze: 1, none: 0}
 const SUMMARY_ORDER = ['onyx', 'platinum', 'gold', 'silver', 'bronze', 'none'] as const
 const FMT = new Intl.NumberFormat('pt-BR')
 
-/** Prateleira das 26 badges — resumo de tiers, próxima medalha, grade. `badges` de `computeAllBadges`. Server. */
-export default function BadgeShelf({badges}: {badges: Badge[]}) {
+/** Prateleira das 26 badges — resumo de tiers, próxima medalha, grade. Server. */
+export default function BadgeShelf({
+  badges,
+  history = [],
+}: {
+  badges: Badge[]
+  history?: StatSnapshot[]
+}) {
   if (badges.length === 0) return null
 
   const counts = tierCounts(badges) as Record<string, number>
@@ -24,6 +32,21 @@ export default function BadgeShelf({badges}: {badges: Badge[]}) {
   )
 
   const next = nextMedal(badges) as Badge | null
+  const nextDef = next
+    ? (BADGES as {key: string; statKey: string; tiers: Record<string, number>}[]).find(
+        (b) => b.key === next.key,
+      )
+    : null
+  const projection =
+    next && nextDef
+      ? (projectNextTier(history, nextDef, next.value) as {tier: string; date: string} | {reason: string} | null)
+      : null
+  const projectionText =
+    projection && 'date' in projection
+      ? `no ritmo atual, ~${new Date(projection.date).toLocaleDateString('pt-BR', {month: 'short', year: 'numeric'})}`
+      : projection && 'reason' in projection
+        ? 'sem progresso recente'
+        : 'mande um 2º export para a projeção'
 
   return (
     <Panel label="Medalhas" hint={summary.join(' · ')}>
@@ -42,7 +65,8 @@ export default function BadgeShelf({badges}: {badges: Badge[]}) {
               <div className="ing-next-medal__fill" style={{width: `${Math.round((next.pct ?? 0) * 100)}%`}} />
             </div>
             <span className="ing-next-medal__hint">
-              faltam {FMT.format(next.next!.remaining)} · {Math.round((next.pct ?? 0) * 100)}%
+              faltam {FMT.format(next.next!.remaining)} · {Math.round((next.pct ?? 0) * 100)}% ·{' '}
+              {projectionText}
             </span>
           </div>
         </Link>

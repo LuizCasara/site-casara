@@ -1483,12 +1483,14 @@ detalhe. `history < 2` devolve "precisa de mais um export".
 **Tools**: MCP NONE · Skill `nextjs-use-client`
 
 **Done when**:
-- [ ] `history ≥ 2` mostra data estimada; `< 2` mostra a mensagem; taxa ≤ 0 mostra "sem progresso recente"
-- [ ] Gate check passes: `npm run lint && npm test && npm run build`
+- [x] Card "próxima medalha" (`BadgeShelf`) e página de detalhe usam `projectNextTier(profile.history, def, value)`
+- [x] `history ≥ 2` → data estimada (mês/ano); `< 2` → "mande um 2º export"; taxa ≤ 0 → "sem progresso recente"
+- [x] Gate check passes: `npm run lint && npm test && npm run build` (✔ 323 ✔)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(ingress): projeção do próximo tier na UI`
+**Status**: ✅ Complete
 
 ---
 
