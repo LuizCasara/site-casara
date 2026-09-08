@@ -4,10 +4,9 @@
  * Histórico, como `scripts/migrate-casara.mjs`: o arquivo é versionado e o site
  * NÃO depende do ingress.plus em runtime nem em build.
  *
- * Pega as 26 medalhas de contagem cujo `stat_line` casa com uma coluna do export
- * do app (as 14 "core" + Translator/Seer/Recruiter/Guardian/Recon/Scout/Scout
- * Controller/NL-1331 Meetups/Mission Day/First Saturday/Second Sunday/Operation
- * Clear Field). É idempotente: mesma resposta da API → mesmo arquivo.
+ * Pega as 29 medalhas de contagem cujo `stat_line` casa com uma coluna do export
+ * do app. **Preserva as entradas non-core** (evento/anomalia/colecionável) que o
+ * `scripts/ingress.mjs badges add` tiver acrescentado. Idempotente.
  *
  * Uso:  node scripts/ingress-catalog-gen.mjs [--apply]
  */
@@ -24,14 +23,20 @@ const API = `https://ingress.plus/api/collections/${COLLECTION}/records?perPage=
 // stat_line do ingress.plus -> chave estável (coluna do export)
 const COL_TO_KEY = new Map(STAT_COLUMNS.map((c) => [c.col, c.key]));
 
-// Ordem canônica no arquivo: as 14 core primeiro, depois as 12 extras.
+// Ordem canônica das core no arquivo.
 const ORDER = [
     'builder', 'connector', 'mind-controller', 'illuminator', 'liberator', 'pioneer',
     'explorer', 'trekker', 'purifier', 'hacker', 'sojourner', 'recharger', 'engineer',
     'specops', 'translator', 'recon', 'scout', 'scout-controller', 'seer', 'recruiter',
     'guardian', 'first-saturday', 'second-sunday', 'mission-day', 'nl-1331-meetups',
-    'operation-clear-field',
+    'operation-clear-field', 'maverick', 'reclaimer', 'epoch',
 ];
+
+// Limiares que o jogo mostra diferente do ingress.plus (o jogo é a fonte da verdade).
+const TIER_OVERRIDES = {
+    illuminator: [5000, 50000, 250000, 1000000, 4000000], // ingress.plus diz bronze 2000
+    guardian: [3, 10, 20, 90, 150], // ingress.plus diz 80/140
+};
 
 function slugify(title) {
     return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -57,7 +62,7 @@ async function main() {
             name: it.title,
             group: 'core',
             statKey,
-            tiers: it.tier_values.split(',').map((n) => parseInt(n, 10)),
+            tiers: TIER_OVERRIDES[slug] || it.tier_values.split(',').map((n) => parseInt(n, 10)),
             requirement: (it.requirement || '').trim(),
             unobtainable: Boolean(it.unobtainable),
             ipId: it.id,
@@ -68,8 +73,18 @@ async function main() {
     const missing = ORDER.filter((s) => !bySlug.has(s));
     if (missing.length) throw new Error(`Não achei no ingress.plus: ${missing.join(', ')}`);
 
+    // Preserva as entradas non-core (evento/anomalia) já no arquivo.
+    let existing = {};
+    try {
+        existing = JSON.parse(readFileSync(OUT, 'utf8'));
+    } catch {
+        /* arquivo ainda não existe */
+    }
+    const nonCore = Object.entries(existing).filter(([, e]) => e.group !== 'core');
+
     const catalog = {};
     for (const slug of ORDER) catalog[slug] = bySlug.get(slug);
+    for (const [slug, e] of nonCore) catalog[slug] = e;
 
     const json = JSON.stringify(catalog, null, 2) + '\n';
     let current = '';

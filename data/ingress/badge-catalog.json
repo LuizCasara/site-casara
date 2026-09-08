@@ -70,7 +70,7 @@
     "group": "core",
     "statKey": "mindUnitsCaptured",
     "tiers": [
-      2000,
+      5000,
       50000,
       250000,
       1000000,
@@ -447,8 +447,8 @@
       3,
       10,
       20,
-      80,
-      140
+      90,
+      150
     ],
     "requirement": "Was the owner of a Portal for {0} consecutive days without it being destroyed. (Retired in April 2018)",
     "unobtainable": false,
@@ -569,6 +569,327 @@
       "badge_operation_clear_field_gold_8t9rEoRNxm.png",
       "badge_operation_clear_field_platinum_0HAvXNGUSk.png",
       "badge_operation_clear_field_black_okhbwjUN1N.png"
+    ]
+  },
+  "maverick": {
+    "name": "Maverick",
+    "group": "core",
+    "statKey": "droneHacks",
+    "tiers": [
+      250,
+      1000,
+      2000,
+      5000,
+      10000
+    ],
+    "requirement": "Hack {0} Portals via the Dronenet.",
+    "unobtainable": false,
+    "ipId": "5ask0sbnnzhxsnl",
+    "ipArt": [
+      "badge_maverick_bronze_ucaNlf9gKA.png",
+      "badge_maverick_silver_T5lU6VxMz2.png",
+      "badge_maverick_gold_xoVTCf36bi.png",
+      "badge_maverick_platinum_AvJgc9twQl.png",
+      "badge_maverick_black_qdTjvMfEhY.png"
+    ]
+  },
+  "reclaimer": {
+    "name": "Reclaimer",
+    "group": "core",
+    "statKey": "machinaPortalsReclaimed",
+    "tiers": [
+      100,
+      1000,
+      5000,
+      15000,
+      40000
+    ],
+    "requirement": "Capture a Portal {0} times after it has been taken over by Machina.",
+    "unobtainable": false,
+    "ipId": "4hyo3tzr1razgg0",
+    "ipArt": [
+      "badge_reclaimer_bronze_EzCVWaq6o9.png",
+      "badge_reclaimer_silver_qomrnZQtii.png",
+      "badge_reclaimer_gold_hDYa7eB329.png",
+      "badge_reclaimer_platinum_sykLgHDCb1.png",
+      "badge_reclaimer_black_cwOsb4IVLO.png"
+    ]
+  },
+  "epoch": {
+    "name": "Epoch",
+    "group": "core",
+    "statKey": "completedHackstreaks",
+    "tiers": [
+      2,
+      4,
+      8,
+      30,
+      60
+    ],
+    "requirement": "Complete a 7-Day Hackstreak {0} times.",
+    "unobtainable": false,
+    "ipId": "y8cpm7xb8kmgxar",
+    "ipArt": [
+      "badge_epoch_bronze_s59kClN5ff.png",
+      "badge_epoch_silver_RS2XPO82Jb.png",
+      "badge_epoch_gold_Knsi3kws3z.png",
+      "badge_epoch_platinum_2dSV7hnlrA.png",
+      "badge_epoch_black_OWxDhaE2tV.png"
+    ]
+  },
+  "knight-of-tessellation": {
+    "name": "Knight of Tessellation",
+    "group": "event",
+    "requirement": "",
+    "ipId": "x8dsx64zwav0tul",
+    "ipArt": [
+      "badge_knight_tessellation_silver_5QJXIKWCP7.png",
+      "badge_knight_tessellation_gold_EL8Jn2XtdL.png"
+    ]
+  },
+  "eve": {
+    "name": "Eve",
+    "group": "event",
+    "requirement": "",
+    "ipId": "i20zx6u6zck2cy5",
+    "ipArt": [
+      "unique_badge_eve_RbaRlnDIza.png"
+    ]
+  },
+  "verified": {
+    "name": "Verified",
+    "group": "event",
+    "requirement": "",
+    "ipId": "io5d30l7v6a2efg",
+    "ipArt": [
+      "unique_badge_verified_B57B8yzC1a.png"
+    ]
+  },
+  "tessellation-paragon": {
+    "name": "Tessellation Paragon",
+    "group": "event",
+    "requirement": "",
+    "ipId": "r85xcrkmaroncqh",
+    "ipArt": [
+      "unique_badge_paragon_Inibkevvg2.png"
+    ]
+  },
+  "avenir-shard-challenge": {
+    "name": "Avenir Shard Challenge",
+    "group": "event",
+    "requirement": "",
+    "ipId": "orb5wfhrrzwyl46",
+    "ipArt": [
+      "unique_badge_avenir_shard_challenge_LWFgJycZYf.png"
+    ]
+  },
+  "apollo-global-op": {
+    "name": "Apollo: Global Op",
+    "group": "event",
+    "requirement": "Earn {0} Apollo Mod Battle Points and claim the relevant Dispatch Assignment.",
+    "ipId": "1xoh1eoam109zey",
+    "ipArt": [
+      "apollo_global_op_bronze_p5zao6h48c.png",
+      "apollo_global_op_silver_q7p4cqglc8.png",
+      "apollo_global_op_gold_cpkkphjb6z.png"
+    ]
+  },
+  "gamma-global-op": {
+    "name": "+Gamma: Global Op",
+    "group": "event",
+    "requirement": "Earned {0} all‑time +Gamma Link Points and claimed the corresponding Dispatch assignment during the +Gamma Campaign: Global in February 2026.",
+    "ipId": "7pzqpfjxkepdbqo",
+    "ipArt": [
+      "pgamma_op_bronze_39bp5j6xod.png",
+      "pgamma_op_silver_smtzu21km2.png",
+      "pgamma_op_gold_1f9tvqv76m.png"
+    ]
+  },
+  "cryptic-memories-global-op": {
+    "name": "Cryptic Memories: Global Op",
+    "group": "event",
+    "requirement": "Gained {0} Cryptic Memories Global Op Points during the Cryptic Memories: Global Op in January 2024.",
+    "ipId": "pkvwawzdicyvncc",
+    "ipArt": [
+      "cryptic_memories_op_bronze_ixcSNX4ULQ.png",
+      "cryptic_memories_op_silver_fYef4QtUcd.png"
+    ]
+  },
+  "erased-memories-global-op": {
+    "name": "Erased Memories: Global Op",
+    "group": "event",
+    "requirement": "Completed {0} Assignments from the Erased Memories: Global Op Campaign in October 2024.",
+    "ipId": "4n7njg843dkng8n",
+    "ipArt": [
+      "event_erased_memories_global_op_bronze_MJyyzY06Ik.png",
+      "event_erased_memories_global_op_silver_R5gGpzerfV.png"
+    ]
+  },
+  "courier-meet-you-out-there-challenge": {
+    "name": "Courier Meet You Out There Challenge",
+    "group": "event",
+    "requirement": "Earned {0} AP during the August 2021 Courier Meet You Out There Challenge.",
+    "ipId": "wa22xfpgas7k2uu",
+    "ipArt": [
+      "badge_courier_challenge_bronze_DMjIlHgNWQ.png",
+      "badge_courier_challenge_silver_03oshfKQuS.png",
+      "badge_courier_challenge_gold_X86joN6wve.png"
+    ]
+  },
+  "didact-field-challenge": {
+    "name": "Didact Field Challenge",
+    "group": "event",
+    "requirement": "Created {0} Control Fields during the February 2020 Didact Field Challenge.",
+    "ipId": "3lsrv9t1zib41o5",
+    "ipArt": [
+      "event_badge_didact_field_bronze_UWLhnqhI7l.png",
+      "event_badge_didact_field_silver_yAtyR7P238.png",
+      "event_badge_didact_field_gold_1sw3JFIDSq.png"
+    ]
+  },
+  "shared-memories-operation": {
+    "name": "Shared Memories: Operation",
+    "group": "event",
+    "requirement": "Gained {0} Shared Memories Global OP Points during the Global Shared Link Challenge in July 2024.",
+    "ipId": "wg0lu4ih1dwjsbh",
+    "ipArt": [
+      "shared_memories_op_bronze_UyZKkCmxKS.png",
+      "shared_memories_op_silver_B83eqrRrso.png"
+    ]
+  },
+  "alpha-global-op": {
+    "name": "+Alpha: Global Op",
+    "group": "event",
+    "requirement": "Completed {0} Assignments during the +Alpha Campaign: Global in January 2025.",
+    "ipId": "ave76v1b5db2deq",
+    "ipArt": [
+      "event_palpha_op_bronze_zjdZQIruBJ.png",
+      "event_palpha_op_silver_z1xUfcg5sS.png"
+    ]
+  },
+  "field-test-hexathlon": {
+    "name": "Field Test: Hexathlon",
+    "group": "event",
+    "requirement": "",
+    "ipId": "2e2otlsvagv3evx",
+    "ipArt": [
+      "event_badge_field_test_MdeoqAqQjI.png",
+      "event_badge_field_test_elite_2zuUxf8yaG.png"
+    ]
+  },
+  "aurora-glyph-challenge": {
+    "name": "Aurora Glyph Challenge",
+    "group": "event",
+    "requirement": "",
+    "ipId": "gp3zn9fbzaobr4q",
+    "ipArt": [
+      "event_badge_aurora_glyph_bronze_IM0QN49l0x.png",
+      "event_badge_aurora_glyph_silver_Chnw5qDdGA.png",
+      "event_badge_aurora_glyph_gold_QgUYZS4ypv.png"
+    ]
+  },
+  "umbra-deploy-challenge": {
+    "name": "Umbra Deploy Challenge",
+    "group": "event",
+    "requirement": "Deployed {0} Resonators during the December 2019 Umbra Global Challenge.",
+    "ipId": "taaqallnquc418x",
+    "ipArt": [
+      "event_badge_umbra_deploy_bronze_AxohLJMmQn.png",
+      "event_badge_umbra_deploy_silver_qqdesGiBz3.png",
+      "event_badge_umbra_deploy_gold_BJ92KPTC48.png"
+    ]
+  },
+  "dark-xm": {
+    "name": "Dark XM",
+    "group": "event",
+    "requirement": "Created Links totaling {0}km during the Dark XM 2019 event.",
+    "ipId": "lyha505cdnoipla",
+    "ipArt": [
+      "event_badge_dark_xm_bronze_MumsFiZiGa.png",
+      "event_badge_dark_xm_silver_86kWhBtk2D.png",
+      "event_badge_dark_xm_gold_jsDSc6QT3Z.png"
+    ]
+  },
+  "cassandra-neutralizer": {
+    "name": "Cassandra Neutralizer",
+    "group": "event",
+    "requirement": "",
+    "ipId": "32yjtb0xu34u4eo",
+    "ipArt": [
+      "event_badge_cassandra_neutralizer_bronze_L0BAGMKz4y.png",
+      "event_badge_cassandra_neutralizer_silver_NxxZxccU66.png",
+      "event_badge_cassandra_neutralizer_gold_pxM6OKIQxu.png"
+    ]
+  },
+  "myriad-hack-challenge": {
+    "name": "Myriad Hack Challenge",
+    "group": "event",
+    "requirement": "Hacked {0} unique Portals during the July 2019 Myriad Hack Challenge.",
+    "ipId": "560b5ba0ear580w",
+    "ipArt": [
+      "event_badge_myriad_hack_bronze_K05jEmAUBB.png",
+      "event_badge_myriad_hack_silver_DUKS6haCmB.png",
+      "event_badge_myriad_hack_gold_PxW1uaEAFK.png"
+    ]
+  },
+  "beta": {
+    "name": "+Beta",
+    "group": "anomaly",
+    "requirement": "Earn {0} +Beta Tokens.",
+    "ipId": "3m5f329bm16583o",
+    "ipArt": [
+      "beta_bronze_uuyqbciayh.png",
+      "beta_silver_eeupszahg9.png",
+      "beta_gold_x5jizgi2z1.png"
+    ]
+  },
+  "gamma": {
+    "name": "+Gamma",
+    "group": "anomaly",
+    "requirement": "Earn {0} +Gamma Tokens",
+    "ipId": "l8mi1sc9582nd6n",
+    "ipArt": [
+      "pgamma_season_bronze_sxucdu5ff6.png",
+      "pgamma_season_silver_7snylx5qhd.png",
+      "pgamma_season_gold_pwiam7m7cu.png"
+    ]
+  },
+  "delta": {
+    "name": "+Delta",
+    "group": "anomaly",
+    "requirement": "Earn {0} +Delta Tokens.",
+    "ipId": "6l3g60t54hm7rnq",
+    "ipArt": [
+      "pdelta_bronze_xdkb8al063.png",
+      "pdelta_silver_ezxqurxcgn.png",
+      "pdelta_gold_9aa1y8henf.png"
+    ]
+  },
+  "discoverie": {
+    "name": "Discoverie",
+    "group": "anomaly",
+    "requirement": "",
+    "ipId": "lbdvkn0fbk1yhsm",
+    "ipArt": [
+      "img_0229_zJBO2SUtgn.png"
+    ]
+  },
+  "nemesis-myriad": {
+    "name": "Nemesis: Myriad",
+    "group": "anomaly",
+    "requirement": "",
+    "ipId": "zgycw18lfajjnne",
+    "ipArt": [
+      "anomaly_nemesis_myriad_8M0pRF670I.png"
+    ]
+  },
+  "darsana-prime": {
+    "name": "Darsana Prime",
+    "group": "anomaly",
+    "requirement": "",
+    "ipId": "mbdm9rnr6u0t1bb",
+    "ipArt": [
+      "anomaly_darsana_prime_ZKklmqbGqA.png"
     ]
   }
 }

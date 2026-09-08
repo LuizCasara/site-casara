@@ -2,8 +2,8 @@ import {TIER_LABELS} from '@/lib/ingress-badges.mjs'
 import Panel from './Panel'
 
 const W = 320
-const H = 96
-const PAD = {left: 10, right: 10, top: 30, bottom: 22}
+const H = 128
+const PAD = {left: 10, right: 10, top: 20, bottom: 22}
 const TIER_COLOR: Record<string, string> = {
   bronze: '#d08a4e',
   silver: '#cfdad4',
@@ -72,16 +72,21 @@ export default function AchievementTimeline({acquisitions}: {acquisitions: Acq[]
         })}
         {acquisitions.map((a, i) => {
           const cx = x(ts[i])
+          // espalha verticalmente por um hash do slug — dezenas de datas no mesmo
+          // mês deixariam de se sobrepor por completo
+          const band = H - PAD.top - PAD.bottom - 6
+          const cy =
+            PAD.top + 3 + ((a.slug.charCodeAt(0) * 7 + a.slug.length * 13 + i * 5) % band)
           return (
             <g key={`${a.slug}-${a.tier}-${a.date}`}>
               <line
                 x1={cx}
-                y1={PAD.top}
+                y1={cy}
                 x2={cx}
                 y2={H - PAD.bottom}
                 className="ing-achv-timeline__stem"
               />
-              <circle cx={cx} cy={PAD.top} r={3.5} fill={TIER_COLOR[a.tier] ?? '#26b6ff'}>
+              <circle cx={cx} cy={cy} r={2.4} fill={TIER_COLOR[a.tier] ?? '#26b6ff'}>
                 <title>
                   {a.name}
                   {a.tier !== 'single' ? ` — ${TIER_LABELS[a.tier] ?? a.tier}` : ''} · {a.date}

@@ -131,8 +131,315 @@
       }
     }
   ],
-  "medalDates": {},
-  "eventBadges": [],
+  "medalDates": {
+    "builder": {
+      "bronze": "2014-06-25",
+      "silver": "2018-05-03",
+      "gold": "2018-11-13",
+      "platinum": "2025-12-10"
+    },
+    "connector": {
+      "bronze": "2014-04-28",
+      "silver": "2014-07-28",
+      "gold": "2018-08-01"
+    },
+    "mind-controller": {
+      "bronze": "2014-05-23",
+      "silver": "2014-07-17",
+      "gold": "2018-05-19",
+      "platinum": "2020-11-15"
+    },
+    "illuminator": {
+      "bronze": "2015-02-27",
+      "silver": "2015-02-27",
+      "gold": "2015-02-27",
+      "platinum": "2018-04-22",
+      "onyx": "2018-06-27"
+    },
+    "liberator": {
+      "bronze": "2014-06-29",
+      "silver": "2018-04-07",
+      "gold": "2019-01-29",
+      "platinum": "2020-03-07"
+    },
+    "pioneer": {
+      "bronze": "2014-05-17",
+      "silver": "2018-03-24",
+      "gold": "2019-03-23"
+    },
+    "explorer": {
+      "bronze": "2014-07-16",
+      "silver": "2018-12-19",
+      "gold": "2019-06-08"
+    },
+    "trekker": {
+      "bronze": "2014-12-26",
+      "silver": "2014-12-26",
+      "gold": "2014-12-26",
+      "platinum": "2018-08-16",
+      "onyx": "2019-10-28"
+    },
+    "purifier": {
+      "bronze": "2014-09-06",
+      "silver": "2018-07-26",
+      "gold": "2018-12-07"
+    },
+    "hacker": {
+      "bronze": "2014-06-16",
+      "silver": "2018-07-16",
+      "gold": "2019-06-20"
+    },
+    "sojourner": {
+      "bronze": "2016-08-03",
+      "silver": "2016-08-18",
+      "gold": "2018-05-11",
+      "platinum": "2018-09-08",
+      "onyx": "2019-03-07"
+    },
+    "recharger": {
+      "bronze": "2014-04-26",
+      "silver": "2014-05-17",
+      "gold": "2014-07-22",
+      "platinum": "2018-04-14",
+      "onyx": "2018-07-17"
+    },
+    "engineer": {
+      "bronze": "2015-01-03",
+      "silver": "2018-06-08",
+      "gold": "2018-11-13"
+    },
+    "specops": {
+      "bronze": "2014-12-30",
+      "silver": "2018-05-10",
+      "gold": "2018-08-18",
+      "platinum": "2018-11-25",
+      "onyx": "2019-07-05"
+    },
+    "translator": {
+      "bronze": "2016-07-25",
+      "silver": "2018-05-09",
+      "gold": "2018-06-30",
+      "platinum": "2018-07-31",
+      "onyx": "2018-11-04"
+    },
+    "recon": {
+      "bronze": "2018-06-11",
+      "silver": "2018-06-17",
+      "gold": "2018-08-20",
+      "platinum": "2018-11-18"
+    },
+    "seer": {
+      "bronze": "2014-08-18",
+      "silver": "2014-10-06",
+      "gold": "2025-11-10"
+    },
+    "recruiter": {
+      "bronze": "2018-03-18"
+    },
+    "guardian": {
+      "bronze": "2014-04-22",
+      "silver": "2014-04-29",
+      "gold": "2014-05-09",
+      "platinum": "2014-07-18",
+      "onyx": "2014-09-16"
+    },
+    "first-saturday": {
+      "bronze": "2019-04-15",
+      "silver": "2019-09-17",
+      "gold": "2020-03-16",
+      "platinum": "2021-10-14"
+    },
+    "second-sunday": {
+      "bronze": "2025-10-12"
+    },
+    "mission-day": {
+      "bronze": "2019-03-01",
+      "silver": "2019-12-05"
+    },
+    "nl-1331-meetups": {
+      "bronze": "2020-03-31"
+    },
+    "operation-clear-field": {
+      "bronze": "2019-02-28"
+    },
+    "maverick": {
+      "bronze": "2023-11-27",
+      "silver": "2026-03-01"
+    },
+    "reclaimer": {
+      "bronze": "2025-09-05"
+    },
+    "epoch": {
+      "bronze": "2021-05-10",
+      "silver": "2023-11-13",
+      "gold": "2024-01-09",
+      "platinum": "2026-02-07"
+    }
+  },
+  "eventBadges": [
+    {
+      "slug": "alpha-global-op",
+      "dates": {
+        "bronze": "2025-12-03",
+        "gold": "2025-12-05"
+      }
+    },
+    {
+      "slug": "apollo-global-op",
+      "dates": {
+        "bronze": "2026-08-27",
+        "silver": "2026-09-05"
+      }
+    },
+    {
+      "slug": "aurora-glyph-challenge",
+      "dates": {
+        "bronze": "2019-08-16",
+        "silver": "2019-08-24"
+      }
+    },
+    {
+      "slug": "avenir-shard-challenge",
+      "dates": {
+        "single": "2019-10-02"
+      }
+    },
+    {
+      "slug": "beta",
+      "dates": {
+        "bronze": "2025-11-22"
+      }
+    },
+    {
+      "slug": "cassandra-neutralizer",
+      "dates": {
+        "bronze": "2018-07-16"
+      }
+    },
+    {
+      "slug": "courier-meet-you-out-there-challenge",
+      "dates": {
+        "bronze": "2021-08-22"
+      }
+    },
+    {
+      "slug": "cryptic-memories-global-op",
+      "dates": {
+        "bronze": "2025-12-03"
+      }
+    },
+    {
+      "slug": "dark-xm",
+      "dates": {
+        "bronze": "2019-04-30",
+        "silver": "2019-04-30",
+        "gold": "2019-04-30"
+      }
+    },
+    {
+      "slug": "darsana-prime",
+      "dates": {
+        "single": "2019-03-16"
+      }
+    },
+    {
+      "slug": "delta",
+      "dates": {
+        "bronze": "2025-09-26"
+      }
+    },
+    {
+      "slug": "didact-field-challenge",
+      "dates": {
+        "bronze": "2020-02-17",
+        "silver": "2020-02-24"
+      }
+    },
+    {
+      "slug": "discoverie",
+      "dates": {
+        "single": "2023-11-16"
+      }
+    },
+    {
+      "slug": "erased-memories-global-op",
+      "dates": {
+        "bronze": "2025-12-04",
+        "silver": "2025-12-15"
+      }
+    },
+    {
+      "slug": "eve",
+      "dates": {
+        "single": "2014-07-29"
+      }
+    },
+    {
+      "slug": "field-test-hexathlon",
+      "dates": {
+        "bronze": "2019-09-17",
+        "silver": "2019-09-14"
+      }
+    },
+    {
+      "slug": "gamma",
+      "dates": {
+        "bronze": "2026-02-19"
+      }
+    },
+    {
+      "slug": "gamma-global-op",
+      "dates": {
+        "bronze": "2026-02-19"
+      }
+    },
+    {
+      "slug": "knight-of-tessellation",
+      "dates": {
+        "bronze": "2020-07-31"
+      }
+    },
+    {
+      "slug": "myriad-hack-challenge",
+      "dates": {
+        "bronze": "2019-07-11",
+        "silver": "2019-07-16",
+        "gold": "2019-07-21"
+      }
+    },
+    {
+      "slug": "nemesis-myriad",
+      "dates": {
+        "single": "2019-07-30"
+      }
+    },
+    {
+      "slug": "shared-memories-operation",
+      "dates": {
+        "bronze": "2025-12-18"
+      }
+    },
+    {
+      "slug": "tessellation-paragon",
+      "dates": {
+        "single": "2020-07-31"
+      }
+    },
+    {
+      "slug": "umbra-deploy-challenge",
+      "dates": {
+        "bronze": "2019-12-20",
+        "silver": "2019-12-20",
+        "gold": "2019-12-25"
+      }
+    },
+    {
+      "slug": "verified",
+      "dates": {
+        "single": "2014-04-10"
+      }
+    }
+  ],
   "s2": {
     "center": {
       "lat": -24.9573,

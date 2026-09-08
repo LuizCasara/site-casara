@@ -719,8 +719,8 @@
 }
 
 .ing-achv-timeline__stem {
-  stroke: var(--ing-edge);
-  stroke-width: 1;
+  stroke: rgba(0, 230, 118, 0.14);
+  stroke-width: 0.75;
 }
 
 .ing-achv-timeline__year {
