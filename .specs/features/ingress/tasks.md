@@ -1153,15 +1153,16 @@ badges de `stat_line` mapeável do ingress.plus e escreve
 **Tools**: MCP NONE · Skill NONE
 
 **Done when**:
-- [ ] `appendSnapshot`: `t` novo adiciona ordenado; `t` igual ao último é no-op; ponto anterior ao primeiro não quebra a ordem
-- [ ] `ratePerDay`: 1 ponto devolve `null`; 2+ devolve valor por dia; taxa ≤ 0 tratada
-- [ ] `projectNextTier`: 2 pontos + taxa conhecida devolve data plausível; 1 ponto devolve `null`; taxa ≤ 0 devolve `{reason}`
-- [ ] Gate check passes: `npm test`
-- [ ] Test count: ≥7 tests pass
+- [x] `appendSnapshot`: `t` novo adiciona ordenado; `t` repetido é no-op; ponto anterior ao primeiro entra na ordem certa; não muta a entrada
+- [x] `ratePerDay`: <2 pontos devolve `null`; 2+ devolve valor/dia; regressão devolve taxa negativa
+- [x] `projectNextTier`: 2 pts + taxa devolve `{tier, date}` plausível; 1 pt e tier máximo devolvem `null`; taxa ≤ 0 devolve `{reason}`
+- [x] Gate check passes: `npm test`
+- [x] Test count: 9 tests pass
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(ingress): histórico de snapshots, taxa e projeção`
+**Status**: ✅ Complete
 
 ---
 
