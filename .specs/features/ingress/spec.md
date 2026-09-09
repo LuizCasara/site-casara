@@ -39,7 +39,7 @@ enriquecer depois sem retrabalho.
 | Edição via navegador / rota de admin | Mesmo princípio de `/livros`: sem superfície de escrita pública |
 | Alternância de facção / temas de cor | Só o Luiz (Enlightened) no MVP |
 | Projeção de AP futuro | Nice-to-have sem valor claro agora (projeção de tier de badge foi feita — MED-08; progresso além do Onyx — MED-10) |
-| Recursão por medalha ("Onyx ×N" com os chevrons vermelhos do scanner) | Precisa de dado que nem o export nem os prints trazem — fila em `docs/ingress-proximos-passos.md`, aguarda o dump GDPR |
+| Contagem **real** de recursão por medalha | O export não traz — MED-16 mostra as asinhas com base em `valor ÷ limiar Onyx` (aproximação honesta, rotulada como tal); a contagem oficial por medalha aguarda o dump GDPR |
 | Colecionáveis e Personagens no catálogo | Não dá pra identificar com segurança pelos thumbnails; `MedalGrid` já tem os grupos prontos, populados quando o dump GDPR chegar |
 
 ---
@@ -328,7 +328,7 @@ Fatos que mudam o desenho:
 | Arte das 26 badges (5 tiers cada) | Baixada do ingress.plus por `scripts/ingress.mjs medals --fetch` (thumbs ~96px), versionada em `public/ingress/medals/` | A página de detalhe precisa da escada de tiers offline; ~1 MB é aceitável (comparável a `public/livros/capas/`) | y |
 | `history[]` no perfil | `build` adiciona um snapshot `{t, stats}` por export com `capturedAt` novo | Destrava a projeção (Onda 2) sem retrabalho | y |
 | Projeção de próximo tier | Estruturada agora (P3), só calcula com ≥2 snapshots em `history` | Precisa de taxa; hoje só há 1 ponto | y |
-| Ordem das seções | hero → medalhas → conquistas → timeline → KPIs (com hint de badge) → radar → distribuição → resto | Medalhas na frente foi o pedido central | y |
+| Ordem das seções | hero (com globo no desktop) → grade de medalhas → resumo da linha do tempo → radar "Padrão de jogo" → grupos de stats (AP e XM…) → distribuição → AP/portais/S2 | Medalhas na frente e o radar antes dos números foram pedidos do Luiz | y |
 
 ## User Stories (expansão)
 
@@ -659,8 +659,11 @@ dedo.
 2. WHEN uma razão de componente passa de `RADAR_DRAW_MAX` (2×) THEN o sistema
    SHALL travá-la nesse teto antes de entrar na média, mas SHALL preservar a
    razão real para exibição.
-3. The system SHALL desenhar o radar até `2×` Onyx, com o anel do meio marcado
-   como "Onyx" e a borda destacada.
+3. WHEN o usuário troca a escala do desenho (`½× · Onyx · 2× · Forma`) THEN o
+   sistema SHALL redesenhar as fichas e os anéis nessa escala: `2×` é o padrão
+   (anel do meio = "Onyx", borda destacada); `Forma` normaliza **cada** ficha
+   pelo seu próprio eixo mais forte (compara o formato, não a magnitude) e mostra
+   um aviso disso.
 4. WHEN o radar monta THEN o sistema SHALL rotular o `%` do nível Onyx em cada
    vértice.
 5. WHEN o usuário passa o mouse ou toca num eixo THEN o sistema SHALL exibir o
@@ -669,6 +672,8 @@ dedo.
 6. The system SHALL manter `computeRadarAxes` e `RADAR_AXES` em
    `lib/ingress-radar.mjs` com testes (âncora = Onyx da medalha declarada,
    média-não-soma, trava no teto).
+7. The system SHALL dar folga lateral ao `viewBox` do SVG para os rótulos de eixo
+   não serem cortados pela borda do painel.
 
 **Independent Test**: `computeRadarAxes` do perfil real → Exploração e Hacking
 acima do Onyx, Construção/Destruição/Links abaixo; toda `part` com `badge` tem
@@ -678,27 +683,69 @@ acima do Onyx, Construção/Destruição/Links abaixo; toda `part` com `badge` t
 
 ### MED-15: Comparar fichas de agentes ⭐ P3
 
-**User Story**: Como agente, quero colar o export do app de outro agente e ver as
-duas fichas sobrepostas no radar, na hora.
+**User Story**: Como agente, quero colar o export do app de outro agente (ou dois
+exports) e ver as fichas sobrepostas no radar, na hora.
 
 **Acceptance Criteria**:
 
-1. WHEN o usuário abre "Comparar" e cola um texto THEN o sistema SHALL tentar
-   lê-lo com o mesmo parser do CLI (`parseAppExport`) e, em sucesso, sobrepor o
-   radar do outro agente numa cor distinta (`--ing-xm`), com legenda dos dois
-   codinomes.
-2. IF o texto colado não é um export válido THEN o sistema SHALL exibir a
-   mensagem de erro do parser inline, sem quebrar o radar próprio.
-3. WHILE há uma comparação ativa o sistema SHALL exibir, eixo a eixo, o `%` de
-   cada agente e destacar quem lidera; e o hover no eixo SHALL mostrar as duas
-   colunas.
-4. WHEN o usuário aciona "Limpar" THEN o sistema SHALL remover a comparação e
-   voltar ao radar de um agente só.
-5. The system SHALL NOT persistir, exportar nem enviar nada — é cola-e-vê local.
+1. WHEN o usuário abre "Comparar" THEN o sistema SHALL oferecer dois modos:
+   "Contra o dono do perfil" (1 export → agente B roxo, dono = A verde) e "Dois
+   agentes" (2 exports colados → A verde, B roxo), sem envolver o perfil.
+2. WHEN o usuário submete THEN o sistema SHALL ler cada texto com o mesmo parser
+   do CLI (`parseAppExport`) e sobrepor as fichas; o parser SHALL tolerar export
+   colado que perdeu os tabs (vira separado por espaço), reconstruindo o
+   cabeçalho pelos nomes de coluna conhecidos.
+3. IF um texto não é um export válido THEN o sistema SHALL exibir a mensagem de
+   erro do parser inline, sem quebrar o radar.
+4. WHILE há comparação ativa o sistema SHALL pôr o radar de um lado e uma
+   **tabela** do outro (empilha no mobile) com o `%` de cada eixo dos dois
+   agentes + os valores/razões de cada estatística, o líder destacado na cor de
+   cada um; o hover num eixo SHALL mostrar as duas colunas.
+5. WHEN o usuário aciona "Limpar" THEN o sistema SHALL remover a comparação.
+6. The system SHALL NOT persistir, exportar nem enviar nada — é cola-e-vê local.
 
-**Independent Test**: Colar um export do app → duas formas no radar + lista
-eixo-a-eixo com o líder marcado; colar lixo → erro inline; "Limpar" volta ao
-estado de um agente. `compareRadar(mine, theirs)` coberto por teste.
+**Independent Test**: Colar um export (com ou sem tabs) → duas formas no radar +
+tabela com o líder marcado; modo "Dois agentes" compara os dois sem o perfil;
+colar lixo → erro inline; "Limpar" volta ao estado de um agente.
+`compareRadar` e o parser tolerante a espaço cobertos por teste.
+
+---
+
+### MED-16: "Asinhas" da recursão nas medalhas ≥ 2× Onyx ⭐ P3
+
+**User Story**: Como agente recursado, quero que as medalhas cujo total passou de
+2× o limiar de Onyx tenham os chevrons vermelhos do scanner com o multiplicador.
+
+**Acceptance Criteria**:
+
+1. WHERE `computeBadge().beyond.multiple` de uma medalha é ≥ 2 THEN o sistema
+   SHALL exibir chevrons vermelhos + `×N` (N = multiple) no hexágono da grade, no
+   painel de detalhe e no herói da página da medalha.
+2. WHILE `multiple` é 1 ou a medalha não é Onyx o sistema SHALL NOT exibir a
+   marca.
+3. The system SHALL rotular a marca como "N× o limiar de Onyx" (não afirma
+   recursão oficial por medalha — dado que só vem no dump GDPR).
+
+**Independent Test**: Para o perfil real, Illuminator ×4 / Recharger ×3 /
+Sojourner ×2 recebem a marca; as demais não.
+
+---
+
+### MED-17: Globo decorativo no hero (desktop) ⭐ P3
+
+**User Story**: Como Luiz, quero um elemento visual "de Ingress" no cabeçalho do
+perfil — um globo girando, como no app.
+
+**Acceptance Criteria**:
+
+1. WHERE a viewport é desktop (≥ 60rem) THEN o sistema SHALL renderizar um globo
+   decorativo animado sangrando pela direita do hero, com `pointer-events: none`,
+   sem cobrir o conteúdo (o corpo do hero limita a ~52% da largura).
+2. WHILE a viewport é menor o sistema SHALL NOT renderizar o globo.
+3. The system SHALL respeitar `prefers-reduced-motion`.
+
+**Independent Test**: `/ingress` no desktop mostra o globo girando atrás do
+codinome; em 360px o globo não aparece.
 
 ---
 
@@ -735,47 +782,47 @@ estado de um agente. `compareRadar(mine, theirs)` coberto por teste.
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| INGR-01 | P1: Perfil renderizado | Design | Pending |
-| INGR-02 | P1: Perfil — stats agrupadas em pt-BR | Design | Pending |
-| INGR-03 | P1: Perfil — layout próprio, PT, fora do LanguageProvider | Design | Pending |
-| INGR-04 | P1: Perfil — chave ausente não quebra render | Design | Pending |
-| INGR-05 | P1: Perfil — zero chamadas à Niantic em runtime | Design | Pending |
-| INGR-36 | P1: Perfil — mobile-first, usável a 360px sem scroll horizontal | Design | Pending |
-| INGR-06 | P1: Script — export do app → JSON com chaves estáveis | Design | Pending |
-| INGR-07 | P1: Script — valida colunas/linha, aborta sem gravar | Design | Pending |
-| INGR-08 | P1: Script — dry-run é o padrão | Design | Pending |
-| INGR-09 | P1: Script — diff + confirmação no `--apply` | Design | Pending |
-| INGR-10 | P1: Script — idempotente | Design | Pending |
-| INGR-11 | P1: Script — merge preserva seções do dump GDPR | Design | Pending |
-| INGR-12 | P1: Badges — cálculo de tier a partir da tabela de limiares | Design | Pending |
-| INGR-13 | P1: Badges — falta para o próximo tier | Design | Pending |
-| INGR-14 | P1: Badges — indicação de Onyx (tier máximo) | Design | Pending |
-| INGR-15 | P1: Badges — estatística ausente omite a badge | Design | Pending |
-| INGR-16 | P1: Badges — limiares oficiais cobertos por teste | Design | Pending |
-| INGR-17 | P1: Espera GDPR — placeholder de evolução de AP | Design | Pending |
-| INGR-18 | P1: Espera GDPR — placeholder de mapa de portais | Design | Pending |
-| INGR-19 | P1: Espera GDPR — seções em espera vêm de campo explícito | Design | Pending |
-| INGR-20 | P1: Espera GDPR — seção real aparece sem mudar código | Design | Pending |
-| INGR-21 | P2: Gráficos — radar do perfil | - | Pending |
-| INGR-22 | P2: Gráficos — distribuição de ações | - | Pending |
-| INGR-23 | P2: Gráficos — normalização do radar em lib testada | - | Pending |
-| INGR-24 | P2: Gráficos — eixo sem dado vira 0 | - | Pending |
-| INGR-25 | P2: S2 — mapa Leaflet/OSM centrado na coordenada do JSON | - | Pending |
-| INGR-26 | P2: S2 — slider de nível redesenha a grade | - | Pending |
-| INGR-27 | P2: S2 — arrastar o mapa recalcula as células | - | Pending |
-| INGR-28 | P2: S2 — matemática de células em lib testada | - | Pending |
-| INGR-29 | P2: S2 — fallback se o mapa não carrega | - | Pending |
-| INGR-30 | P2: OG — imagem OpenGraph com dados do JSON | - | Pending |
-| INGR-31 | P2: OG — title/description próprios da rota | - | Pending |
-| INGR-32 | P3: Dump — ingestão de séries temporais e portais | - | Pending |
-| INGR-33 | P3: Dump — merge preserva o mais recente e limpa `pending` | - | Pending |
-| INGR-34 | P3: Dump — arquivo ausente/vazio não aborta | - | Pending |
-| INGR-35 | P3: Dump — gráfico de evolução de AP substitui o placeholder | - | Pending |
-| MED-01 | P1: Medalhas como centro da página (26 badges, resumo, próxima) | Tasks | Pending |
-| MED-02 | P1: Página de detalhe `/ingress/medalha/[slug]` | Tasks | Pending |
-| MED-03 | P1: Seção "Conquistas" (eventBadges por categoria) | Tasks | Pending |
-| MED-04 | P1: Histórico de snapshots (`history[]` no build) | Tasks | Pending |
-| MED-05 | P1: CLI `badges` + `medals --fetch` | Tasks | Pending |
+| INGR-01 | P1: Perfil renderizado | Feito | Verified |
+| INGR-02 | P1: Perfil — stats agrupadas em pt-BR | Feito | Verified |
+| INGR-03 | P1: Perfil — layout próprio, PT, fora do LanguageProvider | Feito | Verified |
+| INGR-04 | P1: Perfil — chave ausente não quebra render | Feito | Verified |
+| INGR-05 | P1: Perfil — zero chamadas à Niantic em runtime | Feito | Verified |
+| INGR-36 | P1: Perfil — mobile-first, usável a 360px sem scroll horizontal | Feito | Verified |
+| INGR-06 | P1: Script — export do app → JSON com chaves estáveis | Feito | Verified |
+| INGR-07 | P1: Script — valida colunas/linha, aborta sem gravar | Feito | Verified |
+| INGR-08 | P1: Script — dry-run é o padrão | Feito | Verified |
+| INGR-09 | P1: Script — diff + confirmação no `--apply` | Feito | Verified |
+| INGR-10 | P1: Script — idempotente | Feito | Verified |
+| INGR-11 | P1: Script — merge preserva seções do dump GDPR | Feito | Verified |
+| INGR-12 | P1: Badges — cálculo de tier a partir da tabela de limiares | Feito | Verified |
+| INGR-13 | P1: Badges — falta para o próximo tier | Feito | Verified |
+| INGR-14 | P1: Badges — indicação de Onyx (tier máximo) | Feito | Verified |
+| INGR-15 | P1: Badges — estatística ausente omite a badge | Feito | Verified |
+| INGR-16 | P1: Badges — limiares oficiais cobertos por teste | Feito | Verified |
+| INGR-17 | P1: Espera GDPR — placeholder de evolução de AP | Feito | Verified |
+| INGR-18 | P1: Espera GDPR — placeholder de mapa de portais | Feito | Verified |
+| INGR-19 | P1: Espera GDPR — seções em espera vêm de campo explícito | Feito | Verified |
+| INGR-20 | P1: Espera GDPR — seção real aparece sem mudar código | Feito | Verified |
+| INGR-21 | P2: Gráficos — radar do perfil | Feito | Verified |
+| INGR-22 | P2: Gráficos — distribuição de ações | Feito | Verified |
+| INGR-23 | P2: Gráficos — normalização do radar em lib testada | Feito | Verified |
+| INGR-24 | P2: Gráficos — eixo sem dado vira 0 | Feito | Verified |
+| INGR-25 | P2: S2 — mapa Leaflet/OSM centrado na coordenada do JSON | Feito | Verified |
+| INGR-26 | P2: S2 — slider de nível redesenha a grade | Feito | Verified |
+| INGR-27 | P2: S2 — arrastar o mapa recalcula as células | Feito | Verified |
+| INGR-28 | P2: S2 — matemática de células em lib testada | Feito | Verified |
+| INGR-29 | P2: S2 — fallback se o mapa não carrega | Feito | Verified |
+| INGR-30 | P2: OG — imagem OpenGraph com dados do JSON | Feito | Verified |
+| INGR-31 | P2: OG — title/description próprios da rota | Feito | Verified |
+| INGR-32 | P3: Dump — ingestão de séries temporais e portais | Feito | Verified |
+| INGR-33 | P3: Dump — merge preserva o mais recente e limpa `pending` | Feito | Verified |
+| INGR-34 | P3: Dump — arquivo ausente/vazio não aborta | Feito | Verified |
+| INGR-35 | P3: Dump — gráfico de evolução de AP substitui o placeholder | Feito | Verified |
+| MED-01 | P1: Medalhas como centro da página (26 badges, resumo, próxima) | Tasks | Verified |
+| MED-02 | P1: Página de detalhe `/ingress/medalha/[slug]` | Tasks | Verified |
+| MED-03 | P1: Seção "Conquistas" (eventBadges por categoria) | Tasks | Verified |
+| MED-04 | P1: Histórico de snapshots (`history[]` no build) | Tasks | Verified |
+| MED-05 | P1: CLI `badges` + `medals --fetch` | Tasks | Verified |
 | MED-06 | P2: Timeline de conquistas (versão simples) | Tasks | Superada por MED-09 |
 | MED-07 | P2: Hover no KPI mostra a badge | Tasks | Implementado |
 | MED-08 | P3: Projeção de próximo tier | Tasks | Implementado |
@@ -784,24 +831,34 @@ estado de um agente. `compareRadar(mine, theirs)` coberto por teste.
 | MED-11 | P3: "Plus" editorial por medalha (`medal-lore.json` + `lib/ingress-lore.mjs`) | Iteração UI | Implementado + testado (math), conteúdo a calibrar |
 | MED-12 | P2: Home como grade hexagonal (`MedalGrid`, substitui BadgeShelf/AchievementsShelf) | Iteração UI | Implementado — UAT visual pendente |
 | MED-13 | P3: Tokens de tier neutros (Onyx grafite, Platina cinza) | Iteração UI | Implementado |
-| MED-14 | P2: Radar ancorado no limiar de Onyx (`computeRadarAxes` média-de-razões, hover com o cálculo, % nos vértices) | Iteração UI | Implementado + testado |
-| MED-15 | P3: Comparar fichas — cola o export de outro agente, radar sobreposto | Iteração UI | Implementado + testado (`compareRadar`) |
+| MED-14 | P2: Radar ancorado no Onyx (média-de-razões, escala ½×/Onyx/2×/Forma, hover com o cálculo, % nos vértices) | Iteração UI | Implementado + testado |
+| MED-15 | P3: Comparar fichas — 1 export vs perfil ou 2 exports entre si, radar + tabela lado a lado; parser tolera tabs perdidos | Iteração UI | Implementado + testado |
+| MED-16 | P3: "Asinhas" da recursão (`RecursionMark`) nas medalhas ≥ 2× Onyx | Iteração UI | Implementado |
+| MED-17 | P3: Globo decorativo no hero (desktop) | Iteração UI | Implementado |
 
 **ID format:** `INGR-[NUMBER]` (feature original) · `MED-[NUMBER]` (expansão de
 medalhas + iteração de UI)
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 36 `INGR-*` + 15 `MED-*` = 51 requisitos, todos implementados no
+**Coverage:** 36 `INGR-*` + 17 `MED-*` = 53 requisitos, todos implementados no
 branch `feat/ingress`. Verificação: as ACs de lógica pura estão ✅ Verified com
-evidência `file:line` em `validation.md` (parsing, badges incl. `beyond`, S2,
-history, timeline `collectAcquisitions`/`annotateLaneGaps`/`groupLanes`/`formatGap`,
-lore `medalLore`/`formatLoreNumber`, radar `computeRadarAxes`/`compareRadar`);
-342 testes, 2 passagens de Verifier (feature + expansão). As ACs de UI (grade
-hexagonal, painel de detalhe, brush, filtros, toggle, "plus", tokens de cor,
-radar interativo, comparar fichas) estão implementadas com `npm run build` /
-`npm run lint` verdes mas **sem teste automatizado e sem UAT visual do Luiz** —
-esse é o gate aberto. Ver `.specs/features/ingress/validation.md`.
+evidência `file:line` em `validation.md` (parsing incl. tabs perdidos, badges
+incl. `beyond`, S2, history, timeline
+`collectAcquisitions`/`annotateLaneGaps`/`groupLanes`/`formatGap`, lore
+`medalLore`/`formatLoreNumber`, radar `computeRadarAxes`/`compareRadar`); **344
+testes**, 2 passagens de Verifier (feature + expansão). As ACs de UI (grade
+hexagonal, painel de detalhe, brush, filtros, toggles, "plus", tokens de cor,
+radar interativo + escalas + comparar 2 agentes, asinhas da recursão, globo do
+hero) estão implementadas com `npm run build` / `npm run lint` verdes mas **sem
+teste automatizado e sem UAT visual do Luiz** — esse é o gate aberto. Ver
+`.specs/features/ingress/validation.md`.
+
+**Fechamento (10/09/2026):** demanda encerrada "por hora" pelo Luiz. Branch
+`feat/ingress` pushado, PR aberto contra `main`. Falta o UAT visual dele + o
+merge. Itens que aguardam o dump GDPR: Colecionáveis/Personagens na grade,
+recursão real por medalha, série de AP, mapa de portais, `medal-lore.json` a
+calibrar. Ver `docs/ingress-proximos-passos.md`.
 
 ---
 

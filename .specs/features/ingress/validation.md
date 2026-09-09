@@ -334,3 +334,20 @@ rotas `/ingress/medalha/[slug]` + OG.
 `ProfileRadar` virou client leaf. `parseAppExport` (já testado, `lib/ingress-stats.test.mjs`) é reusado no cliente — módulo puro, sem `node:*`.
 
 **Gate**: `npm run lint` ✔ · `npm test` **342 ✔** · `npm run build` ✔.
+
+### Adendo 3 — MED-15..17, fechamento (10/09/2026)
+
+| Req | Evidência (lógica pura) | ACs de UI |
+| --- | --- | --- |
+| MED-15 (comparar) | `lib/ingress-radar.test.mjs` `compareRadar`; `lib/ingress-stats.test.mjs` — export colado sem tabs parseia igual ao com tabs, coluna desconhecida multi-palavra não desalinha | toggle de modo, radar + tabela lado a lado, erro inline, "Limpar" — **UAT pendente** |
+| MED-16 (asinhas) | reusa `computeBadge().beyond.multiple` (testado) | `RecursionMark` na grade/detalhe/página — visual |
+| MED-17 (globo) | — | só desktop, `prefers-reduced-motion` — visual (outra sessão) |
+
+`ProfileRadar` continua client leaf; movido para antes de `StatGroups` no
+`app/ingress/page.tsx`.
+
+**Gate**: `npm run lint` ✔ · `npm test` **344 ✔** · `npm run build` ✔.
+
+**Estado**: demanda fechada "por hora" (10/09). Branch `feat/ingress` (~90
+commits) pushado, PR aberto. Gate aberto: UAT visual do Luiz + merge. Fila
+dependente do dump GDPR em `docs/ingress-proximos-passos.md`.

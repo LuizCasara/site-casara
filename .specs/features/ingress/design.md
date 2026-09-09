@@ -582,3 +582,24 @@ insere marcador de fronteira de nó de texto dentro de `<title>`) — corrigido 
    monta o Leaflet (`dynamic ssr:false`) e baixa os tiles. `prefers-reduced-motion`
    não afeta isso (é interação, não animação). Fallback se o mapa não carregar
    após o toque: mensagem na seção, preview estático permanece.
+
+### Radar — iteração 2 (MED-14/15) + recursão + globo (10/09/2026)
+
+- `lib/ingress-radar.mjs` (+test): `computeRadarAxes` retorna `parts[].note`
+  (derivação da âncora, ex. `portalsNeutralized` = Onyx de Purifier ÷ 8);
+  Destruição só com âncoras reais (Purifier + portais neutralizados), "Links e
+  campos" ganha `mindUnitsCaptured` (Illuminator Onyx). `compareRadar(a, b)`.
+- `ProfileRadar.tsx` (client leaf, agora antes de `StatGroups` no `page.tsx`):
+  toggle de escala `½× / Onyx / 2× / Forma` (Forma = normaliza cada ficha pelo
+  próprio pico); `viewBox` com `PAD_X` p/ os rótulos não cortarem; fonte do SVG
+  reduzida. Comparar: modo "Contra o dono" ou "Dois agentes", radar + tabela
+  lado a lado (`ing-radar__cmp-layout`).
+- `lib/ingress-stats.mjs` (+test): `parseAppExport` normaliza export colado sem
+  tabs — `tokenizeHeaderLoose` casa nomes de coluna conhecidos (desconhecidas
+  multi-palavra agrupadas até a próxima conhecida), a linha de dados junta o
+  "ALL TIME" e separa o resto por espaço.
+- `components/ingress/RecursionMark.tsx` (server): chevrons vermelhos + `×N`
+  quando `beyond.multiple >= 2`; usado em `MedalGrid`, `MedalDetail`,
+  `medalha/[slug]`. `DetailStat.beyond` ganhou `multiple`.
+- `components/ingress/HeroGlobe.tsx` + `lib/ingress-globe.ts` (outra sessão):
+  globo decorativo girando no hero, só desktop.
