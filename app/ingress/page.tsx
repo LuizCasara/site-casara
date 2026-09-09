@@ -128,7 +128,7 @@ export default function IngressPage() {
 
       <StatGroups stats={profile.stats} />
 
-      <ProfileRadar stats={profile.stats} />
+      <ProfileRadar stats={profile.stats} agentName={profile.agent.codename} />
 
       <ActionsBreakdown stats={profile.stats} />
 
