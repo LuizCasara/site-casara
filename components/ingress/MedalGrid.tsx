@@ -2,6 +2,7 @@
 
 import {useMemo, useState} from 'react'
 import MedalDetail, {type DetailMedal} from './MedalDetail'
+import RecursionMark from './RecursionMark'
 
 export type GridMedal = {
   slug: string
@@ -65,6 +66,7 @@ export default function MedalGrid({medals, next}: {medals: GridMedal[]; next?: N
           e.currentTarget.style.visibility = 'hidden'
         }}
       />
+      <RecursionMark multiple={med.detail.stat?.beyond?.multiple} className="ing-mgrid__recursion" />
     </button>
   )
 

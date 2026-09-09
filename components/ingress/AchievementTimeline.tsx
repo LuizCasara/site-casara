@@ -22,7 +22,7 @@ type MedalStat = {
   thresholds: number[]
   pct: number | null
   next: {tier: string; remaining: number} | null
-  beyond: {label: string; pct: number; remaining: number} | null
+  beyond: {label: string; pct: number; remaining: number; multiple: number} | null
 }
 type MedalStats = Record<string, MedalStat>
 type Variant = 'resumo' | 'completo'

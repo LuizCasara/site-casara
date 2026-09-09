@@ -9,6 +9,7 @@ import {medalArt} from '@/lib/ingress-medal-art.mjs'
 import TierLadder from '@/components/ingress/TierLadder'
 import MedalSpark from '@/components/ingress/MedalSpark'
 import MedalLore from '@/components/ingress/MedalLore'
+import RecursionMark from '@/components/ingress/RecursionMark'
 
 const FMT = new Intl.NumberFormat('pt-BR')
 const CORE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'onyx']
@@ -81,7 +82,10 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
           </div>
         )}
         <div>
-          <h1 className="ing-medal-hero__name">{def.name}</h1>
+          <h1 className="ing-medal-hero__name">
+            {def.name}
+            <RecursionMark multiple={badge.beyond?.multiple} />
+          </h1>
           <p className="ing-medal-hero__tier">
             {TIER_LABELS[badge.tier]}
             {badge.atMax ? ' · tier máximo' : null}

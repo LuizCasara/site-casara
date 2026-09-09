@@ -732,6 +732,7 @@
 }
 
 .ing-mgrid__cell {
+  position: relative;
   display: grid;
   place-items: center;
   aspect-ratio: 1;
@@ -770,6 +771,55 @@
   margin: 0;
   font-size: 0.8rem;
   color: var(--ing-text-faint);
+}
+
+/* --- asinhas da recursão (Onyx ×N) --- */
+
+.ing-recursion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.68em;
+  line-height: 1;
+  color: #ff4242;
+}
+
+.ing-recursion__wings {
+  height: 0.7em;
+  width: auto;
+  overflow: visible;
+}
+
+.ing-recursion__wings path {
+  fill: none;
+  stroke: #ff4242;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ing-recursion__x {
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-mgrid__recursion {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  margin-left: 0;
+  gap: 0.1rem;
+  padding: 1px 3px 1px 2px;
+  border-radius: 5px;
+  background: rgba(11, 15, 20, 0.82);
+  font-size: 0.58rem;
+}
+
+.ing-mgrid__recursion .ing-recursion__wings {
+  height: 0.6rem;
 }
 
 /* --- escada de tiers (página de detalhe) --- */

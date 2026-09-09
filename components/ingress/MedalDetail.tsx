@@ -4,6 +4,7 @@ import {useEffect, useRef} from 'react'
 import {formatGap} from '@/lib/ingress-timeline.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import MedalSpark from './MedalSpark'
+import RecursionMark from './RecursionMark'
 
 const FMT = new Intl.NumberFormat('pt-BR')
 const CORE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'onyx']
@@ -30,7 +31,7 @@ export type DetailStat = {
   thresholds: number[]
   pct: number | null
   next: {tier: string; remaining: number} | null
-  beyond: {label: string; pct: number; remaining: number} | null
+  beyond: {label: string; pct: number; remaining: number; multiple: number} | null
 }
 export type DetailMedal = {
   slug: string
@@ -153,7 +154,10 @@ export default function MedalDetail({
           }}
         />
         <div>
-          <b>{medal.name}</b>
+          <b>
+            {medal.name}
+            <RecursionMark multiple={medal.stat?.beyond?.multiple} />
+          </b>
           {range ? <span className="ing-tl__detail-sub">{range}</span> : null}
           {isCore ? (
             <a className="ing-tl__detail-link" href={`/ingress/medalha/${medal.slug}`}>
