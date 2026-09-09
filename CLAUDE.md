@@ -261,12 +261,14 @@ Shared across all three live dynamics — `lib/sound.ts` exports `playSound(name
 
 ### Environment Variables
 
-Required in `.env.local`:
+Required in `.env.local` (see `.env.example`):
 ```
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 TELEGRAM_THREAD_ID=
 TELEGRAM_LOVE_LANGUAGES_THREAD_ID=
+TELEGRAM_INGRESS_THREAD_ID=          # comparações do radar em /ingress
+TELEGRAM_INGRESS_CHAT_ID=            # opcional; fallback = TELEGRAM_CHAT_ID
 EMAIL_USER=
 EMAIL_PASS=
 DATABASE_URL=
