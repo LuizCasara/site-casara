@@ -1,5 +1,62 @@
 import {NextResponse} from 'next/server';
 import {getLoveLanguageDisplayName} from '@/apps/desenvolvimento-pessoal/love-language-info';
+import {compareMessages} from '@/lib/ingress-compare-message.mjs';
+import {radarPng} from './ingress-radar.jsx';
+
+/**
+ * Envia a comparação de fichas do radar do /ingress para o tópico do Ingress:
+ * a foto do radar (A verde vs B roxo) + a tabela de valores. Chamado do
+ * `ProfileRadar` a cada comparação nova (o cliente já deduplica por 10 min).
+ * @param {{a:{codename,stats}, b:{codename,stats}, vsOwner?:boolean}} data
+ */
+async function sendIngressCompare(data) {
+    const {a, b, vsOwner} = data;
+    if (!a?.codename || !b?.codename || !a?.stats || !b?.stats) {
+        throw new Error('ingress-compare: faltam a/b com codename e stats');
+    }
+
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_INGRESS_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
+    const threadId = process.env.TELEGRAM_INGRESS_THREAD_ID;
+    if (!botToken || !chatId) {
+        throw new Error('Telegram bot token or chat ID not configured');
+    }
+
+    const {caption, table} = compareMessages({a, b, vsOwner});
+    const base = `https://api.telegram.org/bot${botToken}`;
+    const common = {chat_id: chatId, parse_mode: 'Markdown'};
+    if (threadId) common.message_thread_id = threadId;
+
+    const sendJson = async (method, body) => {
+        const r = await fetch(`${base}/${method}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({...common, ...body}),
+        });
+        if (!r.ok) throw new Error(`Telegram ${method}: ${JSON.stringify(await r.json())}`);
+        return r.json();
+    };
+
+    let png = null;
+    try {
+        png = await radarPng({a, b});
+    } catch (e) {
+        console.error('ingress-compare: radar PNG falhou, mando só texto', e);
+    }
+
+    if (png) {
+        const form = new FormData();
+        for (const [k, v] of Object.entries(common)) form.append(k, String(v));
+        form.append('caption', caption);
+        form.append('photo', new Blob([png], {type: 'image/png'}), 'radar.png');
+        const r = await fetch(`${base}/sendPhoto`, {method: 'POST', body: form});
+        if (!r.ok) throw new Error(`Telegram sendPhoto: ${JSON.stringify(await r.json())}`);
+    } else {
+        await sendJson('sendMessage', {text: caption});
+    }
+
+    return sendJson('sendMessage', {text: table});
+}
 
 /**
  * Sends a message to a Telegram group via bot for temperament test results
@@ -190,6 +247,9 @@ export async function POST(request) {
                 break;
             case 'love-language-test':
                 result = await sendLoveLanguageTestMessage(data);
+                break;
+            case 'ingress-compare':
+                result = await sendIngressCompare(data);
                 break;
             default:
                 console.error(`Unsupported notification type: ${type}`);

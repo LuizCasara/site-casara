@@ -1977,6 +1977,12 @@
   color: #ff8f6b;
 }
 
+.ing-radar__compare-sent {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--ing-green-soft);
+}
+
 .ing-radar__compare-actions {
   display: flex;
   gap: 0.5rem;

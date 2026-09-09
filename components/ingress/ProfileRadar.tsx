@@ -3,6 +3,7 @@
 import {Fragment, useState} from 'react'
 import {computeRadarAxes, compareRadar, RADAR_DRAW_MAX} from '@/lib/ingress-radar.mjs'
 import {parseAppExport} from '@/lib/ingress-stats.mjs'
+import {compareHash, RADAR_STAT_KEYS} from '@/lib/ingress-compare-message.mjs'
 import type {Profile} from '@/lib/ingress'
 import Panel from './Panel'
 import {fmtStat} from '@/lib/ingress-format.mjs'
@@ -37,6 +38,51 @@ function toAgent(text: string): Agent {
   return {codename: p.agent.codename, stats: p.stats}
 }
 
+const DEDUPE_MS = 10 * 60 * 1000
+const SENT_KEY = 'ing-cmp-sent'
+
+/** Só as stats que o radar usa — é isso que vai pro servidor/Telegram. */
+function radarStats(stats: Record<string, number>) {
+  const out: Record<string, number> = {}
+  for (const k of RADAR_STAT_KEYS as string[]) out[k] = Number(stats[k]) || 0
+  return out
+}
+
+/** Manda a comparação pro Telegram do Luiz, no máximo uma vez por par a cada 10 min. */
+function notifyTelegram(a: Agent, b: Agent, vsOwner: boolean, onSent: () => void) {
+  // só em produção — dev/preview não spamma o Telegram a cada teste
+  if (process.env.NODE_ENV !== 'production') return
+  const payload = {
+    a: {codename: a.codename, stats: radarStats(a.stats)},
+    b: {codename: b.codename, stats: radarStats(b.stats)},
+    vsOwner,
+  }
+  let sent: Record<string, number> = {}
+  try {
+    sent = JSON.parse(localStorage.getItem(SENT_KEY) || '{}')
+  } catch {
+    sent = {}
+  }
+  const hash = compareHash(payload)
+  const now = Date.now()
+  if (sent[hash] && now - sent[hash] < DEDUPE_MS) return
+  try {
+    const pruned: Record<string, number> = {}
+    for (const [k, t] of Object.entries(sent)) if (now - t < DEDUPE_MS) pruned[k] = t
+    pruned[hash] = now
+    localStorage.setItem(SENT_KEY, JSON.stringify(pruned))
+  } catch {
+    // localStorage bloqueado — segue sem dedupe
+  }
+  fetch('/api/telegram', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({type: 'ingress-compare', ...payload}),
+  })
+    .then(onSent)
+    .catch(() => {})
+}
+
 /** Anéis em múltiplos do Onyx que cabem dentro da escala escolhida. */
 function ringStops(drawMax: number) {
   const cands = drawMax <= 0.5 ? [0.25, 0.5] : drawMax <= 1 ? [0.5, 1] : [0.5, 1, 2]
@@ -64,6 +110,7 @@ export default function ProfileRadar({
   const [textB, setTextB] = useState('')
   const [cmp, setCmp] = useState<{a: Agent; b: Agent} | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [sentNote, setSentNote] = useState(false)
 
   const me: Agent = {codename: agentName, stats: stats as Record<string, number>}
   const agentA = cmp ? cmp.a : me
@@ -84,12 +131,19 @@ export default function ProfileRadar({
   const stops = fit ? [] : ringStops(scale as number)
   const edge = stops[stops.length - 1]
 
+  const flagSent = () => {
+    setSentNote(true)
+    window.setTimeout(() => setSentNote(false), 4000)
+  }
+
   const runCompare = () => {
     try {
-      if (mode === 'two') setCmp({a: toAgent(textA), b: toAgent(textB)})
-      else setCmp({a: me, b: toAgent(textA)})
+      const a = mode === 'two' ? toAgent(textA) : me
+      const b = toAgent(mode === 'two' ? textB : textA)
+      setCmp({a, b})
       setError(null)
       setActive(null)
+      notifyTelegram(a, b, mode === 'vs-me', flagSent)
     } catch (e) {
       setCmp(null)
       setError(e instanceof Error ? e.message : 'Não deu pra ler esse texto.')
@@ -100,6 +154,7 @@ export default function ProfileRadar({
     setTextA('')
     setTextB('')
     setError(null)
+    setSentNote(false)
     setOpen(false)
   }
   const canCompare = mode === 'two' ? textA.trim() !== '' && textB.trim() !== '' : textA.trim() !== ''
@@ -318,6 +373,7 @@ export default function ProfileRadar({
           ) : null}
 
           {error ? <p className="ing-radar__compare-error">{error}</p> : null}
+          {sentNote ? <p className="ing-radar__compare-sent">✓ comparação enviada</p> : null}
           <div className="ing-radar__compare-actions">
             <button
               type="button"
