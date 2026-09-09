@@ -259,8 +259,30 @@
   }
 }
 
+/* globo decorativo (client, HeroGlobe) — só desktop, sangra pela direita */
+.ing-hero__globe {
+  display: none;
+}
+
 .ing-hero__body {
   position: relative;
+}
+
+@media (min-width: 60rem) {
+  .ing-hero__globe {
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: -70px;
+    width: 660px;
+    height: 720px;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .ing-hero__body {
+    max-width: 52%;
+  }
 }
 
 .ing-hero__eyebrow {

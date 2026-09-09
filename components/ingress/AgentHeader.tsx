@@ -9,6 +9,7 @@ import {
 import {coverViewport} from '@/lib/ingress-s2.mjs'
 import type {Profile} from '@/lib/ingress'
 import HeroMesh from './HeroMesh'
+import HeroGlobe from './HeroGlobe'
 
 const FACTION_LABEL: Record<Profile['agent']['faction'], string> = {
   enlightened: 'Enlightened',
@@ -27,7 +28,8 @@ const LINKS = [
  * Hero da direção "Scanner": codinome sobre a malha de células S2 da região do
  * agente (mesma matemática da seção interativa). A malha é calculada aqui, no
  * server, e passada como polígonos normalizados para o `HeroMesh` (client)
- * animar. Server component.
+ * animar. No desktop, `HeroGlobe` (client) desenha o globo decorativo sangrando
+ * pela direita. Server component.
  */
 export default function AgentHeader({profile}: {profile: Profile}) {
   const {agent, s2} = profile
@@ -55,6 +57,7 @@ export default function AgentHeader({profile}: {profile: Profile}) {
   return (
     <header className="ing-hero">
       <HeroMesh polygons={polygons} />
+      <HeroGlobe center={s2.center} />
       <div className="ing-hero__body">
         <p className="ing-hero__eyebrow">Agente de campo</p>
         <h1 className="ing-hero__codename">{agent.codename}</h1>
