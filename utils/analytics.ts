@@ -212,6 +212,17 @@ export const trackSocialMediaClick = (platform: string) =>
 export const trackProjectClick = (projectName: string) =>
   trackEvent('project_click', { project_name: projectName });
 
+/**
+ * Clique num card de "Experimentos" da página /projects — as áreas construídas
+ * dentro do próprio site (aplicativos, livros, ingress). Separado de
+ * `project_click` (portfólio de cliente) porque a pergunta é outra: o que das
+ * minhas próprias coisas as pessoas exploram. `slug` distingue; a `route` do
+ * evento já separa quando o mesmo card é linkado de outro lugar (ex.: o bloco
+ * de leitura do /sobre).
+ */
+export const trackInternalProjectClick = (slug: string) =>
+  trackEvent('internal_project_click', { slug });
+
 // ─── Apps ─────────────────────────────────────────────────────────────────────
 
 export const trackAppClick = (appId: string, appTitle: string) =>
