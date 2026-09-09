@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {FaGithub, FaGlobe, FaInstagram, FaLinkedin, FaWhatsapp} from "react-icons/fa";
-import {trackSocialMediaClick, trackCvDownload} from "@/utils/analytics";
+import {trackSocialMediaClick, trackCvDownload, trackInternalProjectClick} from "@/utils/analytics";
 import {useLang} from "@/context/LanguageContext";
 import {Typewriter} from "@/components/ui/typewriter";
 
@@ -28,14 +28,14 @@ const experience = [
     },
     highlights: {
       pt: [
-        "Liderança de dois squads multifuncionais — arquitetura, planejamento e qualidade de código.",
-        "Dono técnico de 9 produtos financeiros, alguns com SLA ≤20ms e 350+ TPS de throughput sustentado.",
+        "Responsável pela plataforma de front-end da empresa — produtos internos e externos —, da arquitetura à qualidade de código.",
+        "Gestão de squads multifuncionais: pessoas, planejamento, prioridades e a estrutura técnica por trás da entrega.",
         "Micro-frontend com React + TypeScript, GraphQL (Apollo), Node.js BFFs e Python APIs.",
         "Conduzindo a adoção de Spec-Driven Development para melhorar previsibilidade entre squads.",
       ],
       en: [
-        "Leading two cross-functional squads — architecture decisions, delivery planning, and code quality.",
-        "Technical owner of 9 financial products, some with ≤20ms SLA and 350+ TPS sustained throughput.",
+        "Owning the company's front-end platform — internal and customer-facing products — from architecture to code quality.",
+        "Leading cross-functional squads: people, planning, priorities, and the technical foundations behind delivery.",
         "Micro-frontend architecture with React + TypeScript, GraphQL (Apollo), Node.js BFFs, and Python APIs.",
         "Driving Spec-Driven Development adoption to improve squad predictability and alignment.",
       ],
@@ -105,9 +105,9 @@ const experience = [
 
 const translations = {
   pt: {
-    bio1: `10+ anos de experiência construindo software de alta criticidade em escala. Atualmente Tech Lead na`,
+    bio1: `10+ anos construindo software de alta criticidade em escala. Hoje Tech Lead na`,
     bio1company: "Dock",
-    bio1end: ", uma fintech de infraestrutura bancária. Bacharel em Ciência da Computação pela Anhanguera — Cascavel, PR.",
+    bio1end: ", fintech de infraestrutura bancária (BaaS), onde respondo pela plataforma de front-end da empresa — interna e externa — e pela gestão de squads, pessoas e arquitetura. Bacharel em Ciência da Computação pela Anhanguera — Cascavel, PR.",
     bio2: `Sou movido por desafios complexos e pela melhoria constante. Fora do trabalho, sou Chefe Escoteiro e coordenador regional do movimento escoteiro no oeste do Paraná — papel que me ensinou tanto sobre liderança quanto qualquer projeto de tecnologia.`,
     stackTitle: "Stack Técnico",
     skillCategories: {
@@ -125,15 +125,18 @@ const translations = {
       {emoji: "🎮", text: "Gamer no Steam (Friend Code: 140363246) e ouvinte ativo no Spotify (@fencherlc)."},
       {emoji: "🌱", text: "Aprendendo AWS e GoLang. Defensor da melhoria de 1% por dia."},
     ],
+    readingTitle: "Leitura",
+    readingText: "Leio bastante — de engenharia a formação pessoal. Montei meu acervo numa sala de leitura 3D navegável, com resenhas e notas de cada livro.",
+    readingCta: "Explorar meu acervo →",
     contactTitle: "Contato",
     contactText: "Sempre disponível para uma",
     contactBold: "boa",
     contactText2: "conversa!",
   },
   en: {
-    bio1: `10+ years of experience building high-criticality software at scale. Currently Tech Lead at`,
+    bio1: `10+ years building high-criticality software at scale. Now Tech Lead at`,
     bio1company: "Dock",
-    bio1end: ", a banking-as-a-service fintech. Bachelor's in Computer Science from Anhanguera — Cascavel, Brazil.",
+    bio1end: ", a banking-as-a-service (BaaS) fintech, where I own the company's front-end platform — internal and external — and lead squads, people, and architecture. Bachelor's in Computer Science from Anhanguera — Cascavel, Brazil.",
     bio2: `I'm driven by complex challenges and constant improvement. Outside of work, I'm a Scout Leader and regional coordinator of the Scout movement in western Paraná — a role that taught me as much about leadership as any tech project.`,
     stackTitle: "Tech Stack",
     skillCategories: {
@@ -151,6 +154,9 @@ const translations = {
       {emoji: "🎮", text: "Gamer on Steam (Friend Code: 140363246) and active Spotify listener (@fencherlc)."},
       {emoji: "🌱", text: "Learning AWS and GoLang. Advocate for 1% daily improvement."},
     ],
+    readingTitle: "Reading",
+    readingText: "I read a lot — from engineering to personal growth. I built my library as a navigable 3D reading room, with reviews and notes on every book.",
+    readingCta: "Explore my library →",
     contactTitle: "Contact",
     contactText: "Always available for a",
     contactBold: "good",
@@ -182,8 +188,8 @@ export default function About() {
             <div className="font-mono text-sm text-gray-400 dark:text-gray-500 mb-4 h-5">
               <Typewriter
                 text={lang === "pt"
-                  ? ["Lidero squads de alto desempenho", "Construo produtos financeiros em escala", "Chefe Escoteiro voluntário 🏕️", "1% melhor todo dia"]
-                  : ["Leading high-performance squads", "Building financial products at scale", "Volunteer Scout Leader 🏕️", "1% better every day"]
+                  ? ["Lidero squads de alto desempenho", "Cuido da plataforma de front, ponta a ponta", "Chefe Escoteiro voluntário 🏕️", "1% melhor todo dia"]
+                  : ["Leading high-performance squads", "Front-end platform, end to end", "Volunteer Scout Leader 🏕️", "1% better every day"]
                 }
                 speed={55}
                 deleteSpeed={25}
@@ -282,6 +288,24 @@ export default function About() {
                 <p>{text}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Reading */}
+        <section className="mb-16 p-6 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800">
+          <div className="flex items-start gap-4">
+            <span className="text-3xl shrink-0">📚</span>
+            <div>
+              <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{t.readingTitle}</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4 max-w-2xl">{t.readingText}</p>
+              <Link
+                href="/livros"
+                onClick={() => trackInternalProjectClick("livros")}
+                className="inline-flex items-center gap-1 text-sm font-semibold text-green-500 hover:text-green-600 transition-colors"
+              >
+                {t.readingCta}
+              </Link>
+            </div>
           </div>
         </section>
 

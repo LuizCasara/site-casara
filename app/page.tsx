@@ -3,7 +3,7 @@
 import Link from "next/link";
 import {useEffect, useState} from "react";
 import {FaBookOpen, FaCloud, FaDice, FaLaugh, FaLightbulb, FaQuestionCircle} from "react-icons/fa";
-import {trackGenerateQuote, trackHomePageVisit, trackQuickAccessLink, trackReceiveTip} from "@/utils/analytics";
+import {trackBookCardClick, trackGenerateQuote, trackHomePageVisit, trackQuickAccessLink, trackReceiveTip} from "@/utils/analytics";
 import {useLang} from "@/context/LanguageContext";
 import {TextScramble} from "@/components/ui/text-scramble";
 import {RainingLetters} from "@/components/ui/raining-letters";
@@ -11,19 +11,18 @@ import {RainingLetters} from "@/components/ui/raining-letters";
 const translations = {
   pt: {
     location: "🇧🇷 Cascavel, Brasil",
-    bio: `10+ anos construindo software de alta criticidade em escala. Atualmente lidero dois squads em fintech — responsável por 9 produtos financeiros, alguns com SLA de`,
-    bioHighlight1: "≤20ms",
-    bioMid: "e",
-    bioHighlight2: "350+ TPS",
-    bioEnd: "de throughput.",
+    bio: `10+ anos construindo software de alta criticidade em escala. Hoje respondo pela plataforma de front-end de uma fintech de infraestrutura bancária (BaaS) — do produto interno ao que chega no cliente final —, cuidando de squads, pessoas, arquitetura e das estruturas que sustentam a entrega.`,
     subtitle: "Tech Lead · Senior Full-Stack Engineer",
     viewProjects: "Ver Projetos",
     aboutMe: "Sobre Mim",
     stats: [
       {value: "10+", label: "Anos de experiência"},
-      {value: "2", label: "Squads liderados"},
-      {value: "9", label: "Produtos financeiros"},
+      {value: "Tech Lead", label: "Fintech BaaS · SaaS"},
+      {value: "Front-end", label: "Plataforma interna + externa"},
     ],
+    mustReadTitle: "Leituras obrigatórias",
+    mustReadDesc: "Livros que eu recomendo pra qualquer pessoa.",
+    mustReadSeeAll: "Ver acervo →",
     appsTitle: "Mini Aplicativos",
     appsDesc: "Ferramentas que construí para uso no dia a dia.",
     seeAll: "Ver todos →",
@@ -56,19 +55,18 @@ const translations = {
   },
   en: {
     location: "🇧🇷 Cascavel, Brazil",
-    bio: `10+ years building high-criticality software at scale. Currently leading two squads at a fintech — responsible for 9 financial products, some with`,
-    bioHighlight1: "≤20ms",
-    bioMid: "SLA and",
-    bioHighlight2: "350+ TPS",
-    bioEnd: "throughput.",
+    bio: `10+ years building high-criticality software at scale. Today I own the front-end platform of a banking-as-a-service (BaaS) fintech — from internal tooling to customer-facing products — leading squads, people, architecture, and the foundations behind delivery.`,
     subtitle: "Tech Lead · Senior Full-Stack Engineer",
     viewProjects: "View Projects",
     aboutMe: "About Me",
     stats: [
       {value: "10+", label: "Years of experience"},
-      {value: "2", label: "Squads led"},
-      {value: "9", label: "Financial products"},
+      {value: "Tech Lead", label: "BaaS · SaaS fintech"},
+      {value: "Front-end", label: "Internal + external platform"},
     ],
+    mustReadTitle: "Essential reading",
+    mustReadDesc: "Books I'd recommend to anyone.",
+    mustReadSeeAll: "See library →",
     appsTitle: "Mini Apps",
     appsDesc: "Tools I built for everyday use.",
     seeAll: "See all →",
@@ -100,6 +98,14 @@ const translations = {
     ],
   },
 };
+
+// Títulos em português mesmo na versão EN — são os títulos das edições que ele
+// tem, e cada card leva para /livros/<slug> (a página do livro é só PT).
+const mustReads = [
+  {slug: "a-revolta-de-atlas", title: "A Revolta de Atlas", author: "Ayn Rand"},
+  {slug: "em-busca-de-sentido", title: "Em Busca de Sentido", author: "Viktor E. Frankl"},
+  {slug: "o-mitico-homem-mes", title: "O Mítico Homem-Mês", author: "Frederick P. Brooks Jr."},
+];
 
 const appLinks = [
   {href: "/app/descubra-seu-temperamento", icon: <FaLaugh className="text-green-500" size={20} />, trackLabel: "Temperamento"},
@@ -173,11 +179,7 @@ export default function Home() {
             {t.subtitle}
           </p>
           <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed mb-8 max-w-2xl">
-            {t.bio}{" "}
-            <span className="text-gray-900 dark:text-gray-200 font-semibold">{t.bioHighlight1}</span>{" "}
-            {t.bioMid}{" "}
-            <span className="text-gray-900 dark:text-gray-200 font-semibold">{t.bioHighlight2}</span>{" "}
-            {t.bioEnd}
+            {t.bio}
           </p>
 
           <div className="flex flex-wrap gap-2 mb-10">
@@ -213,15 +215,42 @@ export default function Home() {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8 max-w-2xl">
           {t.stats.map(stat => (
             <div key={stat.label}>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1">{stat.value}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">{stat.value}</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Mini Apps */}
+      {/* Leituras obrigatórias */}
       <section className="py-16">
+        <div className="flex items-baseline justify-between mb-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t.mustReadTitle}</h2>
+          <Link href="/livros" className="text-sm text-green-500 hover:text-green-600 transition-colors">
+            {t.mustReadSeeAll}
+          </Link>
+        </div>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">{t.mustReadDesc}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {mustReads.map((book, i) => (
+            <Link
+              key={book.slug}
+              href={`/livros/${book.slug}`}
+              onClick={() => trackBookCardClick(book.slug, i)}
+              className="flex items-start gap-3 p-5 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-green-200 dark:hover:border-green-800/60 hover:bg-green-50/50 dark:hover:bg-green-950/20 transition-all"
+            >
+              <FaBookOpen className="text-green-500 mt-0.5 shrink-0" size={16} />
+              <span>
+                <span className="block text-sm font-medium text-gray-800 dark:text-gray-200 leading-snug">{book.title}</span>
+                <span className="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">{book.author}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Mini Apps */}
+      <section className="py-16 border-t border-gray-100 dark:border-gray-800/60">
         <div className="flex items-baseline justify-between mb-2">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t.appsTitle}</h2>
           <Link href="/app" className="text-sm text-green-500 hover:text-green-600 transition-colors">
