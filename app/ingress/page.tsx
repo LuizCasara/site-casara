@@ -126,9 +126,9 @@ export default function IngressPage() {
 
       <AchievementTimeline acquisitions={acquisitions} variant="resumo" />
 
-      <StatGroups stats={profile.stats} />
-
       <ProfileRadar stats={profile.stats} agentName={profile.agent.codename} />
+
+      <StatGroups stats={profile.stats} />
 
       <ActionsBreakdown stats={profile.stats} />
 
