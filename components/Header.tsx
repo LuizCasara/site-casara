@@ -157,10 +157,13 @@ const Header = () => {
                   </Link>
 
                   {isDropdownOpen && (
-                    <div
-                      role="menu"
-                      className="absolute right-0 top-full mt-1 w-60 rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-lg p-1.5"
-                    >
+                    // `pt-2` num wrapper transparente, e NÃO `mt-1` no painel: a
+                    // margem criava uma faixa de alguns pixels que não pertence
+                    // nem ao link nem ao painel — passar o mouse devagar por ela
+                    // disparava o `onMouseLeave` e fechava tudo. O padding fica
+                    // dentro da área que conta como "sobre o menu".
+                    <div role="menu" className="absolute right-0 top-full w-60 pt-2">
+                      <div className="rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-lg p-1.5">
                       <p className="px-2.5 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
                         {experimentsLabel}
                       </p>
@@ -202,6 +205,7 @@ const Header = () => {
                           <span>{child.label}</span>
                         </Link>
                       ))}
+                      </div>
                     </div>
                   )}
                 </div>
