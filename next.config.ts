@@ -28,9 +28,15 @@ const nextConfig: NextConfig = {
      * caminho montado em runtime não é um import — sem esta linha a rota funciona
      * no `npm run dev` e devolve zero páginas em produção, que é o tipo de
      * defeito que só aparece depois do deploy.
+     *
+     * `/ingress/**` pela mesma razão: `lib/ingress-catalog.mjs` e
+     * `lib/ingress-lore.mjs` leem `data/ingress/*.json` com `process.cwd()`.
+     * Hoje essas rotas são estáticas (o dado é empacotado no build), mas se
+     * alguma virar dinâmica o `readFileSync` quebra em produção sem isto.
      */
     outputFileTracingIncludes: {
         '/api/caderno': ['./content/caderno/**/*'],
+        '/ingress/**': ['./data/ingress/**/*'],
     },
     // Environment variables that will be available at runtime
     env: {
