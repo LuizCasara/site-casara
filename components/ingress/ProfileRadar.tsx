@@ -2,14 +2,13 @@ import {computeRadarAxes} from '@/lib/ingress-radar.mjs'
 import type {Profile} from '@/lib/ingress'
 import Panel from './Panel'
 
-const FMT = new Intl.NumberFormat('pt-BR')
-
 const SIZE = 260
 const C = SIZE / 2
 const R = 88
-const RINGS = [0.25, 0.5, 0.75, 1]
+// anéis em 0,5× / 1,0× (Onyx) / 1,5× Onyx — o desenho vai até 1,5×
+const RINGS = [1 / 3, 2 / 3, 1]
 
-type Axis = {id: string; label: string; raw: number; value: number}
+type Axis = {id: string; label: string; onyxRatio: number; value: number}
 
 function point(i: number, count: number, radius: number): [number, number] {
   const angle = -Math.PI / 2 + (i * 2 * Math.PI) / count
@@ -17,9 +16,9 @@ function point(i: number, count: number, radius: number): [number, number] {
 }
 
 /**
- * Radar do padrão de jogo — série única, sem legenda (o título nomeia).
- * Server component: os valores são fixos do snapshot; o tooltip é o `<title>`
- * nativo do SVG, sem JS.
+ * Radar do padrão de jogo. Cada eixo é a média das razões das suas estatísticas
+ * contra o limiar de Onyx da medalha correspondente — o anel do meio é "Onyx"
+ * (1,0×), o de fora é 1,5×. Server component; tooltip via `<title>` nativo.
  */
 export default function ProfileRadar({stats}: {stats: Profile['stats']}) {
   const axes = computeRadarAxes(stats) as Axis[]
@@ -28,7 +27,7 @@ export default function ProfileRadar({stats}: {stats: Profile['stats']}) {
   const shape = axes.map((a, i) => point(i, n, R * Math.max(a.value, 0.02)).join(',')).join(' ')
 
   return (
-    <Panel label="Padrão de jogo" hint="peso relativo por eixo">
+    <Panel label="Padrão de jogo" hint="cada eixo vs. o nível Onyx">
       <div className="ing-radar">
         <svg viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label="Radar do padrão de jogo">
           {/* anéis + eixos, recessivos */}
@@ -36,7 +35,7 @@ export default function ProfileRadar({stats}: {stats: Profile['stats']}) {
             <polygon
               key={ring}
               points={axes.map((_, i) => point(i, n, R * ring).join(',')).join(' ')}
-              className="ing-radar__ring"
+              className={ring === 2 / 3 ? 'ing-radar__ring ing-radar__ring--onyx' : 'ing-radar__ring'}
             />
           ))}
           {axes.map((a, i) => {
@@ -52,10 +51,15 @@ export default function ProfileRadar({stats}: {stats: Profile['stats']}) {
             const [x, y] = point(i, n, R * Math.max(a.value, 0.02))
             return (
               <circle key={a.id} cx={x} cy={y} r={4} className="ing-radar__dot">
-                <title>{`${a.label}: ${FMT.format(a.raw)}`}</title>
+                <title>{`${a.label}: ${Math.round(a.onyxRatio * 100)}% do nível Onyx`}</title>
               </circle>
             )
           })}
+
+          {/* rótulo do anel Onyx */}
+          <text x={C + 2} y={C - R * (2 / 3) - 3} className="ing-radar__ring-label">
+            Onyx
+          </text>
 
           {/* rótulos dos eixos */}
           {axes.map((a, i) => {

@@ -1410,6 +1410,18 @@
   stroke-width: 1;
 }
 
+.ing-radar__ring--onyx {
+  stroke: var(--ing-text-faint);
+  stroke-dasharray: 3 3;
+}
+
+.ing-radar__ring-label {
+  fill: var(--ing-text-faint);
+  font-family: var(--ing-font-body);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+
 .ing-radar__spoke {
   stroke: var(--ing-edge-soft);
   stroke-width: 1;
