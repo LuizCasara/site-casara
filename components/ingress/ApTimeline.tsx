@@ -1,10 +1,10 @@
 import type {TimePoint} from '@/lib/ingress'
 import Panel from './Panel'
+import {fmtStat} from '@/lib/ingress-format.mjs'
 
 const W = 320
 const H = 150
 const PAD = {top: 10, right: 8, bottom: 20, left: 8}
-const FMT = new Intl.NumberFormat('pt-BR')
 
 /**
  * Evolução do AP acumulado — mudança ao longo do tempo, linha de série única.
@@ -31,7 +31,7 @@ export default function ApTimeline({points}: {points: TimePoint[]}) {
   const years = Array.from(new Set(sorted.map((p) => new Date(p.t).getUTCFullYear())))
 
   return (
-    <Panel label="Evolução de AP" hint={`${FMT.format(vs[vs.length - 1])} AP acumulado`}>
+    <Panel label="Evolução de AP" hint={`${fmtStat(vs[vs.length - 1])} AP acumulado`}>
       <svg
         className="ing-timeline"
         viewBox={`0 0 ${W} ${H}`}
@@ -48,7 +48,7 @@ export default function ApTimeline({points}: {points: TimePoint[]}) {
         <path d={line} className="ing-timeline__line" />
         {sorted.map((p, i) => (
           <circle key={p.t} cx={x(ts[i])} cy={y(p.v)} r={2.5} className="ing-timeline__dot">
-            <title>{`${p.t}: ${FMT.format(p.v)} AP`}</title>
+            <title>{`${p.t}: ${fmtStat(p.v)} AP`}</title>
           </circle>
         ))}
         {years.map((yr) => {

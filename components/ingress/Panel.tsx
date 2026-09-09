@@ -9,20 +9,18 @@ export default function Panel({
   label,
   hint,
   children,
-  as: Tag = 'section',
 }: {
   label: string
   hint?: string
   children: ReactNode
-  as?: 'section' | 'div'
 }) {
   return (
-    <Tag className="ing-panel">
+    <section className="ing-panel">
       <header className="ing-panel__head">
         <h2 className="ing-panel__label">{label}</h2>
         {hint ? <span className="ing-panel__hint">{hint}</span> : null}
       </header>
       <div>{children}</div>
-    </Tag>
+    </section>
   )
 }

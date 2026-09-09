@@ -2,6 +2,7 @@ import {ImageResponse} from 'next/og'
 import {loadProfile} from '@/lib/ingress'
 import {BADGES, computeBadge, TIER_LABELS} from '@/lib/ingress-badges.mjs'
 import {catalogEntry, coreBadges} from '@/lib/ingress-catalog.mjs'
+import {fmtStat} from '@/lib/ingress-format.mjs'
 
 export const runtime = 'nodejs'
 export const size = {width: 1200, height: 630}
@@ -14,7 +15,6 @@ export function generateStaticParams() {
 const GREEN = '#00e676'
 const INK = '#eaf5ef'
 const DIM = '#93a7a0'
-const FMT = new Intl.NumberFormat('pt-BR')
 
 export default async function Image({params}: {params: Promise<{slug: string}>}) {
   const {slug} = await params
@@ -51,7 +51,7 @@ export default async function Image({params}: {params: Promise<{slug: string}>})
         </span>
         <span style={{color: INK, fontSize: 40, marginTop: 22}}>
           {tierLabel}
-          {badge.tier !== 'none' ? ` · ${FMT.format(value)}` : ''}
+          {badge.tier !== 'none' ? ` · ${fmtStat(value)}` : ''}
         </span>
       </div>
     ),

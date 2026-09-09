@@ -14,6 +14,7 @@ import {writeFileSync, readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 import {STAT_COLUMNS} from '../lib/ingress-stats.mjs';
+import {slugify} from '../lib/book-utils.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'data', 'ingress', 'badge-catalog.json');
@@ -37,10 +38,6 @@ const TIER_OVERRIDES = {
     illuminator: [5000, 50000, 250000, 1000000, 4000000], // ingress.plus diz bronze 2000
     guardian: [3, 10, 20, 90, 150], // ingress.plus diz 80/140
 };
-
-function slugify(title) {
-    return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
 
 async function main() {
     const res = await fetch(API, {headers: {'User-Agent': 'Mozilla/5.0'}});

@@ -1,7 +1,6 @@
 import type {Profile} from '@/lib/ingress'
+import {fmtStat} from '@/lib/ingress-format.mjs'
 import Panel from './Panel'
-
-const FMT = new Intl.NumberFormat('pt-BR')
 
 // Uma família coesa: o que o agente construiu vs. o que derrubou.
 const ROWS: {key: string; label: string}[] = [
@@ -24,7 +23,8 @@ export default function ActionsBreakdown({stats}: {stats: Profile['stats']}) {
     value: stats[r.key],
   }))
   if (rows.length === 0) return null
-  const max = Math.max(...rows.map((r) => r.value))
+  // `|| 1`: agente novo com todas as ações em 0 daria `width: NaN%`.
+  const max = Math.max(...rows.map((r) => r.value)) || 1
 
   return (
     <Panel label="Construir e derrubar" hint="ações acumuladas">
@@ -33,7 +33,7 @@ export default function ActionsBreakdown({stats}: {stats: Profile['stats']}) {
           <li key={r.key} className="ing-bar">
             <div className="ing-bar__top">
               <span className="ing-bar__label">{r.label}</span>
-              <span className="ing-bar__value">{FMT.format(r.value)}</span>
+              <span className="ing-bar__value">{fmtStat(r.value)}</span>
             </div>
             <div className="ing-bar__track">
               <div className="ing-bar__fill" style={{width: `${(r.value / max) * 100}%`}} />

@@ -1,17 +1,7 @@
-import {TIER_LABELS} from '@/lib/ingress-badges.mjs'
+import {TIERS, TIER_LABELS, TIER_RANK} from '@/lib/ingress-tiers.mjs'
 import {formatGap} from '@/lib/ingress-timeline.mjs'
+import {fmtMedalDate, fmtStat} from '@/lib/ingress-format.mjs'
 import {medalArt} from '@/lib/ingress-medal-art.mjs'
-
-const FMT = new Intl.NumberFormat('pt-BR')
-const fmtDate = (iso: string) =>
-  new Date(`${iso}T00:00:00Z`).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
-const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'onyx'] as const
-const RANK: Record<string, number> = {none: 0, bronze: 1, silver: 2, gold: 3, platinum: 4, onyx: 5}
 
 /**
  * A escada dos 5 tiers de uma badge de contagem: arte + limiar de cada, o tier
@@ -31,14 +21,14 @@ export default function TierLadder({
   dates?: Record<string, string>
   value?: number
 }) {
-  const currentRank = RANK[currentTier] ?? 0
+  const currentRank = TIER_RANK[currentTier] ?? 0
   const firstLocked = value != null ? tiers.findIndex((thr) => value < thr) : -1
   let prevDate: number | null = null
 
   return (
     <ol className="ing-ladder">
       {TIERS.map((tier, i) => {
-        const reached = RANK[tier] <= currentRank
+        const reached = TIER_RANK[tier] <= currentRank
         const isCurrent = tier === currentTier
         const art = medalArt(slug, tier) as string | null
         const date = dates[tier]
@@ -74,10 +64,10 @@ export default function TierLadder({
                 {TIER_LABELS[tier]}
                 {isCurrent ? <span className="ing-ladder__badge-atual"> · atual</span> : null}
               </span>
-              <span className="ing-ladder__req">{FMT.format(tiers[i])}</span>
+              <span className="ing-ladder__req">{fmtStat(tiers[i])}</span>
             </div>
             {gap ? <span className="ing-ladder__gap">+{gap}</span> : null}
-            <span className="ing-ladder__date">{date ? fmtDate(date) : pct || '—'}</span>
+            <span className="ing-ladder__date">{date ? fmtMedalDate(date) : pct || '—'}</span>
           </li>
         )
       })}

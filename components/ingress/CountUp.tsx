@@ -1,8 +1,8 @@
 'use client'
 
 import {useEffect, useRef, useState} from 'react'
+import {fmtStat} from '@/lib/ingress-format.mjs'
 
-const FMT = new Intl.NumberFormat('pt-BR')
 const DURATION = 900
 
 /**
@@ -49,5 +49,5 @@ export default function CountUp({value}: {value: number}) {
     }
   }, [value])
 
-  return <span ref={ref}>{FMT.format(display)}</span>
+  return <span ref={ref}>{fmtStat(display)}</span>
 }

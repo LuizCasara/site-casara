@@ -22,6 +22,7 @@ import {parseAppExport} from '../lib/ingress-stats.mjs';
 import {buildProfile, mergeGdprDump} from '../lib/ingress-profile.mjs';
 import {computeAllBadges, BADGES} from '../lib/ingress-badges.mjs';
 import {loadCatalog, catalogEntry, coreBadges} from '../lib/ingress-catalog.mjs';
+import {slugify} from '../lib/book-utils.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PROFILE_PATH = join(ROOT, 'data', 'ingress', 'fencherlc.json');
@@ -58,10 +59,6 @@ const rel = (p) => p.replace(ROOT, '.');
 const readProfile = () =>
   existsSync(PROFILE_PATH) ? JSON.parse(readFileSync(PROFILE_PATH, 'utf8')) : null;
 const serialize = (obj) => JSON.stringify(obj, null, 2) + '\n';
-
-function slugify(title) {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
 
 function diff(before, after) {
   if (serialize(before || {}) === serialize(after)) return null;

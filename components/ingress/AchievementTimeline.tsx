@@ -1,7 +1,9 @@
 'use client'
 
 import {useMemo, useRef, useState} from 'react'
+import {TIER_COLOR, TIER_LABELS} from '@/lib/ingress-tiers.mjs'
 import {annotateLaneGaps, formatGap, groupLanes} from '@/lib/ingress-timeline.mjs'
+import {fmtMedalDate} from '@/lib/ingress-format.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import Panel from './Panel'
 import MedalDetail, {type DetailMedal} from './MedalDetail'
@@ -33,23 +35,6 @@ const LEFT_PAD = 14
 const ROW_H = 26
 const AXIS_TOP = 18
 
-const TIER_COLOR: Record<string, string> = {
-  bronze: '#d08a4e',
-  silver: '#9aa4ac',
-  gold: '#ffd24a',
-  platinum: '#7fe9ff',
-  onyx: '#0c0f14',
-  single: '#26b6ff',
-}
-const TIER_LABEL: Record<string, string> = {
-  bronze: 'Bronze',
-  silver: 'Prata',
-  gold: 'Ouro',
-  platinum: 'Platina',
-  onyx: 'Onyx',
-  single: 'Evento',
-}
-
 const CATEGORIES: {k: string; label: string}[] = [
   {k: 'all', label: 'Todas'},
   {k: 'core', label: 'Estatística'},
@@ -67,15 +52,6 @@ const TIER_CHIPS: {k: string; label: string}[] = [
 ]
 
 const YEAR = 365.25 * 24 * 3600 * 1000
-
-function fmtDate(iso: string) {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
-}
 
 function laneArt(lane: {slug: string; group: string; latestTier: string}) {
   return artPath(lane.slug, lane.group === 'core' ? lane.latestTier : 'single')
@@ -443,13 +419,13 @@ function Completo({rows, medalStats}: {rows: Row[]; medalStats?: MedalStats}) {
                             setHover({
                               x: e.clientX,
                               y: e.clientY,
-                              text: `${lane.name} — ${TIER_LABEL[t.tier] ?? t.tier} · ${fmtDate(t.date)}`,
+                              text: `${lane.name} — ${TIER_LABELS[t.tier] ?? t.tier} · ${fmtMedalDate(t.date)}`,
                             })
                           }
                           onMouseMove={(e) => setHover((h) => (h ? {...h, x: e.clientX, y: e.clientY} : h))}
                           onMouseLeave={() => setHover(null)}
                         >
-                          <title>{`${lane.name} — ${TIER_LABEL[t.tier] ?? t.tier} · ${fmtDate(t.date)}`}</title>
+                          <title>{`${lane.name} — ${TIER_LABELS[t.tier] ?? t.tier} · ${fmtMedalDate(t.date)}`}</title>
                         </circle>
                       </g>
                     )

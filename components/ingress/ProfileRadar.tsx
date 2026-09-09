@@ -5,8 +5,8 @@ import {computeRadarAxes, compareRadar, RADAR_DRAW_MAX} from '@/lib/ingress-rada
 import {parseAppExport} from '@/lib/ingress-stats.mjs'
 import type {Profile} from '@/lib/ingress'
 import Panel from './Panel'
+import {fmtStat} from '@/lib/ingress-format.mjs'
 
-const FMT = new Intl.NumberFormat('pt-BR')
 const SIZE = 260
 const C = SIZE / 2
 const R = 90
@@ -227,10 +227,10 @@ export default function ProfileRadar({
                       <tr key={p.key} className="is-part">
                         <td>{p.label}</td>
                         <td>
-                          {FMT.format(p.value)} <small>{pct(p.ratio)}</small>
+                          {fmtStat(p.value)} <small>{pct(p.ratio)}</small>
                         </td>
                         <td>
-                          {FMT.format(bAxes[i].parts[pi].value)} <small>{pct(bAxes[i].parts[pi].ratio)}</small>
+                          {fmtStat(bAxes[i].parts[pi].value)} <small>{pct(bAxes[i].parts[pi].ratio)}</small>
                         </td>
                       </tr>
                     ))}
@@ -261,7 +261,7 @@ export default function ProfileRadar({
                   {p.note ? <em className="ing-radar__bd-note"> · {p.note}</em> : null}
                 </span>
                 <span className="ing-radar__bd-calc">
-                  {FMT.format(p.value)} / {FMT.format(p.ref)}
+                  {fmtStat(p.value)} / {fmtStat(p.ref)}
                 </span>
                 <span className="ing-radar__bd-ratio">
                   {pct(p.ratio)}

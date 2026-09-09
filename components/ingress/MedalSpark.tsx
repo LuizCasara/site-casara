@@ -4,14 +4,7 @@
  * a página da medalha.
  */
 
-const TIER_COLOR: Record<string, string> = {
-  bronze: '#d08a4e',
-  silver: '#9aa4ac',
-  gold: '#ffd24a',
-  platinum: '#8d949d',
-  onyx: '#0c0f14',
-  single: '#26b6ff',
-}
+import {TIER_COLOR} from '@/lib/ingress-tiers.mjs'
 
 const W = 220
 const H = 54

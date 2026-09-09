@@ -3,7 +3,7 @@ import type {Metadata} from 'next'
 import {loadProfile} from '@/lib/ingress'
 import {loadCatalog} from '@/lib/ingress-catalog.mjs'
 import {collectAcquisitions} from '@/lib/ingress-timeline.mjs'
-import {BADGES, computeBadge} from '@/lib/ingress-badges.mjs'
+import {BADGES, computeBadge, TIERS} from '@/lib/ingress-badges.mjs'
 import BackLink from '@/components/ingress/BackLink'
 import AchievementTimeline from '@/components/ingress/AchievementTimeline'
 import Panel from '@/components/ingress/Panel'
@@ -16,7 +16,7 @@ function buildMedalStats(stats: Record<string, number>) {
     const b = computeBadge(def, stats[def.statKey] ?? 0)
     out[def.key] = {
       value: b.value,
-      thresholds: [def.tiers.bronze, def.tiers.silver, def.tiers.gold, def.tiers.platinum, def.tiers.onyx],
+      thresholds: TIERS.map((t) => def.tiers[t]),
       pct: b.pct,
       next: b.next,
       beyond: b.beyond,

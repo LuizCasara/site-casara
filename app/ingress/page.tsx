@@ -1,6 +1,6 @@
 import {loadProfile} from '@/lib/ingress'
 import type {Profile} from '@/lib/ingress'
-import {BADGES, computeAllBadges, nextMedal, TIER_LABELS} from '@/lib/ingress-badges.mjs'
+import {BADGES, computeAllBadges, nextMedal, TIERS, TIER_LABELS} from '@/lib/ingress-badges.mjs'
 import {loadCatalog} from '@/lib/ingress-catalog.mjs'
 import {annotateLaneGaps, collectAcquisitions, groupLanes} from '@/lib/ingress-timeline.mjs'
 import {projectNextTier} from '@/lib/ingress-history.mjs'
@@ -18,7 +18,6 @@ import S2Preview from '@/components/ingress/S2Preview'
 import ApTimeline from '@/components/ingress/ApTimeline'
 
 const CATEGORY: Record<string, string> = {core: 'estatistica', anomaly: 'anomalias', event: 'eventos'}
-const CORE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'onyx']
 
 type Lane = {
   slug: string
@@ -38,7 +37,7 @@ function buildMedals(profile: Profile): GridMedal[] {
   const stat: GridMedal[] = computeAllBadges(profile.stats).map((b) => {
     const def = (BADGES as BadgeDef[]).find((d) => d.key === b.key) as BadgeDef
     const lane = laneBySlug.get(b.key)
-    const thresholds = CORE_TIERS.map((t) => def.tiers[t])
+    const thresholds = TIERS.map((t) => def.tiers[t])
     return {
       slug: b.key,
       name: b.name,

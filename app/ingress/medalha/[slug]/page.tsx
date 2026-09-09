@@ -2,17 +2,16 @@ import {notFound} from 'next/navigation'
 import type {Metadata} from 'next'
 import {loadProfile} from '@/lib/ingress'
 import BackLink from '@/components/ingress/BackLink'
-import {BADGES, computeBadge, TIER_LABELS} from '@/lib/ingress-badges.mjs'
+import {BADGES, computeBadge, TIERS, TIER_LABELS} from '@/lib/ingress-badges.mjs'
 import {projectNextTier} from '@/lib/ingress-history.mjs'
 import {catalogEntry, coreBadges} from '@/lib/ingress-catalog.mjs'
 import {medalArt} from '@/lib/ingress-medal-art.mjs'
+import {fmtStat} from '@/lib/ingress-format.mjs'
 import TierLadder from '@/components/ingress/TierLadder'
 import MedalSpark from '@/components/ingress/MedalSpark'
 import MedalLore from '@/components/ingress/MedalLore'
 import RecursionMark from '@/components/ingress/RecursionMark'
 
-const FMT = new Intl.NumberFormat('pt-BR')
-const CORE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'onyx']
 
 type BadgeDef = {key: string; name: string; statKey: string; tiers: Record<string, number>}
 type CatalogEntry = {name: string; requirement?: string; tiers: number[]}
@@ -54,7 +53,7 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
   const since = allTs.length ? Math.min(...allTs) : Date.parse('2014-01-01')
   const capturedTs = profile?.capturedAt ? Date.parse(profile.capturedAt) : since
   const daysPlaying = Math.max(1, Math.round((capturedTs - since) / 86_400_000))
-  const sparkTiers = CORE_TIERS.filter((t) => dates[t]).map((t) => ({tier: t, date: dates[t]}))
+  const sparkTiers = TIERS.filter((t) => dates[t]).map((t) => ({tier: t, date: dates[t]}))
   const projection = projectNextTier(profile?.history ?? [], def, value) as
     | {tier: string; date: string}
     | {reason: string}
@@ -91,11 +90,11 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
             {badge.atMax ? ' · tier máximo' : null}
           </p>
           <p className="ing-medal-hero__value">
-            {FMT.format(value)}
+            {fmtStat(value)}
             {badge.next
-              ? ` · ${Math.round((badge.pct ?? 0) * 100)}% · faltam ${FMT.format(badge.next.remaining)} para ${TIER_LABELS[badge.next.tier] ?? badge.next.tier}`
+              ? ` · ${Math.round((badge.pct ?? 0) * 100)}% · faltam ${fmtStat(badge.next.remaining)} para ${TIER_LABELS[badge.next.tier] ?? badge.next.tier}`
               : badge.beyond
-                ? ` · ${badge.beyond.label} · ${Math.round(badge.beyond.pct * 100)}% · faltam ${FMT.format(badge.beyond.remaining)}`
+                ? ` · ${badge.beyond.label} · ${Math.round(badge.beyond.pct * 100)}% · faltam ${fmtStat(badge.beyond.remaining)}`
                 : ''}
           </p>
         </div>
@@ -107,7 +106,7 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
         <p className="ing-medal-req">
           {entry.requirement.replace(
             '{0}',
-            FMT.format(badge.next ? def.tiers[badge.next.tier] : def.tiers.onyx),
+            fmtStat(badge.next ? def.tiers[badge.next.tier] : def.tiers.onyx),
           )}
         </p>
       ) : null}

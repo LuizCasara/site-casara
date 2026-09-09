@@ -1,29 +1,12 @@
 'use client'
 
 import {useEffect, useRef} from 'react'
+import {TIERS, TIER_COLOR, TIER_LABELS} from '@/lib/ingress-tiers.mjs'
 import {formatGap} from '@/lib/ingress-timeline.mjs'
+import {fmtMedalDate, fmtStat} from '@/lib/ingress-format.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import MedalSpark from './MedalSpark'
 import RecursionMark from './RecursionMark'
-
-const FMT = new Intl.NumberFormat('pt-BR')
-const CORE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'onyx']
-const TIER_COLOR: Record<string, string> = {
-  bronze: '#d08a4e',
-  silver: '#9aa4ac',
-  gold: '#ffd24a',
-  platinum: '#8d949d',
-  onyx: '#0c0f14',
-  single: '#26b6ff',
-}
-const TIER_LABEL: Record<string, string> = {
-  bronze: 'Bronze',
-  silver: 'Prata',
-  gold: 'Ouro',
-  platinum: 'Platina',
-  onyx: 'Onyx',
-  single: 'Evento',
-}
 
 export type DetailTier = {tier: string; date: string; gapDays: number | null; prevTier: string | null}
 export type DetailStat = {
@@ -42,15 +25,6 @@ export type DetailMedal = {
   stat?: DetailStat
 }
 
-function fmtDate(iso: string) {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
-}
-
 function StatLadder({medal, focusIdx}: {medal: DetailMedal; focusIdx: number}) {
   const stat = medal.stat as DetailStat
   const gotByTier = new Map(medal.tiers.map((t, i) => [t.tier, {entry: t, i}]))
@@ -58,10 +32,10 @@ function StatLadder({medal, focusIdx}: {medal: DetailMedal; focusIdx: number}) {
   return (
     <div className="ing-tl__detail-stat">
       <p className="ing-tl__detail-total">
-        Seu total: <b>{FMT.format(stat.value)}</b>
+        Seu total: <b>{fmtStat(stat.value)}</b>
       </p>
       <ol className="ing-tl__detail-ladder ing-tl__detail-ladder--stat">
-        {CORE_TIERS.map((tn, i) => {
+        {TIERS.map((tn, i) => {
           const thr = stat.thresholds[i]
           const got = gotByTier.get(tn)
           const reached = stat.value >= thr
@@ -69,11 +43,11 @@ function StatLadder({medal, focusIdx}: {medal: DetailMedal; focusIdx: number}) {
           return (
             <li key={tn} className={got && got.i === focusIdx ? 'is-current' : reached ? undefined : 'is-locked'}>
               <span className="ing-tl__detail-dot" style={{background: TIER_COLOR[tn]}} />
-              <span className="ing-tl__detail-tier">{TIER_LABEL[tn]}</span>
-              <span className="ing-tl__detail-thr">{FMT.format(thr)}</span>
+              <span className="ing-tl__detail-tier">{TIER_LABELS[tn]}</span>
+              <span className="ing-tl__detail-thr">{fmtStat(thr)}</span>
               <time>
                 {got
-                  ? fmtDate(got.entry.date)
+                  ? fmtMedalDate(got.entry.date)
                   : reached
                     ? '✓'
                     : i === firstLocked
@@ -87,11 +61,11 @@ function StatLadder({medal, focusIdx}: {medal: DetailMedal; focusIdx: number}) {
       </ol>
       {stat.beyond ? (
         <p className="ing-tl__detail-foot">
-          {stat.beyond.label} · {Math.round(stat.beyond.pct * 100)}% · faltam {FMT.format(stat.beyond.remaining)}
+          {stat.beyond.label} · {Math.round(stat.beyond.pct * 100)}% · faltam {fmtStat(stat.beyond.remaining)}
         </p>
       ) : stat.next ? (
         <p className="ing-tl__detail-foot">
-          faltam {FMT.format(stat.next.remaining)} para {TIER_LABEL[stat.next.tier] ?? stat.next.tier}
+          faltam {fmtStat(stat.next.remaining)} para {TIER_LABELS[stat.next.tier] ?? stat.next.tier}
         </p>
       ) : null}
     </div>
@@ -131,9 +105,9 @@ export default function MedalDetail({
     range = isCore ? 'ainda sem medalha' : ''
   } else if (tiers.length > 1) {
     const span = formatGap(Math.round((Date.parse(last.date) - Date.parse(first.date)) / 86_400_000))
-    range = `${TIER_LABEL[first.tier] ?? first.tier} → ${TIER_LABEL[last.tier] ?? last.tier}${span ? ` · ${span}` : ''}`
+    range = `${TIER_LABELS[first.tier] ?? first.tier} → ${TIER_LABELS[last.tier] ?? last.tier}${span ? ` · ${span}` : ''}`
   } else {
-    range = `${TIER_LABEL[first.tier] ?? first.tier}${medal.count && medal.count > 1 ? ` · ${medal.count}×` : ''}`
+    range = `${TIER_LABELS[first.tier] ?? first.tier}${medal.count && medal.count > 1 ? ` · ${medal.count}×` : ''}`
   }
 
   return (
@@ -179,8 +153,8 @@ export default function MedalDetail({
                 return (
                   <li key={t.tier} className={i === idx ? 'is-current' : undefined}>
                     <span className="ing-tl__detail-dot" style={{background: TIER_COLOR[t.tier] ?? '#26b6ff'}} />
-                    <span className="ing-tl__detail-tier">{TIER_LABEL[t.tier] ?? t.tier}</span>
-                    <time>{fmtDate(t.date)}</time>
+                    <span className="ing-tl__detail-tier">{TIER_LABELS[t.tier] ?? t.tier}</span>
+                    <time>{fmtMedalDate(t.date)}</time>
                     <span className="ing-tl__detail-gap">{g ? `+${g}` : ''}</span>
                   </li>
                 )
