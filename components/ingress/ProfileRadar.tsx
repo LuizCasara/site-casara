@@ -1,6 +1,6 @@
 'use client'
 
-import {useState} from 'react'
+import {Fragment, useState} from 'react'
 import {computeRadarAxes, compareRadar, RADAR_DRAW_MAX} from '@/lib/ingress-radar.mjs'
 import {parseAppExport} from '@/lib/ingress-stats.mjs'
 import type {Profile} from '@/lib/ingress'
@@ -9,9 +9,13 @@ import Panel from './Panel'
 const FMT = new Intl.NumberFormat('pt-BR')
 const SIZE = 260
 const C = SIZE / 2
-const R = 88
-const RING_ONYX = 1 / RADAR_DRAW_MAX
-const RINGS = [RING_ONYX / 2, RING_ONYX, 1]
+const R = 90
+
+const SCALES: {v: number; label: string}[] = [
+  {v: 0.5, label: '½×'},
+  {v: 1, label: 'Onyx'},
+  {v: RADAR_DRAW_MAX, label: `${RADAR_DRAW_MAX}×`},
+]
 
 type Part = {key: string; label: string; value: number; ref: number; ratio: number; note: string | null}
 type Axis = {id: string; label: string; onyxRatio: number; value: number; parts: Part[]}
@@ -24,11 +28,17 @@ function point(i: number, count: number, radius: number): [number, number] {
 
 const pct = (r: number) => `${Math.round(r * 100)}%`
 
+/** Anéis em múltiplos do Onyx que cabem dentro da escala escolhida. */
+function ringStops(drawMax: number) {
+  const cands = drawMax <= 0.5 ? [0.25, 0.5] : drawMax <= 1 ? [0.5, 1] : [0.5, 1, 2]
+  return cands.filter((o) => o <= drawMax + 1e-9)
+}
+
 /**
  * Radar do padrão de jogo. Cada eixo é a média das razões das suas estatísticas
- * contra o limiar de Onyx da medalha correspondente. Toque/hover num eixo mostra
- * o cálculo. "Comparar" cola o export do app de outro agente e sobrepõe a ficha
- * dele. Leaf client component.
+ * contra o limiar de Onyx da medalha correspondente. A escala do desenho é
+ * ajustável (½× / Onyx / 2×). "Comparar" cola o export do app de outro agente e
+ * mostra as duas fichas lado a lado com a tabela dos valores. Leaf client.
  */
 export default function ProfileRadar({
   stats,
@@ -40,6 +50,7 @@ export default function ProfileRadar({
   const axes = computeRadarAxes(stats) as Axis[]
   const n = axes.length
   const [active, setActive] = useState<number | null>(null)
+  const [drawMax, setDrawMax] = useState(RADAR_DRAW_MAX)
   const [open, setOpen] = useState(false)
   const [paste, setPaste] = useState('')
   const [other, setOther] = useState<Other | null>(null)
@@ -50,7 +61,10 @@ export default function ProfileRadar({
   const sel = active != null ? axes[active] : null
   const selOther = active != null && otherAxes ? otherAxes[active] : null
 
-  const shape = (as: Axis[]) => as.map((a, i) => point(i, n, R * Math.max(a.value, 0.02)).join(',')).join(' ')
+  const radius = (onyxRatio: number) => R * Math.max(Math.min(onyxRatio / drawMax, 1), 0.02)
+  const shape = (as: Axis[]) => as.map((a, i) => point(i, n, radius(a.onyxRatio)).join(',')).join(' ')
+  const stops = ringStops(drawMax)
+  const edge = stops[stops.length - 1]
 
   const doCompare = () => {
     try {
@@ -71,79 +85,140 @@ export default function ProfileRadar({
     setOpen(false)
   }
 
+  const svg = (
+    <div className="ing-radar">
+      <svg viewBox={`0 0 ${SIZE} ${SIZE + 6}`} role="img" aria-label="Radar do padrão de jogo">
+        {stops.map((o) => {
+          const rr = R * Math.min(o / drawMax, 1)
+          const isOnyx = Math.abs(o - 1) < 1e-9
+          return (
+            <g key={o}>
+              <polygon
+                points={axes.map((_, i) => point(i, n, rr).join(',')).join(' ')}
+                className={`ing-radar__ring${isOnyx ? ' ing-radar__ring--onyx' : ''}${o === edge ? ' ing-radar__ring--edge' : ''}`}
+              />
+              <text x={C + 3} y={C - rr - 3} className="ing-radar__ring-label">
+                {isOnyx ? 'Onyx' : o === 0.5 ? '½×' : `${o}×`}
+              </text>
+            </g>
+          )
+        })}
+        {axes.map((a, i) => {
+          const [x, y] = point(i, n, R)
+          return <line key={a.id} x1={C} y1={C} x2={x} y2={y} className="ing-radar__spoke" />
+        })}
+
+        <polygon points={shape(axes)} className={`ing-radar__shape${otherAxes ? ' ing-radar__shape--muted' : ''}`} />
+        {otherAxes ? <polygon points={shape(otherAxes)} className="ing-radar__shape ing-radar__shape--them" /> : null}
+
+        {otherAxes
+          ? otherAxes.map((a, i) => {
+              const [x, y] = point(i, n, radius(a.onyxRatio))
+              return <circle key={a.id} cx={x} cy={y} r={4.5} className="ing-radar__dot ing-radar__dot--them" />
+            })
+          : null}
+
+        {axes.map((a, i) => {
+          const [x, y] = point(i, n, radius(a.onyxRatio))
+          const [lx, ly] = point(i, n, R + 14)
+          const anchor = lx < C - 8 ? 'end' : lx > C + 8 ? 'start' : 'middle'
+          return (
+            <g
+              key={a.id}
+              className="ing-radar__axis"
+              onMouseEnter={() => setActive(i)}
+              onMouseLeave={() => setActive(null)}
+              onClick={() => setActive((cur) => (cur === i ? null : i))}
+            >
+              <circle cx={x} cy={y} r={active === i ? 6 : 4} className={`ing-radar__dot${active === i ? ' is-active' : ''}`}>
+                <title>{`${a.label}: ${pct(a.onyxRatio)} do nível Onyx`}</title>
+              </circle>
+              <text x={lx} y={ly - 5} textAnchor={anchor} className="ing-radar__label">
+                {a.label}
+              </text>
+              <text x={lx} y={ly + 6} textAnchor={anchor} className="ing-radar__pct">
+                {pct(a.onyxRatio)}
+                {otherAxes ? <tspan className="ing-radar__pct-them"> · {pct(otherAxes[i].onyxRatio)}</tspan> : null}
+              </text>
+              <circle cx={x} cy={y} r={18} fill="transparent" />
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+
   return (
     <Panel label="Padrão de jogo" hint="cada eixo = média das stats vs. o Onyx da medalha">
-      {other ? (
-        <p className="ing-radar__legend">
-          <span className="ing-radar__legend-me">● {agentName}</span>
-          <span className="ing-radar__legend-them">● {other.codename}</span>
-        </p>
-      ) : null}
-
-      <div className="ing-radar">
-        <svg viewBox={`0 0 ${SIZE} ${SIZE + 6}`} role="img" aria-label="Radar do padrão de jogo">
-          {RINGS.map((ring, ri) => (
-            <polygon
-              key={ring}
-              points={axes.map((_, i) => point(i, n, R * ring).join(',')).join(' ')}
-              className={`ing-radar__ring${ring === RING_ONYX ? ' ing-radar__ring--onyx' : ''}${
-                ri === RINGS.length - 1 ? ' ing-radar__ring--edge' : ''
-              }`}
-            />
+      <div className="ing-radar__topbar">
+        {other ? (
+          <p className="ing-radar__legend">
+            <span className="ing-radar__legend-me">● {agentName}</span>
+            <span className="ing-radar__legend-them">● {other.codename}</span>
+          </p>
+        ) : (
+          <span />
+        )}
+        <div className="ing-radar__scale" role="group" aria-label="Escala do radar">
+          {SCALES.map((s) => (
+            <button key={s.v} type="button" aria-pressed={drawMax === s.v} onClick={() => setDrawMax(s.v)}>
+              {s.label}
+            </button>
           ))}
-          {axes.map((a, i) => {
-            const [x, y] = point(i, n, R)
-            return <line key={a.id} x1={C} y1={C} x2={x} y2={y} className="ing-radar__spoke" />
-          })}
+        </div>
+      </div>
 
-          <polygon points={shape(axes)} className={`ing-radar__shape${otherAxes ? ' ing-radar__shape--muted' : ''}`} />
-          {otherAxes ? <polygon points={shape(otherAxes)} className="ing-radar__shape ing-radar__shape--them" /> : null}
-
-          <text x={C + 3} y={C - R * RING_ONYX - 3} className="ing-radar__ring-label">
-            Onyx
-          </text>
-
-          {otherAxes
-            ? otherAxes.map((a, i) => {
-                const [x, y] = point(i, n, R * Math.max(a.value, 0.02))
-                return <circle key={a.id} cx={x} cy={y} r={4.5} className="ing-radar__dot ing-radar__dot--them" />
-              })
-            : null}
-
-          {axes.map((a, i) => {
-            const [x, y] = point(i, n, R * Math.max(a.value, 0.02))
-            const [lx, ly] = point(i, n, R + 14)
-            const anchor = lx < C - 8 ? 'end' : lx > C + 8 ? 'start' : 'middle'
-            return (
-              <g
-                key={a.id}
-                className="ing-radar__axis"
-                onMouseEnter={() => setActive(i)}
-                onMouseLeave={() => setActive(null)}
-                onClick={() => setActive((cur) => (cur === i ? null : i))}
-              >
-                <circle cx={x} cy={y} r={active === i ? 6 : 4} className={`ing-radar__dot${active === i ? ' is-active' : ''}`}>
-                  <title>{`${a.label}: ${pct(a.onyxRatio)} do nível Onyx`}</title>
-                </circle>
-                <text x={lx} y={ly - 5} textAnchor={anchor} className="ing-radar__label">
-                  {a.label}
-                </text>
-                <text x={lx} y={ly + 6} textAnchor={anchor} className="ing-radar__pct">
-                  {pct(a.onyxRatio)}
-                  {otherAxes ? <tspan className="ing-radar__pct-them"> · {pct(otherAxes[i].onyxRatio)}</tspan> : null}
-                </text>
-                <circle cx={x} cy={y} r={18} fill="transparent" />
-              </g>
-            )
-          })}
-        </svg>
+      <div className={other ? 'ing-radar__cmp-layout' : undefined}>
+        {svg}
+        {other && otherAxes && rows ? (
+          <div className="ing-radar__cmp-table-wrap">
+            <table className="ing-radar__cmp-table">
+              <thead>
+                <tr>
+                  <th />
+                  <th className="ing-radar__cmp-me">{agentName}</th>
+                  <th className="ing-radar__cmp-them">{other.codename}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {axes.map((a, i) => (
+                  <Fragment key={a.id}>
+                    <tr className="is-axis">
+                      <th>{a.label}</th>
+                      <td className={rows[i].leader === 'mine' ? 'is-lead' : undefined}>{pct(a.onyxRatio)}</td>
+                      <td className={rows[i].leader === 'theirs' ? 'is-lead-them' : undefined}>
+                        {pct(otherAxes[i].onyxRatio)}
+                      </td>
+                    </tr>
+                    {a.parts.map((p, pi) => (
+                      <tr key={p.key} className="is-part">
+                        <td>{p.label}</td>
+                        <td>
+                          {FMT.format(p.value)} <small>{pct(p.ratio)}</small>
+                        </td>
+                        <td>
+                          {FMT.format(otherAxes[i].parts[pi].value)} <small>{pct(otherAxes[i].parts[pi].ratio)}</small>
+                        </td>
+                      </tr>
+                    ))}
+                  </Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </div>
 
       {sel ? (
         <div className="ing-radar__breakdown">
           <p className="ing-radar__bd-head">
             <b>{sel.label}</b> — {pct(sel.onyxRatio)} do nível Onyx
-            {selOther ? <span className="ing-radar__bd-vs"> · {other?.codename}: {pct(selOther.onyxRatio)}</span> : null}
+            {selOther ? (
+              <span className="ing-radar__bd-vs">
+                {' '}
+                · {other?.codename}: {pct(selOther.onyxRatio)}
+              </span>
+            ) : null}
           </p>
           <ul>
             {sel.parts.map((p, pi) => (
@@ -157,9 +232,7 @@ export default function ProfileRadar({
                 </span>
                 <span className="ing-radar__bd-ratio">
                   {pct(p.ratio)}
-                  {selOther ? (
-                    <span className="ing-radar__bd-ratio-them"> · {pct(selOther.parts[pi].ratio)}</span>
-                  ) : null}
+                  {selOther ? <span className="ing-radar__bd-ratio-them"> · {pct(selOther.parts[pi].ratio)}</span> : null}
                 </span>
               </li>
             ))}
@@ -169,20 +242,9 @@ export default function ProfileRadar({
             {sel.parts.some((p) => p.ratio > RADAR_DRAW_MAX) ? ` · o que passa de ${RADAR_DRAW_MAX * 100}% entra travado` : ''}
           </p>
         </div>
-      ) : rows ? (
-        <ul className="ing-radar__compare">
-          {rows.map((row) => (
-            <li key={row.id}>
-              <span className="ing-radar__cmp-axis">{row.label}</span>
-              <span className={`ing-radar__cmp-me${row.leader === 'mine' ? ' is-lead' : ''}`}>{pct(row.mine)}</span>
-              <span className="ing-radar__cmp-sep">vs</span>
-              <span className={`ing-radar__cmp-them${row.leader === 'theirs' ? ' is-lead' : ''}`}>{pct(row.theirs)}</span>
-            </li>
-          ))}
-        </ul>
-      ) : (
+      ) : !other ? (
         <p className="ing-radar__hint">Passe o mouse ou toque num eixo para ver o cálculo.</p>
-      )}
+      ) : null}
 
       {open ? (
         <div className="ing-radar__compare-box">
@@ -199,7 +261,12 @@ export default function ProfileRadar({
           />
           {error ? <p className="ing-radar__compare-error">{error}</p> : null}
           <div className="ing-radar__compare-actions">
-            <button type="button" className="ing-radar__btn ing-radar__btn--primary" onClick={doCompare} disabled={!paste.trim()}>
+            <button
+              type="button"
+              className="ing-radar__btn ing-radar__btn--primary"
+              onClick={doCompare}
+              disabled={!paste.trim()}
+            >
               Comparar
             </button>
             <button type="button" className="ing-radar__btn" onClick={clear}>
