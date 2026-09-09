@@ -12,7 +12,7 @@ const R = 80
 const RING_ONYX = 1 / RADAR_DRAW_MAX // fração do raio onde fica o anel "Onyx" (1,0×)
 const RINGS = [RING_ONYX / 2, RING_ONYX, 1] // 0,5× · 1× (Onyx) · 2× (borda)
 
-type Part = {key: string; label: string; value: number; ref: number; ratio: number}
+type Part = {key: string; label: string; value: number; ref: number; ratio: number; note: string | null}
 type Axis = {id: string; label: string; onyxRatio: number; value: number; parts: Part[]}
 
 function point(i: number, count: number, radius: number): [number, number] {
@@ -98,7 +98,10 @@ export default function ProfileRadar({stats}: {stats: Profile['stats']}) {
           <ul>
             {sel.parts.map((p) => (
               <li key={p.key} className={p.ratio > RADAR_DRAW_MAX ? 'is-capped' : undefined}>
-                <span className="ing-radar__bd-label">{p.label}</span>
+                <span className="ing-radar__bd-label">
+                  {p.label}
+                  {p.note ? <em className="ing-radar__bd-note"> · {p.note}</em> : null}
+                </span>
                 <span className="ing-radar__bd-calc">
                   {FMT.format(p.value)} / {FMT.format(p.ref)}
                 </span>

@@ -1492,6 +1492,12 @@
   color: var(--ing-teal);
 }
 
+.ing-radar__bd-note {
+  color: var(--ing-text-faint);
+  font-style: normal;
+  font-size: 0.68rem;
+}
+
 .ing-radar__bd-calc {
   font-variant-numeric: tabular-nums;
   color: var(--ing-text-faint);
