@@ -9,7 +9,7 @@ import Panel from './Panel'
 const FMT = new Intl.NumberFormat('pt-BR')
 const SIZE = 260
 const C = SIZE / 2
-const R = 80
+const R = 88
 const RING_ONYX = 1 / RADAR_DRAW_MAX
 const RINGS = [RING_ONYX / 2, RING_ONYX, 1]
 
@@ -81,7 +81,7 @@ export default function ProfileRadar({
       ) : null}
 
       <div className="ing-radar">
-        <svg viewBox={`0 0 ${SIZE} ${SIZE + 12}`} role="img" aria-label="Radar do padrão de jogo">
+        <svg viewBox={`0 0 ${SIZE} ${SIZE + 6}`} role="img" aria-label="Radar do padrão de jogo">
           {RINGS.map((ring, ri) => (
             <polygon
               key={ring}
@@ -96,8 +96,8 @@ export default function ProfileRadar({
             return <line key={a.id} x1={C} y1={C} x2={x} y2={y} className="ing-radar__spoke" />
           })}
 
+          <polygon points={shape(axes)} className={`ing-radar__shape${otherAxes ? ' ing-radar__shape--muted' : ''}`} />
           {otherAxes ? <polygon points={shape(otherAxes)} className="ing-radar__shape ing-radar__shape--them" /> : null}
-          <polygon points={shape(axes)} className="ing-radar__shape" />
 
           <text x={C + 3} y={C - R * RING_ONYX - 3} className="ing-radar__ring-label">
             Onyx
@@ -106,13 +106,13 @@ export default function ProfileRadar({
           {otherAxes
             ? otherAxes.map((a, i) => {
                 const [x, y] = point(i, n, R * Math.max(a.value, 0.02))
-                return <circle key={a.id} cx={x} cy={y} r={3.5} className="ing-radar__dot ing-radar__dot--them" />
+                return <circle key={a.id} cx={x} cy={y} r={4.5} className="ing-radar__dot ing-radar__dot--them" />
               })
             : null}
 
           {axes.map((a, i) => {
             const [x, y] = point(i, n, R * Math.max(a.value, 0.02))
-            const [lx, ly] = point(i, n, R + 16)
+            const [lx, ly] = point(i, n, R + 14)
             const anchor = lx < C - 8 ? 'end' : lx > C + 8 ? 'start' : 'middle'
             return (
               <g

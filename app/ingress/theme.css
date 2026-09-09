@@ -1554,7 +1554,7 @@
 
 .ing-radar svg {
   width: 100%;
-  max-width: 20rem;
+  max-width: 25rem;
   height: auto;
   overflow: visible;
 }
@@ -1678,16 +1678,23 @@
 
 /* --- comparar fichas --- */
 
+.ing-radar__shape--muted {
+  fill: rgba(0, 230, 118, 0.06);
+}
+
 .ing-radar__shape--them {
-  fill: rgba(176, 108, 255, 0.12);
-  stroke: var(--ing-xm);
-  stroke-width: 2;
+  fill: none;
+  stroke: #c58cff;
+  stroke-width: 2.5;
   stroke-linejoin: round;
-  stroke-dasharray: 4 3;
+  stroke-dasharray: 5 3;
+  filter: drop-shadow(0 0 3px rgba(176, 108, 255, 0.55));
 }
 
 .ing-radar__dot--them {
-  fill: var(--ing-xm);
+  fill: #c58cff;
+  stroke: var(--ing-bg);
+  stroke-width: 1;
 }
 
 .ing-radar__pct-them {
