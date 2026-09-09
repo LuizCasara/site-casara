@@ -22,7 +22,7 @@ const SCALES: {v: Scale; label: string}[] = [
 
 type Part = {key: string; label: string; value: number; ref: number; ratio: number; note: string | null}
 type Axis = {id: string; label: string; onyxRatio: number; value: number; parts: Part[]}
-type Other = {codename: string; stats: Record<string, number>}
+type Agent = {codename: string; stats: Record<string, number>}
 
 function point(i: number, count: number, radius: number): [number, number] {
   const angle = -Math.PI / 2 + (i * 2 * Math.PI) / count
@@ -30,6 +30,12 @@ function point(i: number, count: number, radius: number): [number, number] {
 }
 
 const pct = (r: number) => `${Math.round(r * 100)}%`
+
+function toAgent(text: string): Agent {
+  const p = parseAppExport(text)
+  if (!p.agent?.codename) throw new Error('Export sem "Agent Name".')
+  return {codename: p.agent.codename, stats: p.stats}
+}
 
 /** Anéis em múltiplos do Onyx que cabem dentro da escala escolhida. */
 function ringStops(drawMax: number) {
@@ -39,9 +45,9 @@ function ringStops(drawMax: number) {
 
 /**
  * Radar do padrão de jogo. Cada eixo é a média das razões das suas estatísticas
- * contra o limiar de Onyx da medalha correspondente. A escala do desenho é
- * ajustável (½× / Onyx / 2×). "Comparar" cola o export do app de outro agente e
- * mostra as duas fichas lado a lado com a tabela dos valores. Leaf client.
+ * contra o limiar de Onyx da medalha correspondente. Escala do desenho ajustável
+ * (½× / Onyx / 2× / Forma). "Comparar" sobrepõe outro agente: contra o dono do
+ * perfil, ou dois exports colados um contra o outro. Leaf client component.
  */
 export default function ProfileRadar({
   stats,
@@ -50,46 +56,53 @@ export default function ProfileRadar({
   stats: Profile['stats']
   agentName?: string
 }) {
-  const axes = computeRadarAxes(stats) as Axis[]
-  const n = axes.length
   const [active, setActive] = useState<number | null>(null)
   const [scale, setScale] = useState<Scale>(RADAR_DRAW_MAX)
   const [open, setOpen] = useState(false)
-  const [paste, setPaste] = useState('')
-  const [other, setOther] = useState<Other | null>(null)
+  const [mode, setMode] = useState<'vs-me' | 'two'>('vs-me')
+  const [textA, setTextA] = useState('')
+  const [textB, setTextB] = useState('')
+  const [cmp, setCmp] = useState<{a: Agent; b: Agent} | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const otherAxes = other ? (computeRadarAxes(other.stats) as Axis[]) : null
-  const rows = other ? compareRadar(stats, other.stats) : null
-  const sel = active != null ? axes[active] : null
-  const selOther = active != null && otherAxes ? otherAxes[active] : null
+  const me: Agent = {codename: agentName, stats: stats as Record<string, number>}
+  const agentA = cmp ? cmp.a : me
+  const agentB = cmp ? cmp.b : null
+
+  const aAxes = computeRadarAxes(agentA.stats) as Axis[]
+  const bAxes = agentB ? (computeRadarAxes(agentB.stats) as Axis[]) : null
+  const n = aAxes.length
+  const rows = agentB ? compareRadar(agentA.stats, agentB.stats) : null
+
+  const sel = active != null ? aAxes[active] : null
+  const selB = active != null && bAxes ? bAxes[active] : null
 
   const fit = scale === 'fit'
   const maxOf = (as: Axis[]) => (fit ? Math.max(...as.map((a) => a.onyxRatio), 0.01) : (scale as number))
-  const radiusIn = (onyxRatio: number, as: Axis[]) =>
-    R * Math.max(Math.min(onyxRatio / maxOf(as), 1), 0.02)
+  const radiusIn = (onyxRatio: number, as: Axis[]) => R * Math.max(Math.min(onyxRatio / maxOf(as), 1), 0.02)
   const shape = (as: Axis[]) => as.map((a, i) => point(i, n, radiusIn(a.onyxRatio, as)).join(',')).join(' ')
   const stops = fit ? [] : ringStops(scale as number)
   const edge = stops[stops.length - 1]
 
-  const doCompare = () => {
+  const runCompare = () => {
     try {
-      const parsed = parseAppExport(paste)
-      if (!parsed.agent?.codename) throw new Error('Export sem "Agent Name".')
-      setOther({codename: parsed.agent.codename, stats: parsed.stats})
+      if (mode === 'two') setCmp({a: toAgent(textA), b: toAgent(textB)})
+      else setCmp({a: me, b: toAgent(textA)})
       setError(null)
       setActive(null)
     } catch (e) {
-      setOther(null)
+      setCmp(null)
       setError(e instanceof Error ? e.message : 'Não deu pra ler esse texto.')
     }
   }
   const clear = () => {
-    setOther(null)
-    setPaste('')
+    setCmp(null)
+    setTextA('')
+    setTextB('')
     setError(null)
     setOpen(false)
   }
+  const canCompare = mode === 'two' ? textA.trim() !== '' && textB.trim() !== '' : textA.trim() !== ''
 
   const svg = (
     <div className="ing-radar">
@@ -98,7 +111,7 @@ export default function ProfileRadar({
           ? [0.34, 0.67, 1].map((f) => (
               <polygon
                 key={f}
-                points={axes.map((_, i) => point(i, n, R * f).join(',')).join(' ')}
+                points={aAxes.map((_, i) => point(i, n, R * f).join(',')).join(' ')}
                 className={`ing-radar__ring${f === 1 ? ' ing-radar__ring--edge' : ''}`}
               />
             ))
@@ -108,7 +121,7 @@ export default function ProfileRadar({
               return (
                 <g key={o}>
                   <polygon
-                    points={axes.map((_, i) => point(i, n, rr).join(',')).join(' ')}
+                    points={aAxes.map((_, i) => point(i, n, rr).join(',')).join(' ')}
                     className={`ing-radar__ring${isOnyx ? ' ing-radar__ring--onyx' : ''}${o === edge ? ' ing-radar__ring--edge' : ''}`}
                   />
                   <text x={C + 3} y={C - rr - 3} className="ing-radar__ring-label">
@@ -117,23 +130,23 @@ export default function ProfileRadar({
                 </g>
               )
             })}
-        {axes.map((a, i) => {
+        {aAxes.map((a, i) => {
           const [x, y] = point(i, n, R)
           return <line key={a.id} x1={C} y1={C} x2={x} y2={y} className="ing-radar__spoke" />
         })}
 
-        <polygon points={shape(axes)} className={`ing-radar__shape${otherAxes ? ' ing-radar__shape--muted' : ''}`} />
-        {otherAxes ? <polygon points={shape(otherAxes)} className="ing-radar__shape ing-radar__shape--them" /> : null}
+        <polygon points={shape(aAxes)} className={`ing-radar__shape${bAxes ? ' ing-radar__shape--muted' : ''}`} />
+        {bAxes ? <polygon points={shape(bAxes)} className="ing-radar__shape ing-radar__shape--them" /> : null}
 
-        {otherAxes
-          ? otherAxes.map((a, i) => {
-              const [x, y] = point(i, n, radiusIn(a.onyxRatio, otherAxes))
+        {bAxes
+          ? bAxes.map((a, i) => {
+              const [x, y] = point(i, n, radiusIn(a.onyxRatio, bAxes))
               return <circle key={a.id} cx={x} cy={y} r={4.5} className="ing-radar__dot ing-radar__dot--them" />
             })
           : null}
 
-        {axes.map((a, i) => {
-          const [x, y] = point(i, n, radiusIn(a.onyxRatio, axes))
+        {aAxes.map((a, i) => {
+          const [x, y] = point(i, n, radiusIn(a.onyxRatio, aAxes))
           const [lx, ly] = point(i, n, R + 14)
           const anchor = lx < C - 8 ? 'end' : lx > C + 8 ? 'start' : 'middle'
           return (
@@ -152,7 +165,7 @@ export default function ProfileRadar({
               </text>
               <text x={lx} y={ly + 6} textAnchor={anchor} className="ing-radar__pct">
                 {pct(a.onyxRatio)}
-                {otherAxes ? <tspan className="ing-radar__pct-them"> · {pct(otherAxes[i].onyxRatio)}</tspan> : null}
+                {bAxes ? <tspan className="ing-radar__pct-them"> · {pct(bAxes[i].onyxRatio)}</tspan> : null}
               </text>
               <circle cx={x} cy={y} r={18} fill="transparent" />
             </g>
@@ -165,10 +178,10 @@ export default function ProfileRadar({
   return (
     <Panel label="Padrão de jogo" hint="cada eixo = média das stats vs. o Onyx da medalha">
       <div className="ing-radar__topbar">
-        {other ? (
+        {agentB ? (
           <p className="ing-radar__legend">
-            <span className="ing-radar__legend-me">● {agentName}</span>
-            <span className="ing-radar__legend-them">● {other.codename}</span>
+            <span className="ing-radar__legend-me">● {agentA.codename}</span>
+            <span className="ing-radar__legend-them">● {agentB.codename}</span>
           </p>
         ) : (
           <span />
@@ -188,26 +201,26 @@ export default function ProfileRadar({
         </p>
       ) : null}
 
-      <div className={other ? 'ing-radar__cmp-layout' : undefined}>
+      <div className={agentB ? 'ing-radar__cmp-layout' : undefined}>
         {svg}
-        {other && otherAxes && rows ? (
+        {agentB && bAxes && rows ? (
           <div className="ing-radar__cmp-table-wrap">
             <table className="ing-radar__cmp-table">
               <thead>
                 <tr>
                   <th />
-                  <th className="ing-radar__cmp-me">{agentName}</th>
-                  <th className="ing-radar__cmp-them">{other.codename}</th>
+                  <th className="ing-radar__cmp-me">{agentA.codename}</th>
+                  <th className="ing-radar__cmp-them">{agentB.codename}</th>
                 </tr>
               </thead>
               <tbody>
-                {axes.map((a, i) => (
+                {aAxes.map((a, i) => (
                   <Fragment key={a.id}>
                     <tr className="is-axis">
                       <th>{a.label}</th>
                       <td className={rows[i].leader === 'mine' ? 'is-lead' : undefined}>{pct(a.onyxRatio)}</td>
                       <td className={rows[i].leader === 'theirs' ? 'is-lead-them' : undefined}>
-                        {pct(otherAxes[i].onyxRatio)}
+                        {pct(bAxes[i].onyxRatio)}
                       </td>
                     </tr>
                     {a.parts.map((p, pi) => (
@@ -217,7 +230,7 @@ export default function ProfileRadar({
                           {FMT.format(p.value)} <small>{pct(p.ratio)}</small>
                         </td>
                         <td>
-                          {FMT.format(otherAxes[i].parts[pi].value)} <small>{pct(otherAxes[i].parts[pi].ratio)}</small>
+                          {FMT.format(bAxes[i].parts[pi].value)} <small>{pct(bAxes[i].parts[pi].ratio)}</small>
                         </td>
                       </tr>
                     ))}
@@ -233,10 +246,10 @@ export default function ProfileRadar({
         <div className="ing-radar__breakdown">
           <p className="ing-radar__bd-head">
             <b>{sel.label}</b> — {pct(sel.onyxRatio)} do nível Onyx
-            {selOther ? (
+            {selB ? (
               <span className="ing-radar__bd-vs">
                 {' '}
-                · {other?.codename}: {pct(selOther.onyxRatio)}
+                · {agentB?.codename}: {pct(selB.onyxRatio)}
               </span>
             ) : null}
           </p>
@@ -252,7 +265,7 @@ export default function ProfileRadar({
                 </span>
                 <span className="ing-radar__bd-ratio">
                   {pct(p.ratio)}
-                  {selOther ? <span className="ing-radar__bd-ratio-them"> · {pct(selOther.parts[pi].ratio)}</span> : null}
+                  {selB ? <span className="ing-radar__bd-ratio-them"> · {pct(selB.parts[pi].ratio)}</span> : null}
                 </span>
               </li>
             ))}
@@ -262,30 +275,55 @@ export default function ProfileRadar({
             {sel.parts.some((p) => p.ratio > RADAR_DRAW_MAX) ? ` · o que passa de ${RADAR_DRAW_MAX * 100}% entra travado` : ''}
           </p>
         </div>
-      ) : !other ? (
+      ) : !agentB ? (
         <p className="ing-radar__hint">Passe o mouse ou toque num eixo para ver o cálculo.</p>
       ) : null}
 
       {open ? (
         <div className="ing-radar__compare-box">
-          <label htmlFor="ing-radar-paste" className="ing-radar__compare-label">
-            Cole aqui o export de estatísticas do app de outro agente:
+          <div className="ing-radar__cmp-mode" role="group" aria-label="O que comparar">
+            <button type="button" aria-pressed={mode === 'vs-me'} onClick={() => setMode('vs-me')}>
+              Contra {agentName}
+            </button>
+            <button type="button" aria-pressed={mode === 'two'} onClick={() => setMode('two')}>
+              Dois agentes
+            </button>
+          </div>
+
+          <label htmlFor="ing-radar-a" className="ing-radar__compare-label">
+            {mode === 'two' ? 'Export do agente A (verde):' : 'Cole o export de estatísticas do app do outro agente:'}
           </label>
           <textarea
-            id="ing-radar-paste"
+            id="ing-radar-a"
             className="ing-radar__textarea"
             rows={3}
-            value={paste}
-            onChange={(e) => setPaste(e.target.value)}
-            placeholder="Time Span	Date…	Agent Name	Agent Faction	…"
+            value={textA}
+            onChange={(e) => setTextA(e.target.value)}
+            placeholder="Time Span	Agent Name	Agent Faction	Date…	…"
           />
+          {mode === 'two' ? (
+            <>
+              <label htmlFor="ing-radar-b" className="ing-radar__compare-label">
+                Export do agente B (roxo):
+              </label>
+              <textarea
+                id="ing-radar-b"
+                className="ing-radar__textarea"
+                rows={3}
+                value={textB}
+                onChange={(e) => setTextB(e.target.value)}
+                placeholder="Time Span	Agent Name	Agent Faction	Date…	…"
+              />
+            </>
+          ) : null}
+
           {error ? <p className="ing-radar__compare-error">{error}</p> : null}
           <div className="ing-radar__compare-actions">
             <button
               type="button"
               className="ing-radar__btn ing-radar__btn--primary"
-              onClick={doCompare}
-              disabled={!paste.trim()}
+              onClick={runCompare}
+              disabled={!canCompare}
             >
               Comparar
             </button>

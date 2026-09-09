@@ -1899,6 +1899,33 @@
   gap: 0.5rem;
 }
 
+.ing-radar__cmp-mode {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.ing-radar__cmp-mode button {
+  font-family: var(--ing-font-body);
+  font-size: 0.75rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--ing-edge);
+  background: transparent;
+  color: var(--ing-text-dim);
+  cursor: pointer;
+}
+
+.ing-radar__cmp-mode button[aria-pressed='true'] {
+  background: rgba(0, 230, 118, 0.12);
+  border-color: var(--ing-green);
+  color: var(--ing-green-soft);
+}
+
+.ing-radar__cmp-mode button:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
 .ing-radar__compare-label {
   font-size: 0.78rem;
   color: var(--ing-text-dim);
