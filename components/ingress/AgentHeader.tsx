@@ -1,3 +1,11 @@
+import {
+  FaBookOpen,
+  FaGlobe,
+  FaMapMarkedAlt,
+  FaQuestion,
+  FaTelegramPlane,
+  FaYoutube,
+} from 'react-icons/fa'
 import {coverViewport} from '@/lib/ingress-s2.mjs'
 import type {Profile} from '@/lib/ingress'
 import HeroMesh from './HeroMesh'
@@ -6,6 +14,14 @@ const FACTION_LABEL: Record<Profile['agent']['faction'], string> = {
   enlightened: 'Enlightened',
   resistance: 'Resistance',
 }
+
+const LINKS = [
+  {href: 'https://ingress.com', label: 'Ingress', Icon: FaGlobe},
+  {href: 'https://intel.ingress.com', label: 'Intel Map', Icon: FaMapMarkedAlt},
+  {href: 'https://www.youtube.com/@Ingress', label: 'YouTube', Icon: FaYoutube},
+  {href: 'https://ingress.fandom.com', label: 'Como funciona', Icon: FaBookOpen},
+  {href: 'https://t.me/FencherLC', label: '@FencherLC', Icon: FaTelegramPlane},
+] as const
 
 /**
  * Hero da direção "Scanner": codinome sobre a malha de células S2 da região do
@@ -50,10 +66,30 @@ export default function AgentHeader({profile}: {profile: Profile}) {
           <span>
             {agent.recursions} {agent.recursions === 1 ? 'recursão' : 'recursões'}
           </span>
-          <span>
-            {agent.monthsSubscribed} {agent.monthsSubscribed === 1 ? 'mês' : 'meses'} de assinatura
-          </span>
         </div>
+        <nav className="ing-hero__links" aria-label="Links do Ingress">
+          {LINKS.map(({href, label, Icon}) => (
+            <a
+              key={href}
+              className="ing-hero__link"
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Icon aria-hidden="true" />
+              {label}
+            </a>
+          ))}
+          <button type="button" className="ing-hero__hint" aria-label="O que é Ingress?">
+            <FaQuestion aria-hidden="true" />
+          </button>
+          <span className="ing-hero__tip" role="tooltip">
+            <strong>Ingress</strong> transforma o mundo real num tabuleiro: monumentos e pontos de
+            referência viram portais que você captura indo até eles a pé e conecta em campos que
+            cobrem bairros inteiros. É de graça, joga em qualquer lugar, e é a melhor desculpa pra
+            andar 10 km sem perceber.
+          </span>
+        </nav>
       </div>
     </header>
   )

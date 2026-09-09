@@ -314,6 +314,111 @@
   box-shadow: var(--ing-glow-tight);
 }
 
+.ing-hero__links {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  margin-top: 1.15rem;
+}
+
+.ing-hero__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.34rem 0.62rem;
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+  text-decoration: none;
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 999px;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.ing-hero__link:hover,
+.ing-hero__link:focus-visible {
+  color: var(--ing-text);
+  border-color: var(--ing-edge);
+  background: rgba(0, 230, 118, 0.12);
+}
+
+.ing-hero__link:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-hero__link svg {
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  opacity: 0.85;
+}
+
+.ing-hero__hint {
+  display: inline-grid;
+  place-items: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  padding: 0;
+  color: var(--ing-teal);
+  background: transparent;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 999px;
+  cursor: help;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.ing-hero__hint:hover,
+.ing-hero__hint:focus-visible {
+  color: var(--ing-text);
+  border-color: var(--ing-edge);
+}
+
+.ing-hero__hint:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-hero__hint svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.ing-hero__tip {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  max-width: 30rem;
+  padding: 0.72rem 0.85rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ing-text-dim);
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--ing-edge);
+  border-radius: 10px;
+  box-shadow: var(--ing-lift);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.2rem);
+  transition: opacity 0.14s ease, transform 0.14s ease;
+  z-index: 3;
+}
+
+.ing-hero__tip strong {
+  color: var(--ing-green-soft);
+  font-weight: 600;
+}
+
+.ing-hero__hint:hover + .ing-hero__tip,
+.ing-hero__hint:focus + .ing-hero__tip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* --- medalhas --- */
 
 .ing-medals {
