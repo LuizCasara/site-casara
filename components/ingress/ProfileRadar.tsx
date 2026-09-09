@@ -10,11 +10,14 @@ const FMT = new Intl.NumberFormat('pt-BR')
 const SIZE = 260
 const C = SIZE / 2
 const R = 90
+const PAD_X = 48 // folga lateral no viewBox para os rótulos dos eixos não cortarem
 
-const SCALES: {v: number; label: string}[] = [
+type Scale = number | 'fit'
+const SCALES: {v: Scale; label: string}[] = [
   {v: 0.5, label: '½×'},
   {v: 1, label: 'Onyx'},
   {v: RADAR_DRAW_MAX, label: `${RADAR_DRAW_MAX}×`},
+  {v: 'fit', label: 'Forma'},
 ]
 
 type Part = {key: string; label: string; value: number; ref: number; ratio: number; note: string | null}
@@ -50,7 +53,7 @@ export default function ProfileRadar({
   const axes = computeRadarAxes(stats) as Axis[]
   const n = axes.length
   const [active, setActive] = useState<number | null>(null)
-  const [drawMax, setDrawMax] = useState(RADAR_DRAW_MAX)
+  const [scale, setScale] = useState<Scale>(RADAR_DRAW_MAX)
   const [open, setOpen] = useState(false)
   const [paste, setPaste] = useState('')
   const [other, setOther] = useState<Other | null>(null)
@@ -61,9 +64,12 @@ export default function ProfileRadar({
   const sel = active != null ? axes[active] : null
   const selOther = active != null && otherAxes ? otherAxes[active] : null
 
-  const radius = (onyxRatio: number) => R * Math.max(Math.min(onyxRatio / drawMax, 1), 0.02)
-  const shape = (as: Axis[]) => as.map((a, i) => point(i, n, radius(a.onyxRatio)).join(',')).join(' ')
-  const stops = ringStops(drawMax)
+  const fit = scale === 'fit'
+  const maxOf = (as: Axis[]) => (fit ? Math.max(...as.map((a) => a.onyxRatio), 0.01) : (scale as number))
+  const radiusIn = (onyxRatio: number, as: Axis[]) =>
+    R * Math.max(Math.min(onyxRatio / maxOf(as), 1), 0.02)
+  const shape = (as: Axis[]) => as.map((a, i) => point(i, n, radiusIn(a.onyxRatio, as)).join(',')).join(' ')
+  const stops = fit ? [] : ringStops(scale as number)
   const edge = stops[stops.length - 1]
 
   const doCompare = () => {
@@ -87,22 +93,30 @@ export default function ProfileRadar({
 
   const svg = (
     <div className="ing-radar">
-      <svg viewBox={`0 0 ${SIZE} ${SIZE + 6}`} role="img" aria-label="Radar do padrão de jogo">
-        {stops.map((o) => {
-          const rr = R * Math.min(o / drawMax, 1)
-          const isOnyx = Math.abs(o - 1) < 1e-9
-          return (
-            <g key={o}>
+      <svg viewBox={`${-PAD_X} 0 ${SIZE + PAD_X * 2} ${SIZE + 6}`} role="img" aria-label="Radar do padrão de jogo">
+        {fit
+          ? [0.34, 0.67, 1].map((f) => (
               <polygon
-                points={axes.map((_, i) => point(i, n, rr).join(',')).join(' ')}
-                className={`ing-radar__ring${isOnyx ? ' ing-radar__ring--onyx' : ''}${o === edge ? ' ing-radar__ring--edge' : ''}`}
+                key={f}
+                points={axes.map((_, i) => point(i, n, R * f).join(',')).join(' ')}
+                className={`ing-radar__ring${f === 1 ? ' ing-radar__ring--edge' : ''}`}
               />
-              <text x={C + 3} y={C - rr - 3} className="ing-radar__ring-label">
-                {isOnyx ? 'Onyx' : o === 0.5 ? '½×' : `${o}×`}
-              </text>
-            </g>
-          )
-        })}
+            ))
+          : stops.map((o) => {
+              const rr = R * Math.min(o / (scale as number), 1)
+              const isOnyx = Math.abs(o - 1) < 1e-9
+              return (
+                <g key={o}>
+                  <polygon
+                    points={axes.map((_, i) => point(i, n, rr).join(',')).join(' ')}
+                    className={`ing-radar__ring${isOnyx ? ' ing-radar__ring--onyx' : ''}${o === edge ? ' ing-radar__ring--edge' : ''}`}
+                  />
+                  <text x={C + 3} y={C - rr - 3} className="ing-radar__ring-label">
+                    {isOnyx ? 'Onyx' : o === 0.5 ? '½×' : `${o}×`}
+                  </text>
+                </g>
+              )
+            })}
         {axes.map((a, i) => {
           const [x, y] = point(i, n, R)
           return <line key={a.id} x1={C} y1={C} x2={x} y2={y} className="ing-radar__spoke" />
@@ -113,13 +127,13 @@ export default function ProfileRadar({
 
         {otherAxes
           ? otherAxes.map((a, i) => {
-              const [x, y] = point(i, n, radius(a.onyxRatio))
+              const [x, y] = point(i, n, radiusIn(a.onyxRatio, otherAxes))
               return <circle key={a.id} cx={x} cy={y} r={4.5} className="ing-radar__dot ing-radar__dot--them" />
             })
           : null}
 
         {axes.map((a, i) => {
-          const [x, y] = point(i, n, radius(a.onyxRatio))
+          const [x, y] = point(i, n, radiusIn(a.onyxRatio, axes))
           const [lx, ly] = point(i, n, R + 14)
           const anchor = lx < C - 8 ? 'end' : lx > C + 8 ? 'start' : 'middle'
           return (
@@ -161,12 +175,18 @@ export default function ProfileRadar({
         )}
         <div className="ing-radar__scale" role="group" aria-label="Escala do radar">
           {SCALES.map((s) => (
-            <button key={s.v} type="button" aria-pressed={drawMax === s.v} onClick={() => setDrawMax(s.v)}>
+            <button key={String(s.v)} type="button" aria-pressed={scale === s.v} onClick={() => setScale(s.v)}>
               {s.label}
             </button>
           ))}
         </div>
       </div>
+
+      {fit ? (
+        <p className="ing-radar__scale-note">
+          Cada ficha normalizada pelo próprio eixo mais forte — compara o formato do jogo, não o tamanho.
+        </p>
+      ) : null}
 
       <div className={other ? 'ing-radar__cmp-layout' : undefined}>
         {svg}

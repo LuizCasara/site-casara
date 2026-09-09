@@ -1554,7 +1554,7 @@
 
 .ing-radar svg {
   width: 100%;
-  max-width: 25rem;
+  max-width: 33rem;
   height: auto;
   overflow: visible;
 }
@@ -1759,6 +1759,13 @@
 .ing-radar__scale button:focus-visible {
   outline: 2px solid var(--ing-cyan);
   outline-offset: 2px;
+}
+
+.ing-radar__scale-note {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  color: var(--ing-text-faint);
+  line-height: 1.4;
 }
 
 /* comparação: radar + tabela lado a lado */
