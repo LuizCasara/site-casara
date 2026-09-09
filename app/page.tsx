@@ -11,18 +11,14 @@ import {RainingLetters} from "@/components/ui/raining-letters";
 const translations = {
   pt: {
     location: "🇧🇷 Cascavel, Brasil",
-    bio: `10+ anos construindo software de alta criticidade em escala. Atualmente lidero dois squads em fintech — responsável por 9 produtos financeiros, alguns com SLA de`,
-    bioHighlight1: "≤20ms",
-    bioMid: "e",
-    bioHighlight2: "350+ TPS",
-    bioEnd: "de throughput.",
+    bio: `10+ anos construindo software de alta criticidade em escala. Hoje respondo pela plataforma de front-end de uma fintech de infraestrutura bancária (BaaS) — do produto interno ao que chega no cliente final —, cuidando de squads, pessoas, arquitetura e das estruturas que sustentam a entrega.`,
     subtitle: "Tech Lead · Senior Full-Stack Engineer",
     viewProjects: "Ver Projetos",
     aboutMe: "Sobre Mim",
     stats: [
       {value: "10+", label: "Anos de experiência"},
-      {value: "2", label: "Squads liderados"},
-      {value: "9", label: "Produtos financeiros"},
+      {value: "Tech Lead", label: "Fintech BaaS · SaaS"},
+      {value: "Front-end", label: "Plataforma interna + externa"},
     ],
     appsTitle: "Mini Aplicativos",
     appsDesc: "Ferramentas que construí para uso no dia a dia.",
@@ -56,18 +52,14 @@ const translations = {
   },
   en: {
     location: "🇧🇷 Cascavel, Brazil",
-    bio: `10+ years building high-criticality software at scale. Currently leading two squads at a fintech — responsible for 9 financial products, some with`,
-    bioHighlight1: "≤20ms",
-    bioMid: "SLA and",
-    bioHighlight2: "350+ TPS",
-    bioEnd: "throughput.",
+    bio: `10+ years building high-criticality software at scale. Today I own the front-end platform of a banking-as-a-service (BaaS) fintech — from internal tooling to customer-facing products — leading squads, people, architecture, and the foundations behind delivery.`,
     subtitle: "Tech Lead · Senior Full-Stack Engineer",
     viewProjects: "View Projects",
     aboutMe: "About Me",
     stats: [
       {value: "10+", label: "Years of experience"},
-      {value: "2", label: "Squads led"},
-      {value: "9", label: "Financial products"},
+      {value: "Tech Lead", label: "BaaS · SaaS fintech"},
+      {value: "Front-end", label: "Internal + external platform"},
     ],
     appsTitle: "Mini Apps",
     appsDesc: "Tools I built for everyday use.",
@@ -173,11 +165,7 @@ export default function Home() {
             {t.subtitle}
           </p>
           <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed mb-8 max-w-2xl">
-            {t.bio}{" "}
-            <span className="text-gray-900 dark:text-gray-200 font-semibold">{t.bioHighlight1}</span>{" "}
-            {t.bioMid}{" "}
-            <span className="text-gray-900 dark:text-gray-200 font-semibold">{t.bioHighlight2}</span>{" "}
-            {t.bioEnd}
+            {t.bio}
           </p>
 
           <div className="flex flex-wrap gap-2 mb-10">
@@ -213,7 +201,7 @@ export default function Home() {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8 max-w-2xl">
           {t.stats.map(stat => (
             <div key={stat.label}>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1">{stat.value}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">{stat.value}</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
             </div>
           ))}
