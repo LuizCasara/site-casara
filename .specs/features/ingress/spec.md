@@ -639,6 +639,69 @@ grade — cores neutras, sem verde/azul.
 
 ---
 
+### MED-14: Radar ancorado no limiar de Onyx ⭐ P2
+
+**User Story**: Como Luiz, quero que o radar "Padrão de jogo" tenha uma base
+consistente e defensável — pensando em comparar agentes no futuro —, com o
+cálculo visível.
+
+**Why**: O agente de Ingress é o próprio jogador (RPG no mundo real); o radar é a
+"ficha de personagem" e precisa de uma âncora real, não de números escolhidos a
+dedo.
+
+**Acceptance Criteria**:
+
+1. WHEN o radar monta THEN cada eixo SHALL ser a **média** das razões das suas
+   estatísticas, cada razão normalizada pelo **limiar de Onyx** da medalha
+   correspondente (`1,0×` = nível Onyx) — ou, quando não há medalha para a stat,
+   por uma conversão de unidade explícita a partir de um limiar de Onyx que
+   exista (nunca um valor estimado).
+2. WHEN uma razão de componente passa de `RADAR_DRAW_MAX` (2×) THEN o sistema
+   SHALL travá-la nesse teto antes de entrar na média, mas SHALL preservar a
+   razão real para exibição.
+3. The system SHALL desenhar o radar até `2×` Onyx, com o anel do meio marcado
+   como "Onyx" e a borda destacada.
+4. WHEN o radar monta THEN o sistema SHALL rotular o `%` do nível Onyx em cada
+   vértice.
+5. WHEN o usuário passa o mouse ou toca num eixo THEN o sistema SHALL exibir o
+   cálculo: cada estatística do eixo, `valor / limiar`, a razão, e a nota de
+   derivação quando houver.
+6. The system SHALL manter `computeRadarAxes` e `RADAR_AXES` em
+   `lib/ingress-radar.mjs` com testes (âncora = Onyx da medalha declarada,
+   média-não-soma, trava no teto).
+
+**Independent Test**: `computeRadarAxes` do perfil real → Exploração e Hacking
+acima do Onyx, Construção/Destruição/Links abaixo; toda `part` com `badge` tem
+`ref` == limiar de Onyx daquela badge.
+
+---
+
+### MED-15: Comparar fichas de agentes ⭐ P3
+
+**User Story**: Como agente, quero colar o export do app de outro agente e ver as
+duas fichas sobrepostas no radar, na hora.
+
+**Acceptance Criteria**:
+
+1. WHEN o usuário abre "Comparar" e cola um texto THEN o sistema SHALL tentar
+   lê-lo com o mesmo parser do CLI (`parseAppExport`) e, em sucesso, sobrepor o
+   radar do outro agente numa cor distinta (`--ing-xm`), com legenda dos dois
+   codinomes.
+2. IF o texto colado não é um export válido THEN o sistema SHALL exibir a
+   mensagem de erro do parser inline, sem quebrar o radar próprio.
+3. WHILE há uma comparação ativa o sistema SHALL exibir, eixo a eixo, o `%` de
+   cada agente e destacar quem lidera; e o hover no eixo SHALL mostrar as duas
+   colunas.
+4. WHEN o usuário aciona "Limpar" THEN o sistema SHALL remover a comparação e
+   voltar ao radar de um agente só.
+5. The system SHALL NOT persistir, exportar nem enviar nada — é cola-e-vê local.
+
+**Independent Test**: Colar um export do app → duas formas no radar + lista
+eixo-a-eixo com o líder marcado; colar lixo → erro inline; "Limpar" volta ao
+estado de um agente. `compareRadar(mine, theirs)` coberto por teste.
+
+---
+
 ## Edge Cases (expansão)
 
 - IF a arte de um tier específico não existe em `public/ingress/medals/` THEN a
@@ -721,19 +784,22 @@ grade — cores neutras, sem verde/azul.
 | MED-11 | P3: "Plus" editorial por medalha (`medal-lore.json` + `lib/ingress-lore.mjs`) | Iteração UI | Implementado + testado (math), conteúdo a calibrar |
 | MED-12 | P2: Home como grade hexagonal (`MedalGrid`, substitui BadgeShelf/AchievementsShelf) | Iteração UI | Implementado — UAT visual pendente |
 | MED-13 | P3: Tokens de tier neutros (Onyx grafite, Platina cinza) | Iteração UI | Implementado |
+| MED-14 | P2: Radar ancorado no limiar de Onyx (`computeRadarAxes` média-de-razões, hover com o cálculo, % nos vértices) | Iteração UI | Implementado + testado |
+| MED-15 | P3: Comparar fichas — cola o export de outro agente, radar sobreposto | Iteração UI | Implementado + testado (`compareRadar`) |
 
 **ID format:** `INGR-[NUMBER]` (feature original) · `MED-[NUMBER]` (expansão de
 medalhas + iteração de UI)
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 36 `INGR-*` + 13 `MED-*` = 49 requisitos, todos implementados no
+**Coverage:** 36 `INGR-*` + 15 `MED-*` = 51 requisitos, todos implementados no
 branch `feat/ingress`. Verificação: as ACs de lógica pura estão ✅ Verified com
 evidência `file:line` em `validation.md` (parsing, badges incl. `beyond`, S2,
 history, timeline `collectAcquisitions`/`annotateLaneGaps`/`groupLanes`/`formatGap`,
-lore `medalLore`/`formatLoreNumber`); 338 testes, 2 passagens de Verifier
-(feature + expansão). As ACs de UI (grade hexagonal, painel de detalhe, brush,
-filtros, toggle, "plus", tokens de cor) estão implementadas com `npm run build` /
+lore `medalLore`/`formatLoreNumber`, radar `computeRadarAxes`/`compareRadar`);
+342 testes, 2 passagens de Verifier (feature + expansão). As ACs de UI (grade
+hexagonal, painel de detalhe, brush, filtros, toggle, "plus", tokens de cor,
+radar interativo, comparar fichas) estão implementadas com `npm run build` /
 `npm run lint` verdes mas **sem teste automatizado e sem UAT visual do Luiz** —
 esse é o gate aberto. Ver `.specs/features/ingress/validation.md`.
 

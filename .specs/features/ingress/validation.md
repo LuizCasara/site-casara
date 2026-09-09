@@ -323,3 +323,14 @@ rotas `/ingress/medalha/[slug]` + OG.
 4. **`medal-lore.json`** — referências de comparação a calibrar com o Luiz.
 5. **Colecionáveis / Personagens** — `MedalGrid` tem os grupos; populados quando
    o dump GDPR chegar (ou o Luiz passar a lista). Ver `docs/ingress-proximos-passos.md`.
+
+### Adendo 2 — radar Onyx-anchored + comparar (MED-14/15, 09/09/2026)
+
+| Req | Evidência (lógica pura) | ACs de UI |
+| --- | --- | --- |
+| MED-14 (radar ancorado no Onyx) | `lib/ingress-radar.test.mjs` — âncora `badge` == limiar de Onyx da medalha; média-não-soma; cada razão trava em `RADAR_DRAW_MAX`; tudo-gigante → raio 1, `onyxRatio` no teto; perfil real → exploração/hacking na frente | `%` nos vértices, hover com o cálculo, anel "Onyx" + borda 2× — **UAT pendente** |
+| MED-15 (comparar fichas) | `lib/ingress-radar.test.mjs` — `compareRadar` aponta o líder por eixo, casa os rótulos, empate = `tie` | textarea → `parseAppExport` → radar sobreposto + legenda + lista; erro inline; "Limpar" — **UAT pendente** |
+
+`ProfileRadar` virou client leaf. `parseAppExport` (já testado, `lib/ingress-stats.test.mjs`) é reusado no cliente — módulo puro, sem `node:*`.
+
+**Gate**: `npm run lint` ✔ · `npm test` **342 ✔** · `npm run build` ✔.

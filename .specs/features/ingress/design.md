@@ -553,6 +553,22 @@ no chat → aprovação). Ver stories MED-09..MED-13 no `spec.md`.
 insere marcador de fronteira de nó de texto dentro de `<title>`) — corrigido em
 `ProfileRadar`, `ApTimeline`, `AchievementTimeline`.
 
+### Radar "Padrão de jogo" (MED-14/15)
+
+- `lib/ingress-radar.mjs` (rewrite, +test): `RADAR_AXES` com `parts:[{key,label,ref,badge?|note?}]`
+  — cada `ref` é o limiar de Onyx de uma medalha real (`badge`) ou uma conversão
+  de unidade explícita a partir de um (`note`, ex. `portalsNeutralized` = Onyx de
+  Purifier ÷ 8). `computeRadarAxes` → `onyxRatio` (média das razões, cada uma
+  travada em `RADAR_DRAW_MAX = 2` antes da média) + `value` (raio) + `parts` com
+  a razão real. `compareRadar(mine, theirs)` → linha por eixo com o líder.
+- `components/ingress/ProfileRadar.tsx` (server → **client leaf**): `%` do Onyx
+  rotulado em cada vértice; hover/toque num eixo abre o cálculo (stat, `valor /
+  limiar`, razão, nota); anel do meio "Onyx", borda destacada em 2×.
+  **Comparar**: `<textarea>` → `parseAppExport` (reusa o parser do CLI,
+  `lib/ingress-stats.mjs`, puro) → radar do outro agente sobreposto em `--ing-xm`
+  + legenda + lista eixo-a-eixo. Sem export/salvar/backend. `agentName` prop nova
+  em `app/ingress/page.tsx`.
+
 ## Design Questions — resolvidas (2026-09-07)
 
 1. **Direção visual:** A — "Scanner" (HUD do Ingress Prime). *(Revisado depois
