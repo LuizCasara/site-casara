@@ -27,11 +27,22 @@ function poly(axes, radiusOf) {
  * @param {{a:{codename,stats}, b:{codename,stats}}}
  * @returns {Promise<Uint8Array>}
  */
+const fmtDay = (iso) => {
+  const t = Date.parse(iso)
+  return Number.isFinite(t)
+    ? new Date(t).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'UTC'})
+    : ''
+}
+
 export async function radarPng({a, b}) {
   const A = computeRadarAxes(a.stats)
   const B = computeRadarAxes(b.stats)
   const n = A.length
   const rOf = (onyx) => RR * Math.max(Math.min(onyx / DRAW, 1), 0.02)
+
+  const self = a.codename === b.codename
+  const aLabel = self ? fmtDay(a.capturedAt) || 'agora' : a.codename
+  const bLabel = self ? fmtDay(b.capturedAt) || 'antes' : b.codename
 
   const ringPoly = (frac) =>
     A.map((_, i) => {
@@ -55,12 +66,26 @@ export async function radarPng({a, b}) {
           color: INK,
         }}
       >
-        <div style={{display: 'flex', alignItems: 'baseline', gap: 12}}>
-          <span style={{fontSize: 30, fontWeight: 700, color: GREEN}}>{a.codename}</span>
-          <span style={{fontSize: 20, color: DIM}}>vs</span>
-          <span style={{fontSize: 30, fontWeight: 700, color: XM}}>{b.codename}</span>
-        </div>
-        <span style={{fontSize: 15, color: DIM, marginTop: 2}}>Padrão de jogo · escala 2× Onyx</span>
+        {self ? (
+          <div style={{display: 'flex', flexDirection: 'column'}}>
+            <span style={{fontSize: 30, fontWeight: 700, color: GREEN}}>{a.codename} — evolução</span>
+            <span style={{fontSize: 15, color: DIM, marginTop: 2}}>
+              <span style={{color: XM}}>● {bLabel}</span>
+              <span style={{color: DIM}}>{'  →  '}</span>
+              <span style={{color: GREEN}}>● {aLabel}</span>
+              <span style={{color: DIM}}>{'   ·   escala 2× Onyx'}</span>
+            </span>
+          </div>
+        ) : (
+          <div style={{display: 'flex', flexDirection: 'column'}}>
+            <div style={{display: 'flex', alignItems: 'baseline', gap: 12}}>
+              <span style={{fontSize: 30, fontWeight: 700, color: GREEN}}>{aLabel}</span>
+              <span style={{fontSize: 20, color: DIM}}>vs</span>
+              <span style={{fontSize: 30, fontWeight: 700, color: XM}}>{bLabel}</span>
+            </div>
+            <span style={{fontSize: 15, color: DIM, marginTop: 2}}>Padrão de jogo · escala 2× Onyx</span>
+          </div>
+        )}
 
         <div style={{flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
           <svg width={360} height={360} viewBox={`0 0 ${VB} ${VB}`}>

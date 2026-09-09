@@ -23,7 +23,7 @@ const SCALES: {v: Scale; label: string}[] = [
 
 type Part = {key: string; label: string; value: number; ref: number; ratio: number; note: string | null}
 type Axis = {id: string; label: string; onyxRatio: number; value: number; parts: Part[]}
-type Agent = {codename: string; stats: Record<string, number>}
+type Agent = {codename: string; stats: Record<string, number>; capturedAt?: string}
 
 function point(i: number, count: number, radius: number): [number, number] {
   const angle = -Math.PI / 2 + (i * 2 * Math.PI) / count
@@ -35,7 +35,7 @@ const pct = (r: number) => `${Math.round(r * 100)}%`
 function toAgent(text: string): Agent {
   const p = parseAppExport(text)
   if (!p.agent?.codename) throw new Error('Export sem "Agent Name".')
-  return {codename: p.agent.codename, stats: p.stats}
+  return {codename: p.agent.codename, stats: p.stats, capturedAt: p.capturedAt ?? undefined}
 }
 
 const DEDUPE_MS = 10 * 60 * 1000
@@ -53,8 +53,8 @@ function notifyTelegram(a: Agent, b: Agent, vsOwner: boolean, onSent: () => void
   // só em produção — dev/preview não spamma o Telegram a cada teste
   if (process.env.NODE_ENV !== 'production') return
   const payload = {
-    a: {codename: a.codename, stats: radarStats(a.stats)},
-    b: {codename: b.codename, stats: radarStats(b.stats)},
+    a: {codename: a.codename, stats: radarStats(a.stats), capturedAt: a.capturedAt},
+    b: {codename: b.codename, stats: radarStats(b.stats), capturedAt: b.capturedAt},
     vsOwner,
   }
   let sent: Record<string, number> = {}
@@ -98,9 +98,11 @@ function ringStops(drawMax: number) {
 export default function ProfileRadar({
   stats,
   agentName = 'Você',
+  capturedAt,
 }: {
   stats: Profile['stats']
   agentName?: string
+  capturedAt?: string
 }) {
   const [active, setActive] = useState<number | null>(null)
   const [scale, setScale] = useState<Scale>(RADAR_DRAW_MAX)
@@ -112,7 +114,7 @@ export default function ProfileRadar({
   const [error, setError] = useState<string | null>(null)
   const [sentNote, setSentNote] = useState(false)
 
-  const me: Agent = {codename: agentName, stats: stats as Record<string, number>}
+  const me: Agent = {codename: agentName, stats: stats as Record<string, number>, capturedAt}
   const agentA = cmp ? cmp.a : me
   const agentB = cmp ? cmp.b : null
 
@@ -123,6 +125,13 @@ export default function ProfileRadar({
 
   const sel = active != null ? aAxes[active] : null
   const selB = active != null && bAxes ? bAxes[active] : null
+
+  // quando os dois lados são o mesmo agente (você agora vs. um export antigo),
+  // desambigua os rótulos pela data do snapshot
+  const selfCmp = !!agentB && agentA.codename === agentB.codename
+  const dmy = (iso?: string) => (iso ? iso.slice(0, 10).split('-').reverse().join('/') : '')
+  const labelA = selfCmp && agentA.capturedAt ? `${agentA.codename} · ${dmy(agentA.capturedAt)}` : agentA.codename
+  const labelB = selfCmp && agentB?.capturedAt ? `${agentB.codename} · ${dmy(agentB.capturedAt)}` : (agentB?.codename ?? '')
 
   const fit = scale === 'fit'
   const maxOf = (as: Axis[]) => (fit ? Math.max(...as.map((a) => a.onyxRatio), 0.01) : (scale as number))
@@ -235,8 +244,8 @@ export default function ProfileRadar({
       <div className="ing-radar__topbar">
         {agentB ? (
           <p className="ing-radar__legend">
-            <span className="ing-radar__legend-me">● {agentA.codename}</span>
-            <span className="ing-radar__legend-them">● {agentB.codename}</span>
+            <span className="ing-radar__legend-me">● {labelA}</span>
+            <span className="ing-radar__legend-them">● {labelB}</span>
           </p>
         ) : (
           <span />
@@ -264,8 +273,8 @@ export default function ProfileRadar({
               <thead>
                 <tr>
                   <th />
-                  <th className="ing-radar__cmp-me">{agentA.codename}</th>
-                  <th className="ing-radar__cmp-them">{agentB.codename}</th>
+                  <th className="ing-radar__cmp-me">{labelA}</th>
+                  <th className="ing-radar__cmp-them">{labelB}</th>
                 </tr>
               </thead>
               <tbody>
