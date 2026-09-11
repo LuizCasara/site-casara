@@ -386,10 +386,10 @@ T36 -> T37
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Passo-a-passo numerado (PT/EN) explicando como exportar do app do Ingress
-- [ ] Área de imagem placeholder no lugar do print real (sem quebrar layout)
-- [ ] Link/botão pra `https://t.me/FencherLC`, `target="_blank"`, sem formulário/coleta de texto
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Passo-a-passo numerado (PT/EN) explicando como exportar do app do Ingress
+- [x] Área de imagem placeholder no lugar do print real (sem quebrar layout)
+- [x] Link/botão pra `https://t.me/FencherLC`, `target="_blank"`, sem formulário/coleta de texto
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build

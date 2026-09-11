@@ -188,8 +188,8 @@
 | ISTATS-19 | P1: i18n /ingress | Design | Pending |
 | ISTATS-20 | P1: i18n /ingress | Design | Pending |
 | ISTATS-21 | P1: i18n /ingress | Design | Pending |
-| ISTATS-22 | P2: Tutorial | Design | Pending |
-| ISTATS-23 | P2: Sugestão Telegram | Design | Pending |
+| ISTATS-22 | P2: Tutorial | Design | Implementing |
+| ISTATS-23 | P2: Sugestão Telegram | Design | Implementing |
 | ISTATS-24 | Edge case: parse falho | Design | Implementing |
 | ISTATS-25 | Edge case: falha de escrita no Neon | Design | Implementing |
 | ISTATS-26 | Edge case: codinomes idênticos | Design | Implementing |
