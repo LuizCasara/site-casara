@@ -151,9 +151,9 @@ T36 -> T37
 - Skill: NONE
 
 **Done when**:
-- [ ] `CREATE TABLE IF NOT EXISTS casara.ingress_rankings` com as 9 colunas do design (`codename_key` PK, `codename`, `faction` com `CHECK`, `lifetime_ap`, `overall_score`, `axis_scores` JSONB, `stat_values` JSONB, `created_at`, `updated_at`)
-- [ ] 2 índices (`overall_score DESC`, `lifetime_ap DESC`)
-- [ ] Comentário no arquivo explicando o significado de `created_at` ("medido desde", não data de criação da conta)
+- [x] `CREATE TABLE IF NOT EXISTS casara.ingress_rankings` com as 9 colunas do design (`codename_key` PK, `codename`, `faction` com `CHECK`, `lifetime_ap`, `overall_score`, `axis_scores` JSONB, `stat_values` JSONB, `created_at`, `updated_at`)
+- [x] 2 índices (`overall_score DESC`, `lifetime_ap DESC`)
+- [x] Comentário no arquivo explicando o significado de `created_at` ("medido desde", não data de criação da conta)
 
 **Tests**: none
 **Gate**: build

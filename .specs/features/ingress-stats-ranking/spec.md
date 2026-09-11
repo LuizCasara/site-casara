@@ -171,7 +171,7 @@
 | ISTATS-05 | P1: Rota /stats | Design | Pending |
 | ISTATS-06 | P1: Rota /stats | Design | Pending |
 | ISTATS-27 | P1: Rota /stats | Design | Pending |
-| ISTATS-07 | P1: Persistência do ranking | Design | Pending |
+| ISTATS-07 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-08 | P1: Persistência do ranking | Design | Pending |
 | ISTATS-09 | P1: Persistência do ranking | Design | Pending |
 | ISTATS-10 | P1: Persistência do ranking | Design | Pending |
@@ -179,7 +179,7 @@
 | ISTATS-12 | P1: Persistência do ranking | Design | Pending |
 | ISTATS-13 | P1: Persistência do ranking | Design | Pending |
 | ISTATS-14 | P1: Persistência do ranking | Design | Pending |
-| ISTATS-28 | P1: Persistência do ranking | Design | Pending |
+| ISTATS-28 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-15 | P1: Ranking visível | Design | Pending |
 | ISTATS-29 | P1: Ranking visível | Design | Pending |
 | ISTATS-16 | P1: Ranking visível | Design | Pending |
