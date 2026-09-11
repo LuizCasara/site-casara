@@ -522,9 +522,9 @@ T36 -> T37
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Botão PT|EN estilizado com o tema Sora/Barlow de `app/ingress/theme.css` (não as classes do `Header` genérico)
-- [ ] Montado em `app/ingress/layout.tsx`, visível em toda a árvore de `/ingress`
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Botão PT|EN estilizado com o tema Sora/Barlow de `app/ingress/theme.css` (não as classes do `Header` genérico)
+- [x] Montado em `app/ingress/layout.tsx`, visível em toda a árvore de `/ingress`
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
