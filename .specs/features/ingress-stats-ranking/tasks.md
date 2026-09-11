@@ -409,11 +409,11 @@ T36 -> T37
 - Skill: `nextjs-use-client` (garantir que o page.tsx em si continua Server Component)
 
 **Done when**:
-- [ ] Carrega `loadProfile()`, computa `axisScores`/`overallScore`/`tier` do FencherLC via T2
-- [ ] Query direta em `casara.ingress_rankings` pro `initialRows` (ordenação de T3)
-- [ ] Compõe `StatsRadarSection`, `AxisExplanations`, `OverallScorePanel`, `IngressRankingTable`, `IngressTutorial`
-- [ ] Estado vazio quando `loadProfile()` retorna `null` (mesmo tratamento que `/ingress` já tem)
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Carrega `loadProfile()`, computa `axisScores`/`overallScore`/`tier` do FencherLC via T2
+- [x] Query direta em `casara.ingress_rankings` pro `initialRows` (ordenação de T3) — envolta em `try/catch`: `casara.ingress_rankings` ainda não existe em produção (confirmado ao vivo via Playwright — `NeonDbError: relation "casara.ingress_rankings" does not exist`), degrada pro estado vazio de `IngressRankingTable` em vez de 500, exatamente como a nota de execução previu
+- [x] Compõe `StatsRadarSection` (que já compõe `OverallScorePanel` internamente), `AxisExplanations`, `IngressRankingTable`, `IngressTutorial`
+- [x] Estado vazio quando `loadProfile()` retorna `null` (mesmo tratamento que `/ingress` já tem)
+- [x] `npm run build` e `npm run lint` verdes — verificado ao vivo via Playwright MCP (autorizado pra esta feature): radar, nota geral/tier do FencherLC, explicações dos 5 eixos, estado vazio do ranking e tutorial renderizam corretamente em `/ingress/stats`
 
 **Tests**: none
 **Gate**: build
