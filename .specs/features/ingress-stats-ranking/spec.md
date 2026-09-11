@@ -164,12 +164,12 @@
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| ISTATS-01 | P1: Rota /stats | Design | Pending |
+| ISTATS-01 | P1: Rota /stats | Design | Implementing |
 | ISTATS-02 | P1: Rota /stats | Design | Pending |
 | ISTATS-03 | P1: Rota /stats | Design | Implementing |
 | ISTATS-04 | P1: Rota /stats | Design | Implementing |
 | ISTATS-05 | P1: Rota /stats | Design | Implementing |
-| ISTATS-06 | P1: Rota /stats | Design | Pending |
+| ISTATS-06 | P1: Rota /stats | Design | Implementing |
 | ISTATS-27 | P1: Rota /stats | Design | Implementing |
 | ISTATS-07 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-08 | P1: Persistência do ranking | Design | Implementing |

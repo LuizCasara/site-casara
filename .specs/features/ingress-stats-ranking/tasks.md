@@ -247,11 +247,11 @@ T36 -> T37
 - Skill: `nextjs-use-client` (revisar se a extensão continua respeitando os limites de client boundary já estabelecidos)
 
 **Done when**:
-- [ ] `variant` default `'default'` preserva 100% o comportamento/props/render atuais (nenhum snapshot visual muda quando `variant` é omitido)
-- [ ] `variant==='ranking'`: modo `'solo'` disponível (`runCompare` faz `setCmp({a: toAgent(textA)})`, sem `b`); caixa de comparação abre por padrão (`open` inicial `true`); rótulos dos 3 modos = "Comparar com {agentName}" / "Comparar com outro agente" / "Só entrar no ranking"
-- [ ] `onCompare?.({a, b})` chamado no mesmo ponto que `notifyTelegram` já é chamado, só quando `variant==='ranking'`
-- [ ] `npm run build` e `npm run lint` verdes
-- [ ] Nota no "Done when" da task seguinte (T8) pra verificação manual de não-regressão em `/ingress` (uso sem `variant`)
+- [x] `variant` default `'default'` preserva 100% o comportamento/props/render atuais (nenhum snapshot visual muda quando `variant` é omitido)
+- [x] `variant==='ranking'`: modo `'solo'` disponível (`runCompare` faz `setCmp({a: toAgent(textA)})`, sem `b`); caixa de comparação abre por padrão (`open` inicial `true`); rótulos dos 3 modos = "Comparar com {agentName}" / "Comparar com outro agente" / "Só entrar no ranking"
+- [x] `onCompare?.({a, b})` chamado no mesmo ponto que `notifyTelegram` já é chamado, só quando `variant==='ranking'`
+- [x] `npm run build` e `npm run lint` verdes
+- [x] Nota no "Done when" da task seguinte (T8) pra verificação manual de não-regressão em `/ingress` (uso sem `variant`)
 
 **Tests**: none
 **Gate**: build

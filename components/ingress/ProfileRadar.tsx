@@ -23,7 +23,7 @@ const SCALES: {v: Scale; label: string}[] = [
 
 type Part = {key: string; label: string; value: number; ref: number; ratio: number; note: string | null}
 type Axis = {id: string; label: string; onyxRatio: number; value: number; parts: Part[]}
-type Agent = {codename: string; stats: Record<string, number>; capturedAt?: string}
+export type Agent = {codename: string; stats: Record<string, number>; capturedAt?: string}
 
 function point(i: number, count: number, radius: number): [number, number] {
   const angle = -Math.PI / 2 + (i * 2 * Math.PI) / count
@@ -99,18 +99,22 @@ export default function ProfileRadar({
   stats,
   agentName = 'Você',
   capturedAt,
+  variant = 'default',
+  onCompare,
 }: {
   stats: Profile['stats']
   agentName?: string
   capturedAt?: string
+  variant?: 'default' | 'ranking'
+  onCompare?: (agents: {a: Agent; b?: Agent}) => void
 }) {
   const [active, setActive] = useState<number | null>(null)
   const [scale, setScale] = useState<Scale>(RADAR_DRAW_MAX)
-  const [open, setOpen] = useState(false)
-  const [mode, setMode] = useState<'vs-me' | 'two'>('vs-me')
+  const [open, setOpen] = useState(variant === 'ranking')
+  const [mode, setMode] = useState<'vs-me' | 'two' | 'solo'>('vs-me')
   const [textA, setTextA] = useState('')
   const [textB, setTextB] = useState('')
-  const [cmp, setCmp] = useState<{a: Agent; b: Agent} | null>(null)
+  const [cmp, setCmp] = useState<{a: Agent; b?: Agent} | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [sentNote, setSentNote] = useState(false)
 
@@ -147,12 +151,16 @@ export default function ProfileRadar({
 
   const runCompare = () => {
     try {
-      const a = mode === 'two' ? toAgent(textA) : me
-      const b = toAgent(mode === 'two' ? textB : textA)
-      setCmp({a, b})
+      const a = mode === 'vs-me' ? me : toAgent(textA)
+      const b = mode === 'solo' ? undefined : toAgent(mode === 'two' ? textB : textA)
+      setCmp(b ? {a, b} : {a})
       setError(null)
       setActive(null)
-      notifyTelegram(a, b, mode === 'vs-me', flagSent)
+      if (variant === 'ranking') {
+        onCompare?.({a, b})
+      } else if (b) {
+        notifyTelegram(a, b, mode === 'vs-me', flagSent)
+      }
     } catch (e) {
       setCmp(null)
       setError(e instanceof Error ? e.message : 'Não deu pra ler esse texto.')
@@ -164,7 +172,7 @@ export default function ProfileRadar({
     setTextB('')
     setError(null)
     setSentNote(false)
-    setOpen(false)
+    setOpen(variant === 'ranking')
   }
   const canCompare = mode === 'two' ? textA.trim() !== '' && textB.trim() !== '' : textA.trim() !== ''
 
@@ -347,15 +355,24 @@ export default function ProfileRadar({
         <div className="ing-radar__compare-box">
           <div className="ing-radar__cmp-mode" role="group" aria-label="O que comparar">
             <button type="button" aria-pressed={mode === 'vs-me'} onClick={() => setMode('vs-me')}>
-              Contra {agentName}
+              {variant === 'ranking' ? `Comparar com ${agentName}` : `Contra ${agentName}`}
             </button>
             <button type="button" aria-pressed={mode === 'two'} onClick={() => setMode('two')}>
-              Dois agentes
+              {variant === 'ranking' ? 'Comparar com outro agente' : 'Dois agentes'}
             </button>
+            {variant === 'ranking' ? (
+              <button type="button" aria-pressed={mode === 'solo'} onClick={() => setMode('solo')}>
+                Só entrar no ranking
+              </button>
+            ) : null}
           </div>
 
           <label htmlFor="ing-radar-a" className="ing-radar__compare-label">
-            {mode === 'two' ? 'Export do agente A (verde):' : 'Cole o export de estatísticas do app do outro agente:'}
+            {mode === 'two'
+              ? 'Export do agente A (verde):'
+              : mode === 'solo'
+                ? 'Cole seu export de estatísticas do app:'
+                : 'Cole o export de estatísticas do app do outro agente:'}
           </label>
           <textarea
             id="ing-radar-a"
