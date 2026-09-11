@@ -340,9 +340,9 @@ T36 -> T37
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Um parágrafo por eixo (Construção, Destruição, Exploração, Hacking, Links e campos) explicando o que cada um mede, em PT e EN
-- [ ] `useLang()` escolhe o idioma sem reload
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Um parágrafo por eixo (Construção, Destruição, Exploração, Hacking, Links e campos) explicando o que cada um mede, em PT e EN
+- [x] `useLang()` escolhe o idioma sem reload
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
