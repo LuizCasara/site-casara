@@ -499,10 +499,10 @@ T36 -> T37
 - Skill: NONE
 
 **Done when**:
-- [ ] Cada uma das 17 entradas do JSON ganha `blurbEn`/`factsEn` (conteúdo redigido, não placeholder)
-- [ ] `lib/ingress-lore.mjs` expõe uma função/parâmetro `lang` pra escolher a versão certa
-- [ ] Testes conferindo que toda entrada tem a versão EN preenchida
-- [ ] `npm test` verde (contagem de testes não regride)
+- [x] Cada uma das 17 entradas do JSON ganha `blurbEn`/`factsEn` (conteúdo redigido, não placeholder)
+- [x] `lib/ingress-lore.mjs` expõe uma função/parâmetro `lang` pra escolher a versão certa
+- [x] Testes conferindo que toda entrada tem a versão EN preenchida
+- [x] `npm test` verde (contagem de testes não regride)
 
 **Tests**: unit
 **Gate**: quick
