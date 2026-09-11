@@ -23,7 +23,7 @@ const SCALES: {v: Scale; label: string}[] = [
 
 type Part = {key: string; label: string; value: number; ref: number; ratio: number; note: string | null}
 type Axis = {id: string; label: string; onyxRatio: number; value: number; parts: Part[]}
-export type Agent = {codename: string; stats: Record<string, number>; capturedAt?: string}
+export type Agent = {codename: string; faction?: string; stats: Record<string, number>; capturedAt?: string}
 
 function point(i: number, count: number, radius: number): [number, number] {
   const angle = -Math.PI / 2 + (i * 2 * Math.PI) / count
@@ -35,7 +35,12 @@ const pct = (r: number) => `${Math.round(r * 100)}%`
 function toAgent(text: string): Agent {
   const p = parseAppExport(text)
   if (!p.agent?.codename) throw new Error('Export sem "Agent Name".')
-  return {codename: p.agent.codename, stats: p.stats, capturedAt: p.capturedAt ?? undefined}
+  return {
+    codename: p.agent.codename,
+    faction: p.agent.faction ?? undefined,
+    stats: p.stats,
+    capturedAt: p.capturedAt ?? undefined,
+  }
 }
 
 const DEDUPE_MS = 10 * 60 * 1000
