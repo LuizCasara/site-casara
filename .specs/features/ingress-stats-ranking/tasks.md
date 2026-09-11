@@ -222,7 +222,7 @@ T36 -> T37
 - Skill: NONE
 
 **Done when**:
-- [x] `POST`: valida body (`codename`, `faction` ∈ {enlightened,resistance}, `lifetimeAp` numérico, `stats` com as 11 chaves) → `400` se inválido
+- [x] `POST`: valida body (`codename`, `faction` ∈ {enlightened,resistance}, `lifetimeAp` numérico, `stats` com as 12 chaves) → `400` se inválido
 - [x] `POST`: se `isFencherLcCodename` → não roda SQL de escrita, só lê a linha existente e devolve `{written:false, rank, totalAgents, overallScore, axisScores, tier}`
 - [x] `POST`: senão, computa `axisScores`/`overallScore` via T2, executa `INSERT ... ON CONFLICT (codename_key) DO UPDATE ... WHERE updated_at < NOW() - INTERVAL '5 minutes'`, e devolve o mesmo shape de resposta (com `written:true`/`false` conforme o upsert de fato aconteceu)
 - [x] `POST`: calcula `rank`/`totalAgents` com uma query separada usando a mesma ordenação de T3
@@ -351,7 +351,7 @@ T36 -> T37
 
 ### T10: `components/ingress/stats/IngressRankingTable.tsx`
 
-**What**: Tabela do ranking completo + ícone "olho" com popover dos 11 valores brutos por eixo.
+**What**: Tabela do ranking completo + ícone "olho" com popover dos 12 valores brutos por eixo.
 **Where**: `components/ingress/stats/IngressRankingTable.tsx`
 **Depends on**: T4
 **Reuses**: `fmtStat` de `lib/ingress-format.mjs`; `Panel.tsx`.
@@ -363,7 +363,7 @@ T36 -> T37
 
 **Done when**:
 - [ ] Colunas: posição, codinome (+ indicador de facção), atualizado em, medido desde, AP total, nota geral
-- [ ] Ícone "olho" por linha → popover com os 11 valores brutos agrupados pelos 5 eixos
+- [ ] Ícone "olho" por linha → popover com os 12 valores brutos agrupados pelos 5 eixos
 - [ ] Recebe `initialRows` como prop (SSR) e refaz `GET /api/ingress-rankings` quando sinalizado por `StatsRadarSection`
 - [ ] Estado vazio explicativo quando `rows.length === 0`
 - [ ] `npm run build` e `npm run lint` verdes

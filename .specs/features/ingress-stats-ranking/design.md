@@ -49,7 +49,7 @@ graph TD
 | `ProfileRadar` | `components/ingress/ProfileRadar.tsx` | Estender aditivamente: nova prop `variant?: 'default' \| 'ranking'`, novo modo `'solo'`, nova prop `onCompare`. Uso atual em `/ingress` (sem `variant`) fica byte-a-byte idêntico. |
 | `parseAppExport` | `lib/ingress-stats.mjs` | Reaproveitado sem mudança — já é o parser client-safe usado tanto pelo radar existente quanto pelo novo POST (o cliente parseia antes de mandar só os campos que interessam). |
 | `computeRadarAxes`, `compareRadar` | `lib/ingress-radar.mjs` | Inalterados — continuam sendo a fonte do desenho do polígono (forma visual, baseada só em razão-Onyx). A nova nota geral é uma camada adicional, não substitui isso. |
-| `RADAR_AXES` (estrutura dos 5 eixos/11 stats) | `lib/ingress-radar.mjs` | Reaproveitada como a estrutura de agrupamento pro novo módulo de score — mesmos 5 eixos, mesmos 11 `statKey`s, só troca a fonte do limiar (de `ref` fixo pra tiers do catálogo). |
+| `RADAR_AXES` (estrutura dos 5 eixos/12 stats) | `lib/ingress-radar.mjs` | Reaproveitada como a estrutura de agrupamento pro novo módulo de score — mesmos 5 eixos, mesmos 12 `statKey`s, só troca a fonte do limiar (de `ref` fixo pra tiers do catálogo). |
 | `BADGES`, `computeBadge` | `lib/ingress-badges.mjs` | **Achado principal da revisão de design** — `computeBadge` já interpola tier+progresso+overflow-pós-Onyx (`beyond.multiple`/`beyond.pct`), matematicamente igual à extensão linear fechada com o usuário. `lib/ingress-tier-score.mjs` (novo) só converte essa saída num número contínuo, não recalcula tiers do zero. É essa cadeia (`ingress-badges.mjs` → `ingress-catalog.mjs` → `fs`) que torna o novo módulo server-only — motivo raiz de "nota só no servidor". |
 | `TIER_LABELS`, `TIER_COLOR`, `TIER_RANK` | `lib/ingress-tiers.mjs` | Reaproveitados pro selo de tier geral (Bronze..Onyx) na visão do próprio perfil e pra converter `tier` em posição numérica (`TIER_RANK[tier]`). |
 | `loadProfile()` | `lib/ingress.ts` | Fonte do baseline do FencherLC (build-time, sem I/O em runtime) — nunca é sobrescrito pela rota pública. |
@@ -137,7 +137,7 @@ graph TD
 
 ### `components/ingress/stats/IngressRankingTable.tsx` (novo, client)
 
-- **Purpose**: ISTATS-15/16/29 — lista completa, ordenada, com ícone de "olho" (popover) mostrando os 11 valores brutos por eixo.
+- **Purpose**: ISTATS-15/16/29 — lista completa, ordenada, com ícone de "olho" (popover) mostrando os 12 valores brutos por eixo.
 - **Interfaces**: recebe `initialRows` (SSR, da query direta feita em `page.tsx`) como prop inicial; refaz `GET /api/ingress-rankings` quando `StatsRadarSection` sinaliza uma escrita nova.
 - **Dependencies**: `useLang()` (cabeçalhos), `fmtStat` de `lib/ingress-format.mjs` (reaproveitado pra formatar os números do popover, mesmo formatador já usado no breakdown do radar).
 

@@ -39,7 +39,7 @@
 | Destaque da própria linha no ranking ao reabrir a página | `localStorage` guarda o(s) codinome(s) já submetidos neste navegador pra destacar a linha correspondente | Mesmo espírito do dedupe por hash em `localStorage` que `ProfileRadar.tsx` já usa hoje pro Telegram; não exige conta/login | n |
 | Validação anti-fraude do conteúdo colado | Nenhuma validação além da já existente em `parseAppExport` (tipos/formato) — sem verificação de autenticidade | Não há como confirmar autenticidade sem API oficial; mesmo risco que a comparação client-side já aceita hoje, só que agora persistido | n |
 | "Data de início de jogo" | `created_at` da linha (primeira medição no NOSSO ranking), rotulada na UI como "medido desde" | Nenhuma fonte de dado disponível (export nem `badge-catalog.json`) contém a data real de criação da conta no Ingress | y |
-| Escopo do hover "olho" na tabela de ranking | Só os 11 valores brutos usados nas 5 pontas do radar (mesmo dado já gravado em `stat_values`) | Confirmado explicitamente — não o catálogo completo de ~54 medalhas, que exigiria guardar dado fora do escopo desta feature | y |
+| Escopo do hover "olho" na tabela de ranking | Só os 12 valores brutos usados nas 5 pontas do radar (mesmo dado já gravado em `stat_values`) | Confirmado explicitamente — não o catálogo completo de ~54 medalhas, que exigiria guardar dado fora do escopo desta feature | y |
 | Selo de tier (Bronze..Onyx) | Aparece só na visão do próprio perfil/radar (P1a), não como coluna na tabela de ranking | O usuário listou as colunas exatas da tabela (nome, atualização, medido desde, AP, nota geral) sem incluir selo de tier ali | y |
 
 **Open questions:** none — todas as ambiguidades foram resolvidas em conversa (i18n, fórmula da nota, política do FencherLC, proteção de GET, UX do debounce, biblioteca de toast, desempate) ou registradas como assumption acima.
@@ -76,7 +76,7 @@
 
 **Acceptance Criteria**:
 
-1. WHEN um visitante envia stats por qualquer um dos 3 caminhos de entrada THEN o sistema SHALL fazer upsert de uma linha por agente colado (chave = codinome normalizado) em `casara.ingress_rankings`, gravando: codinome (normalizado + casing original), facção (`Enlightened`/`Resistance`, do campo `faction` do export), AP total (`lifetimeAp`), nota geral, a nota individual de cada um dos 5 eixos, e os valores brutos dos 11 stats usados nas 5 pontas do radar (`resonatorsDeployed`, `modsDeployed`, `resonatorsDestroyed`, `portalsNeutralized`, `uniquePortalsVisited`, `distanceWalkedKm`, `uniqueMissionsCompleted`, `hacks`, `glyphHackPoints`, `linksCreated`, `controlFieldsCreated`, `mindUnitsCaptured`).
+1. WHEN um visitante envia stats por qualquer um dos 3 caminhos de entrada THEN o sistema SHALL fazer upsert de uma linha por agente colado (chave = codinome normalizado) em `casara.ingress_rankings`, gravando: codinome (normalizado + casing original), facção (`Enlightened`/`Resistance`, do campo `faction` do export), AP total (`lifetimeAp`), nota geral, a nota individual de cada um dos 5 eixos, e os valores brutos dos 12 stats usados nas 5 pontas do radar (`resonatorsDeployed`, `modsDeployed`, `resonatorsDestroyed`, `portalsNeutralized`, `uniquePortalsVisited`, `distanceWalkedKm`, `uniqueMissionsCompleted`, `hacks`, `glyphHackPoints`, `linksCreated`, `controlFieldsCreated`, `mindUnitsCaptured`).
 2. IF a linha existente de um agente foi atualizada há menos de 5 minutos THEN o sistema SHALL NOT atualizar essa linha na nova submissão, e SHALL usar os dados já armazenados desse agente para exibir o resultado.
 3. The system SHALL registrar, em cada linha, a data da primeira vez que aquele agente foi medido (`created_at`, exibida como "medido desde" — não é a data de criação da conta no Ingress, que não existe em nenhuma fonte de dado disponível) e a data da última atualização (`updated_at`).
 4. The system SHALL tratar o codinome do FencherLC como somente-leitura nesta tabela — nenhum caminho da API pública SHALL gravar ou atualizar a linha do FencherLC.
@@ -99,7 +99,7 @@
 **Acceptance Criteria**:
 
 1. WHEN um visitante abre `/ingress/stats` THEN o sistema SHALL exibir uma tabela com todas as linhas de `casara.ingress_rankings`, ordenadas conforme a regra de desempate acima, mostrando: posição, codinome (com um indicador visual de facção — Enlightened/Resistance), data de atualização, data da primeira medição ("medido desde"), AP total e nota geral.
-2. The system SHALL exibir, em cada linha da tabela, um ícone de "olho" que, ao hover/toque, mostra em um popover os 11 valores brutos usados nas 5 pontas do radar daquele agente, organizados pelos 5 eixos (Construção, Destruição, Exploração, Hacking, Links e campos).
+2. The system SHALL exibir, em cada linha da tabela, um ícone de "olho" que, ao hover/toque, mostra em um popover os 12 valores brutos usados nas 5 pontas do radar daquele agente, organizados pelos 5 eixos (Construção, Destruição, Exploração, Hacking, Links e campos).
 3. `GET /api/ingress-rankings` SHALL responder usando uma janela curta de cache/revalidate (15-30s) e SHALL limitar o número de linhas retornadas por um `LIMIT` explícito (ex. 100), sem rate-limit por IP.
 4. The system SHALL permitir a leitura do ranking sem exigir nenhum token de autenticação, consistente com o restante de `/ingress` (rota pública).
 
