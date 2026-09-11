@@ -176,8 +176,8 @@
 | ISTATS-09 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-10 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-11 | P1: Persistência do ranking | Design | Implementing |
-| ISTATS-12 | P1: Persistência do ranking | Design | Pending |
-| ISTATS-13 | P1: Persistência do ranking | Design | Pending |
+| ISTATS-12 | P1: Persistência do ranking | Design | Implementing |
+| ISTATS-13 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-14 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-28 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-15 | P1: Ranking visível | Design | Pending |

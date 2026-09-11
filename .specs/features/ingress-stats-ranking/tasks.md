@@ -271,9 +271,9 @@ T36 -> T37
 - Skill: NONE
 
 **Done when**:
-- [ ] `sonner` em `dependencies` do `package.json`, `npm install` roda sem erro
-- [ ] `<Toaster/>` renderizado dentro de `app/ingress/layout.tsx` (Server Component permanece Server Component — `<Toaster/>` é filho, não torna o layout client)
-- [ ] `npm run build` verde
+- [x] `sonner` em `dependencies` do `package.json`, `npm install` roda sem erro
+- [x] `<Toaster/>` renderizado dentro de `app/ingress/layout.tsx` (Server Component permanece Server Component — `<Toaster/>` é filho, não torna o layout client)
+- [x] `npm run build` verde
 
 **Tests**: none
 **Gate**: build
