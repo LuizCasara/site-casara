@@ -46,9 +46,11 @@ export default function IngressTutorial() {
 
   return (
     <Panel label={t.panelLabel} hint={t.panelHint}>
-      <ol className="ing-tutorial__steps">
+      <ol className="ing-tutorial__steps" style={{listStyle: 'decimal', paddingLeft: '1.4em'}}>
         {t.steps.map((step, i) => (
-          <li key={i}>{step}</li>
+          <li key={i} style={{marginBottom: '0.4em'}}>
+            {step}
+          </li>
         ))}
       </ol>
 
@@ -56,7 +58,7 @@ export default function IngressTutorial() {
         <span>{t.imgPlaceholder}</span>
       </div>
 
-      <p className="ing-tutorial__suggestion">
+      <p className="ing-tutorial__suggestion" style={{marginTop: '0.8em'}}>
         {t.suggestionLabel}{' '}
         <a
           className="ing-radar__btn"
