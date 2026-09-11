@@ -175,15 +175,15 @@
 | ISTATS-08 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-09 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-10 | P1: Persistência do ranking | Design | Implementing |
-| ISTATS-11 | P1: Persistência do ranking | Design | Pending |
+| ISTATS-11 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-12 | P1: Persistência do ranking | Design | Pending |
 | ISTATS-13 | P1: Persistência do ranking | Design | Pending |
 | ISTATS-14 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-28 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-15 | P1: Ranking visível | Design | Pending |
 | ISTATS-29 | P1: Ranking visível | Design | Pending |
-| ISTATS-16 | P1: Ranking visível | Design | Pending |
-| ISTATS-17 | P1: Ranking visível | Design | Pending |
+| ISTATS-16 | P1: Ranking visível | Design | Implementing |
+| ISTATS-17 | P1: Ranking visível | Design | Implementing |
 | ISTATS-18 | P1: i18n /ingress | Design | Pending |
 | ISTATS-19 | P1: i18n /ingress | Design | Pending |
 | ISTATS-20 | P1: i18n /ingress | Design | Pending |
