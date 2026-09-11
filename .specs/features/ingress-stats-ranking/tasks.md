@@ -362,11 +362,11 @@ T36 -> T37
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Colunas: posição, codinome (+ indicador de facção), atualizado em, medido desde, AP total, nota geral
-- [ ] Ícone "olho" por linha → popover com os 12 valores brutos agrupados pelos 5 eixos
-- [ ] Recebe `initialRows` como prop (SSR) e refaz `GET /api/ingress-rankings` quando sinalizado por `StatsRadarSection`
-- [ ] Estado vazio explicativo quando `rows.length === 0`
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Colunas: posição, codinome (+ indicador de facção), atualizado em, medido desde, AP total, nota geral
+- [x] Ícone "olho" por linha → popover com os 12 valores brutos agrupados pelos 5 eixos
+- [x] Recebe `initialRows` como prop (SSR) e refaz `GET /api/ingress-rankings` — **SPEC_DEVIATION**: em vez de "sinalizado por `StatsRadarSection`" (exigiria uma função como prop atravessando Server→Client, impossível com `page.tsx` como Server Component), refaz sozinha por poll de 20s (mesma janela do `s-maxage` da rota) + botão "Atualizar" manual — mesmo padrão de poll já usado por nuvem-de-palavras/quiz-ao-vivo neste projeto
+- [x] Estado vazio explicativo quando `rows.length === 0`
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build

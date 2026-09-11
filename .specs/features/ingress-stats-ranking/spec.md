@@ -180,8 +180,8 @@
 | ISTATS-13 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-14 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-28 | P1: Persistência do ranking | Design | Implementing |
-| ISTATS-15 | P1: Ranking visível | Design | Pending |
-| ISTATS-29 | P1: Ranking visível | Design | Pending |
+| ISTATS-15 | P1: Ranking visível | Design | Implementing |
+| ISTATS-29 | P1: Ranking visível | Design | Implementing |
 | ISTATS-16 | P1: Ranking visível | Design | Implementing |
 | ISTATS-17 | P1: Ranking visível | Design | Implementing |
 | ISTATS-18 | P1: i18n /ingress | Design | Pending |
