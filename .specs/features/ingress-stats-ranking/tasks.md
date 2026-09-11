@@ -433,8 +433,8 @@ T36 -> T37
 - Skill: NONE
 
 **Done when**:
-- [ ] Imagem gerada segue o mesmo padrão visual das rotas irmãs
-- [ ] `npm run build` verde
+- [x] Imagem gerada segue o mesmo padrão visual das rotas irmãs
+- [x] `npm run build` verde
 
 **Tests**: none
 **Gate**: build
