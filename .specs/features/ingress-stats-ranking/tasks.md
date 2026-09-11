@@ -477,9 +477,9 @@ T36 -> T37
 - Skill: NONE
 
 **Done when**:
-- [ ] Cada entrada de `STAT_COLUMNS`/`STAT_GROUPS` usada em componentes de UI (não as de `kind:'meta'`, que são só do CLI) ganha um `labelEn`, sem remover `label` (PT)
-- [ ] Testes conferindo que toda entrada usada em UI tem `labelEn` não-vazio
-- [ ] `npm test` verde (contagem de testes não regride)
+- [x] Cada entrada de `STAT_COLUMNS`/`STAT_GROUPS` usada em componentes de UI (não as de `kind:'meta'`, que são só do CLI) ganha um `labelEn` (grupos ganham `titleEn`), sem remover `label`/`title` (PT)
+- [x] Testes conferindo que toda entrada usada em UI tem `labelEn`/`titleEn` não-vazio
+- [x] `npm test` verde (contagem de testes não regride — 373 → 376)
 
 **Tests**: unit
 **Gate**: quick
