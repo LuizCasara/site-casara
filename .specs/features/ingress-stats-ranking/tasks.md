@@ -198,11 +198,11 @@ T36 -> T37
 - Skill: NONE
 
 **Done when**:
-- [ ] `normalizeCodenameKey(codename)` — `trim().toLowerCase()`
-- [ ] `isFencherLcCodename(codenameKey, fencherlcCodename)` — comparação normalizada
-- [ ] `compareRankingRows(a, b)` — comparador pra `Array.sort`: `overall_score` desc → `lifetime_ap` desc → `created_at` asc
-- [ ] Testes: normalização (espaços, caixa mista), guarda do FencherLC (case-insensitive), comparador com empates em cada nível (nota igual → desempata por AP; nota e AP iguais → desempata por data)
-- [ ] `npm test` verde
+- [x] `normalizeCodenameKey(codename)` — `trim().toLowerCase()`
+- [x] `isFencherLcCodename(codenameKey, fencherlcCodename)` — comparação normalizada
+- [x] `compareRankingRows(a, b)` — comparador pra `Array.sort`: `overall_score` desc → `lifetime_ap` desc → `created_at` asc
+- [x] Testes: normalização (espaços, caixa mista), guarda do FencherLC (case-insensitive), comparador com empates em cada nível (nota igual → desempata por AP; nota e AP iguais → desempata por data)
+- [x] `npm test` verde
 
 **Tests**: unit
 **Gate**: quick
