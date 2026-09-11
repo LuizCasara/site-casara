@@ -166,11 +166,11 @@
 | --- | --- | --- | --- |
 | ISTATS-01 | P1: Rota /stats | Design | Pending |
 | ISTATS-02 | P1: Rota /stats | Design | Pending |
-| ISTATS-03 | P1: Rota /stats | Design | Pending |
-| ISTATS-04 | P1: Rota /stats | Design | Pending |
-| ISTATS-05 | P1: Rota /stats | Design | Pending |
+| ISTATS-03 | P1: Rota /stats | Design | Implementing |
+| ISTATS-04 | P1: Rota /stats | Design | Implementing |
+| ISTATS-05 | P1: Rota /stats | Design | Implementing |
 | ISTATS-06 | P1: Rota /stats | Design | Pending |
-| ISTATS-27 | P1: Rota /stats | Design | Pending |
+| ISTATS-27 | P1: Rota /stats | Design | Implementing |
 | ISTATS-07 | P1: Persistência do ranking | Design | Implementing |
 | ISTATS-08 | P1: Persistência do ranking | Design | Pending |
 | ISTATS-09 | P1: Persistência do ranking | Design | Pending |

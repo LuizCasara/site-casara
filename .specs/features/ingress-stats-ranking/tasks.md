@@ -173,12 +173,12 @@ T36 -> T37
 - Skill: NONE
 
 **Done when**:
-- [ ] `tierPosition(badgeResult)` — `TIER_RANK[tier] + (pct ?? 0)` quando não `atMax`; `5 + (beyond.multiple - 1) + beyond.pct` quando `atMax`
-- [ ] `computeAxisScores(stats)` — resolve `badgeDef` de cada parte de `RADAR_AXES` via `BADGES.find(b => b.slug === part.badge)`; caso especial `portalsNeutralized` usa um `badgeDef` sintético = tiers do Purifier ÷ 8
-- [ ] `computeOverallScore(axisScores)` — média × 20
-- [ ] `overallTierLabel(axisScores)` — piso da média → `TIER_LABELS`, sufixo `+N` quando > Onyx
-- [ ] Testes cobrindo: valor 0 em cada eixo, valor exatamente no limiar de cada tier, overflow (2×, 25× Onyx uniforme em tudo → nota 120 e ~580, conferindo a fórmula linear fechada com o usuário), derivação de `portalsNeutralized`
-- [ ] `npm test` verde
+- [x] `tierPosition(badgeResult)` — `TIER_RANK[tier] + (pct ?? 0)` quando não `atMax`; `5 + (beyond.multiple - 1) + beyond.pct` quando `atMax`
+- [x] `computeAxisScores(stats)` — resolve `badgeDef` de cada parte de `RADAR_AXES` via `BADGES.find(b => b.slug === part.badge)`; caso especial `portalsNeutralized` usa um `badgeDef` sintético = tiers do Purifier ÷ 8
+- [x] `computeOverallScore(axisScores)` — média × 20
+- [x] `overallTierLabel(axisScores)` — piso da média → `TIER_LABELS`, sufixo `+N` quando > Onyx
+- [x] Testes cobrindo: valor 0 em cada eixo, valor exatamente no limiar de cada tier, overflow (2×, 25× Onyx uniforme em tudo → nota 120 e ~580, conferindo a fórmula linear fechada com o usuário), derivação de `portalsNeutralized`
+- [x] `npm test` verde
 
 **Tests**: unit
 **Gate**: quick
