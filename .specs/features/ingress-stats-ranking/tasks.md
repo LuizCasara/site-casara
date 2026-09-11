@@ -293,9 +293,9 @@ T36 -> T37
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Aceita `agents: {label, overallScore, axisScores, tier}[]` (1 ou 2)
-- [ ] Renderiza nota geral + selo por agente, e as 5 notas de eixo lado a lado quando há 2 agentes
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Aceita `agents: {label, overallScore, axisScores, tier}[]` (1 ou 2)
+- [x] Renderiza nota geral + selo por agente, e as 5 notas de eixo lado a lado quando há 2 agentes
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
