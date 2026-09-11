@@ -454,10 +454,10 @@ T36 -> T37
 - Skill: NONE
 
 **Done when**:
-- [ ] `tierLabel(tier, lang: 'pt'|'en')` — PT usa `TIER_LABELS` atual; EN usa os nomes oficiais em inglês (Bronze/Silver/Gold/Platinum/Onyx/"No medal")
-- [ ] `TIER_LABELS` export original inalterado (nenhum call site existente quebra)
-- [ ] Testes cobrindo os dois idiomas pra cada tier
-- [ ] `npm test` verde (contagem de testes não regride)
+- [x] `tierLabel(tier, lang: 'pt'|'en')` — PT usa `TIER_LABELS` atual; EN usa os nomes oficiais em inglês (Bronze/Silver/Gold/Platinum/Onyx/"No medal")
+- [x] `TIER_LABELS` export original inalterado (nenhum call site existente quebra)
+- [x] Testes cobrindo os dois idiomas pra cada tier
+- [x] `npm test` verde (contagem de testes não regride — 369 → 373)
 
 **Tests**: unit
 **Gate**: quick

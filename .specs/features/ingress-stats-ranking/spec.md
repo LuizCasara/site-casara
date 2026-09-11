@@ -185,7 +185,7 @@
 | ISTATS-16 | P1: Ranking visível | Design | Implementing |
 | ISTATS-17 | P1: Ranking visível | Design | Implementing |
 | ISTATS-18 | P1: i18n /ingress | Design | Pending |
-| ISTATS-19 | P1: i18n /ingress | Design | Pending |
+| ISTATS-19 | P1: i18n /ingress | Design | Implementing |
 | ISTATS-20 | P1: i18n /ingress | Design | Pending |
 | ISTATS-21 | P1: i18n /ingress | Design | Pending |
 | ISTATS-22 | P2: Tutorial | Design | Implementing |
