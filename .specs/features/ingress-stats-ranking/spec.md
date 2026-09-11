@@ -190,9 +190,9 @@
 | ISTATS-21 | P1: i18n /ingress | Design | Pending |
 | ISTATS-22 | P2: Tutorial | Design | Pending |
 | ISTATS-23 | P2: Sugestão Telegram | Design | Pending |
-| ISTATS-24 | Edge case: parse falho | Design | Pending |
-| ISTATS-25 | Edge case: falha de escrita no Neon | Design | Pending |
-| ISTATS-26 | Edge case: codinomes idênticos | Design | Pending |
+| ISTATS-24 | Edge case: parse falho | Design | Implementing |
+| ISTATS-25 | Edge case: falha de escrita no Neon | Design | Implementing |
+| ISTATS-26 | Edge case: codinomes idênticos | Design | Implementing |
 
 **ID format:** `ISTATS-[NUMBER]`
 

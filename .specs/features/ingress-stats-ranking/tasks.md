@@ -315,12 +315,12 @@ T36 -> T37
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] `onCompare({a,b})`: decide quais agentes foram colados por modo (`vs-me→[b]`, `two→[a,b]`, `solo→[a]`) — nunca posta o `me`/FencherLC vindo de prop
-- [ ] `Promise.allSettled` nos POSTs — falha de um não bloqueia o outro
-- [ ] Toast de posição usa a regra "primeiro colado" (assumption do spec) quando 2 agentes; toast suave de erro em falha de rede (Edge case do spec), nunca lança/trava a UI
-- [ ] Atualiza o estado que alimenta `OverallScorePanel`; sinaliza `IngressRankingTable` pra refetch após `written:true`
-- [ ] **Verificação manual de não-regressão**: `/ingress` (uso sem `variant`) continua idêntico — comparação, Telegram, tudo igual
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] `onCompare({a,b})`: decide quais agentes foram colados por modo (`vs-me→[b]`, `two→[a,b]`, `solo→[a]`) — nunca posta o `me`/FencherLC vindo de prop
+- [x] `Promise.allSettled` nos POSTs — falha de um não bloqueia o outro
+- [x] Toast de posição usa a regra "primeiro colado" (assumption do spec) quando 2 agentes; toast suave de erro em falha de rede (Edge case do spec), nunca lança/trava a UI
+- [x] Atualiza o estado que alimenta `OverallScorePanel`; sinaliza `IngressRankingTable` pra refetch após `written:true` (via prop `onWritten` — `IngressRankingTable` ainda não existe, é T10/Phase 3; o hook point já está pronto pra `page.tsx` (T12) ligar os dois)
+- [x] **Verificação manual de não-regressão** (por revisão de código, não navegador — ver nota de preferência do usuário): `variant` default preserva `mode` em `'vs-me'|'two'` só, `open` inicial `false`, `notifyTelegram` chamado exatamente como antes com `b` sempre definido — nenhum caminho novo (`solo`, `onCompare`, `faction`) é alcançável nem observável em `/ingress` sem passar `variant="ranking"`
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
