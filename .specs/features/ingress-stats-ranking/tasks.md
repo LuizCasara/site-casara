@@ -1063,3 +1063,125 @@ Nenhuma tarefa depende de uma tarefa de fase posterior — todas as dependência
 | T37 | Página de dashboard | none | none | ✅ OK |
 
 Nenhuma tarefa marca `Tests: none` fora do que a matriz permite (só camadas React/rota/config, todas listadas como `none` na matriz).
+
+---
+
+## Fix Tasks — Verifier Round 1 (`.specs/features/ingress-stats-ranking/validation.md`, Fix 1)
+
+**Gap**: `/ingress/stats` não traduz de verdade pro inglês — o radar (`ProfileRadar.tsx`), o painel de nota geral (`OverallScorePanel.tsx`) e a tabela de ranking (`IngressRankingTable.tsx`) nunca ganharam `useLang()`; só `AxisExplanations`/`IngressTutorial` (componentes novos que já nasceram bilíngues) e as páginas/componentes pré-existentes (Fases 5-8) foram traduzidos. Raiz: `RADAR_AXES` (`lib/ingress-radar.mjs`) nunca ganhou rótulo EN, diferente de todas as outras fontes de dado tocadas pelas fases de i18n.
+
+### FIX-1: `lib/ingress-radar.mjs` — rótulos EN em `RADAR_AXES`
+
+**What**: Adicionar `labelEn` a cada um dos 5 eixos e das 12 partes de `RADAR_AXES`, e `noteEn` na única parte com `note` (portais neutralizados), aditivo — `label`/`note` (PT) inalterados.
+**Where**: `lib/ingress-radar.mjs`
+**Depends on**: None
+**Reuses**: mesmo padrão de `labelEn` já usado em `lib/ingress-stats.mjs` (T15).
+**Requirement**: ISTATS-19 (fix)
+
+**Tools**: MCP: NONE / Skill: NONE
+
+**Nota de implementação**: `computeRadarAxes()` (mesmo arquivo) passou a propagar `labelEn`/`noteEn` no formato que já devolve (`{id,label,...}` por eixo, `{key,label,...}` por parte) — sem isso, FIX-3 (`ProfileRadar.tsx`, que só conhece o output de `computeRadarAxes`, não `RADAR_AXES` diretamente) não teria como ler o rótulo em inglês. Aditivo, dentro do mesmo arquivo/tarefa.
+
+**Done when**:
+- [x] Todo eixo e toda parte de `RADAR_AXES` tem `labelEn`; a parte com `note` tem `noteEn`
+- [x] Teste em `lib/ingress-radar.test.mjs` conferindo que todo eixo/parte tem `labelEn` não-vazio
+- [x] `npm test` verde (contagem de testes não regride — 379 → 381)
+
+**Tests**: unit
+**Gate**: quick
+
+---
+
+### FIX-2: `lib/ingress-tier-score.mjs` — `overallTierLabel` bilíngue
+
+**What**: Adicionar parâmetro `lang` a `overallTierLabel(axisScores, lang = 'pt')`, roteando pra `tierLabel()` de `lib/ingress-tiers.mjs` (T14) em vez de sempre devolver PT.
+**Where**: `lib/ingress-tier-score.mjs`
+**Depends on**: None
+**Reuses**: `tierLabel(tier, lang)` de `lib/ingress-tiers.mjs`, já bilíngue e testado (T14).
+**Requirement**: ISTATS-19 (fix)
+
+**Tools**: MCP: NONE / Skill: NONE
+
+**Done when**:
+- [ ] `overallTierLabel` aceita `lang`, default `'pt'` (chamada sem o parâmetro continua idêntica)
+- [ ] Teste conferindo `lang='en'` devolve o nome oficial em inglês (ex. "Onyx +1")
+- [ ] `npm test` verde (contagem de testes não regride)
+
+**Tests**: unit
+**Gate**: quick
+
+---
+
+### FIX-3: `components/ingress/ProfileRadar.tsx` — bilinguizar todo o texto
+
+**What**: Injetar `useLang()` e traduzir todo o texto do componente (label/hint do `Panel`, os 4 botões de escala, os 3 botões de modo, labels/placeholders das textareas, mensagens de erro/sucesso, rodapé/hint do breakdown, rótulos dos eixos e das partes via `labelEn`/`noteEn` de FIX-1), em AMBAS as variantes (`default` e `ranking`) — a branch `lang==='pt'` deve reproduzir exatamente o texto atual, pra não regredir o uso existente em `/ingress`.
+**Where**: `components/ingress/ProfileRadar.tsx`
+**Depends on**: FIX-1
+**Reuses**: padrão `translations[lang]` já usado no projeto.
+**Requirement**: ISTATS-19 (fix)
+
+**Tools**: MCP: NONE / Skill: `nextjs-use-client`
+
+**Done when**:
+- [ ] Todo texto visível do componente troca com o toggle, nas duas variantes
+- [ ] Com `lang==='pt'` (default), a saída é idêntica à atual — sem regressão no uso de `/ingress`
+- [ ] `npm run build` e `npm run lint` verdes
+
+**Tests**: none
+**Gate**: build
+
+---
+
+### FIX-4: `components/ingress/stats/OverallScorePanel.tsx` — bilinguizar
+
+**What**: Injetar `useLang()`, passar `lang` pra `overallTierLabel` (FIX-2), traduzir headers/labels próprios.
+**Where**: `components/ingress/stats/OverallScorePanel.tsx`
+**Depends on**: FIX-2
+**Requirement**: ISTATS-19 (fix)
+
+**Tools**: MCP: NONE / Skill: `nextjs-use-client`
+
+**Done when**:
+- [ ] Todo texto visível troca com o toggle, incluindo o selo de tier (via FIX-2)
+- [ ] `npm run build` e `npm run lint` verdes
+
+**Tests**: none
+**Gate**: build
+
+---
+
+### FIX-5: `components/ingress/stats/IngressRankingTable.tsx` — bilinguizar
+
+**What**: Injetar `useLang()`, traduzir cabeçalhos de coluna, estado vazio e o conteúdo do popover do "olho".
+**Where**: `components/ingress/stats/IngressRankingTable.tsx`
+**Depends on**: None
+**Requirement**: ISTATS-19 (fix)
+
+**Tools**: MCP: NONE / Skill: `nextjs-use-client`
+
+**Done when**:
+- [ ] Todo texto visível (cabeçalhos, estado vazio, popover) troca com o toggle
+- [ ] `npm run build` e `npm run lint` verdes
+
+**Tests**: none
+**Gate**: build
+
+---
+
+### FIX-6: `components/ingress/stats/StatsRadarSection.tsx` — bilinguizar toasts
+
+**What**: Injetar `useLang()`, traduzir o texto dos toasts (posição no ranking, falha suave de rede).
+**Where**: `components/ingress/stats/StatsRadarSection.tsx`
+**Depends on**: None
+**Requirement**: ISTATS-19 (fix)
+
+**Tools**: MCP: NONE / Skill: `nextjs-use-client`
+
+**Done when**:
+- [ ] Toasts trocam de idioma conforme `useLang()`
+- [ ] `npm run build` e `npm run lint` verdes
+
+**Tests**: none
+**Gate**: build
+
+**Ordem de execução**: FIX-1 → FIX-2 → FIX-3 → FIX-4, FIX-5, FIX-6 (as 3 últimas são independentes entre si, cabem num único batch de 6 tarefas).
