@@ -1,11 +1,13 @@
 'use client'
 
+import Link from 'next/link'
 import {
   FaBookOpen,
   FaGlobe,
   FaMapMarkedAlt,
   FaQuestion,
   FaTelegramPlane,
+  FaTrophy,
   FaYoutube,
 } from 'react-icons/fa'
 import {coverViewport} from '@/lib/ingress-s2.mjs'
@@ -36,6 +38,7 @@ const T = {
     eyebrow: 'Agente de campo',
     level: (n: number) => `Nível ${n}`,
     recursion: (n: number) => `${n} ${n === 1 ? 'recursão' : 'recursões'}`,
+    rankingCta: 'RANKING DE AGENTES',
     linksAria: 'Links do Ingress',
     whatIsIngress: 'O que é Ingress?',
     tooltip:
@@ -45,6 +48,7 @@ const T = {
     eyebrow: 'Field agent',
     level: (n: number) => `Level ${n}`,
     recursion: (n: number) => `${n} ${n === 1 ? 'recursion' : 'recursions'}`,
+    rankingCta: 'AGENT RANKING',
     linksAria: 'Ingress links',
     whatIsIngress: 'What is Ingress?',
     tooltip:
@@ -98,6 +102,10 @@ export default function AgentHeader({profile}: {profile: Profile}) {
           </span>
           <span>{t.recursion(agent.recursions)}</span>
         </div>
+        <Link href="/ingress/ranking" className="ing-hero__cta">
+          <FaTrophy aria-hidden="true" />
+          {t.rankingCta}
+        </Link>
         <nav className="ing-hero__links" aria-label={t.linksAria}>
           {LINKS.map(({href, label, Icon}) => (
             <a
