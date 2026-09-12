@@ -5,6 +5,7 @@ import {FaEye, FaEyeSlash} from 'react-icons/fa'
 import Panel from '../Panel'
 import {fmtStat} from '@/lib/ingress-format.mjs'
 import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
+import {useLang, type Lang} from '@/context/LanguageContext'
 
 export type RankingRow = {
   codename_key: string
@@ -32,8 +33,44 @@ const FACTION_COLOR: Record<RankingRow['faction'], string> = {
 const POLL_MS = 20_000
 
 const fmtScore = (n: number) => Math.round(n).toString()
-const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'})
+const fmtDate = (iso: string, lang: Lang) =>
+  new Date(iso).toLocaleDateString(lang === 'en' ? 'en-US' : 'pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'})
+
+/** Textos bilíngues (ISTATS-19 fix) — a branch `pt` reproduz o texto que já existia. */
+const T = {
+  pt: {
+    panelLabel: 'Ranking de agentes',
+    panelHint: (n: number) => `${n} agente${n > 1 ? 's' : ''} medido${n > 1 ? 's' : ''}`,
+    emptyBody: 'Ainda ninguém foi medido por aqui — cole seu export num dos botões acima pra ser o primeiro agente do ranking.',
+    refreshBtn: 'Atualizar',
+    refreshingBtn: 'Atualizando…',
+    colRank: '#',
+    colCodename: 'Codinome',
+    colUpdated: 'Atualizado em',
+    colMeasuredSince: 'Medido desde',
+    colAp: 'AP total',
+    colScore: 'Nota geral',
+    colDetails: 'Detalhes',
+    hideDetails: (name: string) => `Esconder detalhes de ${name}`,
+    showDetails: (name: string) => `Ver detalhes de ${name}`,
+  },
+  en: {
+    panelLabel: 'Agent ranking',
+    panelHint: (n: number) => `${n} agent${n > 1 ? 's' : ''} measured`,
+    emptyBody: "No one's been measured here yet — paste your export in one of the buttons above to be the ranking's first agent.",
+    refreshBtn: 'Refresh',
+    refreshingBtn: 'Refreshing…',
+    colRank: '#',
+    colCodename: 'Codename',
+    colUpdated: 'Updated on',
+    colMeasuredSince: 'Measured since',
+    colAp: 'Total AP',
+    colScore: 'Overall score',
+    colDetails: 'Details',
+    hideDetails: (name: string) => `Hide details for ${name}`,
+    showDetails: (name: string) => `Show details for ${name}`,
+  },
+} as const
 
 async function fetchRows(): Promise<RankingRow[] | null> {
   try {
@@ -64,6 +101,8 @@ async function fetchRows(): Promise<RankingRow[] | null> {
  * o mesmo; só o mecanismo muda.
  */
 export default function IngressRankingTable({initialRows}: {initialRows: RankingRow[]}) {
+  const {lang} = useLang()
+  const t = T[lang]
   const [rows, setRows] = useState(initialRows)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
@@ -90,33 +129,30 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
 
   if (rows.length === 0) {
     return (
-      <Panel label="Ranking de agentes">
-        <p style={{color: 'var(--ing-text-dim)'}}>
-          Ainda ninguém foi medido por aqui — cole seu export num dos botões acima pra ser o
-          primeiro agente do ranking.
-        </p>
+      <Panel label={t.panelLabel}>
+        <p style={{color: 'var(--ing-text-dim)'}}>{t.emptyBody}</p>
       </Panel>
     )
   }
 
   return (
-    <Panel label="Ranking de agentes" hint={`${rows.length} agente${rows.length > 1 ? 's' : ''} medido${rows.length > 1 ? 's' : ''}`}>
+    <Panel label={t.panelLabel} hint={t.panelHint(rows.length)}>
       <div className="ing-ranking-table__actions">
         <button type="button" className="ing-radar__btn" onClick={refreshNow} disabled={refreshing}>
-          {refreshing ? 'Atualizando…' : 'Atualizar'}
+          {refreshing ? t.refreshingBtn : t.refreshBtn}
         </button>
       </div>
       <div className="ing-ranking-table__wrap">
         <table className="ing-ranking-table">
           <thead>
             <tr>
-              <th scope="col">#</th>
-              <th scope="col">Codinome</th>
-              <th scope="col">Atualizado em</th>
-              <th scope="col">Medido desde</th>
-              <th scope="col">AP total</th>
-              <th scope="col">Nota geral</th>
-              <th scope="col" aria-label="Detalhes" />
+              <th scope="col">{t.colRank}</th>
+              <th scope="col">{t.colCodename}</th>
+              <th scope="col">{t.colUpdated}</th>
+              <th scope="col">{t.colMeasuredSince}</th>
+              <th scope="col">{t.colAp}</th>
+              <th scope="col">{t.colScore}</th>
+              <th scope="col" aria-label={t.colDetails} />
             </tr>
           </thead>
           <tbody>
@@ -136,8 +172,8 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                       {row.codename}
                       <span className="ing-ranking-table__faction"> ({FACTION_LABEL[row.faction]})</span>
                     </td>
-                    <td>{fmtDate(row.updated_at)}</td>
-                    <td>{fmtDate(row.created_at)}</td>
+                    <td>{fmtDate(row.updated_at, lang)}</td>
+                    <td>{fmtDate(row.created_at, lang)}</td>
                     <td>{fmtStat(row.lifetime_ap)}</td>
                     <td>{fmtScore(row.overall_score)}</td>
                     <td>
@@ -145,7 +181,7 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                         type="button"
                         className="ing-ranking-table__eye"
                         aria-expanded={isOpen}
-                        aria-label={isOpen ? `Esconder detalhes de ${row.codename}` : `Ver detalhes de ${row.codename}`}
+                        aria-label={isOpen ? t.hideDetails(row.codename) : t.showDetails(row.codename)}
                         onClick={() => setExpanded(isOpen ? null : row.codename_key)}
                       >
                         {isOpen ? <FaEyeSlash aria-hidden="true" /> : <FaEye aria-hidden="true" />}
@@ -158,11 +194,11 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                         <div className="ing-ranking-table__detail">
                           {RADAR_AXES.map((axis) => (
                             <div key={axis.id} className="ing-ranking-table__detail-axis">
-                              <strong>{axis.label}</strong>
+                              <strong>{lang === 'en' ? axis.labelEn : axis.label}</strong>
                               <ul>
                                 {axis.parts.map((part) => (
                                   <li key={part.key}>
-                                    {part.label}: {fmtStat(row.stat_values?.[part.key] ?? 0)}
+                                    {lang === 'en' ? part.labelEn : part.label}: {fmtStat(row.stat_values?.[part.key] ?? 0)}
                                   </li>
                                 ))}
                               </ul>

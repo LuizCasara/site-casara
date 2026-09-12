@@ -1172,8 +1172,8 @@ duplicava `RANK_TO_TIER` localmente pelo mesmo motivo). Efeito visível idêntic
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Todo texto visível (cabeçalhos, estado vazio, popover) troca com o toggle
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Todo texto visível (cabeçalhos, estado vazio, popover) troca com o toggle
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
