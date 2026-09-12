@@ -1123,9 +1123,9 @@ Nenhuma tarefa marca `Tests: none` fora do que a matriz permite (só camadas Rea
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Todo texto visível do componente troca com o toggle, nas duas variantes
-- [ ] Com `lang==='pt'` (default), a saída é idêntica à atual — sem regressão no uso de `/ingress`
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Todo texto visível do componente troca com o toggle, nas duas variantes
+- [x] Com `lang==='pt'` (default), a saída é idêntica à atual — sem regressão no uso de `/ingress`
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
