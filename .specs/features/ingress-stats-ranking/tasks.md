@@ -1190,8 +1190,8 @@ duplicava `RANK_TO_TIER` localmente pelo mesmo motivo). Efeito visível idêntic
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Toasts trocam de idioma conforme `useLang()`
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Toasts trocam de idioma conforme `useLang()`
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build

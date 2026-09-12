@@ -7,6 +7,35 @@ import OverallScorePanel, {type AgentScore} from './OverallScorePanel'
 import {normalizeCodenameKey} from '@/lib/ingress-rankings.mjs'
 import {RADAR_STAT_KEYS} from '@/lib/ingress-compare-message.mjs'
 import {trackIngressRankingSubmit} from '@/utils/analytics'
+import {useLang} from '@/context/LanguageContext'
+
+/** Textos bilíngues dos toasts (ISTATS-19 fix) — `pt` reproduz o texto anterior. */
+const T = {
+  pt: {
+    rankToast: (rank: number) => `Você está em ${rank}º lugar no ranking!`,
+    errorToast: 'Não foi possível atualizar seu registro agora.',
+  },
+  en: {
+    rankToast: (rank: number) => `You're in ${rank}${rankSuffixEn(rank)} place in the ranking!`,
+    errorToast: 'Could not update your record right now.',
+  },
+} as const
+
+/** Sufixo ordinal em inglês (1st/2nd/3rd/4th...), com a exceção 11-13 -> "th". */
+function rankSuffixEn(n: number): string {
+  const mod100 = n % 100
+  if (mod100 >= 11 && mod100 <= 13) return 'th'
+  switch (n % 10) {
+    case 1:
+      return 'st'
+    case 2:
+      return 'nd'
+    case 3:
+      return 'rd'
+    default:
+      return 'th'
+  }
+}
 
 export type FencherlcInfo = {
   stats: Record<string, number>
@@ -67,6 +96,8 @@ export default function StatsRadarSection({
   /** Chamado sempre que algum POST desta submissão gravou (`written:true`) — sinal pra quem mostra a tabela completa refazer o GET. */
   onWritten?: () => void
 }) {
+  const {lang} = useLang()
+  const t = T[lang]
   const [panelAgents, setPanelAgents] = useState<AgentScore[]>([
     {label: fencherlc.agentName, overallScore: fencherlc.overallScore, axisScores: fencherlc.axisScores, tier: fencherlc.tier},
   ])
@@ -109,9 +140,9 @@ export default function StatsRadarSection({
     // pasted em vs-me/solo, o agente A em dois-agentes) — é ele quem recebe o toast.
     const primaryResponse = toPost.length > 0 ? responses[0] : null
     if (primaryResponse) {
-      toast.success(`Você está em ${primaryResponse.rank}º lugar no ranking!`)
+      toast.success(t.rankToast(primaryResponse.rank))
     } else if (toPost.length > 0) {
-      toast.error('Não foi possível atualizar seu registro agora.')
+      toast.error(t.errorToast)
     }
 
     if (responses.some((r) => r?.written)) {
