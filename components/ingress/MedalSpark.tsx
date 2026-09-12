@@ -1,17 +1,23 @@
+'use client'
+
 /**
  * Mini gráfico: os tiers de uma medalha nas datas reais em que caíram, dentro do
- * vão de tempo dela. Sem estado — serve tanto o painel da linha do tempo quanto
- * a página da medalha.
+ * vão de tempo dela. Serve tanto o painel da linha do tempo quanto a página da
+ * medalha. Client component (ISTATS-19: `useLang()` bilingualiza o aria-label).
  */
 
 import {TIER_COLOR} from '@/lib/ingress-tiers.mjs'
+import {useLang} from '@/context/LanguageContext'
 
 const W = 220
 const H = 54
 const PAD = 12
 const CY = 22
 
+const ARIA = {pt: 'Progressão dos tiers no tempo', en: 'Tier progression over time'}
+
 export default function MedalSpark({tiers}: {tiers: {tier: string; date: string}[]}) {
+  const {lang} = useLang()
   const pts = tiers
     .map((t) => ({...t, ts: Date.parse(t.date)}))
     .filter((t) => Number.isFinite(t.ts))
@@ -24,7 +30,7 @@ export default function MedalSpark({tiers}: {tiers: {tier: string; date: string}
   const yr = (ts: number) => new Date(ts).getUTCFullYear()
 
   return (
-    <svg className="ing-spark" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Progressão dos tiers no tempo">
+    <svg className="ing-spark" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={ARIA[lang]}>
       <line x1={PAD} y1={CY} x2={W - PAD} y2={CY} className="ing-spark__track" />
       {pts.length > 1 ? (
         <polyline className="ing-spark__line" points={pts.map((p) => `${x(p.ts)},${CY}`).join(' ')} />
