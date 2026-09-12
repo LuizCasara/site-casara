@@ -10,12 +10,9 @@ const translations = {
     panelHint: 'direto do app Ingress Prime',
     steps: [
       'Abra o app Ingress Prime e toque no seu avatar, no canto superior, para abrir seu perfil de agente.',
-      'Entre em "Agent Stats" (Estatísticas do agente).',
-      'Toque no ícone de exportar/compartilhar no topo da tela e escolha "All Time" como recorte.',
-      'Copie o texto exportado (a primeira linha é o cabeçalho, a linha "ALL TIME" tem os números) e cole na caixa de comparação, no topo desta página.',
+      'Copie o texto exportado e cole aqui no site.',
     ],
-    imgAlt: 'Print do passo a passo de exportação (em breve)',
-    imgPlaceholder: 'Print em breve',
+    imgAlt: 'Print do app Ingress mostrando o ícone de exportar/compartilhar no perfil do agente',
     suggestionLabel: 'Tem uma ideia pra melhorar isso?',
     suggestionCta: 'Manda no Telegram',
   },
@@ -24,12 +21,9 @@ const translations = {
     panelHint: 'straight from the Ingress Prime app',
     steps: [
       'Open the Ingress Prime app and tap your avatar, top corner, to open your agent profile.',
-      'Go to "Agent Stats".',
-      'Tap the export/share icon at the top of the screen and pick "All Time" as the time span.',
-      'Copy the exported text (the first line is the header, the "ALL TIME" line has the numbers) and paste it into the compare box at the top of this page.',
+      'Copy the exported text and paste it here on the site.',
     ],
-    imgAlt: 'Export walkthrough screenshot (coming soon)',
-    imgPlaceholder: 'Screenshot coming soon',
+    imgAlt: "Ingress app screenshot showing the export/share icon on the agent profile",
     suggestionLabel: 'Got an idea to make this better?',
     suggestionCta: 'Send it on Telegram',
   },
@@ -54,12 +48,16 @@ export default function IngressTutorial() {
         ))}
       </ol>
 
-      <div className="ing-tutorial__img-placeholder" role="img" aria-label={t.imgAlt}>
-        <span>{t.imgPlaceholder}</span>
-      </div>
+      <img
+        src="/ingress/export-tutorial.jpg"
+        alt={t.imgAlt}
+        className="ing-tutorial__img"
+        width={1170}
+        height={725}
+      />
 
-      <p className="ing-tutorial__suggestion" style={{marginTop: '0.8em'}}>
-        {t.suggestionLabel}{' '}
+      <div className="ing-tutorial__suggestion">
+        <p>{t.suggestionLabel}</p>
         <a
           className="ing-radar__btn"
           href="https://t.me/FencherLC"
@@ -68,7 +66,7 @@ export default function IngressTutorial() {
         >
           <FaTelegramPlane aria-hidden="true" /> {t.suggestionCta}
         </a>
-      </p>
+      </div>
     </Panel>
   )
 }
