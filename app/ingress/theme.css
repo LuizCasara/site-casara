@@ -2422,7 +2422,14 @@
 }
 
 .ing-bar__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--ing-text-dim);
+}
+
+.ing-bar__icon {
+  border-radius: 4px;
 }
 
 .ing-bar__value {

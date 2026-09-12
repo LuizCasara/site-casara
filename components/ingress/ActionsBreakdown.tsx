@@ -2,16 +2,20 @@
 
 import type {Profile} from '@/lib/ingress'
 import {fmtStat} from '@/lib/ingress-format.mjs'
+import {artPath} from '@/lib/ingress-art.mjs'
 import {useLang} from '@/context/LanguageContext'
 import Panel from './Panel'
 
-// Uma família coesa: o que o agente construiu vs. o que derrubou.
-const ROWS: {key: string; label: {pt: string; en: string}}[] = [
-  {key: 'resonatorsDeployed', label: {pt: 'Ressonadores implantados', en: 'Resonators deployed'}},
-  {key: 'resonatorsDestroyed', label: {pt: 'Ressonadores destruídos', en: 'Resonators destroyed'}},
-  {key: 'linksCreated', label: {pt: 'Links criados', en: 'Links created'}},
+// Uma família coesa: o que o agente construiu vs. o que derrubou. `badge` é a
+// arte (tier Onyx, só identidade visual — sem badge própria fica sem ícone,
+// mesmo critério de `AxisExplanations`) — `portalsNeutralized` e
+// `enemyLinksDestroyed` não têm medalha dedicada no catálogo.
+const ROWS: {key: string; label: {pt: string; en: string}; badge?: string}[] = [
+  {key: 'resonatorsDeployed', label: {pt: 'Ressonadores implantados', en: 'Resonators deployed'}, badge: 'builder'},
+  {key: 'resonatorsDestroyed', label: {pt: 'Ressonadores destruídos', en: 'Resonators destroyed'}, badge: 'purifier'},
+  {key: 'linksCreated', label: {pt: 'Links criados', en: 'Links created'}, badge: 'connector'},
   {key: 'enemyLinksDestroyed', label: {pt: 'Links inimigos destruídos', en: 'Enemy links destroyed'}},
-  {key: 'portalsCaptured', label: {pt: 'Portais capturados', en: 'Portals captured'}},
+  {key: 'portalsCaptured', label: {pt: 'Portais capturados', en: 'Portals captured'}, badge: 'liberator'},
   {key: 'portalsNeutralized', label: {pt: 'Portais neutralizados', en: 'Portals neutralized'}},
 ]
 
@@ -42,7 +46,12 @@ export default function ActionsBreakdown({stats}: {stats: Profile['stats']}) {
         {rows.map((r) => (
           <li key={r.key} className="ing-bar">
             <div className="ing-bar__top">
-              <span className="ing-bar__label">{r.label[lang]}</span>
+              <span className="ing-bar__label">
+                {r.badge ? (
+                  <img src={artPath(r.badge, 'onyx')} alt="" width={20} height={20} className="ing-bar__icon" />
+                ) : null}
+                {r.label[lang]}
+              </span>
               <span className="ing-bar__value">{fmtStat(r.value)}</span>
             </div>
             <div className="ing-bar__track">

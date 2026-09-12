@@ -152,6 +152,9 @@ export default function IngressPage() {
   const medals = buildMedals(profile)
   const next = buildNext(profile)
   const pending = new Set(profile.pending)
+  // Lembrete só pra mim (Luiz) — placeholder "aguardando dump GDPR" nunca
+  // aparece pra quem visita em produção, só rodando localhost.
+  const IS_DEV = process.env.NODE_ENV !== 'production'
 
   return (
     <main className="ing-shell">
@@ -172,13 +175,15 @@ export default function IngressPage() {
       <ActionsBreakdown stats={profile.stats} />
 
       {pending.has('apTimeline') || !profile.timeSeries?.lifetimeAp ? (
-        <PendingSection kind="apTimeline" />
+        // Placeholder "aguardando dump GDPR" só em dev — em produção some, pra
+        // não mostrar seção vazia pro visitante; aqui é lembrete pro Luiz.
+        IS_DEV ? <PendingSection kind="apTimeline" /> : null
       ) : (
         <ApTimeline points={profile.timeSeries.lifetimeAp} />
       )}
 
       {pending.has('portalMap') || !profile.portals ? (
-        <PendingSection kind="portalMap" />
+        IS_DEV ? <PendingSection kind="portalMap" /> : null
       ) : (
         <PortalsPanel visited={profile.portals.visited.length} submitted={profile.portals.submitted.length} />
       )}
