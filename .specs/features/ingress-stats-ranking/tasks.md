@@ -1141,9 +1141,21 @@ Nenhuma tarefa marca `Tests: none` fora do que a matriz permite (só camadas Rea
 
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
+**SPEC_DEVIATION**: "passar `lang` pra `overallTierLabel`" não pôde ser literal —
+`overallTierLabel` vive em `lib/ingress-tier-score.mjs`, que importa `computeBadge`/`BADGES`
+de `lib/ingress-badges.mjs` → `lib/ingress-catalog.mjs`, que lê `badge-catalog.json` via
+`node:fs` no topo do arquivo (mesmo problema de fs-no-bundle-do-navegador do StatGroups/T21 e
+TierLadder/T29). Este componente já era bundlado como client (comentário original: "só é
+bundlado como client porque quem o usa é client") — importar `ingress-tier-score.mjs` aqui
+quebraria o build. Resolução: `tierLabelFromScore(overallScore, lang)`, uma réplica local da
+mesma matemática de `overallTierLabel` (piso da nota÷20 → `tierLabel()` de `lib/ingress-tiers.mjs`,
+que é puro/sem fs), no mesmo espírito de `tierColorFromScore` já existente neste arquivo (que já
+duplicava `RANK_TO_TIER` localmente pelo mesmo motivo). Efeito visível idêntico ao que
+`overallTierLabel(axisScores, lang)` produziria — só o mecanismo muda.
+
 **Done when**:
-- [ ] Todo texto visível troca com o toggle, incluindo o selo de tier (via FIX-2)
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Todo texto visível troca com o toggle, incluindo o selo de tier (via `tierLabelFromScore`, réplica local de FIX-2 — ver SPEC_DEVIATION)
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
