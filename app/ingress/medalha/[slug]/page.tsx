@@ -125,11 +125,11 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
           Escada de tiers
         </h2>
         <TierLadder
-          slug={slug}
           currentTier={badge.tier}
           tiers={entry.tiers}
           dates={dates}
           value={value}
+          arts={Object.fromEntries(TIERS.map((t) => [t, medalArt(slug, t) as string | null]))}
         />
       </section>
 

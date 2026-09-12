@@ -1,26 +1,39 @@
-import {TIERS, TIER_LABELS, TIER_RANK} from '@/lib/ingress-tiers.mjs'
+'use client'
+
+import {TIERS, TIER_RANK, tierLabel} from '@/lib/ingress-tiers.mjs'
 import {formatGap} from '@/lib/ingress-timeline.mjs'
 import {fmtMedalDate, fmtStat} from '@/lib/ingress-format.mjs'
-import {medalArt} from '@/lib/ingress-medal-art.mjs'
+import {useLang} from '@/context/LanguageContext'
+
+const CURRENT_SUFFIX = {pt: ' · atual', en: ' · current'}
 
 /**
  * A escada dos 5 tiers de uma badge de contagem: arte + limiar de cada, o tier
  * atual marcado, a data de conquista e o intervalo desde o tier anterior; nos
- * tiers ainda não alcançados, o % do caminho até o primeiro deles. Server component.
+ * tiers ainda não alcançados, o % do caminho até o primeiro deles. Client
+ * component (ISTATS-19: `useLang()` bilingualiza o sufixo e os labels de tier,
+ * vindos de `tierLabel` — T14).
+ *
+ * SPEC_DEVIATION: `medalArt` (a arte de cada tier) dependia de `node:fs`, que
+ * não pode ser bundlado para o navegador depois deste arquivo virar client —
+ * mesmo problema e mesma resolução de `StatGroups`/T21. A arte agora chega
+ * pré-computada via a prop `arts` (chave = tier); o cálculo migrou para o
+ * único call site, `app/ingress/medalha/[slug]/page.tsx`.
  */
 export default function TierLadder({
-  slug,
   currentTier,
   tiers,
   dates = {},
   value,
+  arts = {},
 }: {
-  slug: string
   currentTier: string
   tiers: number[]
   dates?: Record<string, string>
   value?: number
+  arts?: Record<string, string | null>
 }) {
+  const {lang} = useLang()
   const currentRank = TIER_RANK[currentTier] ?? 0
   const firstLocked = value != null ? tiers.findIndex((thr) => value < thr) : -1
   let prevDate: number | null = null
@@ -30,7 +43,7 @@ export default function TierLadder({
       {TIERS.map((tier, i) => {
         const reached = TIER_RANK[tier] <= currentRank
         const isCurrent = tier === currentTier
-        const art = medalArt(slug, tier) as string | null
+        const art = arts[tier] ?? null
         const date = dates[tier]
 
         let gap: string | null = null
@@ -61,8 +74,8 @@ export default function TierLadder({
             )}
             <div className="ing-ladder__body">
               <span className="ing-ladder__tier">
-                {TIER_LABELS[tier]}
-                {isCurrent ? <span className="ing-ladder__badge-atual"> · atual</span> : null}
+                {tierLabel(tier, lang)}
+                {isCurrent ? <span className="ing-ladder__badge-atual">{CURRENT_SUFFIX[lang]}</span> : null}
               </span>
               <span className="ing-ladder__req">{fmtStat(tiers[i])}</span>
             </div>

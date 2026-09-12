@@ -756,9 +756,18 @@ assinatura só, comportamento idêntico para toda chave válida.
 
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
+**SPEC_DEVIATION**: `TierLadder` calculava a arte de cada tier via `medalArt`
+(`lib/ingress-medal-art.mjs`, dependente de `node:fs`) usando a prop `slug` —
+mesmo problema de `StatGroups`/T21 ao virar client. A arte agora chega
+pré-computada via a nova prop `arts` (mapa tier→caminho); `slug` foi removido
+das props (não tinha mais uso) e o cálculo migrou para o único call site,
+`app/ingress/medalha/[slug]/page.tsx` — só a chamada de `TierLadder` e o
+`Object.fromEntries(TIERS.map(...))` que monta `arts`, nada do texto próprio
+dessa página (isso é T35, fase 8, fora deste lote) foi tocado ou traduzido.
+
 **Done when**:
-- [ ] Sufixo e labels (via T14) trocam com o toggle
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Sufixo e labels (via T14) trocam com o toggle
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
