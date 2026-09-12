@@ -641,9 +641,16 @@ colateral inevitável do limite client/server, não escopo extra.
 
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
+**SPEC_DEVIATION**: `tierLabel(tier, lang)` (T14) tinha `tier` tipado como
+`keyof typeof TIER_LABELS`, mais estrito que o `tier: string` que os campos de
+dados reais carregam aqui (e em T24/T29). `npm run build` falhava no
+type-check. Afrouxado para `@param {string} tier` em `lib/ingress-tiers.mjs`
+(com fallback `?? tier`, mesmo padrão já usado nos call sites) — mudança de
+assinatura só, comportamento idêntico para toda chave válida.
+
 **Done when**:
-- [ ] Todo texto (incluindo filtros de tier via T14) troca com o toggle
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Todo texto (incluindo filtros de tier via T14) troca com o toggle
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
