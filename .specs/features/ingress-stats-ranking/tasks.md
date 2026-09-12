@@ -596,9 +596,18 @@ T36 -> T37
 
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
+**SPEC_DEVIATION**: `badgeForStat` (o cálculo da badge de cada estatística) usava
+`slugForStatKey` (`lib/ingress-catalog.mjs`) e `medalArt` (`lib/ingress-medal-art.mjs`),
+ambos dependentes de `node:fs`/`node:path`. Virar este arquivo `'use client'` (exigido
+por `useLang()`) com esses imports quebra o build (`UnhandledSchemeError: node:fs`) — o
+bundle do navegador não pode carregar módulos Node. Resolução: o cálculo migrou para
+`app/ingress/page.tsx` (`buildStatBadges`, mesmo padrão já usado ali por `buildMedals`),
+que passa o resultado como a nova prop `badges`. Toca 2 arquivos, não 1 — efeito
+colateral inevitável do limite client/server, não escopo extra.
+
 **Done when**:
-- [ ] Sufixo e labels (via T15) trocam com o toggle
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Sufixo e labels (via T15) trocam com o toggle
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build

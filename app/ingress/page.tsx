@@ -1,13 +1,14 @@
 import {loadProfile} from '@/lib/ingress'
 import type {Profile} from '@/lib/ingress'
-import {BADGES, computeAllBadges, nextMedal, TIERS, TIER_LABELS} from '@/lib/ingress-badges.mjs'
-import {loadCatalog} from '@/lib/ingress-catalog.mjs'
+import {BADGES, computeAllBadges, computeBadge, nextMedal, TIERS, TIER_LABELS} from '@/lib/ingress-badges.mjs'
+import {loadCatalog, slugForStatKey} from '@/lib/ingress-catalog.mjs'
 import {annotateLaneGaps, collectAcquisitions, groupLanes} from '@/lib/ingress-timeline.mjs'
 import {projectNextTier} from '@/lib/ingress-history.mjs'
 import {medalArt} from '@/lib/ingress-medal-art.mjs'
 import Panel from '@/components/ingress/Panel'
 import AgentHeader from '@/components/ingress/AgentHeader'
 import StatGroups from '@/components/ingress/StatGroups'
+import type {StatBadge} from '@/components/ingress/StatGroups'
 import MedalGrid from '@/components/ingress/MedalGrid'
 import type {GridMedal} from '@/components/ingress/MedalGrid'
 import AchievementTimeline from '@/components/ingress/AchievementTimeline'
@@ -73,6 +74,36 @@ function buildMedals(profile: Profile): GridMedal[] {
   return [...stat, ...event]
 }
 
+const BADGE_BY_KEY = new Map((BADGES as BadgeDef[]).map((b) => [b.key, b]))
+
+/**
+ * A badge que cada estatística numérica presente alimenta, já computada —
+ * `slugForStatKey`/`medalArt` dependem de `node:fs`, então este cálculo tem
+ * que ficar aqui (Server Component), não em `StatGroups` (client, per
+ * ISTATS-19). Mesmo padrão já usado por `buildMedals` acima.
+ */
+function buildStatBadges(stats: Profile['stats']): Record<string, StatBadge | null> {
+  const out: Record<string, StatBadge | null> = {}
+  for (const [key, value] of Object.entries(stats)) {
+    if (typeof value !== 'number') continue
+    const slug = slugForStatKey(key) as string | null
+    const def = slug ? BADGE_BY_KEY.get(slug) : null
+    if (!slug || !def) {
+      out[key] = null
+      continue
+    }
+    const b = computeBadge(def, value)
+    out[key] = {
+      slug,
+      name: def.name,
+      tier: b.tier as string,
+      tierLabel: (TIER_LABELS as Record<string, string>)[b.tier] ?? b.tier,
+      art: medalArt(slug, b.tier) as string | null,
+    }
+  }
+  return out
+}
+
 function buildNext(profile: Profile) {
   const badges = computeAllBadges(profile.stats)
   const nm = nextMedal(badges)
@@ -131,7 +162,7 @@ export default function IngressPage() {
         capturedAt={profile.capturedAt}
       />
 
-      <StatGroups stats={profile.stats} />
+      <StatGroups stats={profile.stats} badges={buildStatBadges(profile.stats)} />
 
       <ActionsBreakdown stats={profile.stats} />
 
