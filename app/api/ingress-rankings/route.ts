@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import sql from "@/lib/db";
 import { loadProfile } from "@/lib/ingress";
 import { normalizeCodenameKey, isFencherLcCodename } from "@/lib/ingress-rankings.mjs";
-import { computeAxisScores, computeOverallScore, overallTierLabel } from "@/lib/ingress-tier-score.mjs";
+import { computeAxisScores, computeOverallScore, overallTierLabel, computeStatTiers } from "@/lib/ingress-tier-score.mjs";
 import { RADAR_STAT_KEYS } from "@/lib/ingress-compare-message.mjs";
 
 export const dynamic = "force-dynamic";
@@ -174,6 +174,7 @@ export async function GET(request: NextRequest) {
       overall_score: Number(row.overall_score),
       axis_scores: row.axis_scores,
       stat_values: row.stat_values,
+      stat_tiers: computeStatTiers(row.stat_values as Record<string, number>),
       created_at: row.created_at,
       updated_at: row.updated_at,
     }));

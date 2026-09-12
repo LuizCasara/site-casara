@@ -1,11 +1,15 @@
 'use client'
 
-import {Fragment, useEffect, useRef, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {FaEye, FaEyeSlash} from 'react-icons/fa'
 import Panel from '../Panel'
 import {fmtStat} from '@/lib/ingress-format.mjs'
 import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
+import {artPath} from '@/lib/ingress-art.mjs'
+import {TIER_COLOR} from '@/lib/ingress-tiers.mjs'
 import {useLang, type Lang} from '@/context/LanguageContext'
+
+export type StatTier = {tier: string; badgeSlug: string | null}
 
 export type RankingRow = {
   codename_key: string
@@ -15,6 +19,7 @@ export type RankingRow = {
   overall_score: number
   axis_scores: Record<string, number>
   stat_values: Record<string, number>
+  stat_tiers?: Record<string, StatTier>
   created_at: string
   updated_at: string
 }
@@ -23,9 +28,36 @@ const FACTION_LABEL: Record<RankingRow['faction'], string> = {
   enlightened: 'Enlightened',
   resistance: 'Resistance',
 }
-const FACTION_COLOR: Record<RankingRow['faction'], string> = {
-  enlightened: 'var(--ing-green)',
-  resistance: 'var(--ing-cyan)',
+
+/**
+ * Logo oficial de facção (hexágono), baixado de github.com/cr0ybot/ingress-logos
+ * (`enlightened_hexagon`/`resistance_hexagon`, `.svg`) — CC BY-NC-SA 3.0,
+ * uso pessoal/não-comercial com atribuição. Salvo em `public/ingress/factions/`.
+ */
+const FACTION_ICON: Record<RankingRow['faction'], string> = {
+  enlightened: '/ingress/factions/enlightened.svg',
+  resistance: '/ingress/factions/resistance.svg',
+}
+
+/** Cor do selo de tier por medalha — `TIER_COLOR` não cobre `'none'` (medalha ainda não alcançada). */
+const NONE_TIER_COLOR = 'var(--ing-text-faint)'
+function tierColor(tier: string): string {
+  return (TIER_COLOR as Record<string, string>)[tier] ?? NONE_TIER_COLOR
+}
+
+/**
+ * "Ressonadores" -> "Res." só neste chip (largura fixa, pedido do Luiz) —
+ * as outras exibições do mesmo stat (breakdown do `ProfileRadar`, painéis de
+ * `/ingress`) continuam com o nome completo; `RADAR_AXES` não muda.
+ */
+const CHIP_LABEL_OVERRIDE: Record<string, {pt: string; en: string}> = {
+  resonatorsDeployed: {pt: 'Res. implantados', en: 'Res. deployed'},
+  resonatorsDestroyed: {pt: 'Res. destruídos', en: 'Res. destroyed'},
+}
+function chipLabel(part: {key: string; label: string; labelEn: string}, lang: Lang): string {
+  const override = CHIP_LABEL_OVERRIDE[part.key]
+  if (override) return override[lang]
+  return lang === 'en' ? part.labelEn : part.label
 }
 
 // Espelha o `s-maxage=20` do `GET /api/ingress-rankings` (ver route.ts) — não
@@ -53,6 +85,7 @@ const T = {
     colDetails: 'Detalhes',
     hideDetails: (name: string) => `Esconder detalhes de ${name}`,
     showDetails: (name: string) => `Ver detalhes de ${name}`,
+    logoCredit: 'Logos de facção: cr0ybot/ingress-logos (CC BY-NC-SA 3.0)',
   },
   en: {
     panelLabel: 'Agent ranking',
@@ -69,6 +102,7 @@ const T = {
     colDetails: 'Details',
     hideDetails: (name: string) => `Hide details for ${name}`,
     showDetails: (name: string) => `Show details for ${name}`,
+    logoCredit: 'Faction logos: cr0ybot/ingress-logos (CC BY-NC-SA 3.0)',
   },
 } as const
 
@@ -127,6 +161,8 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
     if (mounted.current) setRefreshing(false)
   }
 
+  const expandedRow = rows.find((r) => r.codename_key === expanded) ?? null
+
   if (rows.length === 0) {
     return (
       <Panel label={t.panelLabel}>
@@ -159,24 +195,24 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
             {rows.map((row, i) => {
               const isOpen = expanded === row.codename_key
               return (
-                <Fragment key={row.codename_key}>
-                  <tr>
-                    <td>{i + 1}</td>
-                    <td>
-                      <span
-                        aria-hidden="true"
-                        style={{color: FACTION_COLOR[row.faction], marginRight: '0.4em'}}
-                      >
-                        ●
-                      </span>
-                      {row.codename}
-                      <span className="ing-ranking-table__faction"> ({FACTION_LABEL[row.faction]})</span>
+                  <tr key={row.codename_key} className={isOpen ? 'is-expanded' : undefined}>
+                    <td data-col="rank">{i + 1}</td>
+                    <td data-col="codename">
+                      <img
+                        src={FACTION_ICON[row.faction]}
+                        alt={FACTION_LABEL[row.faction]}
+                        title={FACTION_LABEL[row.faction]}
+                        width={18}
+                        height={18}
+                        className="ing-ranking-table__faction-icon"
+                      />
+                      <span className="ing-ranking-table__codename">{row.codename}</span>
                     </td>
-                    <td>{fmtDate(row.updated_at, lang)}</td>
-                    <td>{fmtDate(row.created_at, lang)}</td>
-                    <td>{fmtStat(row.lifetime_ap)}</td>
-                    <td>{fmtScore(row.overall_score)}</td>
-                    <td>
+                    <td data-col="updated">{fmtDate(row.updated_at, lang)}</td>
+                    <td data-col="measured">{fmtDate(row.created_at, lang)}</td>
+                    <td data-col="ap">{fmtStat(row.lifetime_ap)}</td>
+                    <td data-col="score">{fmtScore(row.overall_score)}</td>
+                    <td data-col="details">
                       <button
                         type="button"
                         className="ing-ranking-table__eye"
@@ -188,32 +224,55 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                       </button>
                     </td>
                   </tr>
-                  {isOpen ? (
-                    <tr className="ing-ranking-table__detail-row">
-                      <td colSpan={7}>
-                        <div className="ing-ranking-table__detail">
-                          {RADAR_AXES.map((axis) => (
-                            <div key={axis.id} className="ing-ranking-table__detail-axis">
-                              <strong>{lang === 'en' ? axis.labelEn : axis.label}</strong>
-                              <ul>
-                                {axis.parts.map((part) => (
-                                  <li key={part.key}>
-                                    {lang === 'en' ? part.labelEn : part.label}: {fmtStat(row.stat_values?.[part.key] ?? 0)}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          ))}
-                        </div>
-                      </td>
-                    </tr>
-                  ) : null}
-                </Fragment>
               )
             })}
           </tbody>
         </table>
       </div>
+
+      {expandedRow ? (
+        <div className="ing-ranking-table__detail">
+          {RADAR_AXES.map((axis) => (
+            <div key={axis.id} className="ing-ranking-table__detail-axis">
+              <strong>{lang === 'en' ? axis.labelEn : axis.label}</strong>
+              <div className="ing-ranking-table__chips">
+                {axis.parts.map((part) => {
+                  const info = expandedRow.stat_tiers?.[part.key]
+                  const tier = info?.tier ?? 'none'
+                  const iconTier = tier === 'none' ? 'bronze' : tier
+                  const iconSrc = info?.badgeSlug ? artPath(info.badgeSlug, iconTier) : null
+                  return (
+                    <div
+                      key={part.key}
+                      className={`ing-ranking-table__chip${tier === 'none' ? ' is-none' : ''}`}
+                      style={{borderColor: tierColor(tier)}}
+                      title={tier}
+                    >
+                      {iconSrc ? (
+                        <img
+                          src={iconSrc}
+                          alt=""
+                          width={32}
+                          height={32}
+                          className="ing-ranking-table__chip-icon"
+                        />
+                      ) : null}
+                      <span className="ing-ranking-table__chip-text">
+                        <span className="ing-ranking-table__chip-label">{chipLabel(part, lang)}</span>
+                        <span className="ing-ranking-table__chip-value">
+                          {fmtStat(expandedRow.stat_values?.[part.key] ?? 0)}
+                        </span>
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      <p className="ing-ranking-table__credit">{t.logoCredit}</p>
     </Panel>
   )
 }

@@ -1924,6 +1924,195 @@
   color: var(--ing-text-faint);
 }
 
+/* ─── Ranking table (iteração de UI: alinhamento, largura total, ícones) ─── */
+
+.ing-ranking-table__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.6rem;
+}
+
+.ing-ranking-table__wrap {
+  overflow-x: auto;
+}
+
+.ing-ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.ing-ranking-table thead th {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.76rem;
+  color: var(--ing-text-dim);
+  border-bottom: 1px solid var(--ing-edge-soft);
+  white-space: nowrap;
+}
+
+.ing-ranking-table tbody td {
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--ing-edge-soft);
+  color: var(--ing-text);
+  vertical-align: middle;
+}
+
+.ing-ranking-table td[data-col='rank'],
+.ing-ranking-table td[data-col='ap'],
+.ing-ranking-table td[data-col='score'] {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ing-ranking-table td[data-col='score'] {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-green-soft);
+}
+
+.ing-ranking-table td[data-col='updated'],
+.ing-ranking-table td[data-col='measured'] {
+  color: var(--ing-text-dim);
+  white-space: nowrap;
+}
+
+.ing-ranking-table td[data-col='details'] {
+  text-align: right;
+}
+
+.ing-ranking-table__faction-icon {
+  vertical-align: middle;
+  margin-right: 0.5rem;
+  border-radius: 3px;
+}
+
+.ing-ranking-table__codename {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+}
+
+.ing-ranking-table__eye {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--ing-edge-soft);
+  background: transparent;
+  color: var(--ing-text-dim);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.ing-ranking-table__eye:hover,
+.ing-ranking-table__eye:focus-visible {
+  color: var(--ing-green-soft);
+  border-color: var(--ing-edge);
+}
+
+/*
+ * O painel de detalhe fica FORA da <table> (irmão do `.ing-ranking-table__wrap`,
+ * direto no Panel) — não é mais uma <tr colSpan> com hack de largura. Um
+ * colspan dentro de table-layout:auto sempre acaba ditando a largura da
+ * tabela pelo conteúdo mais largo (mesmo com truques de width:1px), o que
+ * quebrava a quebra de linha no mobile; como bloco normal fora da tabela,
+ * o flex-wrap dos chips reage à largura da viewport sem gambiarra.
+ */
+.ing-ranking-table__detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem 1.6rem;
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-top: 1px solid var(--ing-edge-soft);
+  background: var(--ing-green-ghost);
+  border-radius: 10px;
+}
+
+.ing-ranking-table__detail-axis {
+  flex: 1 1 15rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ing-ranking-table__detail-axis strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: var(--ing-font-display);
+  color: var(--ing-text);
+  font-size: 0.82rem;
+}
+
+.ing-ranking-table__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ing-ranking-table__chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 9.75rem;
+  flex: 0 0 auto;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid;
+  border-radius: 10px;
+  background: var(--ing-panel-solid);
+}
+
+.ing-ranking-table__chip.is-none {
+  opacity: 0.55;
+}
+
+.ing-ranking-table__chip-icon {
+  flex-shrink: 0;
+}
+
+.ing-ranking-table__chip.is-none .ing-ranking-table__chip-icon {
+  filter: grayscale(1);
+}
+
+.ing-ranking-table__chip-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.ing-ranking-table__chip-label {
+  font-size: 0.7rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-ranking-table__chip-value {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--ing-text);
+}
+
+.ing-ranking-table__credit {
+  margin-top: 0.8rem;
+  font-size: 0.68rem;
+  color: var(--ing-text-faint);
+}
+
+@media (max-width: 640px) {
+  .ing-ranking-table {
+    font-size: 0.78rem;
+  }
+  .ing-ranking-table thead th,
+  .ing-ranking-table tbody td {
+    padding: 0.45rem 0.4rem;
+  }
+  .ing-ranking-table__chip {
+    padding: 0.3rem 0.5rem;
+  }
+}
+
 .ing-radar__btn {
   font-family: var(--ing-font-body);
   font-size: 0.8rem;
