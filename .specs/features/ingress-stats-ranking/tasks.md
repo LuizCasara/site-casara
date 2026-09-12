@@ -542,8 +542,8 @@ T36 -> T37
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Todo texto visível troca com o toggle, sem reload
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Todo texto visível troca com o toggle, sem reload
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
