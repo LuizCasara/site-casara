@@ -96,6 +96,8 @@ const EVENT_LABELS: Record<string, string> = {
   book_comment_whatsapp:        "BOOK_COMMENT",
   book_suggestion_whatsapp:     "BOOK_SUGGEST",
   caderno_desbloqueado:         "CADERNO_UNLOCK",
+  ingress_ranking_submit:       "ING_RANKING_SUBMIT",
+  ingress_language_toggled:     "ING_LANG_TOGGLE",
 };
 
 const EVENT_DESCRIPTIONS: Record<string, string> = {

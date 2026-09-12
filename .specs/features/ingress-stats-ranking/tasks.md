@@ -953,8 +953,8 @@ só deixou de passar `children`. Toca 2 arquivos, não 1 — mesmo motivo de T33
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Cada evento de T36 tem um rótulo legível em `EVENT_LABELS`
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Cada evento de T36 tem um rótulo legível em `EVENT_LABELS`
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
