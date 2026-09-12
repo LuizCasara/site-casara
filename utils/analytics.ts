@@ -397,14 +397,20 @@ export const trackBookShared = (slug: string, metodo: 'share' | 'clipboard') =>
 // ─── Ingress ──────────────────────────────────────────────────────────────
 
 /**
- * Um agente colado no radar de `/ingress/ranking` terminou de submeter pro
- * ranking (`POST /api/ingress-rankings`, sucesso ou falha). `mode` distingue
- * comparar com o FencherLC, comparar dois colados, ou só entrar no ranking sem
- * comparar; `written` separa uma escrita real do "já enviou nos últimos 5
- * minutos" (debounce da rota).
+ * As 3 formas de entrada de `/ingress/ranking` viram 3 eventos próprios (não
+ * um evento com campo `mode`) — cada um responde a uma pergunta diferente
+ * ("quantos comparam comigo" vs. "quantos comparam com outro agente" vs.
+ * "quantos só entram no ranking"). `written` sempre separa uma escrita real
+ * do "já enviou nos últimos 5 minutos" (debounce de `POST /api/ingress-rankings`).
  */
-export const trackIngressRankingSubmit = (mode: 'vs-me' | 'two' | 'solo', written: boolean) =>
-  trackEvent('ingress_ranking_submit', { mode, written });
+export const trackIngressCompareVsMe = (written: boolean) =>
+  trackEvent('ingress_compare_vs_me', { written });
+
+export const trackIngressCompareTwoAgents = (written: boolean) =>
+  trackEvent('ingress_compare_two_agents', { written });
+
+export const trackIngressRankingJoin = (written: boolean) =>
+  trackEvent('ingress_ranking_join', { written });
 
 /**
  * Troca de idioma dentro de `/ingress` — separado do `language_toggled` geral

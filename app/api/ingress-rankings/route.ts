@@ -46,6 +46,35 @@ async function computeRank(overallScore: number, lifetimeAp: number, createdAt: 
   return { rank: count + 1, totalAgents: total };
 }
 
+/** Top 3 atual, mesma ordenação de `computeRank`/`lib/ingress-rankings.mjs`. */
+async function getTop3(): Promise<{ codename: string; overallScore: number }[]> {
+  const rows = await sql`
+    SELECT codename, overall_score FROM casara.ingress_rankings
+    ORDER BY overall_score DESC, lifetime_ap DESC, created_at ASC
+    LIMIT 3
+  `;
+  return rows.map((r) => ({ codename: r.codename as string, overallScore: Number(r.overall_score) }));
+}
+
+/**
+ * Alerta fire-and-forget pro Telegram a cada escrita real (nunca quando o
+ * debounce bloqueia) — só em produção, mesmo espírito do `notifyTelegram`
+ * client-side de `ProfileRadar.tsx` (dev/preview não deve spammar o chat).
+ * Nunca lança: uma falha aqui não pode derrubar a resposta da rota.
+ */
+function notifyTelegramNewEntry(origin: string, codename: string, rank: number, totalAgents: number) {
+  if (process.env.NODE_ENV !== "production") return;
+  getTop3()
+    .then((top3) =>
+      fetch(`${origin}/api/telegram`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "ingress-ranking-entry", codename, rank, totalAgents, top3 }),
+      })
+    )
+    .catch((err) => console.error("[api/ingress-rankings] alerta do Telegram falhou:", err));
+}
+
 type RowResponse = {
   written: boolean;
   rank: number;
@@ -147,7 +176,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "falha ao gravar o registro" }, { status: 500 });
     }
 
-    return NextResponse.json(await buildResponseFromRow(finalRow, written));
+    const responseBody = await buildResponseFromRow(finalRow, written);
+    if (written) {
+      notifyTelegramNewEntry(request.nextUrl.origin, codename, responseBody.rank, responseBody.totalAgents);
+    }
+    return NextResponse.json(responseBody);
   } catch (err) {
     console.error("[api/ingress-rankings] POST error:", err);
     return NextResponse.json({ error: "internal error" }, { status: 500 });

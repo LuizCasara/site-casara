@@ -6,7 +6,7 @@ import ProfileRadar, {type Agent} from '../ProfileRadar'
 import OverallScorePanel, {type AgentScore} from './OverallScorePanel'
 import {normalizeCodenameKey} from '@/lib/ingress-rankings.mjs'
 import {RADAR_STAT_KEYS} from '@/lib/ingress-compare-message.mjs'
-import {trackIngressRankingSubmit} from '@/utils/analytics'
+import {trackIngressCompareVsMe, trackIngressCompareTwoAgents, trackIngressRankingJoin} from '@/utils/analytics'
 import {useLang} from '@/context/LanguageContext'
 
 /** Textos bilíngues dos toasts (ISTATS-19 fix) — `pt` reproduz o texto anterior. */
@@ -132,8 +132,10 @@ export default function StatsRadarSection({
     if (nextPanelAgents.length > 0) setPanelAgents(nextPanelAgents)
 
     if (toPost.length > 0) {
-      const mode = !b ? 'solo' : isFencherlcAgent(a) ? 'vs-me' : 'two'
-      trackIngressRankingSubmit(mode, responses.some((r) => r?.written))
+      const written = responses.some((r) => r?.written)
+      if (!b) trackIngressRankingJoin(written)
+      else if (isFencherlcAgent(a)) trackIngressCompareVsMe(written)
+      else trackIngressCompareTwoAgents(written)
     }
 
     // "primeiro colado" = o primeiro item de toPost em qualquer modo (o único
