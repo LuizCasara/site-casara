@@ -5,7 +5,7 @@ import {loadCatalog, slugForStatKey} from '@/lib/ingress-catalog.mjs'
 import {annotateLaneGaps, collectAcquisitions, groupLanes} from '@/lib/ingress-timeline.mjs'
 import {projectNextTier} from '@/lib/ingress-history.mjs'
 import {medalArt} from '@/lib/ingress-medal-art.mjs'
-import Panel from '@/components/ingress/Panel'
+import {EmptySignalPanel, PortalsPanel} from '@/components/ingress/IngressPagePanels'
 import AgentHeader from '@/components/ingress/AgentHeader'
 import StatGroups from '@/components/ingress/StatGroups'
 import type {StatBadge} from '@/components/ingress/StatGroups'
@@ -104,6 +104,12 @@ function buildStatBadges(stats: Profile['stats']): Record<string, StatBadge | nu
   return out
 }
 
+/**
+ * `hint` sai como `{pt, en}` (não uma `string` já formatada): `page.tsx` é
+ * Server Component e não sabe qual idioma está ativo no toggle client — quem
+ * escolhe é `MedalGrid` (client, já com `useLang()`) na hora de renderizar.
+ * Mesmo motivo de `toLocaleDateString` virar dois formatadores em vez de um.
+ */
 function buildNext(profile: Profile) {
   const badges = computeAllBadges(profile.stats)
   const nm = nextMedal(badges)
@@ -117,8 +123,11 @@ function buildNext(profile: Profile) {
     : null
   const hint =
     proj && 'date' in proj
-      ? `~${new Date(proj.date).toLocaleDateString('pt-BR', {month: 'short', year: 'numeric'})}`
-      : 'mande um 2º export para a projeção'
+      ? {
+          pt: `~${new Date(proj.date).toLocaleDateString('pt-BR', {month: 'short', year: 'numeric'})}`,
+          en: `~${new Date(proj.date).toLocaleDateString('en-US', {month: 'short', year: 'numeric'})}`,
+        }
+      : {pt: 'mande um 2º export para a projeção', en: 'send a 2nd export for the projection'}
   return {
     slug: nm.key,
     name: nm.name,
@@ -134,11 +143,7 @@ export default function IngressPage() {
   if (!profile) {
     return (
       <main className="ing-shell">
-        <Panel label="Sinal perdido">
-          <p style={{color: 'var(--ing-text-dim)'}}>
-            O perfil do agente ainda não foi publicado. Volte em breve.
-          </p>
-        </Panel>
+        <EmptySignalPanel />
       </main>
     )
   }
@@ -175,15 +180,7 @@ export default function IngressPage() {
       {pending.has('portalMap') || !profile.portals ? (
         <PendingSection kind="portalMap" />
       ) : (
-        <Panel
-          label="Portais"
-          hint={`${profile.portals.visited.length} visitados · ${profile.portals.submitted.length} submetidos`}
-        >
-          <p className="ing-pending">
-            <span className="ing-pending__dot" aria-hidden="true" />O mapa de calor desses portais é o
-            próximo passo — por ora, os números vêm do dump GDPR.
-          </p>
-        </Panel>
+        <PortalsPanel visited={profile.portals.visited.length} submitted={profile.portals.submitted.length} />
       )}
 
       <S2Preview s2={profile.s2} />

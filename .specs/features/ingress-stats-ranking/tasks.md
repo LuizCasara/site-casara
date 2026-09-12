@@ -837,10 +837,25 @@ dessa página (isso é T35, fase 8, fora deste lote) foi tocado ou traduzido.
 
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
+**SPEC_DEVIATION**: `page.tsx` é Server Component (`buildStatBadges`/`buildMedals`
+usam `medalArt`/`slugForStatKey`, dependentes de `node:fs` — não pode virar
+`'use client'` inteiro, mesmo problema de StatGroups/T21 e TierLadder/T29) e
+`Panel.label`/`hint` são `string` simples (não aceitam JSX), então o texto
+bilíngue dos dois blocos com `Panel` ("Sinal perdido", "Portais" + parágrafo do
+mapa de calor) precisa nascer num leaf client novo:
+`components/ingress/IngressPagePanels.tsx` (`EmptySignalPanel`, `PortalsPanel`).
+Separadamente, o hint de "2º export" de `buildNext()` (usa `toLocaleDateString`)
+flui para `MedalGrid` como `next.hint` — como `page.tsx` (Server) não sabe qual
+idioma está ativo no toggle client, `hint` virou `{pt, en}` em vez de `string`
+já formatada, e `MedalGrid.tsx` (client, já tem `useLang()`) escolhe a variante
+na hora de renderizar (`next.hint[lang]`). Toca 3 arquivos, não 1 — efeito
+colateral inevitável do limite client/server + do timing SSR/toggle, não
+escopo extra.
+
 **Done when**:
-- [ ] Todo texto visível troca com o toggle; `toLocaleDateString` usa `'pt-BR'` ou `'en-US'` conforme `lang`
-- [ ] Metadata inalterada (fora do escopo — decisão registrada)
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Todo texto visível troca com o toggle; `toLocaleDateString` usa `'pt-BR'` ou `'en-US'` conforme `lang`
+- [x] Metadata inalterada (fora do escopo — decisão registrada)
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build

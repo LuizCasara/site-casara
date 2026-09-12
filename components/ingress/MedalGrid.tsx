@@ -15,7 +15,14 @@ export type GridMedal = {
   detail: DetailMedal
 }
 
-type NextMedal = {slug: string; name: string; nextTier: string; pct: number; hint: string}
+type NextMedal = {
+  slug: string
+  name: string
+  nextTier: string
+  pct: number
+  /** `{pt, en}` — quem escolhe é aqui (client), não `page.tsx` (Server, não sabe o idioma ativo). */
+  hint: {pt: string; en: string}
+}
 
 const CAT_KEYS = ['estatistica', 'anomalias', 'eventos'] as const
 const SOON_KEYS = ['colecionaveis', 'personagens'] as const
@@ -114,7 +121,7 @@ export default function MedalGrid({medals, next}: {medals: GridMedal[]; next?: N
             <span style={{width: `${Math.round(next.pct * 100)}%`}} />
           </span>
           <span className="ing-mgrid__next-hint">
-            {Math.round(next.pct * 100)}% · {next.hint}
+            {Math.round(next.pct * 100)}% · {next.hint[lang]}
           </span>
         </a>
       ) : null}
