@@ -4,7 +4,7 @@ import {useEffect, useRef, useState} from 'react'
 import {FaEye, FaEyeSlash} from 'react-icons/fa'
 import Panel from '../Panel'
 import {fmtStat} from '@/lib/ingress-format.mjs'
-import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
+import {RADAR_AXES, computeRadarAxes} from '@/lib/ingress-radar.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import {TIER_COLOR} from '@/lib/ingress-tiers.mjs'
 import {useLang, type Lang} from '@/context/LanguageContext'
@@ -60,6 +60,46 @@ function chipLabel(part: {key: string; label: string; labelEn: string}, lang: La
   return lang === 'en' ? part.labelEn : part.label
 }
 
+const SHAPE_SIZE = 150
+const SHAPE_C = SHAPE_SIZE / 2
+const SHAPE_R = 58
+function shapePoint(i: number, count: number, radius: number): [number, number] {
+  const angle = -Math.PI / 2 + (i * 2 * Math.PI) / count
+  return [SHAPE_C + radius * Math.cos(angle), SHAPE_C + radius * Math.sin(angle)]
+}
+
+/**
+ * Radar estático "Forma" (normalizado pelo próprio eixo mais forte do
+ * agente, igual à escala "Forma" do `ProfileRadar` grande) — sem escala/
+ * comparação/hover, é só um preview visual do formato de jogo daquele
+ * agente dentro do painel expandido. Reaproveita `computeRadarAxes` (puro,
+ * client-safe) e as mesmas classes CSS do radar grande.
+ */
+function MiniShapeRadar({stats, ariaLabel}: {stats: Record<string, number>; ariaLabel: string}) {
+  const axes = computeRadarAxes(stats) as {id: string; onyxRatio: number}[]
+  const n = axes.length
+  const maxRatio = Math.max(...axes.map((a) => a.onyxRatio), 0.01)
+  const radiusIn = (ratio: number) => SHAPE_R * Math.max(Math.min(ratio / maxRatio, 1), 0.02)
+  const shape = axes.map((a, i) => shapePoint(i, n, radiusIn(a.onyxRatio)).join(',')).join(' ')
+
+  return (
+    <svg viewBox={`0 0 ${SHAPE_SIZE} ${SHAPE_SIZE}`} width={SHAPE_SIZE} height={SHAPE_SIZE} role="img" aria-label={ariaLabel}>
+      {[0.34, 0.67, 1].map((f) => (
+        <polygon
+          key={f}
+          points={axes.map((_, i) => shapePoint(i, n, SHAPE_R * f).join(',')).join(' ')}
+          className={`ing-radar__ring${f === 1 ? ' ing-radar__ring--edge' : ''}`}
+        />
+      ))}
+      {axes.map((a, i) => {
+        const [x, y] = shapePoint(i, n, SHAPE_R)
+        return <line key={a.id} x1={SHAPE_C} y1={SHAPE_C} x2={x} y2={y} className="ing-radar__spoke" />
+      })}
+      <polygon points={shape} className="ing-radar__shape" />
+    </svg>
+  )
+}
+
 // Espelha o `s-maxage=20` do `GET /api/ingress-rankings` (ver route.ts) — não
 // tem por que o cliente pedir dado mais fresco do que o próprio cache permite.
 const POLL_MS = 20_000
@@ -86,6 +126,8 @@ const T = {
     colDetails: 'Detalhes',
     hideDetails: (name: string) => `Esconder detalhes de ${name}`,
     showDetails: (name: string) => `Ver detalhes de ${name}`,
+    shapeLabel: 'Forma',
+    shapeAria: (name: string) => `Formato de jogo de ${name} (radar normalizado pelo eixo mais forte)`,
     logoCredit: 'Logos de facção: cr0ybot/ingress-logos (CC BY-NC-SA 3.0)',
   },
   en: {
@@ -104,6 +146,8 @@ const T = {
     colDetails: 'Details',
     hideDetails: (name: string) => `Hide details for ${name}`,
     showDetails: (name: string) => `Show details for ${name}`,
+    shapeLabel: 'Shape',
+    shapeAria: (name: string) => `${name}'s play shape (radar normalized by its strongest axis)`,
     logoCredit: 'Faction logos: cr0ybot/ingress-logos (CC BY-NC-SA 3.0)',
   },
 } as const
@@ -274,6 +318,10 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
               </div>
             </div>
           ))}
+          <div className="ing-ranking-table__detail-shape">
+            <span className="ing-ranking-table__detail-shape-label">{t.shapeLabel}</span>
+            <MiniShapeRadar stats={expandedRow.stat_values} ariaLabel={t.shapeAria(expandedRow.codename)} />
+          </div>
         </div>
       ) : null}
 

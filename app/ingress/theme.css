@@ -2025,9 +2025,9 @@
  * o flex-wrap dos chips reage à largura da viewport sem gambiarra.
  */
 .ing-ranking-table__detail {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.1rem 1.6rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.4rem 1.2rem;
   margin-top: 1rem;
   padding: 0.9rem 1rem;
   border-top: 1px solid var(--ing-edge-soft);
@@ -2035,10 +2035,16 @@
   border-radius: 10px;
 }
 
+/* 5 eixos lado a lado só quando há espaço de verdade — abaixo disso, 1
+   coluna só (cada eixo empilhado, chips em coluna dentro dele). */
+@media (min-width: 860px) {
+  .ing-ranking-table__detail {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
 .ing-ranking-table__detail-axis {
-  flex: 1 1 15rem;
   min-width: 0;
-  max-width: 100%;
 }
 
 .ing-ranking-table__detail-axis strong {
@@ -2051,7 +2057,7 @@
 
 .ing-ranking-table__chips {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.5rem;
 }
 
@@ -2059,8 +2065,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  width: 9.75rem;
-  flex: 0 0 auto;
+  width: 100%;
   padding: 0.35rem 0.6rem;
   border: 1px solid;
   border-radius: 10px;
@@ -2095,6 +2100,23 @@
   font-weight: 600;
   font-size: 0.85rem;
   color: var(--ing-text);
+}
+
+.ing-ranking-table__detail-shape {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--ing-edge-soft);
+}
+
+.ing-ranking-table__detail-shape-label {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: var(--ing-text-dim);
 }
 
 .ing-ranking-table__credit {
