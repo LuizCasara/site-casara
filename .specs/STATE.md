@@ -12,27 +12,20 @@
 
 ## Handoff
 
-- **Feature**: ingress (`.specs/features/ingress/`)
-- **Phase / Task**: Feature COMPLETA no código (T1–T43 + 2 Verifiers + transcrição dos 56 prints + redesign da linha do tempo). Branch pushado, PR aberto contra `main`. Falta só UAT visual do Luiz + merge.
-- **Completed**: T1–T24 (feature) + T25–T43 (expansão). Fase 5-6: catálogo das 26 badges do ingress.plus, `lib/ingress-catalog/-history/-timeline.mjs`, `ingress-badges` data-driven, `history[]`/`medalDates`/`eventBadges` no perfil, CLI `badges`/`medals --fetch`, 130 PNGs baixados. Fase 7-8: BadgeShelf 26 + resumo + próxima medalha, `/ingress/medalha/[slug]` (detalhe + TierLadder + OG por badge, 26 rotas prerender), AchievementsShelf, AchievementTimeline, hover KPI→badge (CSS puro), projeção. 325 testes, 8/8 mutantes mortos, gate verde.
-- **In-progress** (file:line): nenhum
-- **Prints TRANSCRITOS (08/09)**: 56 prints → 27 `medalDates`, 25 `eventBadges`, 3 badges core novas (Maverick/Reclaimer/Epoch, core = 29), 2 correções de limiar (Illuminator/Guardian), 40 PNGs. Timeline de conquistas com 126 marcadores. + `fix` do "voltar" (BackLink). 325 testes, gate verde. Ver adendo em `validation.md`.
-- **Linha do tempo REDESENHADA (08/09)**: brainstorming (bounded) → combo. `components/ingress/AchievementTimeline.tsx` agora client, com `variant="resumo"` (curva no `/ingress`) e `variant="completo"` (nova rota `/ingress/linha-do-tempo`: overview+brush de zoom, filtros categoria/tier, swimlane por medalha, tooltip com arte PNG + intervalo desde o tier anterior, drill-down). `lib/ingress-timeline.mjs` +`annotateLaneGaps`/`formatGap` (+testes, 329). `artPath` → `lib/ingress-art.mjs` (sem `node:fs`). Fix: cor prata/onyx dos pontos; arte de badge de evento no tooltip (usa `<slug>.png` único). Commits `09dfa1c`, `3609362`. Lint/build verdes.
-- **Pushed + PR (08/09)**: branch pushado, Luiz abriu o PR contra `main`. `gh` CLI não instalado nesta máquina. PR acumula os commits novos automaticamente.
-- **Iteração de UI (09/09)** — várias rodadas de feedback do Luiz, tudo pushado:
-  - Progresso %: `computeBadge` +`beyond` (Onyx ×2/×3…); barra+% em toda medalha; tabela de limiares+valor atual no painel da linha do tempo.
-  - Painel de detalhe acima da swimlane, com faixa "Bronze→Onyx · Xa Ym", mini gráfico (`MedalSpark`) e escada com intervalo entre datas (colunas alinhadas).
-  - Cores: Onyx grafite `#626873`, Platina cinza `#8d949d` (sem verde/azul do tema) em `/ingress`.
-  - **"Plus" por medalha de estatística**: `data/ingress/medal-lore.json` (17 medalhas) + `lib/ingress-lore.mjs` (+testes) + `MedalLore`. Página `/ingress/medalha/[slug]` reorganizada (herói→plus→requisito→MedalSpark→TierLadder com gaps+%→projeção).
-  - **Home = grade hexagonal** (`MedalGrid`): substitui BadgeShelf+AchievementsShelf (removidos). Toggle Cronologia|Categoria, "próxima medalha", toque→`MedalDetail` (painel extraído e compartilhado com a linha do tempo). Grupos Colecionáveis/Personagens = placeholder "chegam com o dump GDPR".
-  - 338 testes, lint/build verdes.
-- **Next step**: (1) UAT visual do Luiz (nada renderizado num browser ainda) — `/ingress` (grade, toggle, próxima, detalhe), `/ingress/linha-do-tempo`, `/ingress/medalha/[slug]` (o plus, o spark, a escada), desktop + 360px. (2) Se aprovado: mergear o PR.
-- **Dívida técnica**: CSS morto em `theme.css` (`.ing-medal*`, `.ing-next-medal*`, `.ing-achv*` dos componentes removidos) — limpar depois. `scratchpad/` agora gitignored (dump da API do ingress.plus caiu no repo por engano no commit `5834abf`, removido no `3a663b5`).
-- **Blockers**:
-  - UAT visual (só Luiz — memória: não abrir browser).
-  - Interações novas (grade, toggle, painéis, brush) sem teste — só lógica pura testada.
-  - Dado externo: dump GDPR (AP, portais, recursão por medalha, lista de Colecionáveis/Personagens pra `MedalGrid`) + `GDPR_SERIES`; 2º export (projeção real).
-  - `docs/ingress-proximos-passos.md`: recursão/"Onyx ×N" com chevrons + ênfase na medalha Recursion.
-  - `medal-lore.json` a calibrar com o Luiz (referências de comparação).
-- **Uncommitted files**: nenhum
-- **Branch**: `feat/ingress`, ~74 commits à frente de `main`, **pushed**, PR aberto.
+- **Feature**: ingress-stats-ranking (`.specs/features/ingress-stats-ranking/`)
+- **Phase / Task**: Execute COMPLETO — 37 tasks + 6 fix tasks (Verifier round 1 → FAIL → fix → round 2 → **PASS**). `validate_state.py` confirma o relatório. Branch `feat/ingress-stats-ranking` **NÃO pushada ainda** — falta autorização explícita do Luiz pra push/PR (blast radius: Execute só autoriza commit local).
+- **Completed**: internacionalização PT/EN de toda `/ingress` (toggle novo, já que o `Header` genérico esconde a si mesmo nessas rotas); nova rota `/ingress/stats` (radar + explicação fixa dos 5 eixos + nota geral tier-based com overflow linear pós-Onyx + ranking); tabela `casara.ingress_rankings` (upsert atômico guardado por debounce de 5 min, guarda do FencherLC, desempate nota→AP→data); 3 caminhos de entrada (`ProfileRadar` estendido, aditivo, sem regressão no uso existente de `/ingress`); toast (`sonner`, escopado ao layout de `/ingress`); analytics (`trackIngress*`). 383 testes (349 baseline → 379 pós-37-tasks → 383 pós-fix), gate lint/build/test verde, 2 mutantes/sensor mortos em cada rodada do Verifier.
+- **In-progress**: nenhum — feature code-complete e verificada.
+- **Achados registrados como lição** (`.specs/lessons.json`): i18n retrofit deve recobrir os componentes NOVOS da própria feature, não só as páginas pré-existentes (foi o que o Verifier round 1 pegou); componente forçado a virar Client Component não pode manter cálculo dependente de `node:fs` — precisa receber via prop do Server Component pai (padrão repetido em T21/T29/T33-35/FIX-4).
+- **Gap de baixa severidade, não-bloqueante (L-006)**: `app/ingress/stats/page.tsx` — o fallback "Sinal perdido" (perfil vazio) ficou hardcoded PT, ao contrário do fallback equivalente em `/ingress`. Praticamente inalcançável em produção (o perfil do FencherLC é sempre committado), mas fica como polish futuro se algum dia entrar um segundo perfil.
+- **Bloqueio operacional (não é código)**: a tabela `casara.ingress_rankings` ainda não existe em produção — precisa que o Luiz rode manualmente a nova seção "Ingress Stats & Ranking" de `lib/schema.sql` no Neon SQL Editor (mesma convenção já usada pro resto do schema). Até lá, `POST /api/ingress-rankings` nunca rodou contra banco real — só compilou/type-checkou.
+- **Autorizações concedidas pelo Luiz nesta feature** (ver `.specs/features/ingress-stats-ranking/tasks.md` → `## Execution Notes` e memória `project_ingress_feature.md`): Playwright autorizado pra ver/testar telas (escopado a esta feature, não é o padrão geral do projeto); banco é sempre produção, sem diferença de ambiente.
+- **Next step**: (1) Luiz roda o DDL no Neon SQL Editor. (2) Smoke test real do `POST/GET /api/ingress-rankings` com um codinome descartável (apagar depois). (3) UAT visual do Luiz — nada foi aberto em browser pelos agentes por padrão, exceto o que os batch workers tenham verificado via Playwright quando autorizado. (4) Se aprovado: pedir autorização explícita pra push + abrir PR contra `main`.
+- **Uncommitted files**: nenhum (working tree limpo na branch).
+- **Branch**: `feat/ingress-stats-ranking`, ~41 commits à frente de `main`, **NÃO pushada**.
+
+---
+
+### Handoff anterior (feature `ingress` original, arquivado — ver `.specs/features/ingress/`)
+
+Feature completa e mergeada antes desta (`ingress-stats-ranking`) começar: perfil `/ingress`, linha do tempo, grade de medalhas (`MedalGrid`), `/ingress/medalha/[slug]`. 338 testes na época. Branch `feat/ingress` (histórica, já mergeada). Dívida técnica então pendente (CSS morto em `theme.css`, dump GDPR, `medal-lore.json` a calibrar) continua relevante e não foi tocada por esta feature nova.

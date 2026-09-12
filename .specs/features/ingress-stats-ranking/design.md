@@ -92,7 +92,7 @@ graph TD
 - **Purpose**: único ponto de escrita/leitura da tabela — upsert guardado por debounce + leitura pública do leaderboard.
 - **Location**: `app/api/ingress-rankings/route.ts`
 - **Interfaces**:
-  - `POST` — body `{codename, faction, lifetimeAp, stats: {...11 chaves...}}`.
+  - `POST` — body `{codename, faction, lifetimeAp, stats: {...12 chaves...}}`.
     1. Normaliza `codename_key = codename.trim().toLowerCase()`.
     2. IF `codename_key === FENCHERLC_KEY` (constante derivada de `loadProfile().agent.codename`) THEN **não roda nenhum SQL de escrita** — só lê a linha existente do FencherLC (seedada uma vez, fora da API) pra devolver rank atual; responde `{written:false, ...}`. Mesmo formato de resposta do caso de debounce (unifica os dois guardas numa única forma de resposta "não escrevi, aqui está o que já existe").
     3. Senão, chama `computeAxisScores`/`computeOverallScore` (server-side) e executa o upsert atômico guardado (ver Data Models).
@@ -195,7 +195,7 @@ interface RankingRow {
   lifetimeAp: number
   overallScore: number
   axisScores: Record<string, number>   // 5 chaves: construcao, destruicao, exploracao, hacking, linksCampos
-  statValues: Record<string, number>   // 11 chaves: os stats usados nas 5 pontas
+  statValues: Record<string, number>   // 12 chaves: os stats usados nas 5 pontas
   createdAt: string  // ISO — "medido desde"
   updatedAt: string  // ISO
 }
