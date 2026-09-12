@@ -559,8 +559,8 @@ T36 -> T37
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] As 6 labels + label/hint traduzidos, troca sem reload
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] As 6 labels + label/hint traduzidos, troca sem reload
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
