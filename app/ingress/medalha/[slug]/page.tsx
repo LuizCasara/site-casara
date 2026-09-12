@@ -2,7 +2,7 @@ import {notFound} from 'next/navigation'
 import type {Metadata} from 'next'
 import {loadProfile} from '@/lib/ingress'
 import BackLink from '@/components/ingress/BackLink'
-import {BADGES, computeBadge, TIERS, TIER_LABELS} from '@/lib/ingress-badges.mjs'
+import {BADGES, computeBadge, TIERS} from '@/lib/ingress-badges.mjs'
 import {projectNextTier} from '@/lib/ingress-history.mjs'
 import {catalogEntry, coreBadges} from '@/lib/ingress-catalog.mjs'
 import {medalArt} from '@/lib/ingress-medal-art.mjs'
@@ -11,6 +11,7 @@ import TierLadder from '@/components/ingress/TierLadder'
 import MedalSpark from '@/components/ingress/MedalSpark'
 import MedalLore from '@/components/ingress/MedalLore'
 import RecursionMark from '@/components/ingress/RecursionMark'
+import {MedalHeroStatus, SectionHeading, MedalProjectionText} from '@/components/ingress/MedalPageCopy'
 
 
 type BadgeDef = {key: string; name: string; statKey: string; tiers: Record<string, number>}
@@ -59,17 +60,9 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
     | {reason: string}
     | null
 
-  const projectionText = badge.atMax
-    ? null
-    : projection && 'date' in projection
-      ? `No ritmo dos últimos exports, ${TIER_LABELS[projection.tier] ?? projection.tier} por volta de ${new Date(projection.date).toLocaleDateString('pt-BR', {month: 'long', year: 'numeric'})}.`
-      : projection && 'reason' in projection
-        ? 'Sem progresso recente nessa estatística.'
-        : 'A projeção do próximo tier aparece quando houver um segundo export.'
-
   return (
     <main className="ing-shell">
-      <BackLink fallback="/ingress">← Perfil de FencherLC</BackLink>
+      <BackLink fallback="/ingress" />
 
       <header className="ing-medal-hero">
         {art ? (
@@ -85,18 +78,7 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
             {def.name}
             <RecursionMark multiple={badge.beyond?.multiple} />
           </h1>
-          <p className="ing-medal-hero__tier">
-            {TIER_LABELS[badge.tier]}
-            {badge.atMax ? ' · tier máximo' : null}
-          </p>
-          <p className="ing-medal-hero__value">
-            {fmtStat(value)}
-            {badge.next
-              ? ` · ${Math.round((badge.pct ?? 0) * 100)}% · faltam ${fmtStat(badge.next.remaining)} para ${TIER_LABELS[badge.next.tier] ?? badge.next.tier}`
-              : badge.beyond
-                ? ` · ${badge.beyond.label} · ${Math.round(badge.beyond.pct * 100)}% · faltam ${fmtStat(badge.beyond.remaining)}`
-                : ''}
-          </p>
+          <MedalHeroStatus badge={badge} value={value} />
         </div>
       </header>
 
@@ -114,7 +96,7 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
       {sparkTiers.length > 1 ? (
         <section>
           <h2 className="ing-panel__label" style={{marginBottom: '0.5rem'}}>
-            Sua linha do tempo nesta medalha
+            <SectionHeading kind="timeline" />
           </h2>
           <MedalSpark tiers={sparkTiers} />
         </section>
@@ -122,7 +104,7 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
 
       <section>
         <h2 className="ing-panel__label" style={{marginBottom: '0.75rem'}}>
-          Escada de tiers
+          <SectionHeading kind="ladder" />
         </h2>
         <TierLadder
           currentTier={badge.tier}
@@ -133,7 +115,7 @@ export default async function MedalPage({params}: {params: Promise<{slug: string
         />
       </section>
 
-      {projectionText ? <p className="ing-projection">{projectionText}</p> : null}
+      <MedalProjectionText atMax={badge.atMax} projection={projection} />
     </main>
   )
 }

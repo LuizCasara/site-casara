@@ -901,9 +901,21 @@ Toca 3 arquivos, não 1 — mesmo motivo de T33.
 
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
+**SPEC_DEVIATION**: mesma restrição de Server Component de T33/T34 (`loadProfile`,
+`medalArt` dependente de `node:fs`) — o texto bilíngue nasce num leaf novo,
+`components/ingress/MedalPageCopy.tsx` (`MedalHeroStatus`, `SectionHeading`,
+`MedalProjectionText`). Cobertura maior que os 3 itens do "What" pra satisfazer
+o "todo texto do projeto" do Done-when: além de "Sua linha do tempo"/"Escada de
+tiers"/`projectionText`, também bilinguizados o rótulo de tier do hero
+(`tierLabel` de T14) e a linha "· tier máximo"/"faltam X para Y" — texto do
+projeto que não estava enumerado no "What" mas está coberto pelo Done-when.
+`entry.requirement` e a metadata continuam intocados. `BackLink` não precisou
+de mudança aqui — já ficou bilíngue em T34 (`children` opcional); esta página
+só deixou de passar `children`. Toca 2 arquivos, não 1 — mesmo motivo de T33/T34.
+
 **Done when**:
-- [ ] Todo texto do projeto (não o `requirement` oficial do jogo) troca com o toggle; datas usam o locale certo
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Todo texto do projeto (não o `requirement` oficial do jogo) troca com o toggle; datas usam o locale certo
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
