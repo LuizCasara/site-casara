@@ -685,8 +685,8 @@ assinatura só, comportamento idêntico para toda chave válida.
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Todo texto (incluindo `CATS`/`SOON`) troca com o toggle
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Todo texto (incluindo `CATS`/`SOON`) troca com o toggle
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
