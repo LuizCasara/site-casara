@@ -78,8 +78,8 @@ const T = {
     refreshingBtn: 'Atualizando…',
     colRank: '#',
     colCodename: 'Codinome',
-    colUpdated: 'Atualizado em',
-    colMeasuredSince: 'Medido desde',
+    colDates: 'Datas',
+    datesTooltip: (updated: string, measured: string) => `Atualizado em ${updated} · Medido desde ${measured}`,
     colAp: 'AP total',
     colScore: 'Nota geral',
     colDetails: 'Detalhes',
@@ -95,8 +95,8 @@ const T = {
     refreshingBtn: 'Refreshing…',
     colRank: '#',
     colCodename: 'Codename',
-    colUpdated: 'Updated on',
-    colMeasuredSince: 'Measured since',
+    colDates: 'Dates',
+    datesTooltip: (updated: string, measured: string) => `Updated on ${updated} · Measured since ${measured}`,
     colAp: 'Total AP',
     colScore: 'Overall score',
     colDetails: 'Details',
@@ -183,11 +183,10 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
           <thead>
             <tr>
               <th scope="col">{t.colRank}</th>
-              <th scope="col">{t.colCodename}</th>
-              <th scope="col">{t.colUpdated}</th>
-              <th scope="col">{t.colMeasuredSince}</th>
-              <th scope="col">{t.colAp}</th>
               <th scope="col">{t.colScore}</th>
+              <th scope="col">{t.colCodename}</th>
+              <th scope="col">{t.colDates}</th>
+              <th scope="col">{t.colAp}</th>
               <th scope="col" aria-label={t.colDetails} />
             </tr>
           </thead>
@@ -197,6 +196,7 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
               return (
                   <tr key={row.codename_key} className={isOpen ? 'is-expanded' : undefined}>
                     <td data-col="rank">{i + 1}</td>
+                    <td data-col="score">{fmtScore(row.overall_score)}</td>
                     <td data-col="codename">
                       <img
                         src={FACTION_ICON[row.faction]}
@@ -208,10 +208,10 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                       />
                       <span className="ing-ranking-table__codename">{row.codename}</span>
                     </td>
-                    <td data-col="updated">{fmtDate(row.updated_at, lang)}</td>
-                    <td data-col="measured">{fmtDate(row.created_at, lang)}</td>
+                    <td data-col="dates" title={t.datesTooltip(fmtDate(row.updated_at, lang), fmtDate(row.created_at, lang))}>
+                      {fmtDate(row.updated_at, lang)}
+                    </td>
                     <td data-col="ap">{fmtStat(row.lifetime_ap)}</td>
-                    <td data-col="score">{fmtScore(row.overall_score)}</td>
                     <td data-col="details">
                       <button
                         type="button"

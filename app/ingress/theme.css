@@ -1973,10 +1973,10 @@
   color: var(--ing-green-soft);
 }
 
-.ing-ranking-table td[data-col='updated'],
-.ing-ranking-table td[data-col='measured'] {
+.ing-ranking-table td[data-col='dates'] {
   color: var(--ing-text-dim);
   white-space: nowrap;
+  cursor: help;
 }
 
 .ing-ranking-table td[data-col='details'] {
