@@ -91,7 +91,7 @@ async function fetchRows(): Promise<RankingRow[] | null> {
  * SPEC_DEVIATION: o design previa `IngressRankingTable` refazendo o GET
  * "quando sinalizado por StatsRadarSection" via um callback prop. Isso exige
  * um estado compartilhado entre dois Client Components irmãos sob o mesmo pai
- * — mas o pai (`app/ingress/stats/page.tsx`, T12) precisa continuar Server
+ * — mas o pai (`app/ingress/ranking/page.tsx`, T12) precisa continuar Server
  * Component (seu próprio "Done when"), e uma função não pode atravessar a
  * fronteira Server->Client como prop. Reason: em vez de um arquivo extra só
  * pra guardar esse estado-ponte, esta tabela se atualiza sozinha — poll a

@@ -397,7 +397,7 @@ export const trackBookShared = (slug: string, metodo: 'share' | 'clipboard') =>
 // ─── Ingress ──────────────────────────────────────────────────────────────
 
 /**
- * Um agente colado no radar de `/ingress/stats` terminou de submeter pro
+ * Um agente colado no radar de `/ingress/ranking` terminou de submeter pro
  * ranking (`POST /api/ingress-rankings`, sucesso ou falha). `mode` distingue
  * comparar com o FencherLC, comparar dois colados, ou só entrar no ranking sem
  * comparar; `written` separa uma escrita real do "já enviou nos últimos 5

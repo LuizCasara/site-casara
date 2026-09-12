@@ -38,12 +38,12 @@ async function loadInitialRows(): Promise<RankingRow[]> {
       updated_at: row.updated_at,
     })) as RankingRow[];
   } catch (err) {
-    console.error('[app/ingress/stats] falha ao consultar casara.ingress_rankings:', err);
+    console.error('[app/ingress/ranking] falha ao consultar casara.ingress_rankings:', err);
     return [];
   }
 }
 
-export default async function IngressStatsPage() {
+export default async function IngressRankingPage() {
   const profile = loadProfile()
 
   if (!profile) {
