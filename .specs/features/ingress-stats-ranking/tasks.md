@@ -1103,9 +1103,9 @@ Nenhuma tarefa marca `Tests: none` fora do que a matriz permite (só camadas Rea
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] `overallTierLabel` aceita `lang`, default `'pt'` (chamada sem o parâmetro continua idêntica)
-- [ ] Teste conferindo `lang='en'` devolve o nome oficial em inglês (ex. "Onyx +1")
-- [ ] `npm test` verde (contagem de testes não regride)
+- [x] `overallTierLabel` aceita `lang`, default `'pt'` (chamada sem o parâmetro continua idêntica)
+- [x] Teste conferindo `lang='en'` devolve o nome oficial em inglês (ex. "Onyx +1")
+- [x] `npm test` verde (contagem de testes não regride — 381 → 383)
 
 **Tests**: unit
 **Gate**: quick
