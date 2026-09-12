@@ -739,8 +739,8 @@ assinatura só, comportamento idêntico para toda chave válida.
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Os dois templates trocam com o toggle
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Os dois templates trocam com o toggle
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
