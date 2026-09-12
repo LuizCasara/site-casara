@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import {useLang} from '@/context/LanguageContext'
 import CountUp from './CountUp'
 
 type StatBadge = {
@@ -9,10 +12,16 @@ type StatBadge = {
   art: string | null
 }
 
+const T = {
+  pt: {medal: (name: string, tier: string) => `Medalha ${name}: ${tier}`},
+  en: {medal: (name: string, tier: string) => `Medal ${name}: ${tier}`},
+}
+
 /**
  * Uma métrica: número (pt-BR, com count-up) + rótulo. Quando a estatística
  * alimenta uma badge, um ícone pequeno no canto (sempre visível, para touch) que
- * no hover/focus mostra a medalha e o tier. Tudo por CSS — server component.
+ * no hover/focus mostra a medalha e o tier. Tudo por CSS — client component
+ * (ISTATS-19: `useLang()` bilingualiza o aria-label "Medalha").
  */
 export default function StatValue({
   label,
@@ -23,6 +32,7 @@ export default function StatValue({
   value: number
   badge?: StatBadge | null
 }) {
+  const {lang} = useLang()
   return (
     <div className="ing-stat">
       <div className="ing-stat__value">
@@ -33,7 +43,7 @@ export default function StatValue({
         <Link
           href={`/ingress/medalha/${badge.slug}`}
           className={`ing-stat__badge ing-stat__badge--${badge.tier}`}
-          aria-label={`Medalha ${badge.name}: ${badge.tierLabel}`}
+          aria-label={T[lang].medal(badge.name, badge.tierLabel)}
         >
           {badge.art ? (
             // eslint-disable-next-line @next/next/no-img-element

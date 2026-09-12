@@ -624,8 +624,8 @@ colateral inevitável do limite client/server, não escopo extra.
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Aria-label troca com o toggle
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Aria-label troca com o toggle
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
