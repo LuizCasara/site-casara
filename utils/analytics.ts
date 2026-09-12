@@ -393,3 +393,23 @@ export const trackBookComment = (slug: string) =>
 // copiar-link (desktop) — são gestos diferentes com intenções diferentes.
 export const trackBookShared = (slug: string, metodo: 'share' | 'clipboard') =>
   trackEvent('book_shared', { slug, metodo });
+
+// ─── Ingress ──────────────────────────────────────────────────────────────
+
+/**
+ * Um agente colado no radar de `/ingress/stats` terminou de submeter pro
+ * ranking (`POST /api/ingress-rankings`, sucesso ou falha). `mode` distingue
+ * comparar com o FencherLC, comparar dois colados, ou só entrar no ranking sem
+ * comparar; `written` separa uma escrita real do "já enviou nos últimos 5
+ * minutos" (debounce da rota).
+ */
+export const trackIngressRankingSubmit = (mode: 'vs-me' | 'two' | 'solo', written: boolean) =>
+  trackEvent('ingress_ranking_submit', { mode, written });
+
+/**
+ * Troca de idioma dentro de `/ingress` — separado do `language_toggled` geral
+ * (usado por `Header.tsx` no resto do site) porque a pergunta é outra: quanto
+ * do público desta feature usa o EN.
+ */
+export const trackIngressLanguageToggle = (para: string) =>
+  trackEvent('ingress_language_toggled', { para });

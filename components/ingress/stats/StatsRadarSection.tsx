@@ -6,6 +6,7 @@ import ProfileRadar, {type Agent} from '../ProfileRadar'
 import OverallScorePanel, {type AgentScore} from './OverallScorePanel'
 import {normalizeCodenameKey} from '@/lib/ingress-rankings.mjs'
 import {RADAR_STAT_KEYS} from '@/lib/ingress-compare-message.mjs'
+import {trackIngressRankingSubmit} from '@/utils/analytics'
 
 export type FencherlcInfo = {
   stats: Record<string, number>
@@ -98,6 +99,11 @@ export default function StatsRadarSection({
       .map(agentScoreFor)
       .filter((score): score is AgentScore => !!score)
     if (nextPanelAgents.length > 0) setPanelAgents(nextPanelAgents)
+
+    if (toPost.length > 0) {
+      const mode = !b ? 'solo' : isFencherlcAgent(a) ? 'vs-me' : 'two'
+      trackIngressRankingSubmit(mode, responses.some((r) => r?.written))
+    }
 
     // "primeiro colado" = o primeiro item de toPost em qualquer modo (o único
     // pasted em vs-me/solo, o agente A em dois-agentes) — é ele quem recebe o toast.

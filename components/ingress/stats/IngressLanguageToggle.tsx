@@ -1,6 +1,7 @@
 'use client'
 
 import {useLang} from '@/context/LanguageContext'
+import {trackIngressLanguageToggle} from '@/utils/analytics'
 
 /**
  * Chave PT/EN visível dentro de `/ingress` — o `Header.tsx` genérico do site se
@@ -16,7 +17,10 @@ export default function IngressLanguageToggle() {
   return (
     <button
       type="button"
-      onClick={toggle}
+      onClick={() => {
+        trackIngressLanguageToggle(lang === 'pt' ? 'en' : 'pt')
+        toggle()
+      }}
       aria-label={lang === 'pt' ? 'Switch to English' : 'Mudar para português'}
       style={{
         position: 'fixed',

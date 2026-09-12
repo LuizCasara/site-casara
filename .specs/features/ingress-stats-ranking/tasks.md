@@ -933,8 +933,8 @@ só deixou de passar `children`. Toca 2 arquivos, não 1 — mesmo motivo de T33
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Funções novas chamadas dos pontos certos (`StatsRadarSection` no submit, `IngressLanguageToggle` no toggle)
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Funções novas chamadas dos pontos certos (`StatsRadarSection` no submit, `IngressLanguageToggle` no toggle)
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
