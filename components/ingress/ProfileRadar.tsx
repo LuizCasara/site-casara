@@ -53,6 +53,7 @@ const T = {
     breakdownFootSingle: 'razão contra o limiar de Onyx',
     breakdownFootCapped: (pct: number) => ` · o que passa de ${pct}% entra travado`,
     hoverHint: 'Passe o mouse ou toque num eixo para ver o cálculo.',
+    blankHint: 'Cole seu export de estatísticas abaixo para ver o seu padrão de jogo.',
     whatToCompareAria: 'O que comparar',
     modeVsMe: (name: string, ranking: boolean) => (ranking ? `Comparar com ${name}` : `Contra ${name}`),
     modeTwo: (ranking: boolean) => (ranking ? 'Comparar com outro agente' : 'Dois agentes'),
@@ -80,6 +81,7 @@ const T = {
     breakdownFootSingle: 'ratio against the Onyx threshold',
     breakdownFootCapped: (pct: number) => ` · anything past ${pct}% is capped`,
     hoverHint: 'Hover or tap an axis to see the math.',
+    blankHint: "Paste your stats export below to see your play pattern.",
     whatToCompareAria: 'What to compare',
     modeVsMe: (name: string, ranking: boolean) => (ranking ? `Compare with ${name}` : `Against ${name}`),
     modeTwo: (ranking: boolean) => (ranking ? 'Compare with another agent' : 'Two agents'),
@@ -114,6 +116,9 @@ function toAgent(text: string, noAgentMsg: string): Agent {
     capturedAt: p.capturedAt ?? undefined,
   }
 }
+
+/** Estado vazio do radar em `variant="ranking"`, antes de qualquer submissão. */
+const BLANK_AGENT: Agent = {codename: '', stats: {}}
 
 const DEDUPE_MS = 10 * 60 * 1000
 const SENT_KEY = 'ing-cmp-sent'
@@ -204,7 +209,11 @@ export default function ProfileRadar({
   const [sentNote, setSentNote] = useState(false)
 
   const me: Agent = {codename: agentName, stats: stats as Record<string, number>, capturedAt}
-  const agentA = cmp ? cmp.a : me
+  // No modo ranking, o radar nasce em branco — não pré-carrega o padrão do
+  // FencherLC (isso é exclusivo do uso em /ingress). `me` continua disponível
+  // pro modo "vs-me" comparar contra o FencherLC real quando o visitante cola algo.
+  const isBlank = variant === 'ranking' && !cmp
+  const agentA = cmp ? cmp.a : isBlank ? BLANK_AGENT : me
   const agentB = cmp ? cmp.b : null
 
   const aAxes = computeRadarAxes(agentA.stats) as Axis[]
@@ -212,7 +221,7 @@ export default function ProfileRadar({
   const n = aAxes.length
   const rows = agentB ? compareRadar(agentA.stats, agentB.stats) : null
 
-  const sel = active != null ? aAxes[active] : null
+  const sel = active != null && !isBlank ? aAxes[active] : null
   const selB = active != null && bAxes ? bAxes[active] : null
 
   // quando os dois lados são o mesmo agente (você agora vs. um export antigo),
@@ -320,10 +329,12 @@ export default function ProfileRadar({
               <text x={lx} y={ly - 5} textAnchor={anchor} className="ing-radar__label">
                 {axisLabel(a)}
               </text>
-              <text x={lx} y={ly + 6} textAnchor={anchor} className="ing-radar__pct">
-                {pct(a.onyxRatio)}
-                {bAxes ? <tspan className="ing-radar__pct-them"> · {pct(bAxes[i].onyxRatio)}</tspan> : null}
-              </text>
+              {isBlank ? null : (
+                <text x={lx} y={ly + 6} textAnchor={anchor} className="ing-radar__pct">
+                  {pct(a.onyxRatio)}
+                  {bAxes ? <tspan className="ing-radar__pct-them"> · {pct(bAxes[i].onyxRatio)}</tspan> : null}
+                </text>
+              )}
               <circle cx={x} cy={y} r={18} fill="transparent" />
             </g>
           )
@@ -429,7 +440,7 @@ export default function ProfileRadar({
           </p>
         </div>
       ) : !agentB ? (
-        <p className="ing-radar__hint">{t.hoverHint}</p>
+        <p className="ing-radar__hint">{isBlank ? t.blankHint : t.hoverHint}</p>
       ) : null}
 
       {open ? (

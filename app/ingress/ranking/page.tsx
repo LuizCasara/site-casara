@@ -1,6 +1,6 @@
 import {loadProfile} from '@/lib/ingress'
 import sql from '@/lib/db'
-import {computeAxisScores, computeOverallScore, overallTierLabel} from '@/lib/ingress-tier-score.mjs'
+import {computeAxisScores, computeOverallScore, overallTierLabel, computeStatTiers} from '@/lib/ingress-tier-score.mjs'
 import Panel from '@/components/ingress/Panel'
 import StatsRadarSection from '@/components/ingress/stats/StatsRadarSection'
 import AxisExplanations from '@/components/ingress/stats/AxisExplanations'
@@ -34,6 +34,7 @@ async function loadInitialRows(): Promise<RankingRow[]> {
       overall_score: Number(row.overall_score),
       axis_scores: row.axis_scores,
       stat_values: row.stat_values,
+      stat_tiers: computeStatTiers(row.stat_values as Record<string, number>),
       created_at: row.created_at,
       updated_at: row.updated_at,
     })) as RankingRow[];
@@ -67,6 +68,8 @@ export default async function IngressRankingPage() {
 
   return (
     <main className="ing-shell">
+      <IngressRankingTable initialRows={initialRows} />
+
       <StatsRadarSection
         fencherlc={{
           stats: profile.stats,
@@ -79,8 +82,6 @@ export default async function IngressRankingPage() {
       />
 
       <AxisExplanations />
-
-      <IngressRankingTable initialRows={initialRows} />
 
       <IngressTutorial />
     </main>

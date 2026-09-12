@@ -98,9 +98,9 @@ export default function StatsRadarSection({
 }) {
   const {lang} = useLang()
   const t = T[lang]
-  const [panelAgents, setPanelAgents] = useState<AgentScore[]>([
-    {label: fencherlc.agentName, overallScore: fencherlc.overallScore, axisScores: fencherlc.axisScores, tier: fencherlc.tier},
-  ])
+  // Começa vazio — a nota geral só aparece depois da 1ª submissão (não
+  // pré-carrega o FencherLC aqui, mesmo motivo do radar nascer em branco).
+  const [panelAgents, setPanelAgents] = useState<AgentScore[]>([])
 
   const isFencherlcAgent = (agent: Agent) =>
     normalizeCodenameKey(agent.codename) === normalizeCodenameKey(fencherlc.agentName)
@@ -159,7 +159,7 @@ export default function StatsRadarSection({
         capturedAt={fencherlc.capturedAt}
         onCompare={handleCompare}
       />
-      <OverallScorePanel agents={panelAgents} />
+      {panelAgents.length > 0 ? <OverallScorePanel agents={panelAgents} /> : null}
     </div>
   )
 }
