@@ -1943,7 +1943,7 @@
 }
 
 .ing-ranking-table thead th {
-  text-align: left;
+  text-align: center;
   padding: 0.5rem 0.6rem;
   font-family: var(--ing-font-display);
   font-weight: 600;
@@ -1958,13 +1958,22 @@
   border-bottom: 1px solid var(--ing-edge-soft);
   color: var(--ing-text);
   vertical-align: middle;
+  text-align: center;
+}
+
+/* # / nota / facção / codinome / data ficam centralizadas (default acima);
+   AP total e o botão do olho ficam alinhados à direita. */
+.ing-ranking-table th[data-col='ap'],
+.ing-ranking-table th[data-col='details'],
+.ing-ranking-table td[data-col='ap'],
+.ing-ranking-table td[data-col='details'] {
+  text-align: right;
 }
 
 .ing-ranking-table td[data-col='rank'],
 .ing-ranking-table td[data-col='ap'],
 .ing-ranking-table td[data-col='score'] {
   font-variant-numeric: tabular-nums;
-  text-align: right;
 }
 
 .ing-ranking-table td[data-col='score'] {
@@ -1979,13 +1988,7 @@
   cursor: help;
 }
 
-.ing-ranking-table td[data-col='details'] {
-  text-align: right;
-}
-
 .ing-ranking-table__faction-icon {
-  vertical-align: middle;
-  margin-right: 0.5rem;
   border-radius: 3px;
 }
 

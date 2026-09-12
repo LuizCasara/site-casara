@@ -77,6 +77,7 @@ const T = {
     refreshBtn: 'Atualizar',
     refreshingBtn: 'Atualizando…',
     colRank: '#',
+    colFaction: 'Facção',
     colCodename: 'Codinome',
     colDates: 'Datas',
     datesTooltip: (updated: string, measured: string) => `Atualizado em ${updated} · Medido desde ${measured}`,
@@ -94,6 +95,7 @@ const T = {
     refreshBtn: 'Refresh',
     refreshingBtn: 'Refreshing…',
     colRank: '#',
+    colFaction: 'Faction',
     colCodename: 'Codename',
     colDates: 'Dates',
     datesTooltip: (updated: string, measured: string) => `Updated on ${updated} · Measured since ${measured}`,
@@ -182,12 +184,13 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
         <table className="ing-ranking-table">
           <thead>
             <tr>
-              <th scope="col">{t.colRank}</th>
-              <th scope="col">{t.colScore}</th>
-              <th scope="col">{t.colCodename}</th>
-              <th scope="col">{t.colDates}</th>
-              <th scope="col">{t.colAp}</th>
-              <th scope="col" aria-label={t.colDetails} />
+              <th scope="col" data-col="rank">{t.colRank}</th>
+              <th scope="col" data-col="score">{t.colScore}</th>
+              <th scope="col" data-col="faction" aria-label={t.colFaction} />
+              <th scope="col" data-col="codename">{t.colCodename}</th>
+              <th scope="col" data-col="dates">{t.colDates}</th>
+              <th scope="col" data-col="ap">{t.colAp}</th>
+              <th scope="col" data-col="details" aria-label={t.colDetails} />
             </tr>
           </thead>
           <tbody>
@@ -197,7 +200,7 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                   <tr key={row.codename_key} className={isOpen ? 'is-expanded' : undefined}>
                     <td data-col="rank">{i + 1}</td>
                     <td data-col="score">{fmtScore(row.overall_score)}</td>
-                    <td data-col="codename">
+                    <td data-col="faction">
                       <img
                         src={FACTION_ICON[row.faction]}
                         alt={FACTION_LABEL[row.faction]}
@@ -206,6 +209,8 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                         height={18}
                         className="ing-ranking-table__faction-icon"
                       />
+                    </td>
+                    <td data-col="codename">
                       <span className="ing-ranking-table__codename">{row.codename}</span>
                     </td>
                     <td data-col="dates" title={t.datesTooltip(fmtDate(row.updated_at, lang), fmtDate(row.created_at, lang))}>
