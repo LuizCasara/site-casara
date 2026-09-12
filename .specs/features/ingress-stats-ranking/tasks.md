@@ -579,8 +579,8 @@ T36 -> T37
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Label e aria-label trocam com o toggle
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Label e aria-label trocam com o toggle
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
