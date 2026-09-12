@@ -802,8 +802,8 @@ dessa página (isso é T35, fase 8, fora deste lote) foi tocado ou traduzido.
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] As 3 mensagens trocam com o toggle
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] As 3 mensagens trocam com o toggle
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
