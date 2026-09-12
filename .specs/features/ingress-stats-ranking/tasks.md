@@ -871,9 +871,21 @@ escopo extra.
 
 **Tools**: MCP: NONE / Skill: `nextjs-use-client`
 
+**SPEC_DEVIATION**: mesma restrição de `page.tsx`-Server de T33 — este `page.tsx`
+usa `loadProfile`/`loadCatalog` (o segundo, dependente de `node:fs`), então não
+pode virar `'use client'` inteiro. h1 + parágrafo-template + o `Panel` de
+"poucas datas" foram pra um leaf novo, `components/ingress/TimelineCopy.tsx`
+(`TimelineIntro`, `TimelinePlaceholder`). Also bilinguizado (não estava listado
+no "What", mas está coberto por "todo texto visível" do Done-when):
+`BackLink`'s children de "← Perfil de FencherLC" — como `BackLink` já é client
+(`useRouter`), `children` virou opcional e o próprio componente escolhe o
+rótulo bilíngue via `useLang()` quando omitido; ambos os call sites
+(`linha-do-tempo`, `medalha/[slug]` em T35) passam a não passar `children`.
+Toca 3 arquivos, não 1 — mesmo motivo de T33.
+
 **Done when**:
-- [ ] Todo texto visível troca com o toggle
-- [ ] `npm run build` e `npm run lint` verdes
+- [x] Todo texto visível troca com o toggle
+- [x] `npm run build` e `npm run lint` verdes
 
 **Tests**: none
 **Gate**: build
