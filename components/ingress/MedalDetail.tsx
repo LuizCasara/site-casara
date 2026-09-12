@@ -1,12 +1,34 @@
 'use client'
 
 import {useEffect, useRef} from 'react'
-import {TIERS, TIER_COLOR, TIER_LABELS} from '@/lib/ingress-tiers.mjs'
+import {TIERS, TIER_COLOR, tierLabel} from '@/lib/ingress-tiers.mjs'
 import {formatGap} from '@/lib/ingress-timeline.mjs'
 import {fmtMedalDate, fmtStat} from '@/lib/ingress-format.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
+import {useLang, type Lang} from '@/context/LanguageContext'
 import MedalSpark from './MedalSpark'
 import RecursionMark from './RecursionMark'
+
+const T = {
+  pt: {
+    yourTotal: 'Seu total:',
+    missingFor: (remaining: string, tier: string) => `faltam ${remaining} para ${tier}`,
+    beyondMissing: (label: string, pct: number, remaining: string) => `${label} · ${pct}% · faltam ${remaining}`,
+    noMedalYet: 'ainda sem medalha',
+    close: 'Fechar',
+    detailAria: (name: string) => `Detalhe de ${name}`,
+    openPage: (name: string) => `abrir página da ${name} →`,
+  },
+  en: {
+    yourTotal: 'Your total:',
+    missingFor: (remaining: string, tier: string) => `${remaining} to go for ${tier}`,
+    beyondMissing: (label: string, pct: number, remaining: string) => `${label} · ${pct}% · ${remaining} to go`,
+    noMedalYet: 'no medal yet',
+    close: 'Close',
+    detailAria: (name: string) => `${name} detail`,
+    openPage: (name: string) => `open ${name}'s page →`,
+  },
+}
 
 export type DetailTier = {tier: string; date: string; gapDays: number | null; prevTier: string | null}
 export type DetailStat = {
@@ -25,14 +47,15 @@ export type DetailMedal = {
   stat?: DetailStat
 }
 
-function StatLadder({medal, focusIdx}: {medal: DetailMedal; focusIdx: number}) {
+function StatLadder({medal, focusIdx, lang}: {medal: DetailMedal; focusIdx: number; lang: Lang}) {
+  const tr = T[lang]
   const stat = medal.stat as DetailStat
   const gotByTier = new Map(medal.tiers.map((t, i) => [t.tier, {entry: t, i}]))
   const firstLocked = stat.thresholds.findIndex((thr) => stat.value < thr)
   return (
     <div className="ing-tl__detail-stat">
       <p className="ing-tl__detail-total">
-        Seu total: <b>{fmtStat(stat.value)}</b>
+        {tr.yourTotal} <b>{fmtStat(stat.value)}</b>
       </p>
       <ol className="ing-tl__detail-ladder ing-tl__detail-ladder--stat">
         {TIERS.map((tn, i) => {
@@ -43,7 +66,7 @@ function StatLadder({medal, focusIdx}: {medal: DetailMedal; focusIdx: number}) {
           return (
             <li key={tn} className={got && got.i === focusIdx ? 'is-current' : reached ? undefined : 'is-locked'}>
               <span className="ing-tl__detail-dot" style={{background: TIER_COLOR[tn]}} />
-              <span className="ing-tl__detail-tier">{TIER_LABELS[tn]}</span>
+              <span className="ing-tl__detail-tier">{tierLabel(tn, lang)}</span>
               <span className="ing-tl__detail-thr">{fmtStat(thr)}</span>
               <time>
                 {got
@@ -61,11 +84,11 @@ function StatLadder({medal, focusIdx}: {medal: DetailMedal; focusIdx: number}) {
       </ol>
       {stat.beyond ? (
         <p className="ing-tl__detail-foot">
-          {stat.beyond.label} · {Math.round(stat.beyond.pct * 100)}% · faltam {fmtStat(stat.beyond.remaining)}
+          {tr.beyondMissing(stat.beyond.label, Math.round(stat.beyond.pct * 100), fmtStat(stat.beyond.remaining))}
         </p>
       ) : stat.next ? (
         <p className="ing-tl__detail-foot">
-          faltam {fmtStat(stat.next.remaining)} para {TIER_LABELS[stat.next.tier] ?? stat.next.tier}
+          {tr.missingFor(fmtStat(stat.next.remaining), tierLabel(stat.next.tier, lang))}
         </p>
       ) : null}
     </div>
@@ -86,6 +109,8 @@ export default function MedalDetail({
   focusTier?: string
   onClose: () => void
 }) {
+  const {lang} = useLang()
+  const tr = T[lang]
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     ref.current?.scrollIntoView({block: 'nearest', behavior: 'smooth'})
@@ -102,17 +127,17 @@ export default function MedalDetail({
 
   let range = ''
   if (!tiers.length) {
-    range = isCore ? 'ainda sem medalha' : ''
+    range = isCore ? tr.noMedalYet : ''
   } else if (tiers.length > 1) {
     const span = formatGap(Math.round((Date.parse(last.date) - Date.parse(first.date)) / 86_400_000))
-    range = `${TIER_LABELS[first.tier] ?? first.tier} → ${TIER_LABELS[last.tier] ?? last.tier}${span ? ` · ${span}` : ''}`
+    range = `${tierLabel(first.tier, lang)} → ${tierLabel(last.tier, lang)}${span ? ` · ${span}` : ''}`
   } else {
-    range = `${TIER_LABELS[first.tier] ?? first.tier}${medal.count && medal.count > 1 ? ` · ${medal.count}×` : ''}`
+    range = `${tierLabel(first.tier, lang)}${medal.count && medal.count > 1 ? ` · ${medal.count}×` : ''}`
   }
 
   return (
-    <div className="ing-tl__detail" role="dialog" aria-label={`Detalhe de ${medal.name}`} ref={ref}>
-      <button type="button" className="ing-tl__detail-close" onClick={onClose} aria-label="Fechar">
+    <div className="ing-tl__detail" role="dialog" aria-label={tr.detailAria(medal.name)} ref={ref}>
+      <button type="button" className="ing-tl__detail-close" onClick={onClose} aria-label={tr.close}>
         ✕
       </button>
       <div className="ing-tl__detail-head">
@@ -135,7 +160,7 @@ export default function MedalDetail({
           {range ? <span className="ing-tl__detail-sub">{range}</span> : null}
           {isCore ? (
             <a className="ing-tl__detail-link" href={`/ingress/medalha/${medal.slug}`}>
-              abrir página da {medal.name} →
+              {tr.openPage(medal.name)}
             </a>
           ) : null}
         </div>
@@ -145,7 +170,7 @@ export default function MedalDetail({
         <div className="ing-tl__detail-grid">
           {tiers.length > 1 ? <MedalSpark tiers={tiers} /> : null}
           {medal.stat ? (
-            <StatLadder medal={medal} focusIdx={idx} />
+            <StatLadder medal={medal} focusIdx={idx} lang={lang} />
           ) : tiers.length ? (
             <ol className="ing-tl__detail-ladder ing-tl__detail-ladder--event">
               {tiers.map((t, i) => {
@@ -153,7 +178,7 @@ export default function MedalDetail({
                 return (
                   <li key={t.tier} className={i === idx ? 'is-current' : undefined}>
                     <span className="ing-tl__detail-dot" style={{background: TIER_COLOR[t.tier] ?? '#26b6ff'}} />
-                    <span className="ing-tl__detail-tier">{TIER_LABELS[t.tier] ?? t.tier}</span>
+                    <span className="ing-tl__detail-tier">{tierLabel(t.tier, lang)}</span>
                     <time>{fmtMedalDate(t.date)}</time>
                     <span className="ing-tl__detail-gap">{g ? `+${g}` : ''}</span>
                   </li>
