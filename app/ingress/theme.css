@@ -2100,6 +2100,106 @@
   color: var(--ing-text-faint);
 }
 
+/* ─── "Nota geral" (iteração de UI: layout horizontal por agente) ─── */
+
+.ing-score-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.ing-score-panel__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  padding: 0.8rem 1rem;
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 12px;
+}
+
+.ing-score-panel__agent {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-text);
+  margin-right: 0.3rem;
+}
+
+.ing-score-panel__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+  min-width: 4.2rem;
+}
+
+.ing-score-panel__stat--overall .ing-score-panel__stat-value {
+  color: var(--ing-green-soft);
+  font-size: 1.3rem;
+}
+
+.ing-score-panel__stat--tier {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 999px;
+}
+
+.ing-score-panel__stat-label {
+  font-size: 0.68rem;
+  color: var(--ing-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ing-score-panel__stat-value {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--ing-text);
+}
+
+/* ─── "O que cada eixo mede" (iteração de UI: cartões + ícones de medalha) ─── */
+
+.ing-axis-explanations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.ing-axis-explanations__item {
+  padding: 1rem;
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 12px;
+}
+
+.ing-axis-explanations__icons {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.ing-axis-explanations__icon {
+  border-radius: 8px;
+  background: var(--ing-green-ghost);
+}
+
+.ing-axis-explanations__item dt {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-green-soft);
+  margin-bottom: 0.4rem;
+}
+
+.ing-axis-explanations__item dd {
+  margin: 0;
+  color: var(--ing-text-dim);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
 @media (max-width: 640px) {
   .ing-ranking-table {
     font-size: 0.78rem;

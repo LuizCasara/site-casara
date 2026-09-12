@@ -69,44 +69,32 @@ export default function OverallScorePanel({agents}: {agents: AgentScore[]}) {
 
   return (
     <Panel label={t.panelLabel} hint={t.panelHint}>
-      <table className="ing-score-panel">
-        <thead>
-          <tr>
-            <th scope="col" />
-            {agents.map((agent) => (
-              <th key={agent.label} scope="col" className="ing-score-panel__agent">
-                {agent.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="ing-score-panel__overall-row">
-            <th scope="row">{t.overallRow}</th>
-            {agents.map((agent) => (
-              <td key={agent.label} className="ing-score-panel__overall">
-                {fmtScore(agent.overallScore)}
-              </td>
-            ))}
-          </tr>
-          <tr>
-            <th scope="row">{t.tierRow}</th>
-            {agents.map((agent) => (
-              <td key={agent.label} style={{color: tierColorFromScore(agent.overallScore)}}>
+      <div className="ing-score-panel">
+        {agents.map((agent) => (
+          <div key={agent.label} className="ing-score-panel__row">
+            <span className="ing-score-panel__agent">{agent.label}</span>
+            <span className="ing-score-panel__stat ing-score-panel__stat--overall">
+              <span className="ing-score-panel__stat-label">{t.overallRow}</span>
+              <span className="ing-score-panel__stat-value">{fmtScore(agent.overallScore)}</span>
+            </span>
+            <span
+              className="ing-score-panel__stat ing-score-panel__stat--tier"
+              style={{borderColor: tierColorFromScore(agent.overallScore)}}
+            >
+              <span className="ing-score-panel__stat-label">{t.tierRow}</span>
+              <span className="ing-score-panel__stat-value" style={{color: tierColorFromScore(agent.overallScore)}}>
                 {tierLabelFromScore(agent.overallScore, lang)}
-              </td>
+              </span>
+            </span>
+            {RADAR_AXES.map((axis) => (
+              <span key={axis.id} className="ing-score-panel__stat">
+                <span className="ing-score-panel__stat-label">{lang === 'en' ? axis.labelEn : axis.label}</span>
+                <span className="ing-score-panel__stat-value">{fmtScore((agent.axisScores[axis.id] ?? 0) * 20)}</span>
+              </span>
             ))}
-          </tr>
-          {RADAR_AXES.map((axis) => (
-            <tr key={axis.id}>
-              <th scope="row">{lang === 'en' ? axis.labelEn : axis.label}</th>
-              {agents.map((agent) => (
-                <td key={agent.label}>{fmtScore((agent.axisScores[axis.id] ?? 0) * 20)}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          </div>
+        ))}
+      </div>
     </Panel>
   )
 }

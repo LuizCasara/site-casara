@@ -3,13 +3,13 @@
 import Panel from '../Panel'
 import {useLang} from '@/context/LanguageContext'
 import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
+import {artPath} from '@/lib/ingress-art.mjs'
 
 type AxisId = 'construcao' | 'destruicao' | 'exploracao' | 'hacking' | 'linksCampos'
 
 const translations = {
   pt: {
     panelLabel: 'O que cada eixo mede',
-    panelHint: 'a explicação fica sempre visível — sem depender de hover',
     axes: {
       construcao: {
         title: 'Construção',
@@ -35,7 +35,6 @@ const translations = {
   },
   en: {
     panelLabel: 'What each axis measures',
-    panelHint: 'the explanation stays visible — no hover required',
     axes: {
       construcao: {
         title: 'Construction',
@@ -65,19 +64,35 @@ const translations = {
  * Texto fixo abaixo do radar explicando cada um dos 5 eixos (ISTATS-02) — não
  * depende de nenhum estado de comparação, é sempre o mesmo texto para todo
  * visitante. Client leaf só por causa do `useLang()` (nenhum evento, nenhum
- * efeito).
+ * efeito). Cada eixo mostra os ícones (tier Onyx — não há um agente aqui pra
+ * ancorar num tier real, é só a identidade visual da medalha) das partes que
+ * o compõem; `portalsNeutralized` não tem badge própria, fica sem ícone.
  */
 export default function AxisExplanations() {
   const {lang} = useLang()
   const t = translations[lang]
 
   return (
-    <Panel label={t.panelLabel} hint={t.panelHint}>
+    <Panel label={t.panelLabel}>
       <dl className="ing-axis-explanations">
         {RADAR_AXES.map((axis) => {
           const entry = t.axes[axis.id as AxisId]
           return (
             <div key={axis.id} className="ing-axis-explanations__item">
+              <div className="ing-axis-explanations__icons" aria-hidden="true">
+                {axis.parts
+                  .filter((part) => part.badge)
+                  .map((part) => (
+                    <img
+                      key={part.key}
+                      src={artPath(part.badge as string, 'onyx')}
+                      alt=""
+                      width={40}
+                      height={40}
+                      className="ing-axis-explanations__icon"
+                    />
+                  ))}
+              </div>
               <dt>{entry.title}</dt>
               <dd>{entry.body}</dd>
             </div>
