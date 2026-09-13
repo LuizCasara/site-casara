@@ -2,6 +2,7 @@ import {NextRequest, NextResponse} from 'next/server';
 import sql from '@/lib/db';
 import { parseBrowser } from '@/lib/request-meta';
 import { shouldRecordEvents } from '@/lib/analytics-env';
+import { rateLimitOrNull } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +31,9 @@ export async function POST(request: NextRequest) {
     if (!shouldRecordEvents()) {
       return NextResponse.json({ ok: true, skipped: 'nao-e-producao' });
     }
+
+    const limited = await rateLimitOrNull(request, 'EVENTS_BATCH');
+    if (limited) return limited;
 
     const corpo = await request.json();
     // Aceita o lote (formato atual) e o objeto solto: uma aba aberta antes do

@@ -1,6 +1,6 @@
 'use client'
 
-import {FaTrophy} from 'react-icons/fa'
+import {FaTrophy, FaKeyboard} from 'react-icons/fa'
 import {heroMeshPolygons} from '@/lib/ingress-s2.mjs'
 import {useLang} from '@/context/LanguageContext'
 import HeroMesh from '../HeroMesh'
@@ -12,14 +12,19 @@ const T = {
     heading: 'Onde você fica?',
     body: 'Cole o export de estatísticas do app, compare com o FencherLC ou com outro agente, e veja sua posição — o ranking é público, atualiza na hora e cresce a cada agente que entra.',
     countLabel: (n: number) => `${n} agente${n === 1 ? '' : 's'} medido${n === 1 ? '' : 's'}`,
+    participateCta: 'Participar',
   },
   en: {
     eyebrow: 'Agent ranking',
     heading: 'Where do you stand?',
     body: "Paste your app's stats export, compare with FencherLC or another agent, and see your position — the ranking is public, updates instantly, and grows with every new agent.",
     countLabel: (n: number) => `${n} agent${n === 1 ? '' : 's'} measured`,
+    participateCta: 'Join in',
   },
 } as const
+
+/** Id da textarea principal do `ProfileRadar` (variant `ranking`) — mesmo elemento em qualquer modo (solo/vs-me/two-A). */
+const PASTE_FIELD_ID = 'ing-radar-a'
 
 /**
  * Hero de `/ingress/ranking` — mesmo tratamento visual do hero de `/ingress`
@@ -40,6 +45,12 @@ export default function RankingHero({
   const t = T[lang]
   const polygons = heroMeshPolygons(center) as [number, number][][]
 
+  const handleParticipate = () => {
+    const field = document.getElementById(PASTE_FIELD_ID)
+    field?.scrollIntoView({behavior: 'smooth', block: 'center'})
+    field?.focus({preventScroll: true})
+  }
+
   return (
     <header className="ing-hero ing-hero--ranking">
       <HeroMesh polygons={polygons} />
@@ -54,6 +65,10 @@ export default function RankingHero({
         <div className="ing-hero__meta">
           <span className="ing-hero__faction">{t.countLabel(totalAgents)}</span>
         </div>
+        <button type="button" className="ing-hero__cta" onClick={handleParticipate}>
+          <FaKeyboard aria-hidden="true" />
+          {t.participateCta}
+        </button>
       </div>
     </header>
   )

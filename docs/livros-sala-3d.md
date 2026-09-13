@@ -1229,6 +1229,28 @@ onde a obra é exibida** — o `LICENSE.md` do repositório não cumpre isso par
 quem visita o site. `components/livros/CreditosModelos.tsx` põe a linha no
 rodapé, e o `Footer` a monta só em `/livros`. Mexeu no `LICENSE.md`, mexa lá.
 
+## Bug conhecido do Next.js 16 em dev (não é nosso código)
+
+Clicar num livro (estante, mesa, ou a Bíblia) pode fazer a página recarregar
+inteira em vez de abrir o overlay sobre a sala — perde o contexto todo,
+inclusive a música tocando. **Isso não é um bug da sala nem do
+`router.push` em `Book.tsx`/`ItensDeEstudo.tsx`**: é o
+[issue #91265](https://github.com/vercel/next.js/issues/91265), aberto no
+próprio repositório do Next.js — o Turbopack empurra as rotas de
+interceptação (`@livro/(.)[slug]`) para dentro de `beforeFiles` a cada Hot
+Module Reload, sem limpar a entrada anterior. Depois de algumas edições
+salvas na mesma sessão de `npm run dev`, o caminho interno vira
+`/livros/(.)(.)(.)<slug>` (um `(.)` a mais por save), o fetch RSC da
+navegação client-side responde 500, e o Next cai para hard navigation como
+fallback — daí o reload completo.
+
+Confirmado (13/09/2026, ver [ADR-0003](./adr/0003-upgrade-para-nextjs-16.md)
+para o resto do upgrade): só acontece em `next dev`. `next build && next
+start` não tem o problema — testado com múltiplas navegações seguidas sem
+recompilar nada. **Se acontecer testando localmente, reinicie o `npm run
+dev`** (mata o acúmulo); não há nada a corrigir no nosso lado até o Next
+lançar um patch. Sem fix oficial na data acima.
+
 ## Fora de escopo, por decisão
 
 - **Adapter de Skoob**: a API pública foi desligada em setembro de 2025 e não há

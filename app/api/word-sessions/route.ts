@@ -7,10 +7,16 @@ import {
   generateToken,
   maxWordsCeiling,
 } from "@/lib/word-cloud";
+import { rateLimitOrNull } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
+  // Criação de sessão é pública e sem custo pro host — o limite por IP é o
+  // que impede um script de encher casara.word_sessions.
+  const limited = await rateLimitOrNull(request, "SESSION_CREATE");
+  if (limited) return limited;
+
   try {
     const body = await request.json();
     const title = typeof body.title === "string" ? body.title.trim() : "";

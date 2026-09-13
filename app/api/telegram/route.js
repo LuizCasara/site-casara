@@ -2,6 +2,8 @@ import {NextResponse} from 'next/server';
 import {getLoveLanguageDisplayName} from '@/apps/desenvolvimento-pessoal/love-language-info';
 import {compareMessages} from '@/lib/ingress-compare-message.mjs';
 import {radarPng} from './ingress-radar.jsx';
+import {rateLimitOrNull} from '@/lib/rate-limit';
+import {escapeTelegramMarkdown as esc} from '@/lib/telegram-markdown.mjs';
 
 /**
  * Envia a comparação de fichas do radar do /ingress para o tópico do Ingress:
@@ -78,10 +80,10 @@ async function sendIngressRankingEntry(data) {
 
     const medal = ['🥇', '🥈', '🥉'];
     const top3Lines = top3
-        .map((a, i) => `${medal[i] ?? `${i + 1}.`} ${a.codename} — ${Math.round(a.overallScore)}`)
+        .map((a, i) => `${medal[i] ?? `${i + 1}.`} ${esc(a.codename)} — ${Math.round(a.overallScore)}`)
         .join('\n');
 
-    const text = `🏆 *Novo registro no ranking do Ingress!*\n\n*${codename}* entrou na *${rank}ª posição* (de ${totalAgents}).\n\n*Top 3 atual:*\n${top3Lines}`;
+    const text = `🏆 *Novo registro no ranking do Ingress!*\n\n*${esc(codename)}* entrou na *${rank}ª posição* (de ${totalAgents}).\n\n*Top 3 atual:*\n${top3Lines}`;
 
     const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
@@ -140,18 +142,18 @@ async function sendTemperamentTestMessage(data) {
 📊 *Resultado do Teste de Temperamento*
 
 📅 *Data e Hora:* ${formattedDate}
-👤 *Nome:* ${name}
-🔢 *Idade:* ${age}
-🔄 *Execuções neste dispositivo:* ${executionCount || 'N/A'}
+👤 *Nome:* ${esc(name)}
+🔢 *Idade:* ${esc(age)}
+🔄 *Execuções neste dispositivo:* ${esc(executionCount || 'N/A')}
 
 *Resultados:*
-🔸 *1º: ${getPropSafely(results, 'primaryTemperament.name', 'Não definido')}* (${getPropSafely(results, 'primaryTemperament.percentage', 0)}%)
-🔹 *2º: ${getPropSafely(results, 'secondaryTemperament.name', 'Não definido')}* (${getPropSafely(results, 'secondaryTemperament.percentage', 0)}%)
+🔸 *1º: ${esc(getPropSafely(results, 'primaryTemperament.name', 'Não definido'))}* (${esc(getPropSafely(results, 'primaryTemperament.percentage', 0))}%)
+🔹 *2º: ${esc(getPropSafely(results, 'secondaryTemperament.name', 'Não definido'))}* (${esc(getPropSafely(results, 'secondaryTemperament.percentage', 0))}%)
 
-▫️ ${getArrayElementSafely(results?.allCharacteristics, 0, 'name', 'Não definido')} (${getArrayElementSafely(results?.allCharacteristics, 0, 'percentage', 0)}%)
-▫️ ${getArrayElementSafely(results?.allCharacteristics, 1, 'name', 'Não definido')} (${getArrayElementSafely(results?.allCharacteristics, 1, 'percentage', 0)}%)
-▫️ ${getArrayElementSafely(results?.allCharacteristics, 2, 'name', 'Não definido')} (${getArrayElementSafely(results?.allCharacteristics, 2, 'percentage', 0)}%)
-▫️ ${getArrayElementSafely(results?.allCharacteristics, 3, 'name', 'Não definido')} (${getArrayElementSafely(results?.allCharacteristics, 3, 'percentage', 0)}%)
+▫️ ${esc(getArrayElementSafely(results?.allCharacteristics, 0, 'name', 'Não definido'))} (${esc(getArrayElementSafely(results?.allCharacteristics, 0, 'percentage', 0))}%)
+▫️ ${esc(getArrayElementSafely(results?.allCharacteristics, 1, 'name', 'Não definido'))} (${esc(getArrayElementSafely(results?.allCharacteristics, 1, 'percentage', 0))}%)
+▫️ ${esc(getArrayElementSafely(results?.allCharacteristics, 2, 'name', 'Não definido'))} (${esc(getArrayElementSafely(results?.allCharacteristics, 2, 'percentage', 0))}%)
+▫️ ${esc(getArrayElementSafely(results?.allCharacteristics, 3, 'name', 'Não definido'))} (${esc(getArrayElementSafely(results?.allCharacteristics, 3, 'percentage', 0))}%)
 `;
 
     // Send message to Telegram
@@ -217,7 +219,7 @@ async function sendLoveLanguageTestMessage(data) {
 
     const allLanguages = results?.allLanguages || [];
     const languagesLines = allLanguages
-        .map(l => `▫️ ${getLoveLanguageDisplayName(l.name)} (${l.percentage}%)`)
+        .map(l => `▫️ ${esc(getLoveLanguageDisplayName(l.name))} (${esc(l.percentage)}%)`)
         .join('\n');
 
     const primaryName = getPropSafely(results, 'primary.name', 'Não definido');
@@ -227,13 +229,13 @@ async function sendLoveLanguageTestMessage(data) {
 💌 *Resultado do Teste de Linguagens do Amor*
 
 📅 *Data e Hora:* ${formattedDate}
-👤 *Nome:* ${name}
-🔢 *Idade:* ${age}
-🔄 *Execuções neste dispositivo:* ${executionCount || 'N/A'}
+👤 *Nome:* ${esc(name)}
+🔢 *Idade:* ${esc(age)}
+🔄 *Execuções neste dispositivo:* ${esc(executionCount || 'N/A')}
 
 *Resultado:* ${results?.combined ? '(combinado, próximo entre as 2 primeiras)' : ''}
-🔸 *1º: ${getLoveLanguageDisplayName(primaryName)}* (${getPropSafely(results, 'primary.percentage', 0)}%)
-🔹 *2º: ${getLoveLanguageDisplayName(secondaryName)}* (${getPropSafely(results, 'secondary.percentage', 0)}%)
+🔸 *1º: ${esc(getLoveLanguageDisplayName(primaryName))}* (${esc(getPropSafely(results, 'primary.percentage', 0))}%)
+🔹 *2º: ${esc(getLoveLanguageDisplayName(secondaryName))}* (${esc(getPropSafely(results, 'secondary.percentage', 0))}%)
 
 *Todas as linguagens:*
 ${languagesLines}
@@ -268,6 +270,13 @@ ${languagesLines}
  * Supports temperament test and love language test notifications
  */
 export async function POST(request) {
+    // Rota pública sem autenticação (qualquer visitante que conclui um teste,
+    // ou compara um perfil do /ingress, chama isto do navegador) — o limite
+    // é o que impede alguém de escrever um script que inunda o grupo/tópico
+    // do Telegram com centenas de mensagens.
+    const limited = await rateLimitOrNull(request, 'TELEGRAM');
+    if (limited) return limited;
+
     try {
         const data = await request.json();
         const {type} = data;
@@ -289,7 +298,7 @@ export async function POST(request) {
                 result = await sendIngressRankingEntry(data);
                 break;
             default:
-                console.error(`Unsupported notification type: ${type}`);
+                return NextResponse.json({error: `tipo de notificação desconhecido: ${type}`}, {status: 400});
         }
 
         return NextResponse.json({success: true, result}, {status: 200});

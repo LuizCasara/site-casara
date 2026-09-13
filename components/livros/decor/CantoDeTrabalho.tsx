@@ -57,6 +57,16 @@ const ALTURA_CADEIRA = 0.95;
 const RECUO_DA_CADEIRA = 0.62;
 const ALTURA_MONITOR = 0.42;
 const LARGURA_TECLADO = 0.42;
+/**
+ * O quanto teclado e mouse/mousepad avançam de `zDoFundo` na direção de quem
+ * senta (+z). Compartilhado entre os dois porque precisam ficar alinhados
+ * lado a lado na mesma linha — mudar um sem o outro descasa a composição.
+ *
+ * Era 0.42: a borda frontal do teclado ultrapassava a borda da mesa,
+ * "flutuando" para fora dela. 0.34 deixa a mesma folga que o mousepad já
+ * tinha em relação à borda.
+ */
+const PROFUNDIDADE_PERIFERICOS = 0.34;
 const LADO_TAPETE_M = 2.0;
 /** Altura do porta-retratos; a largura sai dela pela proporção 2:3 da foto. */
 const ALTURA_RETRATO = 0.19;
@@ -441,7 +451,7 @@ export default function CantoDeTrabalho({
 
             <KenneyModel
                 url={MODELOS.teclado}
-                position={[centro[0] - 0.06, tampo, zDoFundo + 0.42]}
+                position={[centro[0] - 0.06, tampo, zDoFundo + PROFUNDIDADE_PERIFERICOS]}
                 rotation={[0, FRENTE_PARA_A_SALA + 0.05, 0]}
                 larguraAlvo={LARGURA_TECLADO}
                 cores={{metalDark: COR_METAL_ESCURO, metalMedium: '#2a3033'}}
@@ -454,7 +464,7 @@ export default function CantoDeTrabalho({
               Primitivas: o kit não tem mouse. Um mousepad é um retângulo fino
               por definição, e o mouse é uma esfera achatada e esticada.
             */}
-            <group position={[centro[0] + 0.33, tampo, zDoFundo + 0.42]} rotation={[0, 0.05, 0]}>
+            <group position={[centro[0] + 0.33, tampo, zDoFundo + PROFUNDIDADE_PERIFERICOS]} rotation={[0, 0.05, 0]}>
                 <mesh position={[0, 0.002, 0]} receiveShadow>
                     <boxGeometry args={[0.22, 0.004, 0.17]}/>
                     <meshStandardMaterial color="#23262a" roughness={0.9}/>
