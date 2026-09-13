@@ -109,6 +109,7 @@ const EVENT_LABELS: Record<string, string> = {
   ingress_compare_two_agents:   "ING_CMP_TWO",
   ingress_ranking_join:         "ING_JOIN",
   ingress_language_toggled:     "ING_LANG_TOGGLE",
+  ingress_ranking_shared:       "ING_SHARE",
 };
 
 const EVENT_DESCRIPTIONS: Record<string, string> = {

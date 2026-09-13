@@ -10,6 +10,8 @@ import {trackIngressLanguageToggle} from '@/utils/analytics'
  * Estilizada com os tokens do tema Sora/Barlow de `app/ingress/theme.css` via
  * inline style (as CSS custom properties já estão disponíveis em qualquer
  * descendente de `.ingress-prime`), não com as classes Tailwind do `Header`.
+ * Não se posiciona sozinha (`position:fixed`) — quem faz isso é `IngressTopBar`,
+ * que também decide se mostra o botão de compartilhar ao lado.
  */
 export default function IngressLanguageToggle() {
   const {lang, toggle} = useLang()
@@ -23,10 +25,6 @@ export default function IngressLanguageToggle() {
       }}
       aria-label={lang === 'pt' ? 'Switch to English' : 'Mudar para português'}
       style={{
-        position: 'fixed',
-        top: '1rem',
-        right: '1rem',
-        zIndex: 20,
         display: 'flex',
         alignItems: 'center',
         gap: '0.35rem',

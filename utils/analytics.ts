@@ -419,3 +419,8 @@ export const trackIngressRankingJoin = (written: boolean) =>
  */
 export const trackIngressLanguageToggle = (para: string) =>
   trackEvent('ingress_language_toggled', { para });
+
+// `metodo` distingue a folha de compartilhamento do sistema (celular) do
+// copiar-link (desktop) — mesmo par usado em `trackBookShared`.
+export const trackIngressRankingShared = (metodo: 'share' | 'clipboard') =>
+  trackEvent('ingress_ranking_shared', { metodo });
