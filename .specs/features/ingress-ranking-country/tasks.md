@@ -231,7 +231,7 @@ T10
 
 ---
 
-### T7: Componente `CountryPicker`
+### T7: Componente `CountryPicker` ✅ Done
 
 **What**: Criar `components/ingress/CountryPicker.tsx` — combobox controlado (`id`, `value: string | null`, `onChange: (code: string | null) => void`, `invalid?: boolean`) com filtro por digitação (nome PT/EN ou código, sem diferenciar caixa/acento — normalizar via `.normalize('NFD').replace(...)` antes de comparar), lista de opções com bandeira (`<img src="/ingress/flags/<cc>.svg">`) ao lado de cada nome, navegação por teclado (setas para mover, Enter para selecionar, Esc para fechar), e a bandeira do país escolhido visível no próprio campo depois de selecionado. Bilíngue via `useLang()`, seguindo o padrão `T = {pt, en}` do resto de `components/ingress/`.
 **Where**: `components/ingress/CountryPicker.tsx`
@@ -246,14 +246,14 @@ T10
 
 **Done when**:
 
-- [ ] Digitar no campo filtra a lista por nome (PT quando `lang==='pt'`, EN quando `lang==='en'`) ou código, sem diferenciar maiúsculas/minúsculas nem acentos
-- [ ] Cada opção da lista mostra a bandeira correspondente
-- [ ] Selecionar uma opção chama `onChange(code)` e preenche o campo com o nome do país escolhido, mostrando a bandeira no campo
-- [ ] Apagar o texto do campo já preenchido chama `onChange(null)`
-- [ ] Navegação por teclado funciona: seta para baixo/cima move o item ativo, Enter seleciona, Esc fecha a lista sem selecionar
-- [ ] `invalid={true}` aplica um estado visual de erro (borda), sem exigir nenhuma outra prop
-- [ ] Validação manual: `npm run dev`, abrir `/ingress/ranking`, testar digitação/seleção/teclado/limpeza do campo isoladamente (antes de integrar em T8)
-- [ ] Gate check passa: `npm run build`
+- [x] Digitar no campo filtra a lista por nome (PT quando `lang==='pt'`, EN quando `lang==='en'`) ou código, sem diferenciar maiúsculas/minúsculas nem acentos — implementado via `fold()` (NFD + strip diacritics + lowercase)
+- [x] Cada opção da lista mostra a bandeira correspondente
+- [x] Selecionar uma opção chama `onChange(code)` e preenche o campo com o nome do país escolhido, mostrando a bandeira no campo
+- [x] Apagar o texto do campo já preenchido chama `onChange(null)` (qualquer edição do texto enquanto havia seleção já invalida, não só apagar tudo — mais amplo que o mínimo pedido)
+- [x] Navegação por teclado funciona: seta para baixo/cima move o item ativo, Enter seleciona, Esc fecha a lista sem selecionar
+- [x] `invalid={true}` aplica um estado visual de erro (borda), sem exigir nenhuma outra prop
+- [x] Validação manual: sem harness de isolamento de componente neste projeto (sem Storybook) — feita em conjunto com T8, que integra o componente na página real (`npm run dev` em `/ingress/ranking`)
+- [x] Gate check passa: `npm run build`
 
 **Tests**: none
 **Gate**: build
