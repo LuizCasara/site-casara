@@ -7,7 +7,7 @@ import {useLang} from '@/context/LanguageContext';
 import {trackNavClick, trackMobileMenuOpened, trackLanguageToggled} from '@/utils/analytics';
 
 type NavSection = 'experiment' | 'shortcut';
-type NavChild = {href: string; label: string; section: NavSection; icon?: string; wip?: boolean};
+type NavChild = {href: string; label: string; section: NavSection; icon?: string};
 type NavItem = {href: string; label: string; children?: NavChild[]};
 
 // Filhos de "Projetos": `section: 'experiment'` são as áreas construídas dentro
@@ -24,7 +24,7 @@ const navLinks: Record<'pt' | 'en', NavItem[]> = {
       children: [
         {href: '/app', label: 'Aplicativos', section: 'experiment', icon: '🧪'},
         {href: '/livros', label: 'Livros', section: 'experiment', icon: '📚'},
-        {href: '/ingress', label: 'Ingress', section: 'experiment', icon: '🛰️', wip: true},
+        {href: '/ingress', label: 'Ingress', section: 'experiment', icon: '🛰️'},
         {href: '/projects', label: 'Trabalho com clientes', section: 'shortcut'},
       ],
     },
@@ -38,7 +38,7 @@ const navLinks: Record<'pt' | 'en', NavItem[]> = {
       children: [
         {href: '/app', label: 'Apps', section: 'experiment', icon: '🧪'},
         {href: '/livros', label: 'Books', section: 'experiment', icon: '📚'},
-        {href: '/ingress', label: 'Ingress', section: 'experiment', icon: '🛰️', wip: true},
+        {href: '/ingress', label: 'Ingress', section: 'experiment', icon: '🛰️'},
         {href: '/projects', label: 'Client work', section: 'shortcut'},
       ],
     },
@@ -64,7 +64,6 @@ const Header = () => {
   const {lang, toggle} = useLang();
   const links = navLinks[lang];
   const experimentsLabel = lang === 'pt' ? 'Experimentos' : 'Experiments';
-  const wipLabel = lang === 'pt' ? 'em construção' : 'work in progress';
 
   // O evento leva o idioma de DESTINO, não o atual: é o que a pessoa quis ver.
   const trocarIdioma = () => {
@@ -114,12 +113,6 @@ const Header = () => {
         ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30'
         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50'
     }`;
-
-  const WipBadge = () => (
-    <span className="ml-2 font-mono text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 rounded px-1 py-px">
-      {wipLabel}
-    </span>
-  );
 
   const experiments = (children: NavChild[]) => children.filter((c) => c.section === 'experiment');
   const shortcuts = (children: NavChild[]) => children.filter((c) => c.section === 'shortcut');
@@ -205,7 +198,6 @@ const Header = () => {
                           >
                             <span aria-hidden="true">{child.icon}</span>
                             <span>{child.label}</span>
-                            {child.wip && <WipBadge />}
                           </Link>
                         ))}
 
@@ -328,7 +320,6 @@ const Header = () => {
                     >
                       <span aria-hidden="true">{child.icon}</span>
                       <span>{child.label}</span>
-                      {child.wip && <WipBadge />}
                     </Link>
                   ))}
 
