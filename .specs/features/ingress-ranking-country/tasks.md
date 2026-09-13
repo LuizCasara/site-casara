@@ -208,7 +208,7 @@ T10
 
 ---
 
-### T6: SSR inicial de `/ingress/ranking` devolve país
+### T6: SSR inicial de `/ingress/ranking` devolve país ✅ Done
 
 **What**: Estender `loadInitialRows()` em `app/ingress/ranking/page.tsx` para incluir `country_code` no `SELECT` e no objeto `RankingRow` retornado (mesmo formato do T5, para a consulta SSR direta ao banco).
 **Where**: `app/ingress/ranking/page.tsx`
@@ -223,8 +223,8 @@ T10
 
 **Done when**:
 
-- [ ] `loadInitialRows()` inclui `country_code` no `SELECT` e no objeto mapeado para `RankingRow[]`
-- [ ] Gate check passa: `npm run build`
+- [x] `loadInitialRows()` inclui `country_code` no `SELECT` e no objeto mapeado para `RankingRow[]`
+- [x] Gate check passa: `npm run build`
 
 **Tests**: none
 **Gate**: build
