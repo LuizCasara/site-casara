@@ -15,6 +15,8 @@ npm test         # Run lib/**/*.test.mjs via node --test
 
 This is a **Next.js 16 (App Router)** personal portfolio site with Tailwind CSS. The site is deployed on Vercel and uses `@vercel/analytics` for event tracking.
 
+**This file is the "what" and the current state.** For *why* a specific past technical decision was made the way it was — not just what it is today — see [`docs/adr/`](./docs/adr/README.md) (Architecture Decision Records). Feature-specific product context and research that doesn't belong in code comments lives in the other loose files under `docs/`.
+
 ### Route Structure
 
 - `/` — Homepage with random quote/tip generator and quick-access cards
