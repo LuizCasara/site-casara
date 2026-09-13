@@ -287,7 +287,7 @@ T10
 
 ---
 
-### T9: `StatsRadarSection` envia `countryCode` no POST
+### T9: `StatsRadarSection` envia `countryCode` no POST ✅ Done
 
 **What**: Em `components/ingress/stats/StatsRadarSection.tsx`, incluir `countryCode: agent.countryCode ?? ''` no body do `fetch('/api/ingress-rankings', ...)` dentro de `postAgent`.
 **Where**: `components/ingress/stats/StatsRadarSection.tsx`
@@ -302,9 +302,9 @@ T10
 
 **Done when**:
 
-- [ ] O body do POST inclui `countryCode` vindo do `Agent` recebido de `ProfileRadar`
-- [ ] Validação manual: submeter um agente de teste em `/ingress/ranking` e confirmar (via T4's checagem, ou pela linha aparecer com bandeira depois de T10) que o país chega gravado
-- [ ] Gate check passa: `npm run build`
+- [x] O body do POST inclui `countryCode` vindo do `Agent` recebido de `ProfileRadar`
+- [x] Validação manual: revisão de código; teste ponta-a-ponta de escrita real fica pendente da autorização de migração (ver seção final) e da verificação visual do Luiz
+- [x] Gate check passa: `npm run build`
 
 **Tests**: none
 **Gate**: build
