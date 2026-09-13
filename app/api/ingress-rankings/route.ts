@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import sql from "@/lib/db";
 import { normalizeCodenameKey } from "@/lib/ingress-rankings.mjs";
+import { normalizeCountryCode, isValidCountryCode } from "@/lib/ingress-countries.mjs";
 import { computeAxisScores, computeOverallScore, overallTierLabel, computeStatTiers } from "@/lib/ingress-tier-score.mjs";
 import { RADAR_STAT_KEYS } from "@/lib/ingress-compare-message.mjs";
 import { rateLimitOrNull } from "@/lib/rate-limit";
@@ -134,6 +135,11 @@ export async function POST(request: NextRequest) {
   }
   const stats = body.stats as Record<string, number>;
 
+  const countryCode = normalizeCountryCode(body.countryCode);
+  if (!isValidCountryCode(countryCode)) {
+    return NextResponse.json({ error: "countryCode é obrigatório e deve ser um código ISO 3166-1 válido" }, { status: 400 });
+  }
+
   try {
     // O codinome do FencherLC não tem mais guarda especial: se o body trouxe
     // stats de verdade (inclusive um export fresco do próprio FencherLC), a
@@ -149,9 +155,9 @@ export async function POST(request: NextRequest) {
     // mais de 5 minutos. Sem conflito (agente novo), o INSERT sempre vale.
     const [inserted] = await sql`
       INSERT INTO casara.ingress_rankings
-        (codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, created_at, updated_at)
+        (codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, country_code, created_at, updated_at)
       VALUES
-        (${codenameKey}, ${codename}, ${faction}, ${lifetimeAp}, ${overallScore}, ${JSON.stringify(axisScoreMap)}, ${JSON.stringify(stats)}, NOW(), NOW())
+        (${codenameKey}, ${codename}, ${faction}, ${lifetimeAp}, ${overallScore}, ${JSON.stringify(axisScoreMap)}, ${JSON.stringify(stats)}, ${countryCode}, NOW(), NOW())
       ON CONFLICT (codename_key) DO UPDATE SET
         codename = EXCLUDED.codename,
         faction = EXCLUDED.faction,
@@ -159,6 +165,7 @@ export async function POST(request: NextRequest) {
         overall_score = EXCLUDED.overall_score,
         axis_scores = EXCLUDED.axis_scores,
         stat_values = EXCLUDED.stat_values,
+        country_code = EXCLUDED.country_code,
         updated_at = NOW()
       WHERE casara.ingress_rankings.updated_at < NOW() - INTERVAL '5 minutes'
       RETURNING *
