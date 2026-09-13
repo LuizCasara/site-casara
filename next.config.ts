@@ -38,12 +38,14 @@ const nextConfig: NextConfig = {
         '/api/caderno': ['./content/caderno/**/*'],
         '/ingress/**': ['./data/ingress/**/*'],
     },
-    // Environment variables that will be available at runtime
-    env: {
-        TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
-        TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID,
-        TELEGRAM_THREAD_ID: process.env.TELEGRAM_THREAD_ID,
-    }
+    // Sem bloco `env`: as três variáveis do Telegram só são lidas dentro de
+    // app/api/telegram/route.js (server-only), que já enxerga process.env.*
+    // sem precisar disso — o bloco `env` do next.config existe justamente
+    // para inlinar valores no bundle do NAVEGADOR, e essas variáveis não têm
+    // prefixo NEXT_PUBLIC_, então declará-las aqui era só risco à toa: bastava
+    // alguém um dia referenciar `process.env.TELEGRAM_BOT_TOKEN` num
+    // componente "use client" para o token do bot vazar publicamente no JS
+    // servido a qualquer visitante.
 };
 
 export default nextConfig;
