@@ -111,7 +111,7 @@ T10
 
 ---
 
-### T2: Lógica pura de validação de país
+### T2: Lógica pura de validação de país ✅ Done
 
 **What**: Criar `lib/ingress-countries.mjs` exportando `normalizeCountryCode(code)` (trim + uppercase, mesmo padrão de `normalizeCodenameKey`), `isValidCountryCode(code)` (contra um `Set` construído de `countries.json`) e `COUNTRIES` (reexport do JSON). Criar `lib/ingress-countries.test.mjs` cobrindo os dois branches de `isValidCountryCode` (válido/inválido) e a normalização (trim, lower→upper, vazio/ausente).
 **Where**: `lib/ingress-countries.mjs`, `lib/ingress-countries.test.mjs`
@@ -126,10 +126,10 @@ T10
 
 **Done when**:
 
-- [ ] `isValidCountryCode('BR')` e `isValidCountryCode('br')`-normalizado retornam `true`; um código de 2 letras fora da lista (ex. `'ZZ'`) e um código malformado (ex. `'BRA'`, `''`, `undefined`) retornam `false`
-- [ ] `normalizeCountryCode` replica o comportamento de `normalizeCodenameKey` para trim/caixa, mas para uppercase
-- [ ] Gate check passa: `npm test`
-- [ ] Test count: pelo menos 4 novos testes passam (nenhuma deleção silenciosa dos testes já existentes)
+- [x] `isValidCountryCode('BR')` e `isValidCountryCode('br')`-normalizado retornam `true`; um código de 2 letras fora da lista (ex. `'ZZ'`) e um código malformado (ex. `'BRA'`, `''`, `undefined`) retornam `false`
+- [x] `normalizeCountryCode` replica o comportamento de `normalizeCodenameKey` para trim/caixa, mas para uppercase
+- [x] Gate check passa: `npm test`
+- [x] Test count: 5 novos testes passam (393 no total, nenhuma deleção silenciosa dos testes já existentes)
 
 **Tests**: unit
 **Gate**: quick
