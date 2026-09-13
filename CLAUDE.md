@@ -8,13 +8,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev      # Start dev server with Turbopack (http://localhost:3000)
 npm run build    # Production build
 npm run lint     # Run ESLint
+npm test         # Run lib/**/*.test.mjs via node --test
 ```
-
-No test suite is configured in this project.
 
 ## Architecture
 
-This is a **Next.js 15 (App Router)** personal portfolio site with Tailwind CSS. The site is deployed on Vercel and uses `@vercel/analytics` for event tracking.
+This is a **Next.js 16 (App Router)** personal portfolio site with Tailwind CSS. The site is deployed on Vercel and uses `@vercel/analytics` for event tracking.
 
 ### Route Structure
 
@@ -77,7 +76,7 @@ Two analytics systems run side by side, both driven from `utils/analytics.ts`'s 
 
 - `lib/db.ts` — lazy-initialized Neon client (`sql` tagged template) reading `DATABASE_URL`; avoids connecting at build time
 - `casara.events` — the single analytics table (event_name, route, payload JSONB, geo/browser columns)
-- `middleware.ts` — fire-and-forget inserts a `page_view` event per request (geo from Vercel headers, bot UAs filtered, skips `_next`/`api`/`_vercel`/favicon)
+- `proxy.ts` (renamed from `middleware.ts`/`export function middleware` in the Next.js 16 upgrade — same file, same behavior, just the convention name) — fire-and-forget inserts a `page_view` event per request (geo from Vercel headers, bot UAs filtered, skips `_next`/`api`/`_vercel`/favicon)
 - **Só produção grava evento — `lib/analytics-env.ts`.** `.env.local` aponta para o banco de PRODUÇÃO (é o mesmo `DATABASE_URL` do `scripts/livros.mjs`), então sem gate cada `npm run dev` gravava dado real: numa auditoria de 07/08/2026, **93,4% dos eventos dos 7 dias anteriores vinham de localhost**. O gate é duplo e por mecanismos diferentes de propósito — servidor (middleware + `/api/events`) por `VERCEL_ENV === 'production'`, que é o único que distingue produção de *preview* e não existe fora da Vercel; cliente (`utils/analytics.ts`) por `NODE_ENV`, porque o Next só inlina `NEXT_PUBLIC_*` no bundle. O do cliente poupa a viagem de rede, o do servidor é o que de fato barra
 - **Eventos do cliente vão em LOTE, não um POST por evento.** `trackEvent` enfileira em memória e esvazia após 2s de silêncio, ou na hora ao juntar 10. O flush de saída usa `navigator.sendBeacon` — o único transporte que sobrevive ao descarregamento da página, e a razão de fechar a aba não perder a fila; um `fetch` pendente seria cancelado. O listener é `visibilitychange → hidden` e **nunca `beforeunload`**, que não dispara no Safari do iOS nem no bfcache, ou seja, justamente no caso "fechei o site no celular". Do lado do servidor, `/api/events` aceita array (e ainda o objeto solto, para abas abertas antes do deploy) e grava o lote inteiro num `INSERT ... SELECT FROM UNNEST`: uma ida ao Neon por lote, não por evento
 - **Antes de criar um evento, pergunte se ele responde a algo que um `page_view` já não responde, e se é um gesto DELIBERADO.** Foi o que a mesma auditoria derrubou: `room_scene_changed` (74% vinha da roda do mouse — atravessar paradas não é escolher nenhuma), `room_loaded` (1:1 com o `page_view` de `/livros`, e o `time_to_interactive_ms` que o justificava era 0–14ms, ou seja cache hit) e `book_opened` (178 `page_view` de slug contra 162 aberturas — a mesma informação duas vezes). Medir travessia de navegação contínua é o antipadrão: um gesto de trackpad rendia dezenas de linhas. Cliques são baratos e ficam
@@ -291,3 +290,13 @@ All user interactions are tracked via `@vercel/analytics`. Tracking functions li
 ### Fonts
 
 Two Google Fonts loaded via `next/font`: `Quicksand` (body, `--font-quicksand`) and `Space Mono` (mono, `--font-space-mono`).
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

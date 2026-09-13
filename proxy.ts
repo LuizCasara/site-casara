@@ -10,7 +10,12 @@ function isBot(ua: string): boolean {
   return /bot|crawl|spider|slurp|mediapartners|facebookexternalhit|whatsapp|telegram|preview/i.test(ua);
 }
 
-export async function middleware(request: NextRequest) {
+// Renomeado de `middleware.ts`/`export function middleware` para `proxy.ts`/
+// `export function proxy` na migração pro Next 16 — mesmo arquivo, mesmo
+// comportamento, só o nome que o Next reconhece mudou (`middleware` fica
+// deprecated, sem suporte a edge runtime; `proxy` sempre roda em nodejs, que é
+// o que este arquivo já precisa para falar com o Neon).
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (SKIP_PREFIXES.some((p) => pathname.startsWith(p))) {
