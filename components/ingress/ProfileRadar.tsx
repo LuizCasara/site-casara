@@ -1,6 +1,8 @@
 'use client'
 
 import {Fragment, useState} from 'react'
+import {FaPaste} from 'react-icons/fa'
+import {toast} from 'sonner'
 import {computeRadarAxes, compareRadar, RADAR_DRAW_MAX} from '@/lib/ingress-radar.mjs'
 import {parseAppExport} from '@/lib/ingress-stats.mjs'
 import {compareHash, RADAR_STAT_KEYS} from '@/lib/ingress-compare-message.mjs'
@@ -57,17 +59,20 @@ const T = {
     whatToCompareAria: 'O que comparar',
     modeVsMe: (name: string, ranking: boolean) => (ranking ? `Comparar com ${name}` : `Contra ${name}`),
     modeTwo: (ranking: boolean) => (ranking ? 'Comparar com outro agente' : 'Dois agentes'),
-    modeSolo: 'Só entrar no ranking',
+    modeSolo: 'Entrar no ranking',
     labelTwoA: 'Export do agente A (verde):',
     labelTwoB: 'Export do agente B (roxo):',
     labelSolo: 'Cole seu export de estatísticas do app:',
     labelVsMe: 'Cole o export de estatísticas do app do outro agente:',
     sentNote: '✓ comparação enviada',
     compareBtn: 'Comparar',
+    submitBtn: 'Enviar',
     clearBtn: 'Limpar',
     openCompareBtn: 'Comparar com outro agente',
     parseErrorNoAgent: 'Export sem "Agent Name".',
     parseErrorGeneric: 'Não deu pra ler esse texto.',
+    pasteBtn: 'Colar',
+    pasteFallback: 'Não foi possível colar automaticamente. Toque e segure o campo para colar.',
   },
   en: {
     radarAria: 'Play-pattern radar',
@@ -92,10 +97,13 @@ const T = {
     labelVsMe: "Paste the other agent's app stats export:",
     sentNote: '✓ comparison sent',
     compareBtn: 'Compare',
+    submitBtn: 'Submit',
     clearBtn: 'Clear',
     openCompareBtn: 'Compare with another agent',
     parseErrorNoAgent: 'Export missing "Agent Name".',
     parseErrorGeneric: "Couldn't read that text.",
+    pasteBtn: 'Paste',
+    pasteFallback: "Couldn't paste automatically. Tap and hold the field to paste.",
   },
 } as const
 
@@ -272,6 +280,29 @@ export default function ProfileRadar({
     setOpen(variant === 'ranking')
   }
   const canCompare = mode === 'two' ? textA.trim() !== '' && textB.trim() !== '' : textA.trim() !== ''
+
+  /**
+   * Botão "Colar" (principalmente pra mobile: evita o
+   * selecionar-e-achar-"Colar"-no-menu). Só preenche o campo — quem decide
+   * disparar a comparação continua sendo o clique em "Comparar", então um
+   * clipboard com lixo não tem efeito colateral. `readText` exige gesto do
+   * usuário e contexto seguro (ok, o site é https); se a API não existir ou
+   * a permissão for negada, cai no mesmo fallback gracioso do resto do
+   * Ingress (toast + foco no campo pra colar manualmente).
+   */
+  const pasteInto = async (setter: (v: string) => void, textareaId: string) => {
+    try {
+      const text = await navigator.clipboard?.readText?.()
+      if (text) {
+        setter(text)
+        return
+      }
+    } catch {
+      // permissão negada ou API indisponível — cai no fallback abaixo
+    }
+    toast.error(t.pasteFallback)
+    document.getElementById(textareaId)?.focus()
+  }
 
   const svg = (
     <div className="ing-radar">
@@ -464,9 +495,19 @@ export default function ProfileRadar({
             </button>
           </div>
 
-          <label htmlFor="ing-radar-a" className="ing-radar__compare-label">
-            {mode === 'two' ? t.labelTwoA : mode === 'solo' ? t.labelSolo : t.labelVsMe}
-          </label>
+          <div className="ing-radar__label-row">
+            <label htmlFor="ing-radar-a" className="ing-radar__compare-label">
+              {mode === 'two' ? t.labelTwoA : mode === 'solo' ? t.labelSolo : t.labelVsMe}
+            </label>
+            <button
+              type="button"
+              className="ing-radar__btn ing-radar__btn--paste"
+              onClick={() => pasteInto(setTextA, 'ing-radar-a')}
+            >
+              <FaPaste aria-hidden="true" />
+              {t.pasteBtn}
+            </button>
+          </div>
           <textarea
             id="ing-radar-a"
             className="ing-radar__textarea"
@@ -477,9 +518,19 @@ export default function ProfileRadar({
           />
           {mode === 'two' ? (
             <>
-              <label htmlFor="ing-radar-b" className="ing-radar__compare-label">
-                {t.labelTwoB}
-              </label>
+              <div className="ing-radar__label-row">
+                <label htmlFor="ing-radar-b" className="ing-radar__compare-label">
+                  {t.labelTwoB}
+                </label>
+                <button
+                  type="button"
+                  className="ing-radar__btn ing-radar__btn--paste"
+                  onClick={() => pasteInto(setTextB, 'ing-radar-b')}
+                >
+                  <FaPaste aria-hidden="true" />
+                  {t.pasteBtn}
+                </button>
+              </div>
               <textarea
                 id="ing-radar-b"
                 className="ing-radar__textarea"
@@ -500,7 +551,7 @@ export default function ProfileRadar({
               onClick={runCompare}
               disabled={!canCompare}
             >
-              {t.compareBtn}
+              {mode === 'solo' ? t.submitBtn : t.compareBtn}
             </button>
             <button type="button" className="ing-radar__btn" onClick={clear}>
               {t.clearBtn}
