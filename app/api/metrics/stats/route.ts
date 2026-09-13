@@ -110,6 +110,19 @@ export async function GET(request: Request) {
       WHERE created_at > NOW() - INTERVAL '1 day' * ${days}
     `;
 
+    const [ingress] = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE event_name = 'ingress_compare_vs_me')                                                      AS total_compare_vs_me,
+        COUNT(*) FILTER (WHERE event_name = 'ingress_compare_vs_me' AND (payload->>'written')::boolean)                   AS written_compare_vs_me,
+        COUNT(*) FILTER (WHERE event_name = 'ingress_compare_two_agents')                                                 AS total_compare_two_agents,
+        COUNT(*) FILTER (WHERE event_name = 'ingress_compare_two_agents' AND (payload->>'written')::boolean)              AS written_compare_two_agents,
+        COUNT(*) FILTER (WHERE event_name = 'ingress_ranking_join')                                                       AS total_ranking_join,
+        COUNT(*) FILTER (WHERE event_name = 'ingress_ranking_join' AND (payload->>'written')::boolean)                    AS written_ranking_join,
+        COUNT(*) FILTER (WHERE event_name = 'ingress_language_toggled')                                                   AS total_language_toggled
+      FROM casara.events
+      WHERE created_at > NOW() - INTERVAL '1 day' * ${days}
+    `;
+
     const loveLanguagesByPrimary = await sql`
       SELECT payload->>'primary' AS language, COUNT(*) AS count
       FROM casara.events
@@ -142,6 +155,15 @@ export async function GET(request: Request) {
           temperament: r.temperament as string,
           count:       Number(r.count),
         })),
+      },
+      ingress: {
+        total_compare_vs_me:      Number(ingress.total_compare_vs_me),
+        written_compare_vs_me:    Number(ingress.written_compare_vs_me),
+        total_compare_two_agents:   Number(ingress.total_compare_two_agents),
+        written_compare_two_agents: Number(ingress.written_compare_two_agents),
+        total_ranking_join:      Number(ingress.total_ranking_join),
+        written_ranking_join:    Number(ingress.written_ranking_join),
+        total_language_toggled:  Number(ingress.total_language_toggled),
       },
       love_languages: {
         total_started:        Number(loveLanguages.total_started),

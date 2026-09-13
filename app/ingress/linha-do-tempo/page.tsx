@@ -6,7 +6,7 @@ import {collectAcquisitions} from '@/lib/ingress-timeline.mjs'
 import {BADGES, computeBadge, TIERS} from '@/lib/ingress-badges.mjs'
 import BackLink from '@/components/ingress/BackLink'
 import AchievementTimeline from '@/components/ingress/AchievementTimeline'
-import Panel from '@/components/ingress/Panel'
+import {TimelineIntro, TimelinePlaceholder} from '@/components/ingress/TimelineCopy'
 
 type BadgeDef = {key: string; name: string; statKey: string; tiers: Record<string, number>}
 
@@ -44,16 +44,9 @@ export default function TimelinePage() {
 
   return (
     <main className="ing-shell">
-      <BackLink fallback="/ingress">← Perfil de FencherLC</BackLink>
+      <BackLink fallback="/ingress" />
 
-      <header className="ing-tl-hero">
-        <h1>Linha do tempo</h1>
-        <p>
-          {acquisitions.length > 0 && anos
-            ? `${acquisitions.length} conquistas entre ${anos[0]} e ${anos[1]}. Passe o mouse nos pontos para ver a arte da medalha e o intervalo desde o tier anterior, filtre por categoria ou tier, e arraste na curva para dar zoom num período.`
-            : 'A linha do tempo aparece conforme as datas de conquista são registradas.'}
-        </p>
-      </header>
+      <TimelineIntro count={acquisitions.length} years={anos as [number, number] | null} />
 
       {acquisitions.length >= 2 ? (
         <AchievementTimeline
@@ -62,12 +55,7 @@ export default function TimelinePage() {
           medalStats={medalStats as ComponentProps<typeof AchievementTimeline>['medalStats']}
         />
       ) : (
-        <Panel label="Linha do tempo">
-          <p className="ing-pending">
-            <span className="ing-pending__dot" aria-hidden="true" />
-            Ainda não há datas de conquista suficientes.
-          </p>
-        </Panel>
+        <TimelinePlaceholder />
       )}
     </main>
   )

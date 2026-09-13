@@ -32,6 +32,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: lib/ingress-catalog.mjs coreBadges (lib/pure-logic)
 - last seen: 2026-09-08T03:51:44Z
 
+### L-004 - When an i18n retrofit phase translates a feature's pre-existing pages, explicitly re-check every component built in the feature's own earlier phases too -- new components are not automatically in scope just because they render on the same page as translated ones.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `i18n` · harmful: 0
+- features: ingress-stats-ranking
+- evidence: ISTATS-19 AC-2; components/ingress/ProfileRadar.tsx, components/ingress/stats/OverallScorePanel.tsx, components/ingress/stats/IngressRankingTable.tsx (i18n)
+- last seen: 2026-09-12T01:06:57Z
+
+### L-005 - A component that must become a Client Component (for useLang/state/events) cannot keep computing values via node:fs-backed helpers -- move that computation to the nearest Server Component caller and pass the result down as a prop instead.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `components` · harmful: 0
+- features: ingress-stats-ranking
+- evidence: SPEC_DEVIATION markers in components/ingress/StatGroups.tsx:29, components/ingress/TierLadder.tsx:17, components/ingress/stats/IngressRankingTable.tsx:54 (tasks T10, T21, T29, T33-T35) (components)
+- last seen: 2026-09-12T01:07:07Z
+
+### L-006 - When an i18n retrofit adds a bilingual leaf component for a Server Component route's fallback/empty state, grep every sibling route with the same fallback pattern and give each an equivalent leaf -- a Done-when that says 'same treatment as route X' is not verified until compared string-for-string with X's actual bilingual output.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `i18n` · harmful: 0
+- features: ingress-stats-ranking
+- evidence: app/ingress/stats/page.tsx:52 (T12); cf. bilingual sibling components/ingress/IngressPagePanels.tsx:32 EmptySignalPanel (T33) (i18n)
+- last seen: 2026-09-12T01:38:38Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

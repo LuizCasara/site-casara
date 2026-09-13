@@ -1,6 +1,7 @@
 'use client'
 
 import {useMemo, useState} from 'react'
+import {useLang} from '@/context/LanguageContext'
 import MedalDetail, {type DetailMedal} from './MedalDetail'
 import RecursionMark from './RecursionMark'
 
@@ -14,20 +15,46 @@ export type GridMedal = {
   detail: DetailMedal
 }
 
-type NextMedal = {slug: string; name: string; nextTier: string; pct: number; hint: string}
+type NextMedal = {
+  slug: string
+  name: string
+  nextTier: string
+  pct: number
+  /** `{pt, en}` — quem escolhe é aqui (client), não `page.tsx` (Server, não sabe o idioma ativo). */
+  hint: {pt: string; en: string}
+}
 
-const CATS: {k: string; label: string}[] = [
-  {k: 'estatistica', label: 'Estatística'},
-  {k: 'anomalias', label: 'Anomalias'},
-  {k: 'eventos', label: 'Eventos & Ops'},
-]
-const SOON = ['Colecionáveis', 'Personagens']
+const CAT_KEYS = ['estatistica', 'anomalias', 'eventos'] as const
+const SOON_KEYS = ['colecionaveis', 'personagens'] as const
+
+const T = {
+  pt: {
+    medals: 'Medalhas',
+    chrono: 'Cronologia',
+    byCat: 'Categoria',
+    nextMedal: 'Próxima medalha',
+    soonHint: 'chegam com o dump GDPR',
+    cat: {estatistica: 'Estatística', anomalias: 'Anomalias', eventos: 'Eventos & Ops'} as Record<string, string>,
+    soon: {colecionaveis: 'Colecionáveis', personagens: 'Personagens'} as Record<string, string>,
+  },
+  en: {
+    medals: 'Medals',
+    chrono: 'Timeline',
+    byCat: 'Category',
+    nextMedal: 'Next medal',
+    soonHint: 'arriving with the GDPR dump',
+    cat: {estatistica: 'Stats', anomalias: 'Anomalies', eventos: 'Events & Ops'} as Record<string, string>,
+    soon: {colecionaveis: 'Collectibles', personagens: 'Characters'} as Record<string, string>,
+  },
+}
 
 /**
  * Grade de medalhas da home: hexágonos só com a arte, ordenáveis por cronologia
  * ou categoria, toque abre o painel de detalhe compartilhado com a linha do tempo.
  */
 export default function MedalGrid({medals, next}: {medals: GridMedal[]; next?: NextMedal | null}) {
+  const {lang} = useLang()
+  const tr = T[lang]
   const [sortBy, setSortBy] = useState<'crono' | 'cat'>('crono')
   const [selected, setSelected] = useState<GridMedal | null>(null)
 
@@ -73,20 +100,20 @@ export default function MedalGrid({medals, next}: {medals: GridMedal[]; next?: N
   return (
     <section className="ing-panel ing-mgrid">
       <div className="ing-panel__head">
-        <h2 className="ing-panel__label">Medalhas</h2>
+        <h2 className="ing-panel__label">{tr.medals}</h2>
         <div className="ing-mgrid__toggle">
           <button type="button" aria-pressed={sortBy === 'crono'} onClick={() => setSortBy('crono')}>
-            Cronologia
+            {tr.chrono}
           </button>
           <button type="button" aria-pressed={sortBy === 'cat'} onClick={() => setSortBy('cat')}>
-            Categoria
+            {tr.byCat}
           </button>
         </div>
       </div>
 
       {next ? (
         <a className="ing-mgrid__next" href={`/ingress/medalha/${next.slug}`}>
-          <span className="ing-mgrid__next-label">Próxima medalha</span>
+          <span className="ing-mgrid__next-label">{tr.nextMedal}</span>
           <strong>
             {next.name} → {next.nextTier}
           </strong>
@@ -94,7 +121,7 @@ export default function MedalGrid({medals, next}: {medals: GridMedal[]; next?: N
             <span style={{width: `${Math.round(next.pct * 100)}%`}} />
           </span>
           <span className="ing-mgrid__next-hint">
-            {Math.round(next.pct * 100)}% · {next.hint}
+            {Math.round(next.pct * 100)}% · {next.hint[lang]}
           </span>
         </a>
       ) : null}
@@ -105,18 +132,18 @@ export default function MedalGrid({medals, next}: {medals: GridMedal[]; next?: N
         <div className="ing-mgrid__grid">{chrono.map(cell)}</div>
       ) : (
         <>
-          {CATS.map((c) =>
-            byCat[c.k]?.length ? (
-              <div key={c.k} className="ing-mgrid__group">
-                <h3 className="ing-mgrid__group-label">{c.label}</h3>
-                <div className="ing-mgrid__grid">{byCat[c.k].map(cell)}</div>
+          {CAT_KEYS.map((k) =>
+            byCat[k]?.length ? (
+              <div key={k} className="ing-mgrid__group">
+                <h3 className="ing-mgrid__group-label">{tr.cat[k]}</h3>
+                <div className="ing-mgrid__grid">{byCat[k].map(cell)}</div>
               </div>
             ) : null,
           )}
-          {SOON.map((label) => (
-            <div key={label} className="ing-mgrid__group">
-              <h3 className="ing-mgrid__group-label">{label}</h3>
-              <p className="ing-mgrid__soon">chegam com o dump GDPR</p>
+          {SOON_KEYS.map((k) => (
+            <div key={k} className="ing-mgrid__group">
+              <h3 className="ing-mgrid__group-label">{tr.soon[k]}</h3>
+              <p className="ing-mgrid__soon">{tr.soonHint}</p>
             </div>
           ))}
         </>

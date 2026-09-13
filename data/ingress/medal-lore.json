@@ -1,86 +1,136 @@
 {
   "trekker": {
     "blurb": "Distância a pé que o scanner registrou desde 2014 — só conta o que você andou com o app aberto.",
+    "blurbEn": "Walking distance the scanner has logged since 2014 — only counts steps taken with the app open.",
     "facts": [
       {"per": 42.195, "label": "maratonas"},
       {"per": 140, "label": "vezes a estrada Cascavel–Foz do Iguaçu"},
       {"rate": "km por dia, em média"}
+    ],
+    "factsEn": [
+      {"per": 42.195, "label": "marathons"},
+      {"per": 140, "label": "times the Cascavel–Foz do Iguaçu highway"},
+      {"rate": "km per day, on average"}
     ]
   },
   "builder": {
     "blurb": "Resonadores plantados — a base de todo portal Enlightened que você levantou.",
+    "blurbEn": "Resonators deployed — the foundation of every Enlightened portal you've built.",
     "facts": [
       {"per": 8, "label": "portais montados do zero (8 resonadores cada)"},
       {"rate": "resonadores por dia"}
+    ],
+    "factsEn": [
+      {"per": 8, "label": "portals built from scratch (8 resonators each)"},
+      {"rate": "resonators per day"}
     ]
   },
   "connector": {
     "blurb": "Links criados entre portais — cada linha verde no mapa saiu de um hack seu.",
+    "blurbEn": "Links created between portals — every green line on the map came from one of your hacks.",
     "facts": [
       {"rate": "links por dia"},
       {"per": 3, "label": "campos que dariam (3 links cada)"}
+    ],
+    "factsEn": [
+      {"rate": "links per day"},
+      {"per": 3, "label": "fields those would make (3 links each)"}
     ]
   },
   "mind-controller": {
     "blurb": "Campos de controle — cada triângulo verde que cobriu o mapa.",
-    "facts": [{"rate": "campos por dia"}]
+    "blurbEn": "Control fields — every green triangle that has covered the map.",
+    "facts": [{"rate": "campos por dia"}],
+    "factsEn": [{"rate": "fields per day"}]
   },
   "illuminator": {
     "blurb": "Mind Units: a soma da população estimada sob todos os campos que você fechou.",
+    "blurbEn": "Mind Units: the total estimated population under every field you've ever closed.",
     "facts": [
       {"per": 332000, "label": "vezes a população de Cascavel"},
       {"per": 12300000, "label": "vezes a cidade de São Paulo inteira"}
+    ],
+    "factsEn": [
+      {"per": 332000, "label": "times the population of Cascavel"},
+      {"per": 12300000, "label": "times the entire city of São Paulo"}
     ]
   },
   "liberator": {
     "blurb": "Capturas de portal — contando recapturas do mesmo lugar.",
-    "facts": [{"rate": "capturas por dia"}]
+    "blurbEn": "Portal captures — recaptures of the same spot count too.",
+    "facts": [{"rate": "capturas por dia"}],
+    "factsEn": [{"rate": "captures per day"}]
   },
   "pioneer": {
     "blurb": "Portais diferentes onde você foi o primeiro Enlightened a fincar bandeira.",
-    "facts": []
+    "blurbEn": "Distinct portals where you were the first Enlightened to plant a flag.",
+    "facts": [],
+    "factsEn": []
   },
   "explorer": {
     "blurb": "Portais distintos que você visitou pelo menos uma vez.",
-    "facts": []
+    "blurbEn": "Distinct portals you've visited at least once.",
+    "facts": [],
+    "factsEn": []
   },
   "purifier": {
     "blurb": "Resonadores inimigos derrubados — o trabalho sujo antes da captura.",
-    "facts": [{"per": 8, "label": "portais adversários zerados por completo"}]
+    "blurbEn": "Enemy resonators destroyed — the dirty work before the capture.",
+    "facts": [{"per": 8, "label": "portais adversários zerados por completo"}],
+    "factsEn": [{"per": 8, "label": "enemy portals wiped clean"}]
   },
   "hacker": {
     "blurb": "Cada vez que você encostou num portal pra puxar itens ou girar glifos.",
+    "blurbEn": "Every time you touched a portal to pull items or spin glyphs.",
     "facts": [
       {"rate": "hacks por dia, desde 2014"},
       {"per": 900, "label": "horas de scanner só hackeando (a ~4s cada)"}
+    ],
+    "factsEn": [
+      {"rate": "hacks per day, since 2014"},
+      {"per": 900, "label": "hours of scanner time spent just hacking (~4s each)"}
     ]
   },
   "translator": {
     "blurb": "Pontos de glifo — ganhos por desenhar as sequências no hack em vez de pular.",
-    "facts": [{"per": 50000, "label": "vezes o limiar máximo da medalha"}]
+    "blurbEn": "Glyph points — earned by drawing the sequences during a hack instead of skipping them.",
+    "facts": [{"per": 50000, "label": "vezes o limiar máximo da medalha"}],
+    "factsEn": [{"per": 50000, "label": "times the medal's max threshold"}]
   },
   "engineer": {
     "blurb": "Mods instalados em portais: escudos, multi-hacks, turrets, links amp.",
-    "facts": [{"rate": "mods por dia"}]
+    "blurbEn": "Mods installed on portals: shields, multi-hacks, turrets, link amps.",
+    "facts": [{"rate": "mods por dia"}],
+    "factsEn": [{"rate": "mods per day"}]
   },
   "recharger": {
     "blurb": "XM devolvido a portais aliados pra segurá-los de pé.",
-    "facts": [{"per": 25000000, "label": "vezes o limiar máximo da medalha"}]
+    "blurbEn": "XM given back to friendly portals to keep them standing.",
+    "facts": [{"per": 25000000, "label": "vezes o limiar máximo da medalha"}],
+    "factsEn": [{"per": 25000000, "label": "times the medal's max threshold"}]
   },
   "specops": {
     "blurb": "Missões concluídas — as trilhas guiadas de portais.",
-    "facts": [{"per": 6, "label": "banners de 6 missões"}]
+    "blurbEn": "Missions completed — the guided portal trails.",
+    "facts": [{"per": 6, "label": "banners de 6 missões"}],
+    "factsEn": [{"per": 6, "label": "6-mission banners"}]
   },
   "sojourner": {
     "blurb": "Sua maior sequência de dias seguidos hackeando ao menos um portal.",
-    "facts": [{"per": 365, "label": "anos seguidos sem furar um dia"}]
+    "blurbEn": "Your longest streak of consecutive days hacking at least one portal.",
+    "facts": [{"per": 365, "label": "anos seguidos sem furar um dia"}],
+    "factsEn": [{"per": 365, "label": "straight years without missing a day"}]
   },
   "guardian": {
     "blurb": "O recorde de dias que um portal seu ficou de pé sem ninguém derrubar.",
-    "facts": [{"per": 30.44, "label": "meses intocado, o recorde"}]
+    "blurbEn": "The record for days one of your portals stood without being taken down.",
+    "facts": [{"per": 30.44, "label": "meses intocado, o recorde"}],
+    "factsEn": [{"per": 30.44, "label": "untouched months, the record"}]
   },
   "recon": {
     "blurb": "Análises no Wayfarer que bateram com a decisão da maioria.",
-    "facts": [{"rate": "análises por dia"}]
+    "blurbEn": "Wayfarer reviews that matched the majority decision.",
+    "facts": [{"rate": "análises por dia"}],
+    "factsEn": [{"rate": "reviews per day"}]
   }
 }

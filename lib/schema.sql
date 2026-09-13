@@ -164,3 +164,23 @@ CREATE TABLE IF NOT EXISTS casara.books (
 CREATE INDEX IF NOT EXISTS idx_books_status   ON casara.books (status);
 CREATE INDEX IF NOT EXISTS idx_books_category ON casara.books (category);
 CREATE INDEX IF NOT EXISTS idx_books_tags     ON casara.books USING GIN (tags);
+
+-- ─── Ingress Stats & Ranking ────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS casara.ingress_rankings (
+  codename_key   TEXT PRIMARY KEY,
+  codename       TEXT NOT NULL,
+  faction        TEXT NOT NULL CHECK (faction IN ('enlightened','resistance')),
+  lifetime_ap    BIGINT NOT NULL DEFAULT 0,
+  overall_score  NUMERIC(7,2) NOT NULL,
+  axis_scores    JSONB NOT NULL,
+  stat_values    JSONB NOT NULL,
+  -- created_at = "medido desde": a primeira vez que este agente foi medido
+  -- NESTE ranking, não a data de criação da conta no Ingress (nenhuma fonte
+  -- de dado disponível contém essa data real).
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ingress_rankings_score ON casara.ingress_rankings (overall_score DESC);
+CREATE INDEX IF NOT EXISTS idx_ingress_rankings_ap    ON casara.ingress_rankings (lifetime_ap DESC);

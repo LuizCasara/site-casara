@@ -33,6 +33,7 @@
     "react-leaflet": "^5.0.0",
     "react-markdown": "^10.1.0",
     "s2js": "^1.44.0",
+    "sonner": "^2.0.8",
     "three": "^0.185.1"
   },
   "devDependencies": {

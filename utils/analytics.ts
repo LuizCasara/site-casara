@@ -393,3 +393,34 @@ export const trackBookComment = (slug: string) =>
 // copiar-link (desktop) — são gestos diferentes com intenções diferentes.
 export const trackBookShared = (slug: string, metodo: 'share' | 'clipboard') =>
   trackEvent('book_shared', { slug, metodo });
+
+// ─── Ingress ──────────────────────────────────────────────────────────────
+
+/**
+ * As 3 formas de entrada de `/ingress/ranking` viram 3 eventos próprios (não
+ * um evento com campo `mode`) — cada um responde a uma pergunta diferente
+ * ("quantos comparam comigo" vs. "quantos comparam com outro agente" vs.
+ * "quantos só entram no ranking"). `written` sempre separa uma escrita real
+ * do "já enviou nos últimos 5 minutos" (debounce de `POST /api/ingress-rankings`).
+ */
+export const trackIngressCompareVsMe = (written: boolean) =>
+  trackEvent('ingress_compare_vs_me', { written });
+
+export const trackIngressCompareTwoAgents = (written: boolean) =>
+  trackEvent('ingress_compare_two_agents', { written });
+
+export const trackIngressRankingJoin = (written: boolean) =>
+  trackEvent('ingress_ranking_join', { written });
+
+/**
+ * Troca de idioma dentro de `/ingress` — separado do `language_toggled` geral
+ * (usado por `Header.tsx` no resto do site) porque a pergunta é outra: quanto
+ * do público desta feature usa o EN.
+ */
+export const trackIngressLanguageToggle = (para: string) =>
+  trackEvent('ingress_language_toggled', { para });
+
+// `metodo` distingue a folha de compartilhamento do sistema (celular) do
+// copiar-link (desktop) — mesmo par usado em `trackBookShared`.
+export const trackIngressRankingShared = (metodo: 'share' | 'clipboard') =>
+  trackEvent('ingress_ranking_shared', { metodo });

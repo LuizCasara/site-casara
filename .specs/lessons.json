@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 4,
+  "next_id": 7,
   "lessons": [
     {
       "id": "L-001",
@@ -58,6 +58,60 @@
       ],
       "created": "2026-09-08T03:51:44Z",
       "last_seen": "2026-09-08T03:51:44Z"
+    },
+    {
+      "id": "L-004",
+      "key": "ac_gap::when an i18n retrofit phase translates a feature s pre existing pages explicitly re check every component built in the feature s own earlier phases too new components are not automatically in scope just because they render on the same page as translated ones",
+      "text": "When an i18n retrofit phase translates a feature's pre-existing pages, explicitly re-check every component built in the feature's own earlier phases too -- new components are not automatically in scope just because they render on the same page as translated ones.",
+      "signal": "ac_gap",
+      "scope": "i18n",
+      "status": "candidate",
+      "features": [
+        "ingress-stats-ranking"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "ISTATS-19 AC-2; components/ingress/ProfileRadar.tsx, components/ingress/stats/OverallScorePanel.tsx, components/ingress/stats/IngressRankingTable.tsx (i18n)"
+      ],
+      "created": "2026-09-12T01:06:57Z",
+      "last_seen": "2026-09-12T01:06:57Z"
+    },
+    {
+      "id": "L-005",
+      "key": "spec_deviation::a component that must become a client component for uselang state events cannot keep computing values via node fs backed helpers move that computation to the nearest server component caller and pass the result down as a prop instead",
+      "text": "A component that must become a Client Component (for useLang/state/events) cannot keep computing values via node:fs-backed helpers -- move that computation to the nearest Server Component caller and pass the result down as a prop instead.",
+      "signal": "spec_deviation",
+      "scope": "components",
+      "status": "candidate",
+      "features": [
+        "ingress-stats-ranking"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SPEC_DEVIATION markers in components/ingress/StatGroups.tsx:29, components/ingress/TierLadder.tsx:17, components/ingress/stats/IngressRankingTable.tsx:54 (tasks T10, T21, T29, T33-T35) (components)"
+      ],
+      "created": "2026-09-12T01:07:07Z",
+      "last_seen": "2026-09-12T01:07:07Z"
+    },
+    {
+      "id": "L-006",
+      "key": "ac_gap::when an i18n retrofit adds a bilingual leaf component for a server component route s fallback empty state grep every sibling route with the same fallback pattern and give each an equivalent leaf a done when that says same treatment as route x is not verified until compared string for string with x s actual bilingual output",
+      "text": "When an i18n retrofit adds a bilingual leaf component for a Server Component route's fallback/empty state, grep every sibling route with the same fallback pattern and give each an equivalent leaf -- a Done-when that says 'same treatment as route X' is not verified until compared string-for-string with X's actual bilingual output.",
+      "signal": "ac_gap",
+      "scope": "i18n",
+      "status": "candidate",
+      "features": [
+        "ingress-stats-ranking"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "app/ingress/stats/page.tsx:52 (T12); cf. bilingual sibling components/ingress/IngressPagePanels.tsx:32 EmptySignalPanel (T33) (i18n)"
+      ],
+      "created": "2026-09-12T01:38:38Z",
+      "last_seen": "2026-09-12T01:38:38Z"
     }
   ]
 }

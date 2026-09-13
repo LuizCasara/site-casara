@@ -1,5 +1,7 @@
 import type {Metadata} from 'next'
 import {Sora, Barlow} from 'next/font/google'
+import {Toaster} from 'sonner'
+import IngressTopBar from '@/components/ingress/stats/IngressTopBar'
 import './theme.css'
 
 // Display / números / codinome — geométrica moderna, o registro do Ingress Prime.
@@ -41,6 +43,10 @@ export const metadata: Metadata = {
 
 export default function IngressLayout({children}: {children: React.ReactNode}) {
   return (
-    <div className={`${sora.variable} ${barlow.variable} ingress-prime`}>{children}</div>
+    <div className={`${sora.variable} ${barlow.variable} ingress-prime`}>
+      <IngressTopBar />
+      {children}
+      <Toaster />
+    </div>
   )
 }

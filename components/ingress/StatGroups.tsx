@@ -1,57 +1,65 @@
+'use client'
+
 import {STAT_COLUMNS, STAT_GROUPS} from '@/lib/ingress-stats.mjs'
-import {BADGES, computeBadge, TIER_LABELS} from '@/lib/ingress-badges.mjs'
-import {slugForStatKey} from '@/lib/ingress-catalog.mjs'
-import {medalArt} from '@/lib/ingress-medal-art.mjs'
 import type {Profile} from '@/lib/ingress'
+import {useLang} from '@/context/LanguageContext'
 import Panel from './Panel'
 import StatValue from './StatValue'
 
-const LABELS = new Map<string, string>(
-  (STAT_COLUMNS as {key: string; label: string}[]).map((c) => [c.key, c.label]),
-)
-const BADGE_BY_KEY = new Map(
-  (BADGES as {key: string; statKey: string; tiers: Record<string, number>; name: string}[]).map((b) => [
-    b.key,
-    b,
-  ]),
+type StatColumn = {key: string; label: string; labelEn?: string}
+type StatGroup = {id: string; title: string; titleEn?: string; keys: string[]}
+export type StatBadge = {slug: string; name: string; tier: string; tierLabel: string; art: string | null}
+
+const LABELS_PT = new Map<string, string>((STAT_COLUMNS as StatColumn[]).map((c) => [c.key, c.label]))
+const LABELS_EN = new Map<string, string>(
+  (STAT_COLUMNS as StatColumn[]).map((c) => [c.key, c.labelEn ?? c.label]),
 )
 
-/** A badge que a estatística `statKey` alimenta, já computada, ou `null`. */
-function badgeForStat(statKey: string, value: number) {
-  const slug = slugForStatKey(statKey) as string | null
-  if (!slug) return null
-  const def = BADGE_BY_KEY.get(slug)
-  if (!def) return null
-  const b = computeBadge(def, value)
-  return {
-    slug,
-    name: def.name,
-    tier: b.tier as string,
-    tierLabel: (TIER_LABELS as Record<string, string>)[b.tier] ?? b.tier,
-    art: medalArt(slug, b.tier) as string | null,
-  }
+const T = {
+  pt: {metrics: (n: number) => `${n} métricas`},
+  en: {metrics: (n: number) => `${n} metrics`},
 }
 
 /**
  * Um `Panel` por grupo de estatísticas. Cada `StatValue` recebe a badge que
  * aquele número alimenta (hover mostra a medalha). Chave ausente é omitida.
- * Server component.
+ * Client component (ISTATS-19: `useLang()` escolhe título/rótulos em EN,
+ * vindos de `lib/ingress-stats.mjs` — T15).
+ *
+ * SPEC_DEVIATION: a badge de cada estatística (antes computada aqui via
+ * `slugForStatKey`/`medalArt`, ambos dependentes de `node:fs`) agora chega
+ * pré-computada via a prop `badges` — o build falha (`UnhandledSchemeError:
+ * node:fs`) se este arquivo virar client E importar esses módulos, porque o
+ * bundle do navegador não pode carregar `node:fs`. `app/ingress/page.tsx`
+ * (Server Component) faz esse cálculo, no mesmo padrão que já usa para
+ * `buildMedals`/`MedalGrid`.
  */
-export default function StatGroups({stats}: {stats: Profile['stats']}) {
+export default function StatGroups({
+  stats,
+  badges,
+}: {
+  stats: Profile['stats']
+  badges: Record<string, StatBadge | null>
+}) {
+  const {lang} = useLang()
+  const t = T[lang]
+  const labels = lang === 'en' ? LABELS_EN : LABELS_PT
+
   return (
     <>
-      {(STAT_GROUPS as {id: string; title: string; keys: string[]}[]).map((group) => {
+      {(STAT_GROUPS as StatGroup[]).map((group) => {
         const present = group.keys.filter((k) => typeof stats[k] === 'number')
         if (present.length === 0) return null
+        const title = lang === 'en' ? group.titleEn ?? group.title : group.title
         return (
-          <Panel key={group.id} label={group.title} hint={`${present.length} métricas`}>
+          <Panel key={group.id} label={title} hint={t.metrics(present.length)}>
             <div className="ing-grid">
               {present.map((k) => (
                 <StatValue
                   key={k}
-                  label={LABELS.get(k) ?? k}
+                  label={labels.get(k) ?? k}
                   value={stats[k]}
-                  badge={badgeForStat(k, stats[k])}
+                  badge={badges[k] ?? null}
                 />
               ))}
             </div>

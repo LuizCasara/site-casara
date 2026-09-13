@@ -1,13 +1,15 @@
 import {loadProfile} from '@/lib/ingress'
 import type {Profile} from '@/lib/ingress'
-import {BADGES, computeAllBadges, nextMedal, TIERS, TIER_LABELS} from '@/lib/ingress-badges.mjs'
-import {loadCatalog} from '@/lib/ingress-catalog.mjs'
+import {loadFencherLcRadarOverride} from '@/lib/ingress-live-override'
+import {BADGES, computeAllBadges, computeBadge, nextMedal, TIERS, TIER_LABELS} from '@/lib/ingress-badges.mjs'
+import {loadCatalog, slugForStatKey} from '@/lib/ingress-catalog.mjs'
 import {annotateLaneGaps, collectAcquisitions, groupLanes} from '@/lib/ingress-timeline.mjs'
 import {projectNextTier} from '@/lib/ingress-history.mjs'
 import {medalArt} from '@/lib/ingress-medal-art.mjs'
-import Panel from '@/components/ingress/Panel'
+import {EmptySignalPanel, PortalsPanel} from '@/components/ingress/IngressPagePanels'
 import AgentHeader from '@/components/ingress/AgentHeader'
 import StatGroups from '@/components/ingress/StatGroups'
+import type {StatBadge} from '@/components/ingress/StatGroups'
 import MedalGrid from '@/components/ingress/MedalGrid'
 import type {GridMedal} from '@/components/ingress/MedalGrid'
 import AchievementTimeline from '@/components/ingress/AchievementTimeline'
@@ -73,6 +75,42 @@ function buildMedals(profile: Profile): GridMedal[] {
   return [...stat, ...event]
 }
 
+const BADGE_BY_KEY = new Map((BADGES as BadgeDef[]).map((b) => [b.key, b]))
+
+/**
+ * A badge que cada estatística numérica presente alimenta, já computada —
+ * `slugForStatKey`/`medalArt` dependem de `node:fs`, então este cálculo tem
+ * que ficar aqui (Server Component), não em `StatGroups` (client, per
+ * ISTATS-19). Mesmo padrão já usado por `buildMedals` acima.
+ */
+function buildStatBadges(stats: Profile['stats']): Record<string, StatBadge | null> {
+  const out: Record<string, StatBadge | null> = {}
+  for (const [key, value] of Object.entries(stats)) {
+    if (typeof value !== 'number') continue
+    const slug = slugForStatKey(key) as string | null
+    const def = slug ? BADGE_BY_KEY.get(slug) : null
+    if (!slug || !def) {
+      out[key] = null
+      continue
+    }
+    const b = computeBadge(def, value)
+    out[key] = {
+      slug,
+      name: def.name,
+      tier: b.tier as string,
+      tierLabel: (TIER_LABELS as Record<string, string>)[b.tier] ?? b.tier,
+      art: medalArt(slug, b.tier) as string | null,
+    }
+  }
+  return out
+}
+
+/**
+ * `hint` sai como `{pt, en}` (não uma `string` já formatada): `page.tsx` é
+ * Server Component e não sabe qual idioma está ativo no toggle client — quem
+ * escolhe é `MedalGrid` (client, já com `useLang()`) na hora de renderizar.
+ * Mesmo motivo de `toLocaleDateString` virar dois formatadores em vez de um.
+ */
 function buildNext(profile: Profile) {
   const badges = computeAllBadges(profile.stats)
   const nm = nextMedal(badges)
@@ -86,8 +124,11 @@ function buildNext(profile: Profile) {
     : null
   const hint =
     proj && 'date' in proj
-      ? `~${new Date(proj.date).toLocaleDateString('pt-BR', {month: 'short', year: 'numeric'})}`
-      : 'mande um 2º export para a projeção'
+      ? {
+          pt: `~${new Date(proj.date).toLocaleDateString('pt-BR', {month: 'short', year: 'numeric'})}`,
+          en: `~${new Date(proj.date).toLocaleDateString('en-US', {month: 'short', year: 'numeric'})}`,
+        }
+      : {pt: 'mande um 2º export para a projeção', en: 'send a 2nd export for the projection'}
   return {
     slug: nm.key,
     name: nm.name,
@@ -97,25 +138,36 @@ function buildNext(profile: Profile) {
   }
 }
 
-export default function IngressPage() {
+// Regenera no máximo a cada 5 min (mesma janela do debounce de
+// `casara.ingress_rankings`) em vez de consultar o banco a cada visita —
+// `/ingress` continua leve, só troca "estático pra sempre" por "estático por
+// até 5 min", que é o quanto uma submissão real leva pra valer de qualquer jeito.
+export const revalidate = 300
+
+export default async function IngressPage() {
   const profile = loadProfile()
 
   if (!profile) {
     return (
       <main className="ing-shell">
-        <Panel label="Sinal perdido">
-          <p style={{color: 'var(--ing-text-dim)'}}>
-            O perfil do agente ainda não foi publicado. Volte em breve.
-          </p>
-        </Panel>
+        <EmptySignalPanel />
       </main>
     )
   }
+
+  // Só o radar reflete a submissão mais recente do próprio FencherLC no
+  // ranking — o resto da página (medalhas, linha do tempo, portais) usa o
+  // `profile.stats` estático, que é dado que a tabela de ranking nem guarda.
+  const radarOverride = await loadFencherLcRadarOverride(profile.agent.codename)
+  const radarStats = radarOverride ? {...profile.stats, ...radarOverride} : profile.stats
 
   const acquisitions = collectAcquisitions(profile, loadCatalog())
   const medals = buildMedals(profile)
   const next = buildNext(profile)
   const pending = new Set(profile.pending)
+  // Lembrete só pra mim (Luiz) — placeholder "aguardando dump GDPR" nunca
+  // aparece pra quem visita em produção, só rodando localhost.
+  const IS_DEV = process.env.NODE_ENV !== 'production'
 
   return (
     <main className="ing-shell">
@@ -126,33 +178,27 @@ export default function IngressPage() {
       <AchievementTimeline acquisitions={acquisitions} variant="resumo" />
 
       <ProfileRadar
-        stats={profile.stats}
+        stats={radarStats}
         agentName={profile.agent.codename}
         capturedAt={profile.capturedAt}
       />
 
-      <StatGroups stats={profile.stats} />
+      <StatGroups stats={profile.stats} badges={buildStatBadges(profile.stats)} />
 
       <ActionsBreakdown stats={profile.stats} />
 
       {pending.has('apTimeline') || !profile.timeSeries?.lifetimeAp ? (
-        <PendingSection kind="apTimeline" />
+        // Placeholder "aguardando dump GDPR" só em dev — em produção some, pra
+        // não mostrar seção vazia pro visitante; aqui é lembrete pro Luiz.
+        IS_DEV ? <PendingSection kind="apTimeline" /> : null
       ) : (
         <ApTimeline points={profile.timeSeries.lifetimeAp} />
       )}
 
       {pending.has('portalMap') || !profile.portals ? (
-        <PendingSection kind="portalMap" />
+        IS_DEV ? <PendingSection kind="portalMap" /> : null
       ) : (
-        <Panel
-          label="Portais"
-          hint={`${profile.portals.visited.length} visitados · ${profile.portals.submitted.length} submetidos`}
-        >
-          <p className="ing-pending">
-            <span className="ing-pending__dot" aria-hidden="true" />O mapa de calor desses portais é o
-            próximo passo — por ora, os números vêm do dump GDPR.
-          </p>
-        </Panel>
+        <PortalsPanel visited={profile.portals.visited.length} submitted={profile.portals.submitted.length} />
       )}
 
       <S2Preview s2={profile.s2} />

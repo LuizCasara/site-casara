@@ -5,6 +5,7 @@ import {computeRadarAxes, compareRadar, RADAR_DRAW_MAX} from '@/lib/ingress-rada
 import {parseAppExport} from '@/lib/ingress-stats.mjs'
 import {compareHash, RADAR_STAT_KEYS} from '@/lib/ingress-compare-message.mjs'
 import type {Profile} from '@/lib/ingress'
+import {useLang} from '@/context/LanguageContext'
 import Panel from './Panel'
 import {fmtStat} from '@/lib/ingress-format.mjs'
 
@@ -21,9 +22,82 @@ const SCALES: {v: Scale; label: string}[] = [
   {v: 'fit', label: 'Forma'},
 ]
 
-type Part = {key: string; label: string; value: number; ref: number; ratio: number; note: string | null}
-type Axis = {id: string; label: string; onyxRatio: number; value: number; parts: Part[]}
-type Agent = {codename: string; stats: Record<string, number>; capturedAt?: string}
+type Part = {
+  key: string
+  label: string
+  labelEn: string
+  value: number
+  ref: number
+  ratio: number
+  note: string | null
+  noteEn: string | null
+}
+type Axis = {id: string; label: string; labelEn: string; onyxRatio: number; value: number; parts: Part[]}
+export type Agent = {codename: string; faction?: string; stats: Record<string, number>; capturedAt?: string}
+
+/**
+ * Textos bilíngues do componente (ISTATS-19 fix). A branch `pt` reproduz
+ * literalmente o texto que existia antes deste componente ganhar `useLang()`
+ * - não pode regredir o uso existente em `/ingress` (variant `default`).
+ */
+const T = {
+  pt: {
+    radarAria: 'Radar do padrão de jogo',
+    panelLabel: 'Padrão de jogo',
+    panelHint: 'cada eixo = média das stats vs. o Onyx da medalha',
+    scaleAria: 'Escala do radar',
+    scaleShape: 'Forma',
+    fitNote: 'Cada ficha normalizada pelo próprio eixo mais forte — compara o formato do jogo, não o tamanho.',
+    ofOnyxLevel: 'do nível Onyx',
+    breakdownFootMulti: (n: number) => `média das ${n} razões`,
+    breakdownFootSingle: 'razão contra o limiar de Onyx',
+    breakdownFootCapped: (pct: number) => ` · o que passa de ${pct}% entra travado`,
+    hoverHint: 'Passe o mouse ou toque num eixo para ver o cálculo.',
+    blankHint: 'Cole seu export de estatísticas abaixo para ver o seu padrão de jogo.',
+    whatToCompareAria: 'O que comparar',
+    modeVsMe: (name: string, ranking: boolean) => (ranking ? `Comparar com ${name}` : `Contra ${name}`),
+    modeTwo: (ranking: boolean) => (ranking ? 'Comparar com outro agente' : 'Dois agentes'),
+    modeSolo: 'Só entrar no ranking',
+    labelTwoA: 'Export do agente A (verde):',
+    labelTwoB: 'Export do agente B (roxo):',
+    labelSolo: 'Cole seu export de estatísticas do app:',
+    labelVsMe: 'Cole o export de estatísticas do app do outro agente:',
+    sentNote: '✓ comparação enviada',
+    compareBtn: 'Comparar',
+    clearBtn: 'Limpar',
+    openCompareBtn: 'Comparar com outro agente',
+    parseErrorNoAgent: 'Export sem "Agent Name".',
+    parseErrorGeneric: 'Não deu pra ler esse texto.',
+  },
+  en: {
+    radarAria: 'Play-pattern radar',
+    panelLabel: 'Play pattern',
+    panelHint: "each axis = average of stats vs. the badge's Onyx threshold",
+    scaleAria: 'Radar scale',
+    scaleShape: 'Shape',
+    fitNote: 'Each card normalized by its own strongest axis — compares the shape of play, not the size.',
+    ofOnyxLevel: 'of Onyx level',
+    breakdownFootMulti: (n: number) => `average of ${n} ratios`,
+    breakdownFootSingle: 'ratio against the Onyx threshold',
+    breakdownFootCapped: (pct: number) => ` · anything past ${pct}% is capped`,
+    hoverHint: 'Hover or tap an axis to see the math.',
+    blankHint: "Paste your stats export below to see your play pattern.",
+    whatToCompareAria: 'What to compare',
+    modeVsMe: (name: string, ranking: boolean) => (ranking ? `Compare with ${name}` : `Against ${name}`),
+    modeTwo: (ranking: boolean) => (ranking ? 'Compare with another agent' : 'Two agents'),
+    modeSolo: 'Just join the ranking',
+    labelTwoA: 'Agent A export (green):',
+    labelTwoB: 'Agent B export (purple):',
+    labelSolo: 'Paste your app stats export:',
+    labelVsMe: "Paste the other agent's app stats export:",
+    sentNote: '✓ comparison sent',
+    compareBtn: 'Compare',
+    clearBtn: 'Clear',
+    openCompareBtn: 'Compare with another agent',
+    parseErrorNoAgent: 'Export missing "Agent Name".',
+    parseErrorGeneric: "Couldn't read that text.",
+  },
+} as const
 
 function point(i: number, count: number, radius: number): [number, number] {
   const angle = -Math.PI / 2 + (i * 2 * Math.PI) / count
@@ -32,11 +106,19 @@ function point(i: number, count: number, radius: number): [number, number] {
 
 const pct = (r: number) => `${Math.round(r * 100)}%`
 
-function toAgent(text: string): Agent {
+function toAgent(text: string, noAgentMsg: string): Agent {
   const p = parseAppExport(text)
-  if (!p.agent?.codename) throw new Error('Export sem "Agent Name".')
-  return {codename: p.agent.codename, stats: p.stats, capturedAt: p.capturedAt ?? undefined}
+  if (!p.agent?.codename) throw new Error(noAgentMsg)
+  return {
+    codename: p.agent.codename,
+    faction: p.agent.faction ?? undefined,
+    stats: p.stats,
+    capturedAt: p.capturedAt ?? undefined,
+  }
 }
+
+/** Estado vazio do radar em `variant="ranking"`, antes de qualquer submissão. */
+const BLANK_AGENT: Agent = {codename: '', stats: {}}
 
 const DEDUPE_MS = 10 * 60 * 1000
 const SENT_KEY = 'ing-cmp-sent'
@@ -94,28 +176,47 @@ function ringStops(drawMax: number) {
  * contra o limiar de Onyx da medalha correspondente. Escala do desenho ajustável
  * (½× / Onyx / 2× / Forma). "Comparar" sobrepõe outro agente: contra o dono do
  * perfil, ou dois exports colados um contra o outro. Leaf client component.
+ * Bilíngue via `useLang()` (ISTATS-19 fix) nas duas variants (`default` e
+ * `ranking`) - a branch `pt` reproduz o texto anterior sem regressão.
  */
 export default function ProfileRadar({
   stats,
   agentName = 'Você',
   capturedAt,
+  variant = 'default',
+  onCompare,
 }: {
   stats: Profile['stats']
   agentName?: string
   capturedAt?: string
+  variant?: 'default' | 'ranking'
+  onCompare?: (agents: {a: Agent; b?: Agent}, mode: 'vs-me' | 'two' | 'solo') => void
 }) {
+  const {lang} = useLang()
+  const t = T[lang]
+  const axisLabel = (a: Axis) => (lang === 'en' ? a.labelEn : a.label)
+  const partLabel = (p: Part) => (lang === 'en' ? p.labelEn : p.label)
+  const partNote = (p: Part) => (lang === 'en' ? p.noteEn : p.note)
+
   const [active, setActive] = useState<number | null>(null)
   const [scale, setScale] = useState<Scale>(RADAR_DRAW_MAX)
-  const [open, setOpen] = useState(false)
-  const [mode, setMode] = useState<'vs-me' | 'two'>('vs-me')
+  const [open, setOpen] = useState(variant === 'ranking')
+  // Em `ranking`, "só entrar" é o caminho principal (comparação é secundária)
+  // — por isso também é o modo padrão nessa variant; em `default` (uso
+  // dentro de /ingress) não existe modo "solo", então o padrão continua vs-me.
+  const [mode, setMode] = useState<'vs-me' | 'two' | 'solo'>(variant === 'ranking' ? 'solo' : 'vs-me')
   const [textA, setTextA] = useState('')
   const [textB, setTextB] = useState('')
-  const [cmp, setCmp] = useState<{a: Agent; b: Agent} | null>(null)
+  const [cmp, setCmp] = useState<{a: Agent; b?: Agent} | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [sentNote, setSentNote] = useState(false)
 
   const me: Agent = {codename: agentName, stats: stats as Record<string, number>, capturedAt}
-  const agentA = cmp ? cmp.a : me
+  // No modo ranking, o radar nasce em branco — não pré-carrega o padrão do
+  // FencherLC (isso é exclusivo do uso em /ingress). `me` continua disponível
+  // pro modo "vs-me" comparar contra o FencherLC real quando o visitante cola algo.
+  const isBlank = variant === 'ranking' && !cmp
+  const agentA = cmp ? cmp.a : isBlank ? BLANK_AGENT : me
   const agentB = cmp ? cmp.b : null
 
   const aAxes = computeRadarAxes(agentA.stats) as Axis[]
@@ -123,7 +224,7 @@ export default function ProfileRadar({
   const n = aAxes.length
   const rows = agentB ? compareRadar(agentA.stats, agentB.stats) : null
 
-  const sel = active != null ? aAxes[active] : null
+  const sel = active != null && !isBlank ? aAxes[active] : null
   const selB = active != null && bAxes ? bAxes[active] : null
 
   // quando os dois lados são o mesmo agente (você agora vs. um export antigo),
@@ -147,15 +248,19 @@ export default function ProfileRadar({
 
   const runCompare = () => {
     try {
-      const a = mode === 'two' ? toAgent(textA) : me
-      const b = toAgent(mode === 'two' ? textB : textA)
-      setCmp({a, b})
+      const a = mode === 'vs-me' ? me : toAgent(textA, t.parseErrorNoAgent)
+      const b = mode === 'solo' ? undefined : toAgent(mode === 'two' ? textB : textA, t.parseErrorNoAgent)
+      setCmp(b ? {a, b} : {a})
       setError(null)
       setActive(null)
-      notifyTelegram(a, b, mode === 'vs-me', flagSent)
+      if (variant === 'ranking') {
+        onCompare?.({a, b}, mode)
+      } else if (b) {
+        notifyTelegram(a, b, mode === 'vs-me', flagSent)
+      }
     } catch (e) {
       setCmp(null)
-      setError(e instanceof Error ? e.message : 'Não deu pra ler esse texto.')
+      setError(e instanceof Error ? e.message : t.parseErrorGeneric)
     }
   }
   const clear = () => {
@@ -164,13 +269,13 @@ export default function ProfileRadar({
     setTextB('')
     setError(null)
     setSentNote(false)
-    setOpen(false)
+    setOpen(variant === 'ranking')
   }
   const canCompare = mode === 'two' ? textA.trim() !== '' && textB.trim() !== '' : textA.trim() !== ''
 
   const svg = (
     <div className="ing-radar">
-      <svg viewBox={`${-PAD_X} 0 ${SIZE + PAD_X * 2} ${SIZE + 6}`} role="img" aria-label="Radar do padrão de jogo">
+      <svg viewBox={`${-PAD_X} 0 ${SIZE + PAD_X * 2} ${SIZE + 6}`} role="img" aria-label={t.radarAria}>
         {fit
           ? [0.34, 0.67, 1].map((f) => (
               <polygon
@@ -222,15 +327,17 @@ export default function ProfileRadar({
               onClick={() => setActive((cur) => (cur === i ? null : i))}
             >
               <circle cx={x} cy={y} r={active === i ? 6 : 4} className={`ing-radar__dot${active === i ? ' is-active' : ''}`}>
-                <title>{`${a.label}: ${pct(a.onyxRatio)} do nível Onyx`}</title>
+                <title>{`${axisLabel(a)}: ${pct(a.onyxRatio)} ${t.ofOnyxLevel}`}</title>
               </circle>
               <text x={lx} y={ly - 5} textAnchor={anchor} className="ing-radar__label">
-                {a.label}
+                {axisLabel(a)}
               </text>
-              <text x={lx} y={ly + 6} textAnchor={anchor} className="ing-radar__pct">
-                {pct(a.onyxRatio)}
-                {bAxes ? <tspan className="ing-radar__pct-them"> · {pct(bAxes[i].onyxRatio)}</tspan> : null}
-              </text>
+              {isBlank ? null : (
+                <text x={lx} y={ly + 6} textAnchor={anchor} className="ing-radar__pct">
+                  {pct(a.onyxRatio)}
+                  {bAxes ? <tspan className="ing-radar__pct-them"> · {pct(bAxes[i].onyxRatio)}</tspan> : null}
+                </text>
+              )}
               <circle cx={x} cy={y} r={18} fill="transparent" />
             </g>
           )
@@ -240,7 +347,7 @@ export default function ProfileRadar({
   )
 
   return (
-    <Panel label="Padrão de jogo" hint="cada eixo = média das stats vs. o Onyx da medalha">
+    <Panel label={t.panelLabel} hint={t.panelHint}>
       <div className="ing-radar__topbar">
         {agentB ? (
           <p className="ing-radar__legend">
@@ -250,20 +357,16 @@ export default function ProfileRadar({
         ) : (
           <span />
         )}
-        <div className="ing-radar__scale" role="group" aria-label="Escala do radar">
+        <div className="ing-radar__scale" role="group" aria-label={t.scaleAria}>
           {SCALES.map((s) => (
             <button key={String(s.v)} type="button" aria-pressed={scale === s.v} onClick={() => setScale(s.v)}>
-              {s.label}
+              {s.v === 'fit' ? t.scaleShape : s.label}
             </button>
           ))}
         </div>
       </div>
 
-      {fit ? (
-        <p className="ing-radar__scale-note">
-          Cada ficha normalizada pelo próprio eixo mais forte — compara o formato do jogo, não o tamanho.
-        </p>
-      ) : null}
+      {fit ? <p className="ing-radar__scale-note">{t.fitNote}</p> : null}
 
       <div className={agentB ? 'ing-radar__cmp-layout' : undefined}>
         {svg}
@@ -281,7 +384,7 @@ export default function ProfileRadar({
                 {aAxes.map((a, i) => (
                   <Fragment key={a.id}>
                     <tr className="is-axis">
-                      <th>{a.label}</th>
+                      <th>{axisLabel(a)}</th>
                       <td className={rows[i].leader === 'mine' ? 'is-lead' : undefined}>{pct(a.onyxRatio)}</td>
                       <td className={rows[i].leader === 'theirs' ? 'is-lead-them' : undefined}>
                         {pct(bAxes[i].onyxRatio)}
@@ -289,7 +392,7 @@ export default function ProfileRadar({
                     </tr>
                     {a.parts.map((p, pi) => (
                       <tr key={p.key} className="is-part">
-                        <td>{p.label}</td>
+                        <td>{partLabel(p)}</td>
                         <td>
                           {fmtStat(p.value)} <small>{pct(p.ratio)}</small>
                         </td>
@@ -309,7 +412,7 @@ export default function ProfileRadar({
       {sel ? (
         <div className="ing-radar__breakdown">
           <p className="ing-radar__bd-head">
-            <b>{sel.label}</b> — {pct(sel.onyxRatio)} do nível Onyx
+            <b>{axisLabel(sel)}</b> — {pct(sel.onyxRatio)} {t.ofOnyxLevel}
             {selB ? (
               <span className="ing-radar__bd-vs">
                 {' '}
@@ -321,8 +424,8 @@ export default function ProfileRadar({
             {sel.parts.map((p, pi) => (
               <li key={p.key} className={p.ratio > RADAR_DRAW_MAX ? 'is-capped' : undefined}>
                 <span className="ing-radar__bd-label">
-                  {p.label}
-                  {p.note ? <em className="ing-radar__bd-note"> · {p.note}</em> : null}
+                  {partLabel(p)}
+                  {partNote(p) ? <em className="ing-radar__bd-note"> · {partNote(p)}</em> : null}
                 </span>
                 <span className="ing-radar__bd-calc">
                   {fmtStat(p.value)} / {fmtStat(p.ref)}
@@ -335,27 +438,34 @@ export default function ProfileRadar({
             ))}
           </ul>
           <p className="ing-radar__bd-foot">
-            {sel.parts.length > 1 ? `média das ${sel.parts.length} razões` : 'razão contra o limiar de Onyx'}
-            {sel.parts.some((p) => p.ratio > RADAR_DRAW_MAX) ? ` · o que passa de ${RADAR_DRAW_MAX * 100}% entra travado` : ''}
+            {sel.parts.length > 1 ? t.breakdownFootMulti(sel.parts.length) : t.breakdownFootSingle}
+            {sel.parts.some((p) => p.ratio > RADAR_DRAW_MAX) ? t.breakdownFootCapped(RADAR_DRAW_MAX * 100) : ''}
           </p>
         </div>
       ) : !agentB ? (
-        <p className="ing-radar__hint">Passe o mouse ou toque num eixo para ver o cálculo.</p>
+        <p className="ing-radar__hint">{isBlank ? t.blankHint : t.hoverHint}</p>
       ) : null}
 
       {open ? (
         <div className="ing-radar__compare-box">
-          <div className="ing-radar__cmp-mode" role="group" aria-label="O que comparar">
+          <div className="ing-radar__cmp-mode" role="group" aria-label={t.whatToCompareAria}>
+            {variant === 'ranking' ? (
+              // "Só entrar" é o caminho principal em /ingress/ranking — vem
+              // primeiro, comparações (vs-me/two) são secundárias aqui.
+              <button type="button" aria-pressed={mode === 'solo'} onClick={() => setMode('solo')}>
+                {t.modeSolo}
+              </button>
+            ) : null}
             <button type="button" aria-pressed={mode === 'vs-me'} onClick={() => setMode('vs-me')}>
-              Contra {agentName}
+              {t.modeVsMe(agentName, variant === 'ranking')}
             </button>
             <button type="button" aria-pressed={mode === 'two'} onClick={() => setMode('two')}>
-              Dois agentes
+              {t.modeTwo(variant === 'ranking')}
             </button>
           </div>
 
           <label htmlFor="ing-radar-a" className="ing-radar__compare-label">
-            {mode === 'two' ? 'Export do agente A (verde):' : 'Cole o export de estatísticas do app do outro agente:'}
+            {mode === 'two' ? t.labelTwoA : mode === 'solo' ? t.labelSolo : t.labelVsMe}
           </label>
           <textarea
             id="ing-radar-a"
@@ -368,7 +478,7 @@ export default function ProfileRadar({
           {mode === 'two' ? (
             <>
               <label htmlFor="ing-radar-b" className="ing-radar__compare-label">
-                Export do agente B (roxo):
+                {t.labelTwoB}
               </label>
               <textarea
                 id="ing-radar-b"
@@ -382,7 +492,7 @@ export default function ProfileRadar({
           ) : null}
 
           {error ? <p className="ing-radar__compare-error">{error}</p> : null}
-          {sentNote ? <p className="ing-radar__compare-sent">✓ comparação enviada</p> : null}
+          {sentNote ? <p className="ing-radar__compare-sent">{t.sentNote}</p> : null}
           <div className="ing-radar__compare-actions">
             <button
               type="button"
@@ -390,16 +500,16 @@ export default function ProfileRadar({
               onClick={runCompare}
               disabled={!canCompare}
             >
-              Comparar
+              {t.compareBtn}
             </button>
             <button type="button" className="ing-radar__btn" onClick={clear}>
-              Limpar
+              {t.clearBtn}
             </button>
           </div>
         </div>
       ) : (
         <button type="button" className="ing-radar__btn ing-radar__compare-open" onClick={() => setOpen(true)}>
-          Comparar com outro agente
+          {t.openCompareBtn}
         </button>
       )}
     </Panel>

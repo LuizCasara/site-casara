@@ -4,8 +4,14 @@ import {useEffect, useState} from 'react'
 import {MapContainer, TileLayer, Polygon, CircleMarker, useMap, useMapEvents} from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import {coverViewport, LEVEL_RANGE} from '@/lib/ingress-s2.mjs'
+import {useLang} from '@/context/LanguageContext'
 
 type Cell = {token: string; ring: [number, number][]}
+
+const T = {
+  pt: {level: 'Nível da célula:'},
+  en: {level: 'Cell level:'},
+}
 
 function levelToZoom(level: number) {
   return Math.max(2, Math.min(18, Math.round(level - 1)))
@@ -52,12 +58,14 @@ export default function S2Explorer({
   level: number
 }) {
   const [level, setLevel] = useState(initialLevel)
+  const {lang} = useLang()
+  const t = T[lang]
 
   return (
     <div className="ing-s2__explorer">
       <label className="ing-s2__slider">
         <span>
-          Nível da célula: <strong>{level}</strong>
+          {t.level} <strong>{level}</strong>
         </span>
         <input
           type="range"

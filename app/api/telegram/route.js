@@ -59,6 +59,40 @@ async function sendIngressCompare(data) {
 }
 
 /**
+ * Alerta direto (sem imagem, sem detalhe extra) toda vez que uma submissão em
+ * `/ingress/ranking` grava de verdade (nunca quando o debounce bloqueia).
+ * @param {{codename:string, rank:number, totalAgents:number, top3:{codename:string, overallScore:number}[]}} data
+ */
+async function sendIngressRankingEntry(data) {
+    const {codename, rank, totalAgents, top3} = data;
+    if (!codename || !rank || !Array.isArray(top3)) {
+        throw new Error('ingress-ranking-entry: faltam codename/rank/top3');
+    }
+
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_INGRESS_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
+    const threadId = process.env.TELEGRAM_INGRESS_THREAD_ID;
+    if (!botToken || !chatId) {
+        throw new Error('Telegram bot token or chat ID not configured');
+    }
+
+    const medal = ['🥇', '🥈', '🥉'];
+    const top3Lines = top3
+        .map((a, i) => `${medal[i] ?? `${i + 1}.`} ${a.codename} — ${Math.round(a.overallScore)}`)
+        .join('\n');
+
+    const text = `🏆 *Novo registro no ranking do Ingress!*\n\n*${codename}* entrou na *${rank}ª posição* (de ${totalAgents}).\n\n*Top 3 atual:*\n${top3Lines}`;
+
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({chat_id: chatId, message_thread_id: threadId, text, parse_mode: 'Markdown'}),
+    });
+    if (!response.ok) throw new Error(`Telegram sendMessage: ${JSON.stringify(await response.json())}`);
+    return response.json();
+}
+
+/**
  * Sends a message to a Telegram group via bot for temperament test results
  * @param {Object} data - Test data including name, date, and results
  * @returns {Promise<Object>} - Response from Telegram API
@@ -250,6 +284,9 @@ export async function POST(request) {
                 break;
             case 'ingress-compare':
                 result = await sendIngressCompare(data);
+                break;
+            case 'ingress-ranking-entry':
+                result = await sendIngressRankingEntry(data);
                 break;
             default:
                 console.error(`Unsupported notification type: ${type}`);

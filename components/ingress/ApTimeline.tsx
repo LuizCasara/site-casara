@@ -1,4 +1,7 @@
+'use client'
+
 import type {TimePoint} from '@/lib/ingress'
+import {useLang} from '@/context/LanguageContext'
 import Panel from './Panel'
 import {fmtStat} from '@/lib/ingress-format.mjs'
 
@@ -6,12 +9,20 @@ const W = 320
 const H = 150
 const PAD = {top: 10, right: 8, bottom: 20, left: 8}
 
+const T = {
+  pt: {label: 'Evolução de AP', hint: (ap: string) => `${ap} AP acumulado`, aria: 'Evolução do AP acumulado ao longo do tempo'},
+  en: {label: 'AP evolution', hint: (ap: string) => `${ap} AP accumulated`, aria: 'Accumulated AP over time'},
+}
+
 /**
  * Evolução do AP acumulado — mudança ao longo do tempo, linha de série única.
- * Server component (dados fixos do dump). Só é renderizado quando
- * `timeSeries.lifetimeAp` existe; senão a página usa `PendingSection`.
+ * Client component (ISTATS-19: `useLang()` bilingualiza label/aria-label);
+ * dados fixos do dump. Só é renderizado quando `timeSeries.lifetimeAp` existe;
+ * senão a página usa `PendingSection`.
  */
 export default function ApTimeline({points}: {points: TimePoint[]}) {
+  const {lang} = useLang()
+  const t = T[lang]
   if (!points || points.length < 2) return null
 
   const sorted = [...points].sort((a, b) => a.t.localeCompare(b.t))
@@ -31,12 +42,12 @@ export default function ApTimeline({points}: {points: TimePoint[]}) {
   const years = Array.from(new Set(sorted.map((p) => new Date(p.t).getUTCFullYear())))
 
   return (
-    <Panel label="Evolução de AP" hint={`${fmtStat(vs[vs.length - 1])} AP acumulado`}>
+    <Panel label={t.label} hint={t.hint(fmtStat(vs[vs.length - 1]))}>
       <svg
         className="ing-timeline"
         viewBox={`0 0 ${W} ${H}`}
         role="img"
-        aria-label="Evolução do AP acumulado ao longo do tempo"
+        aria-label={t.aria}
       >
         <defs>
           <linearGradient id="ing-ap-area" x1="0" y1="0" x2="0" y2="1">

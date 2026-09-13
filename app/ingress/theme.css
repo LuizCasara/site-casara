@@ -306,6 +306,29 @@
   word-break: break-word;
 }
 
+.ing-hero__codename--ranking {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: clamp(1.9rem, 7vw, 2.9rem);
+}
+
+.ing-hero__ranking-icon {
+  flex-shrink: 0;
+  font-size: 0.75em;
+  color: var(--ing-green-soft);
+  filter: none;
+  -webkit-text-fill-color: initial;
+}
+
+.ing-hero__ranking-body {
+  margin: 0.9rem 0 0;
+  max-width: 34rem;
+  color: var(--ing-text-dim);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
 .ing-hero__meta {
   display: flex;
   flex-wrap: wrap;
@@ -334,6 +357,55 @@
   background: var(--ing-accent);
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
   box-shadow: var(--ing-glow-tight);
+}
+
+.ing-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+  padding: 0.6rem 1.1rem;
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: var(--ing-bg);
+  background: var(--ing-accent);
+  border-radius: 999px;
+  box-shadow: var(--ing-glow), 0 0 0 0 rgba(0, 230, 118, 0.5);
+  animation: ing-hero-cta-pulse 2.6s ease-in-out infinite;
+  transition: transform 0.15s ease;
+}
+
+.ing-hero__cta:hover,
+.ing-hero__cta:focus-visible {
+  transform: translateY(-1px) scale(1.03);
+  animation-play-state: paused;
+}
+
+.ing-hero__cta:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-hero__cta svg {
+  font-size: 0.95em;
+}
+
+@keyframes ing-hero-cta-pulse {
+  0%,
+  100% {
+    box-shadow: var(--ing-glow), 0 0 0 0 rgba(0, 230, 118, 0.45);
+  }
+  50% {
+    box-shadow: var(--ing-glow), 0 0 0 8px rgba(0, 230, 118, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ing-hero__cta {
+    animation: none;
+  }
 }
 
 .ing-hero__links {
@@ -1875,7 +1947,350 @@
   color: var(--ing-text-faint);
 }
 
+/* ─── Ranking table (iteração de UI: alinhamento, largura total, ícones) ─── */
+
+.ing-ranking-table__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.6rem;
+}
+
+.ing-ranking-table__wrap {
+  overflow-x: auto;
+}
+
+.ing-ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.ing-ranking-table thead th {
+  text-align: center;
+  padding: 0.5rem 0.6rem;
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.76rem;
+  color: var(--ing-text-dim);
+  border-bottom: 1px solid var(--ing-edge-soft);
+  white-space: nowrap;
+}
+
+.ing-ranking-table tbody td {
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--ing-edge-soft);
+  color: var(--ing-text);
+  vertical-align: middle;
+  text-align: center;
+}
+
+/* # / nota / facção / codinome / data ficam centralizadas (default acima);
+   AP total e o botão do olho ficam alinhados à direita. */
+.ing-ranking-table th[data-col='ap'],
+.ing-ranking-table th[data-col='details'],
+.ing-ranking-table td[data-col='ap'],
+.ing-ranking-table td[data-col='details'] {
+  text-align: right;
+}
+
+.ing-ranking-table td[data-col='rank'],
+.ing-ranking-table td[data-col='ap'],
+.ing-ranking-table td[data-col='score'] {
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-ranking-table td[data-col='score'] {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-green-soft);
+}
+
+.ing-ranking-table td[data-col='dates'] {
+  color: var(--ing-text-dim);
+  white-space: nowrap;
+  cursor: help;
+}
+
+.ing-ranking-table__faction-icon {
+  border-radius: 3px;
+}
+
+.ing-ranking-table__codename {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+}
+
+.ing-ranking-table__eye {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--ing-edge-soft);
+  background: transparent;
+  color: var(--ing-text-dim);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.ing-ranking-table__eye:hover,
+.ing-ranking-table__eye:focus-visible {
+  color: var(--ing-green-soft);
+  border-color: var(--ing-edge);
+}
+
+/*
+ * O painel de detalhe fica FORA da <table> (irmão do `.ing-ranking-table__wrap`,
+ * direto no Panel) — não é mais uma <tr colSpan> com hack de largura. Um
+ * colspan dentro de table-layout:auto sempre acaba ditando a largura da
+ * tabela pelo conteúdo mais largo (mesmo com truques de width:1px), o que
+ * quebrava a quebra de linha no mobile; como bloco normal fora da tabela,
+ * o flex-wrap dos chips reage à largura da viewport sem gambiarra.
+ */
+.ing-ranking-table__detail {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.4rem 1.2rem;
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-top: 1px solid var(--ing-edge-soft);
+  background: var(--ing-green-ghost);
+  border-radius: 10px;
+}
+
+/* 5 eixos lado a lado só quando há espaço de verdade — abaixo disso, 1
+   coluna só (cada eixo empilhado, chips em coluna dentro dele). */
+@media (min-width: 860px) {
+  .ing-ranking-table__detail {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.ing-ranking-table__detail-axis {
+  min-width: 0;
+}
+
+.ing-ranking-table__detail-axis strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: var(--ing-font-display);
+  color: var(--ing-text);
+  font-size: 0.82rem;
+}
+
+.ing-ranking-table__chips {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ing-ranking-table__chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid;
+  border-radius: 10px;
+  background: var(--ing-panel-solid);
+}
+
+.ing-ranking-table__chip.is-none {
+  opacity: 0.55;
+}
+
+.ing-ranking-table__chip-icon {
+  flex-shrink: 0;
+}
+
+.ing-ranking-table__chip.is-none .ing-ranking-table__chip-icon {
+  filter: grayscale(1);
+}
+
+.ing-ranking-table__chip-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.ing-ranking-table__chip-label {
+  font-size: 0.7rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-ranking-table__chip-value {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--ing-text);
+}
+
+.ing-ranking-table__detail-shape {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--ing-edge-soft);
+}
+
+.ing-ranking-table__detail-shape-label {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-ranking-table__credit {
+  margin-top: 0.8rem;
+  font-size: 0.68rem;
+  color: var(--ing-text-faint);
+}
+
+.ing-tutorial__suggestion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ing-edge-soft);
+}
+
+.ing-tutorial__suggestion p {
+  margin: 0;
+  color: var(--ing-text-dim);
+}
+
+.ing-tutorial__img {
+  display: block;
+  width: 100%;
+  max-width: 32rem;
+  height: auto;
+  margin: 0.9rem 0;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 12px;
+}
+
+/* ─── "Nota geral" (iteração de UI: layout horizontal por agente) ─── */
+
+.ing-score-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.ing-score-panel__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  padding: 0.8rem 1rem;
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 12px;
+}
+
+.ing-score-panel__agent {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-text);
+  margin-right: 0.3rem;
+}
+
+.ing-score-panel__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+  min-width: 4.2rem;
+}
+
+.ing-score-panel__stat--overall .ing-score-panel__stat-value {
+  color: var(--ing-green-soft);
+  font-size: 1.3rem;
+}
+
+.ing-score-panel__stat--tier {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 999px;
+}
+
+.ing-score-panel__stat-label {
+  font-size: 0.68rem;
+  color: var(--ing-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ing-score-panel__stat-value {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--ing-text);
+}
+
+/* ─── "O que cada eixo mede" (iteração de UI: cartões + ícones de medalha) ─── */
+
+.ing-axis-explanations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.ing-axis-explanations__item {
+  padding: 1rem;
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 12px;
+}
+
+.ing-axis-explanations__icons {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.ing-axis-explanations__icon {
+  border-radius: 8px;
+  background: var(--ing-green-ghost);
+}
+
+.ing-axis-explanations__item dt {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-green-soft);
+  margin-bottom: 0.4rem;
+}
+
+.ing-axis-explanations__item dd {
+  margin: 0;
+  color: var(--ing-text-dim);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .ing-ranking-table {
+    font-size: 0.78rem;
+  }
+  .ing-ranking-table thead th,
+  .ing-ranking-table tbody td {
+    padding: 0.45rem 0.4rem;
+  }
+  .ing-ranking-table__chip {
+    padding: 0.3rem 0.5rem;
+  }
+}
+
 .ing-radar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
   font-family: var(--ing-font-body);
   font-size: 0.8rem;
   padding: 0.4rem 0.8rem;
@@ -2030,7 +2445,14 @@
 }
 
 .ing-bar__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--ing-text-dim);
+}
+
+.ing-bar__icon {
+  border-radius: 4px;
 }
 
 .ing-bar__value {

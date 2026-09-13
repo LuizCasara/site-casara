@@ -32,6 +32,15 @@ type StatsData = {
     avg_duration_seconds: number;
     by_primary: { language: string; count: number }[];
   };
+  ingress: {
+    total_compare_vs_me:        number;
+    written_compare_vs_me:      number;
+    total_compare_two_agents:   number;
+    written_compare_two_agents: number;
+    total_ranking_join:         number;
+    written_ranking_join:       number;
+    total_language_toggled:     number;
+  };
 };
 
 type Period = "7d" | "30d" | "all";
@@ -96,6 +105,11 @@ const EVENT_LABELS: Record<string, string> = {
   book_comment_whatsapp:        "BOOK_COMMENT",
   book_suggestion_whatsapp:     "BOOK_SUGGEST",
   caderno_desbloqueado:         "CADERNO_UNLOCK",
+  ingress_compare_vs_me:        "ING_CMP_VS_ME",
+  ingress_compare_two_agents:   "ING_CMP_TWO",
+  ingress_ranking_join:         "ING_JOIN",
+  ingress_language_toggled:     "ING_LANG_TOGGLE",
+  ingress_ranking_shared:       "ING_SHARE",
 };
 
 const EVENT_DESCRIPTIONS: Record<string, string> = {
@@ -644,6 +658,26 @@ export default function StatsPage() {
                     </span>
                   </p>
                 )}
+              </div>
+            </Panel>
+
+            <Panel title="INGRESS_ANALYSIS">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                {[
+                  { label: "CMP_VS_ME",    total: data.ingress.total_compare_vs_me,      written: data.ingress.written_compare_vs_me },
+                  { label: "CMP_2_AGENTES", total: data.ingress.total_compare_two_agents, written: data.ingress.written_compare_two_agents },
+                  { label: "SÓ_RANKING",   total: data.ingress.total_ranking_join,       written: data.ingress.written_ranking_join },
+                ].map(({ label, total, written }) => (
+                  <div key={label} className="border border-green-900/50 rounded p-2">
+                    <p className="text-green-800 text-xs">{label}</p>
+                    <p className="text-green-200 font-bold text-xl">{total}</p>
+                    <p className="text-green-900 text-xs">{written} gravaram</p>
+                  </div>
+                ))}
+                <div className="border border-green-900/50 rounded p-2">
+                  <p className="text-green-800 text-xs">TROCA_IDIOMA</p>
+                  <p className="text-green-200 font-bold text-xl">{data.ingress.total_language_toggled}</p>
+                </div>
               </div>
             </Panel>
 

@@ -1,10 +1,11 @@
 'use client'
 
 import {useMemo, useRef, useState} from 'react'
-import {TIER_COLOR, TIER_LABELS} from '@/lib/ingress-tiers.mjs'
+import {TIER_COLOR, tierLabel} from '@/lib/ingress-tiers.mjs'
 import {annotateLaneGaps, formatGap, groupLanes} from '@/lib/ingress-timeline.mjs'
 import {fmtMedalDate} from '@/lib/ingress-format.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
+import {useLang} from '@/context/LanguageContext'
 import Panel from './Panel'
 import MedalDetail, {type DetailMedal} from './MedalDetail'
 
@@ -35,21 +36,51 @@ const LEFT_PAD = 14
 const ROW_H = 26
 const AXIS_TOP = 18
 
-const CATEGORIES: {k: string; label: string}[] = [
-  {k: 'all', label: 'Todas'},
-  {k: 'core', label: 'Estatística'},
-  {k: 'anomaly', label: 'Anomalia'},
-  {k: 'event', label: 'Evento'},
-]
-const TIER_CHIPS: {k: string; label: string}[] = [
-  {k: 'all', label: 'Todos'},
-  {k: 'bronze', label: 'Bronze'},
-  {k: 'silver', label: 'Prata'},
-  {k: 'gold', label: 'Ouro'},
-  {k: 'platinum', label: 'Platina'},
-  {k: 'onyx', label: 'Onyx'},
-  {k: 'single', label: 'Evento'},
-]
+const CATEGORY_KEYS = ['all', 'core', 'anomaly', 'event'] as const
+const TIER_CHIP_KEYS = ['all', 'bronze', 'silver', 'gold', 'platinum', 'onyx', 'single'] as const
+
+const T = {
+  pt: {
+    catLabel: {all: 'Todas', core: 'Estatística', anomaly: 'Anomalia', event: 'Evento'} as Record<string, string>,
+    tierAll: 'Todos',
+    placeholderLabel: 'Linha do tempo',
+    placeholderHint: 'quando cada medalha caiu',
+    placeholderResumo: 'A linha do tempo aparece com 2 ou mais datas de conquista.',
+    placeholderCompleto:
+      'A linha do tempo aparece com 2 ou mais datas de conquista. Ela cresce conforme as datas são transcritas dos prints do scanner (ou quando o dump GDPR chega).',
+    resumoHint: (n: number) => `${n} conquistas`,
+    resumoSvgAria: 'Total de conquistas ao longo do tempo',
+    resumoCta: 'abrir linha do tempo →',
+    heading: 'Linha do tempo',
+    completoHint: (visible: number, total: number) => `${visible} de ${total}`,
+    filtersAria: 'Filtros da linha do tempo',
+    overviewAria: 'Total de conquistas — arraste para dar zoom num período',
+    resetBtn: '↺ ver período inteiro',
+    dragHint: 'Arraste na curva para dar zoom · toque numa medalha para ver o detalhe',
+    swimAria: (n: number) => `${n} medalhas na linha do tempo`,
+    hoverTip: (name: string, tier: string, date: string) => `${name} — ${tier} · ${date}`,
+  },
+  en: {
+    catLabel: {all: 'All', core: 'Stats', anomaly: 'Anomaly', event: 'Event'} as Record<string, string>,
+    tierAll: 'All',
+    placeholderLabel: 'Timeline',
+    placeholderHint: 'when each medal dropped',
+    placeholderResumo: 'The timeline appears once there are 2 or more medal dates.',
+    placeholderCompleto:
+      'The timeline appears once there are 2 or more medal dates. It grows as dates are transcribed from scanner screenshots (or when the GDPR dump arrives).',
+    resumoHint: (n: number) => `${n} achievements`,
+    resumoSvgAria: 'Total achievements over time',
+    resumoCta: 'open full timeline →',
+    heading: 'Timeline',
+    completoHint: (visible: number, total: number) => `${visible} of ${total}`,
+    filtersAria: 'Timeline filters',
+    overviewAria: 'Total achievements — drag to zoom into a period',
+    resetBtn: '↺ view whole period',
+    dragHint: 'Drag on the curve to zoom · tap a medal for detail',
+    swimAria: (n: number) => `${n} medals in the timeline`,
+    hoverTip: (name: string, tier: string, date: string) => `${name} — ${tier} · ${date}`,
+  },
+}
 
 const YEAR = 365.25 * 24 * 3600 * 1000
 
@@ -89,13 +120,13 @@ function yearList(minTs: number, maxTs: number) {
 }
 
 function Placeholder({variant}: {variant: Variant}) {
+  const {lang} = useLang()
+  const tr = T[lang]
   return (
-    <Panel label="Linha do tempo" hint="quando cada medalha caiu">
+    <Panel label={tr.placeholderLabel} hint={tr.placeholderHint}>
       <p className="ing-pending">
         <span className="ing-pending__dot" aria-hidden="true" />
-        {variant === 'resumo'
-          ? 'A linha do tempo aparece com 2 ou mais datas de conquista.'
-          : 'A linha do tempo aparece com 2 ou mais datas de conquista. Ela cresce conforme as datas são transcritas dos prints do scanner (ou quando o dump GDPR chega).'}
+        {variant === 'resumo' ? tr.placeholderResumo : tr.placeholderCompleto}
       </p>
     </Panel>
   )
@@ -103,6 +134,8 @@ function Placeholder({variant}: {variant: Variant}) {
 
 /** Curva acumulada + tira das medalhas mais recentes, que leva à página completa. */
 function Resumo({rows}: {rows: Row[]}) {
+  const {lang} = useLang()
+  const tr = T[lang]
   const W = 760
   const H = 96
   const pad = {t: 10, b: 18}
@@ -123,9 +156,9 @@ function Resumo({rows}: {rows: Row[]}) {
   }
 
   return (
-    <Panel label="Linha do tempo" hint={`${rows.length} conquistas`}>
+    <Panel label={tr.heading} hint={tr.resumoHint(rows.length)}>
       <a className="ing-tl__teaser" href="/ingress/linha-do-tempo">
-        <svg className="ing-tl__svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Total de conquistas ao longo do tempo">
+        <svg className="ing-tl__svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={tr.resumoSvgAria}>
           <defs>
             <linearGradient id="ing-tl-fill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#00e676" stopOpacity="0.5" />
@@ -155,7 +188,7 @@ function Resumo({rows}: {rows: Row[]}) {
             />
           ))}
         </span>
-        <span className="ing-tl__teaser-cta">abrir linha do tempo →</span>
+        <span className="ing-tl__teaser-cta">{tr.resumoCta}</span>
       </a>
     </Panel>
   )
@@ -172,6 +205,8 @@ function laneToDetailMedal(lane: Lane, medalStats?: MedalStats): DetailMedal {
 }
 
 function Completo({rows, medalStats}: {rows: Row[]; medalStats?: MedalStats}) {
+  const {lang} = useLang()
+  const tr = T[lang]
   const [cat, setCat] = useState('all')
   const [tierF, setTierF] = useState('all')
   const [sel, setSel] = useState<[number, number] | null>(null)
@@ -267,30 +302,28 @@ function Completo({rows, medalStats}: {rows: Row[]; medalStats?: MedalStats}) {
   return (
     <section className="ing-panel ing-tl">
       <div className="ing-panel__head">
-        <h2 className="ing-panel__label">Linha do tempo</h2>
-        <span className="ing-panel__hint">
-          {totalVisible} de {rows.length}
-        </span>
+        <h2 className="ing-panel__label">{tr.heading}</h2>
+        <span className="ing-panel__hint">{tr.completoHint(totalVisible, rows.length)}</span>
       </div>
 
-      <div className="ing-tl__filters" role="group" aria-label="Filtros da linha do tempo">
+      <div className="ing-tl__filters" role="group" aria-label={tr.filtersAria}>
         <div className="ing-tl__chipset">
-          {CATEGORIES.map((c) => (
-            <button key={c.k} type="button" className="ing-tl__chip" aria-pressed={cat === c.k} onClick={() => setCat(c.k)}>
-              {c.label}
+          {CATEGORY_KEYS.map((k) => (
+            <button key={k} type="button" className="ing-tl__chip" aria-pressed={cat === k} onClick={() => setCat(k)}>
+              {tr.catLabel[k]}
             </button>
           ))}
         </div>
         <div className="ing-tl__chipset">
-          {TIER_CHIPS.map((c) => (
+          {TIER_CHIP_KEYS.map((k) => (
             <button
-              key={c.k}
+              key={k}
               type="button"
               className="ing-tl__chip"
-              aria-pressed={tierF === c.k}
-              onClick={() => setTierF(c.k)}
+              aria-pressed={tierF === k}
+              onClick={() => setTierF(k)}
             >
-              {c.label}
+              {k === 'all' ? tr.tierAll : tierLabel(k, lang)}
             </button>
           ))}
         </div>
@@ -304,7 +337,7 @@ function Completo({rows, medalStats}: {rows: Row[]; medalStats?: MedalStats}) {
         onPointerMove={onMove}
         onPointerUp={onUp}
         role="img"
-        aria-label="Total de conquistas — arraste para dar zoom num período"
+        aria-label={tr.overviewAria}
       >
         <defs>
           <linearGradient id="ing-tl-fill-c" x1="0" y1="0" x2="0" y2="1">
@@ -334,10 +367,10 @@ function Completo({rows, medalStats}: {rows: Row[]; medalStats?: MedalStats}) {
       <p className="ing-tl__hint-line">
         {sel ? (
           <button type="button" className="ing-tl__reset" onClick={() => setSel(null)}>
-            ↺ ver período inteiro
+            {tr.resetBtn}
           </button>
         ) : (
-          'Arraste na curva para dar zoom · toque numa medalha para ver o detalhe'
+          tr.dragHint
         )}
       </p>
 
@@ -360,7 +393,7 @@ function Completo({rows, medalStats}: {rows: Row[]; medalStats?: MedalStats}) {
           ))}
         </ul>
         <div className="ing-tl__swim-plot">
-          <svg width={plotW} height={SH} role="img" aria-label={`${lanes.length} medalhas na linha do tempo`}>
+          <svg width={plotW} height={SH} role="img" aria-label={tr.swimAria(lanes.length)}>
             {yearTicks.map((t) => (
               <g key={t.y}>
                 <line x1={t.x} y1={AXIS_TOP - 6} x2={t.x} y2={SH - 16} className="ing-tl__grid" />
@@ -419,13 +452,13 @@ function Completo({rows, medalStats}: {rows: Row[]; medalStats?: MedalStats}) {
                             setHover({
                               x: e.clientX,
                               y: e.clientY,
-                              text: `${lane.name} — ${TIER_LABELS[t.tier] ?? t.tier} · ${fmtMedalDate(t.date)}`,
+                              text: tr.hoverTip(lane.name, tierLabel(t.tier, lang), fmtMedalDate(t.date)),
                             })
                           }
                           onMouseMove={(e) => setHover((h) => (h ? {...h, x: e.clientX, y: e.clientY} : h))}
                           onMouseLeave={() => setHover(null)}
                         >
-                          <title>{`${lane.name} — ${TIER_LABELS[t.tier] ?? t.tier} · ${fmtMedalDate(t.date)}`}</title>
+                          <title>{tr.hoverTip(lane.name, tierLabel(t.tier, lang), fmtMedalDate(t.date))}</title>
                         </circle>
                       </g>
                     )
