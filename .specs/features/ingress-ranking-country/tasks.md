@@ -311,7 +311,7 @@ T10
 
 ---
 
-### T10: Coluna de bandeira em `IngressRankingTable`
+### T10: Coluna de bandeira em `IngressRankingTable` ✅ Done
 
 **What**: Em `components/ingress/stats/IngressRankingTable.tsx`: estender `RankingRow` com `country_code: string | null`; adicionar `<th data-col="country">` (ícone/label acessível, mesmo padrão da coluna `faction` existente) e a célula correspondente, renderizando `<img src="/ingress/flags/<code.toLowerCase()>.svg" alt={countryName} title={countryName} width={20} height={15}>` quando `country_code` existe (nome do país vindo de um lookup em `lib/ingress/countries.json` pelo `lang` ativo), e uma célula vazia quando `country_code` é `null`.
 **Where**: `components/ingress/stats/IngressRankingTable.tsx`
@@ -326,11 +326,11 @@ T10
 
 **Done when**:
 
-- [ ] Uma linha com `country_code` preenchido mostra a bandeira certa, com `alt`/`title` no nome do país no idioma ativo
-- [ ] Uma linha com `country_code: null` mostra a célula vazia, sem ícone quebrado nem erro de console
-- [ ] As colunas e a ordenação já existentes continuam inalteradas — a coluna de país é só adicionada
-- [ ] Validação manual: `/ingress/ranking` renderiza corretamente tanto uma linha com país (a submetida em T9) quanto qualquer linha legada sem país
-- [ ] Gate check passa: `npm run build`
+- [x] Uma linha com `country_code` preenchido mostra a bandeira certa, com `alt`/`title` no nome do país no idioma ativo — lookup via `COUNTRY_BY_CODE`
+- [x] Uma linha com `country_code: null` mostra a célula vazia (`{row.country_code ? <img.../> : null}`), sem ícone quebrado nem erro de console
+- [x] As colunas e a ordenação já existentes continuam inalteradas — a coluna de país foi só adicionada (`<th data-col="country">`/`<td data-col="country">` novos, nenhum outro `<th>`/`<td>` tocado)
+- [x] Validação manual: revisão de código + gate de build/lint/test verde; a verificação visual em `/ingress/ranking` (linha com bandeira vs. linha legada sem país) fica para o Luiz testar na tela
+- [x] Gate check passa: `npm run build`, `npm test` (393 testes, sem regressão)
 
 **Tests**: none
 **Gate**: build

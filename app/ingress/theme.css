@@ -2019,6 +2019,11 @@
   border-radius: 3px;
 }
 
+.ing-ranking-table__country-flag {
+  border-radius: 2px;
+  display: block;
+}
+
 .ing-ranking-table__codename {
   font-family: var(--ing-font-display);
   font-weight: 600;

@@ -88,21 +88,21 @@
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| RKCTY-01 | P1: Escolher país ao entrar no ranking | Design | Pending |
-| RKCTY-02 | P1: Escolher país ao entrar no ranking | Design | Pending |
-| RKCTY-03 | P1: Escolher país ao entrar no ranking | Design | Pending |
-| RKCTY-04 | P1: Escolher país ao entrar no ranking | Design | Pending |
-| RKCTY-05 | P1: Escolher país ao entrar no ranking | Design | Pending |
-| RKCTY-06 | P1: Escolher país ao entrar no ranking | Design | Pending |
-| RKCTY-07 | P2: Ver o país de cada agente na tabela de ranking | Design | Pending |
-| RKCTY-08 | P2: Ver o país de cada agente na tabela de ranking | Design | Pending |
-| RKCTY-09 | P2: Ver o país de cada agente na tabela de ranking | Design | Pending |
+| RKCTY-01 | P1: Escolher país ao entrar no ranking | T7 | Implementing |
+| RKCTY-02 | P1: Escolher país ao entrar no ranking | T7, T8 | Implementing |
+| RKCTY-03 | P1: Escolher país ao entrar no ranking | T8 | Implementing |
+| RKCTY-04 | P1: Escolher país ao entrar no ranking | T3, T4 | Implementing |
+| RKCTY-05 | P1: Escolher país ao entrar no ranking | T2, T4 | Implementing |
+| RKCTY-06 | P1: Escolher país ao entrar no ranking | T8 | Implementing |
+| RKCTY-07 | P2: Ver o país de cada agente na tabela de ranking | T5, T6, T10 | Implementing |
+| RKCTY-08 | P2: Ver o país de cada agente na tabela de ranking | T10 | Implementing |
+| RKCTY-09 | P2: Ver o país de cada agente na tabela de ranking | T10 | Implementing |
 
 **ID format:** `RKCTY-NN` (Ranking + CounTrY).
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 9 total, 0 mapped to tasks, 9 unmapped ⚠️ (mapeamento acontece na fase Design/Tasks, ainda não iniciada).
+**Coverage:** 9 total, 9 mapped to tasks, 0 unmapped. Todas as 10 tasks (T1-T10) implementadas e commitadas; aguardando verificação independente (Verifier) antes de "Verified".
 
 ---
 

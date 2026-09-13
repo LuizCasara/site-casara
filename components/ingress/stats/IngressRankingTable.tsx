@@ -8,6 +8,7 @@ import {fmtStat} from '@/lib/ingress-format.mjs'
 import {RADAR_AXES, computeRadarAxes} from '@/lib/ingress-radar.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import {TIER_COLOR} from '@/lib/ingress-tiers.mjs'
+import {COUNTRIES} from '@/lib/ingress-countries.mjs'
 import {useLang, type Lang} from '@/context/LanguageContext'
 
 export type StatTier = {tier: string; badgeSlug: string | null}
@@ -21,6 +22,7 @@ export type RankingRow = {
   axis_scores: Record<string, number>
   stat_values: Record<string, number>
   stat_tiers?: Record<string, StatTier>
+  country_code: string | null
   created_at: string
   updated_at: string
 }
@@ -39,6 +41,15 @@ const FACTION_ICON: Record<RankingRow['faction'], string> = {
   enlightened: '/ingress/factions/enlightened.svg',
   resistance: '/ingress/factions/resistance.svg',
 }
+
+type CountryOption = {code: string; namePt: string; nameEn: string}
+const COUNTRY_BY_CODE = new Map((COUNTRIES as CountryOption[]).map((c) => [c.code, c]))
+function countryName(code: string, lang: Lang): string | null {
+  const c = COUNTRY_BY_CODE.get(code)
+  if (!c) return null
+  return lang === 'en' ? c.nameEn : c.namePt
+}
+const flagSrc = (code: string) => `/ingress/flags/${code.toLowerCase()}.svg`
 
 /** Cor do selo de tier por medalha — `TIER_COLOR` não cobre `'none'` (medalha ainda não alcançada). */
 const NONE_TIER_COLOR = 'var(--ing-text-faint)'
@@ -134,6 +145,7 @@ const T = {
     refreshingBtn: 'Atualizando…',
     colRank: '#',
     colFaction: 'Facção',
+    colCountry: 'País',
     colCodename: 'Codinome',
     colDates: 'Datas',
     datesTooltip: (updated: string, measured: string) => `Atualizado em ${updated} · Medido desde ${measured}`,
@@ -154,6 +166,7 @@ const T = {
     refreshingBtn: 'Refreshing…',
     colRank: '#',
     colFaction: 'Faction',
+    colCountry: 'Country',
     colCodename: 'Codename',
     colDates: 'Dates',
     datesTooltip: (updated: string, measured: string) => `Updated on ${updated} · Measured since ${measured}`,
@@ -247,6 +260,7 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
               <th scope="col" data-col="rank">{t.colRank}</th>
               <th scope="col" data-col="score">{t.colScore}</th>
               <th scope="col" data-col="faction" aria-label={t.colFaction} />
+              <th scope="col" data-col="country" aria-label={t.colCountry} />
               <th scope="col" data-col="codename">{t.colCodename}</th>
               <th scope="col" data-col="dates">{t.colDates}</th>
               <th scope="col" data-col="ap">{t.colAp}</th>
@@ -269,6 +283,18 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                         height={18}
                         className="ing-ranking-table__faction-icon"
                       />
+                    </td>
+                    <td data-col="country">
+                      {row.country_code ? (
+                        <img
+                          src={flagSrc(row.country_code)}
+                          alt={countryName(row.country_code, lang) ?? row.country_code}
+                          title={countryName(row.country_code, lang) ?? row.country_code}
+                          width={20}
+                          height={15}
+                          className="ing-ranking-table__country-flag"
+                        />
+                      ) : null}
                     </td>
                     <td data-col="codename">
                       <span className="ing-ranking-table__codename">{row.codename}</span>
