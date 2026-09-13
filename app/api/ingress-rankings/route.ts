@@ -3,12 +3,18 @@ import sql from "@/lib/db";
 import { normalizeCodenameKey } from "@/lib/ingress-rankings.mjs";
 import { computeAxisScores, computeOverallScore, overallTierLabel, computeStatTiers } from "@/lib/ingress-tier-score.mjs";
 import { RADAR_STAT_KEYS } from "@/lib/ingress-compare-message.mjs";
+import { rateLimitOrNull } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 const DEFAULT_LIMIT = 100;
 const MAX_LIMIT = 100;
 const FACTIONS = new Set(["enlightened", "resistance"]);
+// Mesmo teto de nome que o Quiz ao Vivo (QUIZ_LIMITS.NAME_MAX_LEN) — sem
+// isso, `codename` é texto livre sem limite, e esta é a rota pensada pra
+// receber tráfego de fora (divulgação em comunidade pública): nada impedia
+// um script de gravar strings gigantes repetidas vezes.
+const CODENAME_MAX_LEN = 40;
 
 type AxisScore = { id: string; label: string; score: number };
 type AxisScoreMap = Record<string, number>;
@@ -91,6 +97,14 @@ async function buildResponseFromRow(row: Record<string, unknown>, written: boole
 }
 
 export async function POST(request: NextRequest) {
+  // Pública, sem token: qualquer visitante do /ingress/ranking grava/atualiza
+  // uma linha. O debounce de 5min abaixo é por codename — não impede um
+  // script de gerar codenames diferentes a cada chamada, então o limite por
+  // IP é a camada que segura isso (e o flood do Telegram que uma escrita
+  // nova dispara via notifyTelegramNewEntry).
+  const limited = await rateLimitOrNull(request, "INGRESS_RANKING_WRITE");
+  if (limited) return limited;
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -103,8 +117,11 @@ export async function POST(request: NextRequest) {
   const faction = typeof body.faction === "string" ? body.faction.trim().toLowerCase() : "";
   const lifetimeAp = Number(body.lifetimeAp);
 
-  if (!codenameKey) {
-    return NextResponse.json({ error: "codename é obrigatório" }, { status: 400 });
+  if (!codenameKey || codename.length > CODENAME_MAX_LEN) {
+    return NextResponse.json(
+      { error: `codename é obrigatório (máx. ${CODENAME_MAX_LEN} caracteres)` },
+      { status: 400 }
+    );
   }
   if (!FACTIONS.has(faction)) {
     return NextResponse.json({ error: "faction deve ser enlightened ou resistance" }, { status: 400 });

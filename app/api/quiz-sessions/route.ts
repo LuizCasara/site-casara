@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import sql from "@/lib/db";
 import { generateSessionId, generateToken } from "@/lib/session-ids";
 import { QUIZ_LIMITS, isValidQuestionDraft, type QuizQuestionDraft } from "@/lib/quiz";
+import { rateLimitOrNull } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
+  // Criação de sessão é pública e sem custo pro host — o limite por IP é o
+  // que impede um script de encher casara.quiz_sessions/quiz_questions.
+  const limited = await rateLimitOrNull(request, "SESSION_CREATE");
+  if (limited) return limited;
+
   try {
     const body = await request.json();
     const title = typeof body.title === "string" ? body.title.trim() : "";
