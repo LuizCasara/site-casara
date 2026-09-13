@@ -76,7 +76,15 @@ function shapePoint(i: number, count: number, radius: number): [number, number] 
  * agente dentro do painel expandido. Reaproveita `computeRadarAxes` (puro,
  * client-safe) e as mesmas classes CSS do radar grande.
  */
-function MiniShapeRadar({stats, ariaLabel}: {stats: Record<string, number>; ariaLabel: string}) {
+function MiniShapeRadar({
+  stats,
+  ariaLabel,
+  faction,
+}: {
+  stats: Record<string, number>
+  ariaLabel: string
+  faction: RankingRow['faction']
+}) {
   const axes = computeRadarAxes(stats) as {id: string; onyxRatio: number}[]
   const n = axes.length
   const maxRatio = Math.max(...axes.map((a) => a.onyxRatio), 0.01)
@@ -84,7 +92,14 @@ function MiniShapeRadar({stats, ariaLabel}: {stats: Record<string, number>; aria
   const shape = axes.map((a, i) => shapePoint(i, n, radiusIn(a.onyxRatio)).join(',')).join(' ')
 
   return (
-    <svg viewBox={`0 0 ${SHAPE_SIZE} ${SHAPE_SIZE}`} width={SHAPE_SIZE} height={SHAPE_SIZE} role="img" aria-label={ariaLabel}>
+    <svg
+      viewBox={`0 0 ${SHAPE_SIZE} ${SHAPE_SIZE}`}
+      width={SHAPE_SIZE}
+      height={SHAPE_SIZE}
+      role="img"
+      aria-label={ariaLabel}
+      className={faction === 'resistance' ? 'ing-mini-radar--resistance' : undefined}
+    >
       {[0.34, 0.67, 1].map((f) => (
         <polygon
           key={f}
@@ -321,12 +336,14 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
           ))}
           <div className="ing-ranking-table__detail-shape">
             <span className="ing-ranking-table__detail-shape-label">{t.shapeLabel}</span>
-            <MiniShapeRadar stats={expandedRow.stat_values} ariaLabel={t.shapeAria(expandedRow.codename)} />
+            <MiniShapeRadar stats={expandedRow.stat_values} ariaLabel={t.shapeAria(expandedRow.codename)} faction={expandedRow.faction} />
           </div>
         </div>
       ) : null}
 
-      {expandedRow ? <AgentHistoryChart codenameKey={expandedRow.codename_key} agentName={expandedRow.codename} /> : null}
+      {expandedRow ? (
+        <AgentHistoryChart codenameKey={expandedRow.codename_key} agentName={expandedRow.codename} faction={expandedRow.faction} />
+      ) : null}
 
       <p className="ing-ranking-table__credit">{t.logoCredit}</p>
     </Panel>

@@ -71,12 +71,23 @@ async function fetchHistory(codenameKey: string, bucket: HistoryBucket): Promise
  * `AchievementTimeline`/`.ing-spark`): SVG à mão, reaproveitando o padrão de
  * tooltip fixo por coordenada do ponteiro já usado ali.
  */
-export default function AgentHistoryChart({codenameKey, agentName}: {codenameKey: string; agentName: string}) {
+export default function AgentHistoryChart({
+  codenameKey,
+  agentName,
+  faction,
+}: {
+  codenameKey: string
+  agentName: string
+  faction: 'enlightened' | 'resistance'
+}) {
   const {lang} = useLang()
   const t = T[lang]
   const [bucket, setBucket] = useState<HistoryBucket>('day')
   const [hover, setHover] = useState<HoverInfo | null>(null)
   const gradientId = useId()
+  // A marca do site é sempre verde; só a cor do agente exibido (facção dele)
+  // vira azul — nunca o inverso (ver theme.css: .ing-evo--resistance).
+  const accentColor = faction === 'resistance' ? 'var(--ing-cyan)' : 'var(--ing-green)'
 
   // `key` amarra o resultado à requisição que o produziu — troca de
   // agente/bucket vira "carregando" por comparação de chave, sem precisar de
@@ -139,7 +150,7 @@ export default function AgentHistoryChart({codenameKey, agentName}: {codenameKey
   }, [points])
 
   return (
-    <div className="ing-evo">
+    <div className={`ing-evo${faction === 'resistance' ? ' ing-evo--resistance' : ''}`}>
       <div className="ing-evo__head">
         <div className="ing-evo__title">
           <strong>{t.title}</strong>
@@ -180,8 +191,8 @@ export default function AgentHistoryChart({codenameKey, agentName}: {codenameKey
           <svg className="ing-evo__svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t.ariaChart(agentName)}>
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--ing-green)" stopOpacity="0.22" />
-                <stop offset="100%" stopColor="var(--ing-green)" stopOpacity="0" />
+                <stop offset="0%" stopColor={accentColor} stopOpacity="0.22" />
+                <stop offset="100%" stopColor={accentColor} stopOpacity="0" />
               </linearGradient>
             </defs>
             {geometry.gridLines.map((g, i) => (

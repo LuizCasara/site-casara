@@ -19,6 +19,10 @@
   --ing-green-soft: #4dffa6;
   --ing-teal: #12d9c4;
   --ing-cyan: #26b6ff;
+  /* facção Resistance — usado só onde a cor precisa refletir a facção do
+     agente exibido (ex.: gráfico de evolução, radar "Forma" no ranking),
+     nunca na marca fixa do site (que é sempre o verde Enlightened). */
+  --ing-cyan-soft: #7dd3ff;
   --ing-xm: #b06cff;
   --ing-accent: linear-gradient(118deg, #00e676 0%, #12d9c4 52%, #26b6ff 100%);
   --ing-green-ghost: rgba(0, 230, 118, 0.07);
@@ -2433,6 +2437,16 @@
   fill: var(--ing-green-soft);
 }
 
+/* Radar "Forma" (ranking) na cor da facção do agente exibido, não fixo verde. */
+.ing-mini-radar--resistance .ing-radar__ring--edge {
+  stroke: var(--ing-cyan);
+}
+
+.ing-mini-radar--resistance .ing-radar__shape {
+  fill: rgba(38, 182, 255, 0.14);
+  stroke: var(--ing-cyan);
+}
+
 .ing-radar__label {
   fill: var(--ing-text-dim);
   font-family: var(--ing-font-body);
@@ -2728,6 +2742,25 @@
   font-size: 0.82rem;
   line-height: 1.55;
   color: var(--ing-text-dim);
+}
+
+/* Facção Resistance: gráfico em azul, não na cor-marca (verde) do site. */
+.ing-evo--resistance .ing-evo__stat-value.is-up {
+  color: var(--ing-cyan-soft);
+}
+
+.ing-evo--resistance .ing-evo__line {
+  stroke: var(--ing-cyan);
+}
+
+.ing-evo--resistance .ing-evo__dot {
+  stroke: var(--ing-cyan-soft);
+}
+
+.ing-evo--resistance .ing-evo__dot.is-last {
+  fill: var(--ing-cyan);
+  stroke: var(--ing-cyan-soft);
+  filter: drop-shadow(0 0 5px rgba(38, 182, 255, 0.6));
 }
 
 @media (prefers-reduced-motion: reduce) {
