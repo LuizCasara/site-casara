@@ -10,7 +10,7 @@ import {
   FaTrophy,
   FaYoutube,
 } from 'react-icons/fa'
-import {coverViewport} from '@/lib/ingress-s2.mjs'
+import {heroMeshPolygons} from '@/lib/ingress-s2.mjs'
 import type {Profile} from '@/lib/ingress'
 import {useLang} from '@/context/LanguageContext'
 import HeroMesh from './HeroMesh'
@@ -68,25 +68,7 @@ export default function AgentHeader({profile}: {profile: Profile}) {
   const {lang} = useLang()
   const t = T[lang]
 
-  // Um retângulo pequeno em torno do centro, nível baixo -> poucas células.
-  const span = 0.06
-  const cells = coverViewport(
-    {
-      north: s2.center.lat + span,
-      south: s2.center.lat - span,
-      east: s2.center.lng + span,
-      west: s2.center.lng - span,
-    },
-    11,
-    {cap: 60},
-  ) as {token: string; ring: [number, number][]}[]
-
-  // normaliza lat/lng -> 0..1 no viewBox (lat invertida: norte no topo)
-  const latToY = (lat: number) => (s2.center.lat + span - lat) / (2 * span)
-  const lngToX = (lng: number) => (lng - (s2.center.lng - span)) / (2 * span)
-  const polygons = cells.map((c) =>
-    c.ring.map(([lat, lng]) => [lngToX(lng), latToY(lat)] as [number, number]),
-  )
+  const polygons = heroMeshPolygons(s2.center) as [number, number][][]
 
   return (
     <header className="ing-hero">

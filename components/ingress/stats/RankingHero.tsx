@@ -1,0 +1,60 @@
+'use client'
+
+import {FaTrophy} from 'react-icons/fa'
+import {heroMeshPolygons} from '@/lib/ingress-s2.mjs'
+import {useLang} from '@/context/LanguageContext'
+import HeroMesh from '../HeroMesh'
+import HeroGlobe from '../HeroGlobe'
+
+const T = {
+  pt: {
+    eyebrow: 'Ranking de agentes',
+    heading: 'Onde você fica?',
+    body: 'Cole o export de estatísticas do app, compare com o FencherLC ou com outro agente, e veja sua posição — o ranking é público, atualiza na hora e cresce a cada agente que entra.',
+    countLabel: (n: number) => `${n} agente${n === 1 ? '' : 's'} medido${n === 1 ? '' : 's'}`,
+  },
+  en: {
+    eyebrow: 'Agent ranking',
+    heading: 'Where do you stand?',
+    body: "Paste your app's stats export, compare with FencherLC or another agent, and see your position — the ranking is public, updates instantly, and grows with every new agent.",
+    countLabel: (n: number) => `${n} agent${n === 1 ? '' : 's'} measured`,
+  },
+} as const
+
+/**
+ * Hero de `/ingress/ranking` — mesmo tratamento visual do hero de `/ingress`
+ * (`AgentHeader`: malha S2 + globo decorativo), mas sem identidade de um
+ * agente específico (não há "o agente" nesta página, é o ranking de todos).
+ * A âncora geográfica da malha/globo é `s2.center` do FencherLC (mesma fonte
+ * de sempre) só por não termos outro centro — decoração, não afirma nada
+ * sobre os agentes listados. Client component: `useLang()` + `HeroGlobe`.
+ */
+export default function RankingHero({
+  center,
+  totalAgents,
+}: {
+  center: {lat: number; lng: number}
+  totalAgents: number
+}) {
+  const {lang} = useLang()
+  const t = T[lang]
+  const polygons = heroMeshPolygons(center) as [number, number][][]
+
+  return (
+    <header className="ing-hero ing-hero--ranking">
+      <HeroMesh polygons={polygons} />
+      <HeroGlobe center={center} />
+      <div className="ing-hero__body">
+        <p className="ing-hero__eyebrow">{t.eyebrow}</p>
+        <h1 className="ing-hero__codename ing-hero__codename--ranking">
+          <FaTrophy aria-hidden="true" className="ing-hero__ranking-icon" />
+          {t.heading}
+        </h1>
+        <p className="ing-hero__ranking-body">{t.body}</p>
+        <div className="ing-hero__meta">
+          <span className="ing-hero__faction">{t.countLabel(totalAgents)}</span>
+        </div>
+      </div>
+    </header>
+  )
+}

@@ -306,6 +306,29 @@
   word-break: break-word;
 }
 
+.ing-hero__codename--ranking {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: clamp(1.9rem, 7vw, 2.9rem);
+}
+
+.ing-hero__ranking-icon {
+  flex-shrink: 0;
+  font-size: 0.75em;
+  color: var(--ing-green-soft);
+  filter: none;
+  -webkit-text-fill-color: initial;
+}
+
+.ing-hero__ranking-body {
+  margin: 0.9rem 0 0;
+  max-width: 34rem;
+  color: var(--ing-text-dim);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
 .ing-hero__meta {
   display: flex;
   flex-wrap: wrap;

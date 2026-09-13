@@ -2,6 +2,8 @@ import {loadProfile} from '@/lib/ingress'
 import sql from '@/lib/db'
 import {computeAxisScores, computeOverallScore, overallTierLabel, computeStatTiers} from '@/lib/ingress-tier-score.mjs'
 import Panel from '@/components/ingress/Panel'
+import BackLink from '@/components/ingress/BackLink'
+import RankingHero from '@/components/ingress/stats/RankingHero'
 import StatsRadarSection from '@/components/ingress/stats/StatsRadarSection'
 import AxisExplanations from '@/components/ingress/stats/AxisExplanations'
 import IngressRankingTable, {type RankingRow} from '@/components/ingress/stats/IngressRankingTable'
@@ -68,6 +70,10 @@ export default async function IngressRankingPage() {
 
   return (
     <main className="ing-shell">
+      <BackLink fallback="/ingress" />
+
+      <RankingHero center={profile.s2.center} totalAgents={initialRows.length} />
+
       <IngressRankingTable initialRows={initialRows} />
 
       <StatsRadarSection
