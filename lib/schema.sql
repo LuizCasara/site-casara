@@ -175,6 +175,9 @@ CREATE TABLE IF NOT EXISTS casara.ingress_rankings (
   overall_score  NUMERIC(7,2) NOT NULL,
   axis_scores    JSONB NOT NULL,
   stat_values    JSONB NOT NULL,
+  -- ISO 3166-1 alpha-2, nullable (obrigatório só em POSTs novos, validado na
+  -- API — ver lib/migrations/003-ingress-ranking-country.sql).
+  country_code   CHAR(2) CHECK (country_code IS NULL OR country_code ~ '^[A-Z]{2}$'),
   -- created_at = "medido desde": a primeira vez que este agente foi medido
   -- NESTE ranking, não a data de criação da conta no Ingress (nenhuma fonte
   -- de dado disponível contém essa data real).

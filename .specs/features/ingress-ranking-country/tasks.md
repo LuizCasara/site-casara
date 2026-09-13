@@ -136,10 +136,10 @@ T10
 
 ---
 
-### T3: Migração de schema — coluna `country_code`
+### T3: Migração de schema — coluna `country_code` ✅ Done
 
-**What**: Criar `lib/migrations/002-ingress-ranking-country.sql` com `ALTER TABLE casara.ingress_rankings ADD COLUMN IF NOT EXISTS country_code CHAR(2) CHECK (country_code IS NULL OR country_code ~ '^[A-Z]{2}$');`, seguindo o estilo de comentário de `lib/migrations/001-schema-casara.sql` (contexto + o que faz + o que não toca). Atualizar `lib/schema.sql` para que a `CREATE TABLE casara.ingress_rankings` de uma instalação nova já inclua a coluna e o `CHECK`.
-**Where**: `lib/migrations/002-ingress-ranking-country.sql`, `lib/schema.sql`
+**What**: Criar `lib/migrations/003-ingress-ranking-country.sql` com `ALTER TABLE casara.ingress_rankings ADD COLUMN IF NOT EXISTS country_code CHAR(2) CHECK (country_code IS NULL OR country_code ~ '^[A-Z]{2}$');`, seguindo o estilo de comentário de `lib/migrations/001-schema-casara.sql` (contexto + o que faz + o que não toca). Atualizar `lib/schema.sql` para que a `CREATE TABLE casara.ingress_rankings` de uma instalação nova já inclua a coluna e o `CHECK`.
+**Where**: `lib/migrations/003-ingress-ranking-country.sql`, `lib/schema.sql`
 **Depends on**: None
 **Reuses**: Estilo de `lib/migrations/001-schema-casara.sql`
 **Requirement**: RKCTY-04
@@ -151,10 +151,10 @@ T10
 
 **Done when**:
 
-- [ ] `lib/migrations/002-ingress-ranking-country.sql` existe, é idempotente (`ADD COLUMN IF NOT EXISTS`) e não reescreve nenhuma linha existente
-- [ ] `lib/schema.sql` reflete o estado final da tabela (coluna presente numa instalação nova)
-- [ ] Esta task **não** roda a migração em produção — isso fica para um passo manual explícito, com autorização, depois de T4-T6 estarem prontos
-- [ ] Gate check passa: `npm run build`
+- [x] `lib/migrations/003-ingress-ranking-country.sql` existe, é idempotente (`ADD COLUMN IF NOT EXISTS`) e não reescreve nenhuma linha existente
+- [x] `lib/schema.sql` reflete o estado final da tabela (coluna presente numa instalação nova)
+- [x] Esta task **não** roda a migração em produção — isso fica para um passo manual explícito, com autorização, depois de T4-T6 estarem prontos
+- [x] Gate check passa: `npm run build`
 
 **Tests**: none
 **Gate**: build
@@ -428,4 +428,4 @@ Nenhuma violação — apenas T2 tem `Tests: unit`, exatamente onde a matriz exi
 
 ## Autorização pendente (fora das tasks)
 
-Depois de T3-T6 estarem implementadas e o gate de build passar, a migração `lib/migrations/002-ingress-ranking-country.sql` precisa ser **aplicada manualmente em produção no Neon**, com autorização explícita antes de rodar — mesmo processo já usado para criar `casara.ingress_rankings` originalmente. Isto NÃO é uma task de código; é um passo operacional que será proposto separadamente quando o código estiver pronto.
+Depois de T3-T6 estarem implementadas e o gate de build passar, a migração `lib/migrations/003-ingress-ranking-country.sql` precisa ser **aplicada manualmente em produção no Neon**, com autorização explícita antes de rodar — mesmo processo já usado para criar `casara.ingress_rankings` originalmente. Isto NÃO é uma task de código; é um passo operacional que será proposto separadamente quando o código estiver pronto.
