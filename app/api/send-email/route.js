@@ -1,8 +1,57 @@
 import nodemailer from 'nodemailer';
+import { rateLimitOrNull } from '@/lib/rate-limit';
+import { escapeHtml } from '@/lib/sanitize';
+
+/** Só os 4 nomes que o teste realmente produz — qualquer outra coisa aqui já
+ * seria um valor forjado (esta rota não recalcula o teste, confia no body). */
+const TEMPERAMENTOS_VALIDOS = new Set(['Sanguineo', 'Colerico', 'Melancolico', 'Fleumatico']);
+const CARACTERISTICAS_VALIDAS = new Set(['Quente', 'Frio', 'Seco', 'Umido']);
+
+function isValidResults(results) {
+  if (!results || typeof results !== 'object') return false;
+  if (!Array.isArray(results.allTemperaments) || results.allTemperaments.length === 0) return false;
+  if (!Array.isArray(results.allCharacteristics) || results.allCharacteristics.length === 0) return false;
+  const hasNamePercentage = (o) =>
+    o && typeof o === 'object' && TEMPERAMENTOS_VALIDOS.has(o.name) && typeof o.percentage === 'number';
+  const hasCharNamePercentage = (o) =>
+    o && typeof o === 'object' && CARACTERISTICAS_VALIDAS.has(o.name) && typeof o.percentage === 'number';
+  return (
+    results.allTemperaments.every(hasNamePercentage) &&
+    hasNamePercentage(results.primaryTemperament) &&
+    hasNamePercentage(results.secondaryTemperament) &&
+    hasCharNamePercentage(results.primaryCharacteristic) &&
+    hasCharNamePercentage(results.secondaryCharacteristic)
+  );
+}
 
 export async function POST(request) {
+  // Rota pública sem autenticação: qualquer POST daqui manda um e-mail real
+  // pela conta Gmail do dono do site. O limite é o que impede um script de
+  // esgotar a cota diária de envio da conta ou encher a caixa de entrada.
+  const limited = await rateLimitOrNull(request, 'EMAIL');
+  if (limited) return limited;
+
   try {
-    const {name, age, date, browserInfo, results} = await request.json();
+    const body = await request.json();
+    // Sem quebra de linha: além de feio no HTML, um `\r\n` dentro de um campo
+    // usado no assunto do e-mail é o vetor clássico de header injection.
+    const semQuebraDeLinha = (s) => s.replace(/[\r\n]+/g, ' ').trim();
+    const name = typeof body.name === 'string' ? semQuebraDeLinha(body.name).slice(0, 200) : '';
+    const age =
+      typeof body.age === 'number' || typeof body.age === 'string'
+        ? semQuebraDeLinha(String(body.age)).slice(0, 20)
+        : '';
+    const date = typeof body.date === 'string' ? body.date : new Date().toISOString();
+    const browserInfo =
+      typeof body.browserInfo === 'string' ? semQuebraDeLinha(body.browserInfo).slice(0, 300) : '';
+    const { results } = body;
+
+    if (!name || !isValidResults(results)) {
+      return new Response(JSON.stringify({ error: 'corpo inválido' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
     // Create a transporter
     const transporter = nodemailer.createTransport({
@@ -109,10 +158,10 @@ export async function POST(request) {
         <div class="content">
           <div class="section">
             <h2>Informações</h2>
-            <p><strong>Nome:</strong> ${name}</p>
-            <p><strong>Idade:</strong> ${age}</p>
-            <p><strong>Data:</strong> ${formattedDate}</p>
-            <p><strong>Navegador:</strong> ${browserInfo}</p>
+            <p><strong>Nome:</strong> ${escapeHtml(name)}</p>
+            <p><strong>Idade:</strong> ${escapeHtml(age)}</p>
+            <p><strong>Data:</strong> ${escapeHtml(formattedDate)}</p>
+            <p><strong>Navegador:</strong> ${escapeHtml(browserInfo)}</p>
           </div>
 
           <div class="section">
