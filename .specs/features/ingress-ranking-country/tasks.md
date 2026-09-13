@@ -185,7 +185,7 @@ T10
 
 ---
 
-### T5: `GET /api/ingress-rankings` devolve país
+### T5: `GET /api/ingress-rankings` devolve país ✅ Done
 
 **What**: Estender a função `GET` do mesmo arquivo para incluir `country_code` no `SELECT` e no objeto serializado da resposta (`rows`).
 **Where**: `app/api/ingress-rankings/route.ts` (função `GET`)
@@ -200,8 +200,8 @@ T10
 
 **Done when**:
 
-- [ ] `GET /api/ingress-rankings` inclui `country_code` (string ou `null`) em cada item de `rows`
-- [ ] Gate check passa: `npm run build`
+- [x] `GET /api/ingress-rankings` inclui `country_code` (string ou `null`) em cada item de `rows` — mesma ressalva de T4: só funciona contra o banco real depois que a migração pendente for aplicada em produção
+- [x] Gate check passa: `npm run build`
 
 **Tests**: none
 **Gate**: build
