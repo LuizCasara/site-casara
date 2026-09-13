@@ -173,6 +173,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "falha ao gravar o registro" }, { status: 500 });
     }
 
+    if (written) {
+      // Um snapshot append-only por escrita real (nunca sob debounce) —
+      // alimenta o gráfico de evolução. Erro aqui não pode derrubar a
+      // resposta principal: o ranking já foi gravado com sucesso.
+      try {
+        await sql`
+          INSERT INTO casara.ingress_ranking_history (codename_key, lifetime_ap, overall_score, axis_scores)
+          VALUES (${codenameKey}, ${lifetimeAp}, ${overallScore}, ${JSON.stringify(axisScoreMap)})
+        `;
+      } catch (err) {
+        console.error("[api/ingress-rankings] falha ao gravar snapshot de histórico:", err);
+      }
+    }
+
     const responseBody = await buildResponseFromRow(finalRow, written);
     if (written) {
       notifyTelegramNewEntry(request.nextUrl.origin, codename, responseBody.rank, responseBody.totalAgents);

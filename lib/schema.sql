@@ -184,3 +184,17 @@ CREATE TABLE IF NOT EXISTS casara.ingress_rankings (
 
 CREATE INDEX IF NOT EXISTS idx_ingress_rankings_score ON casara.ingress_rankings (overall_score DESC);
 CREATE INDEX IF NOT EXISTS idx_ingress_rankings_ap    ON casara.ingress_rankings (lifetime_ap DESC);
+
+-- Um snapshot por escrita bem-sucedida (não-debounced) em casara.ingress_rankings
+-- — nunca é atualizado nem apagado, só cresce. Alimenta o gráfico de evolução
+-- (dia/mês/ano) no painel expandido do ranking.
+CREATE TABLE IF NOT EXISTS casara.ingress_ranking_history (
+  id             BIGSERIAL PRIMARY KEY,
+  codename_key   TEXT NOT NULL REFERENCES casara.ingress_rankings(codename_key) ON DELETE CASCADE,
+  lifetime_ap    BIGINT NOT NULL,
+  overall_score  NUMERIC(7,2) NOT NULL,
+  axis_scores    JSONB NOT NULL,
+  recorded_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ingress_history_agent ON casara.ingress_ranking_history (codename_key, recorded_at DESC);

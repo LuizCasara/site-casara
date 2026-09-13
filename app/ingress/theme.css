@@ -2620,6 +2620,116 @@
   font-size: 10px;
 }
 
+/* --- evolução do agente (AgentHistoryChart, painel expandido do ranking) --- */
+
+.ing-evo {
+  margin-top: 1.3rem;
+}
+
+.ing-evo__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.ing-evo__title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+
+.ing-evo__title strong {
+  font-family: var(--ing-font-display);
+  font-size: 0.88rem;
+  color: var(--ing-text);
+}
+
+.ing-evo__title span {
+  font-size: 0.72rem;
+  color: var(--ing-text-faint);
+}
+
+.ing-evo__stats {
+  display: flex;
+  gap: 1.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+
+.ing-evo__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.ing-evo__stat-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ing-text-faint);
+}
+
+.ing-evo__stat-value {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--ing-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-evo__stat-value.is-up {
+  color: var(--ing-green-soft);
+}
+
+.ing-evo__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--ing-font-body);
+  overflow: visible;
+}
+
+.ing-evo__grid {
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+}
+
+.ing-evo__axis-label {
+  fill: var(--ing-text-faint);
+  font-size: 9px;
+}
+
+.ing-evo__line {
+  fill: none;
+  stroke: var(--ing-green);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.ing-evo__dot {
+  fill: var(--ing-bg-2);
+  stroke: var(--ing-green-soft);
+  stroke-width: 1.5;
+}
+
+.ing-evo__dot.is-last {
+  fill: var(--ing-green);
+  stroke: var(--ing-green-soft);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 5px rgba(0, 230, 118, 0.6));
+}
+
+.ing-evo__empty {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--ing-text-dim);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ingress-prime * {
     animation-duration: 0.001ms !important;

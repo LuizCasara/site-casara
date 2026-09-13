@@ -3,6 +3,7 @@
 import {useEffect, useRef, useState} from 'react'
 import {FaEye, FaEyeSlash} from 'react-icons/fa'
 import Panel from '../Panel'
+import AgentHistoryChart from './AgentHistoryChart'
 import {fmtStat} from '@/lib/ingress-format.mjs'
 import {RADAR_AXES, computeRadarAxes} from '@/lib/ingress-radar.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
@@ -324,6 +325,8 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
           </div>
         </div>
       ) : null}
+
+      {expandedRow ? <AgentHistoryChart codenameKey={expandedRow.codename_key} agentName={expandedRow.codename} /> : null}
 
       <p className="ing-ranking-table__credit">{t.logoCredit}</p>
     </Panel>
