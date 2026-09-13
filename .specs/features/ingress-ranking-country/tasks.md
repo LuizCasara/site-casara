@@ -252,7 +252,7 @@ T10
 - [x] Apagar o texto do campo já preenchido chama `onChange(null)` (qualquer edição do texto enquanto havia seleção já invalida, não só apagar tudo — mais amplo que o mínimo pedido)
 - [x] Navegação por teclado funciona: seta para baixo/cima move o item ativo, Enter seleciona, Esc fecha a lista sem selecionar
 - [x] `invalid={true}` aplica um estado visual de erro (borda), sem exigir nenhuma outra prop
-- [x] Validação manual: sem harness de isolamento de componente neste projeto (sem Storybook) — feita em conjunto com T8, que integra o componente na página real (`npm run dev` em `/ingress/ranking`)
+- [x] Validação manual: sem harness de isolamento de componente neste projeto (sem Storybook); a verificação visual/interativa fica para o Luiz testar na tela em `/ingress/ranking` depois de T8 integrar o componente (preferência já registrada — não faço verificação visual automática no navegador)
 - [x] Gate check passa: `npm run build`
 
 **Tests**: none
@@ -260,7 +260,7 @@ T10
 
 ---
 
-### T8: Integrar `CountryPicker` e validação obrigatória em `ProfileRadar`
+### T8: Integrar `CountryPicker` e validação obrigatória em `ProfileRadar` ✅ Done
 
 **What**: Em `components/ingress/ProfileRadar.tsx`: estender `type Agent` com `countryCode?: string`; adicionar estados `countryA`/`countryB` (`string | null`, iniciam `null`, resetados em `clear()`); renderizar um `<CountryPicker>` abaixo de cada textarea visível, só quando `variant === 'ranking'` (textarea A sempre; textarea B só quando `mode === 'two'`); em `runCompare`, antes do `try` de parse existente, se `variant === 'ranking'` e faltar país para qualquer agente que será submetido (considerando o mesmo remapeamento que o texto já sofre entre os modos `vs-me`/`two`/`solo`), setar `error` com uma mensagem bilíngue nova e `return` sem chamar `onCompare`; quando a validação passa, incluir `countryCode` nos objetos `Agent` montados (`a`/`b`), aplicando o mesmo remapeamento.
 **Where**: `components/ingress/ProfileRadar.tsx`
@@ -275,12 +275,12 @@ T10
 
 **Done when**:
 
-- [ ] Em `variant === 'ranking'`, o campo de país aparece abaixo de cada textarea visível (A sempre, B só em modo `two`); em `variant === 'default'` (uso em `/ingress`) nenhum seletor aparece
-- [ ] Clicar "Comparar"/"Enviar" sem ter escolhido país para um agente que seria submetido não chama `onCompare` e mostra a mensagem de erro bilíngue no lugar já usado por erros de parse
-- [ ] Escolher o(s) país(es) e clicar de novo funciona normalmente, e o `Agent` passado a `onCompare` carrega o `countryCode` certo — inclusive o remapeamento do modo `vs-me` (o país do campo A vai para o agente `b`, não `a`)
-- [ ] `clear()` reseta `countryA`/`countryB` para `null`
-- [ ] Validação manual: os três modos (`solo`, `vs-me`, `two`) testados manualmente em `/ingress/ranking`, incluindo o bloqueio sem país e o caso de dois agentes com países diferentes
-- [ ] Gate check passa: `npm run build`
+- [x] Em `variant === 'ranking'`, o campo de país aparece abaixo de cada textarea visível (A sempre, B só em modo `two`); em `variant === 'default'` (uso em `/ingress`) nenhum seletor aparece — condicionado por `variant === 'ranking'` no JSX
+- [x] Clicar "Comparar"/"Enviar" sem ter escolhido país para um agente que seria submetido não chama `onCompare` e mostra a mensagem de erro bilíngue no lugar já usado por erros de parse — bloqueio no topo de `runCompare`, antes do `try` de parse
+- [x] Escolher o(s) país(es) e clicar de novo funciona normalmente, e o `Agent` passado a `onCompare` carrega o `countryCode` certo — inclusive o remapeamento do modo `vs-me` (o país do campo A vai para o agente `b`, não `a`) — revisado linha a linha contra o remapeamento de texto já existente
+- [x] `clear()` reseta `countryA`/`countryB` para `null`
+- [x] Validação manual: revisão de código completa + gate de build/lint verde; a verificação visual/interativa dos três modos em `/ingress/ranking` fica para o Luiz testar na tela (preferência já registrada — não abro o navegador para conferir visualmente)
+- [x] Gate check passa: `npm run build`
 
 **Tests**: none
 **Gate**: build

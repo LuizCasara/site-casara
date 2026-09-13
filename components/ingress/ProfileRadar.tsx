@@ -9,6 +9,7 @@ import {compareHash, RADAR_STAT_KEYS} from '@/lib/ingress-compare-message.mjs'
 import type {Profile} from '@/lib/ingress'
 import {useLang} from '@/context/LanguageContext'
 import Panel from './Panel'
+import CountryPicker from './CountryPicker'
 import {fmtStat} from '@/lib/ingress-format.mjs'
 
 const SIZE = 260
@@ -35,7 +36,7 @@ type Part = {
   noteEn: string | null
 }
 type Axis = {id: string; label: string; labelEn: string; onyxRatio: number; value: number; parts: Part[]}
-export type Agent = {codename: string; faction?: string; stats: Record<string, number>; capturedAt?: string}
+export type Agent = {codename: string; faction?: string; stats: Record<string, number>; capturedAt?: string; countryCode?: string}
 
 /**
  * Textos bilíngues do componente (ISTATS-19 fix). A branch `pt` reproduz
@@ -71,6 +72,7 @@ const T = {
     openCompareBtn: 'Comparar com outro agente',
     parseErrorNoAgent: 'Export sem "Agent Name".',
     parseErrorGeneric: 'Não deu pra ler esse texto.',
+    countryRequiredError: 'Escolha o país antes de continuar.',
     pasteBtn: 'Colar',
     pasteFallback: 'Não foi possível colar automaticamente. Toque e segure o campo para colar.',
   },
@@ -102,6 +104,7 @@ const T = {
     openCompareBtn: 'Compare with another agent',
     parseErrorNoAgent: 'Export missing "Agent Name".',
     parseErrorGeneric: "Couldn't read that text.",
+    countryRequiredError: 'Choose a country before continuing.',
     pasteBtn: 'Paste',
     pasteFallback: "Couldn't paste automatically. Tap and hold the field to paste.",
   },
@@ -215,6 +218,10 @@ export default function ProfileRadar({
   const [mode, setMode] = useState<'vs-me' | 'two' | 'solo'>(variant === 'ranking' ? 'solo' : 'vs-me')
   const [textA, setTextA] = useState('')
   const [textB, setTextB] = useState('')
+  // País por textarea — só usado em variant="ranking" (a única variante que
+  // grava no ranking; ver renderização condicional abaixo).
+  const [countryA, setCountryA] = useState<string | null>(null)
+  const [countryB, setCountryB] = useState<string | null>(null)
   const [cmp, setCmp] = useState<{a: Agent; b?: Agent} | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [sentNote, setSentNote] = useState(false)
@@ -255,9 +262,26 @@ export default function ProfileRadar({
   }
 
   const runCompare = () => {
+    // País obrigatório só em variant="ranking" (única variante que grava no
+    // ranking) — bloqueia antes do parse, sem chamar onCompare, reaproveitando
+    // o mesmo mecanismo de erro dos parses malformados.
+    if (variant === 'ranking') {
+      const missingA = countryA === null
+      const missingB = mode === 'two' && countryB === null
+      if (missingA || missingB) {
+        setError(t.countryRequiredError)
+        return
+      }
+    }
     try {
-      const a = mode === 'vs-me' ? me : toAgent(textA, t.parseErrorNoAgent)
-      const b = mode === 'solo' ? undefined : toAgent(mode === 'two' ? textB : textA, t.parseErrorNoAgent)
+      const a =
+        mode === 'vs-me' ? me : {...toAgent(textA, t.parseErrorNoAgent), countryCode: countryA ?? undefined}
+      const b =
+        mode === 'solo'
+          ? undefined
+          : mode === 'two'
+            ? {...toAgent(textB, t.parseErrorNoAgent), countryCode: countryB ?? undefined}
+            : {...toAgent(textA, t.parseErrorNoAgent), countryCode: countryA ?? undefined}
       setCmp(b ? {a, b} : {a})
       setError(null)
       setActive(null)
@@ -275,6 +299,8 @@ export default function ProfileRadar({
     setCmp(null)
     setTextA('')
     setTextB('')
+    setCountryA(null)
+    setCountryB(null)
     setError(null)
     setSentNote(false)
     setOpen(variant === 'ranking')
@@ -516,6 +542,14 @@ export default function ProfileRadar({
             onChange={(e) => setTextA(e.target.value)}
             placeholder="Time Span	Agent Name	Agent Faction	Date…	…"
           />
+          {variant === 'ranking' ? (
+            <CountryPicker
+              id="ing-radar-a-country"
+              value={countryA}
+              onChange={setCountryA}
+              invalid={error === t.countryRequiredError && countryA === null}
+            />
+          ) : null}
           {mode === 'two' ? (
             <>
               <div className="ing-radar__label-row">
@@ -539,6 +573,14 @@ export default function ProfileRadar({
                 onChange={(e) => setTextB(e.target.value)}
                 placeholder="Time Span	Agent Name	Agent Faction	Date…	…"
               />
+              {variant === 'ranking' ? (
+                <CountryPicker
+                  id="ing-radar-b-country"
+                  value={countryB}
+                  onChange={setCountryB}
+                  invalid={error === t.countryRequiredError && countryB === null}
+                />
+              ) : null}
             </>
           ) : null}
 
