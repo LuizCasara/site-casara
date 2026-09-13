@@ -1,6 +1,5 @@
 import {ImageResponse} from 'next/og'
-import {loadProfile} from '@/lib/ingress'
-import {computeAxisScores, computeOverallScore, overallTierLabel} from '@/lib/ingress-tier-score.mjs'
+import sql from '@/lib/db'
 
 export const runtime = 'nodejs'
 export const size = {width: 1200, height: 630}
@@ -11,11 +10,29 @@ const CYAN = '#26b6ff'
 const INK = '#eaf5ef'
 const DIM = '#93a7a0'
 
-export default function Image() {
-  const profile = loadProfile()
-  const axisScores = computeAxisScores(profile?.stats ?? {})
-  const overallScore = computeOverallScore(axisScores)
-  const tier = overallTierLabel(axisScores)
+/**
+ * Total de agentes medidos, pra dar vida ao card sem apontar pra ninguém em
+ * específico. Mesma tolerância a falha de `loadInitialRows` em `page.tsx`:
+ * a tabela pode ainda não existir, ou o banco pode estar fora — a imagem
+ * nunca pode quebrar por causa disso, só cai pro card sem o contador.
+ */
+async function countAgents(): Promise<number | null> {
+  try {
+    const [{count}] = await sql`SELECT COUNT(*)::int AS count FROM casara.ingress_rankings`
+    return count
+  } catch {
+    return null
+  }
+}
+
+/**
+ * OG do `/ingress/ranking` — sobre o ranking em si, não sobre o FencherLC:
+ * mesmo eyebrow/heading do `RankingHero`, sem nenhuma nota ou codinome
+ * individual em destaque (era o que a versão anterior fazia, direcionando o
+ * preview pra "quanto o FencherLC tirou" em vez de "onde você fica").
+ */
+export default async function Image() {
+  const totalAgents = await countAgents()
 
   return new ImageResponse(
     (
@@ -42,35 +59,36 @@ export default function Image() {
         />
         <div style={{display: 'flex', flexDirection: 'column'}}>
           <span style={{color: CYAN, fontSize: 22, letterSpacing: '0.24em', textTransform: 'uppercase'}}>
-            FencherLC · Agente Ingress
+            Ranking de agentes · Ingress
           </span>
-          <span style={{color: GREEN, fontSize: 116, fontWeight: 700, lineHeight: 1, marginTop: 12}}>
-            {Math.round(overallScore)} pts
+          <span style={{color: GREEN, fontSize: 108, fontWeight: 700, lineHeight: 1, marginTop: 12}}>
+            Onde você fica?
           </span>
-          <span style={{color: DIM, fontSize: 30, marginTop: 18}}>
-            Tier {tier} · Padrão de jogo em 5 eixos + ranking de agentes
+          <span style={{color: DIM, fontSize: 30, marginTop: 18, maxWidth: 980}}>
+            Cole o export de estatísticas do app, compare seu padrão de jogo e veja sua posição no ranking público.
           </span>
         </div>
 
-        <div style={{display: 'flex', gap: 22}}>
-          {axisScores.map((axis) => (
-            <div
-              key={axis.id}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                flex: 1,
-                border: '1px solid rgba(0,230,118,0.2)',
-                borderRadius: 16,
-                padding: '20px 18px',
-                background: 'rgba(0,230,118,0.05)',
-              }}
-            >
-              <span style={{color: INK, fontSize: 40, fontWeight: 700}}>{Math.round(axis.score * 20)}</span>
-              <span style={{color: DIM, fontSize: 18, marginTop: 6}}>{axis.label}</span>
-            </div>
-          ))}
-        </div>
+        {totalAgents !== null ? (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignSelf: 'flex-start',
+              border: '1px solid rgba(0,230,118,0.2)',
+              borderRadius: 16,
+              padding: '20px 28px',
+              background: 'rgba(0,230,118,0.05)',
+            }}
+          >
+            <span style={{color: INK, fontSize: 48, fontWeight: 700}}>{totalAgents}</span>
+            <span style={{color: DIM, fontSize: 20, marginTop: 6}}>
+              agente{totalAgents === 1 ? '' : 's'} medido{totalAgents === 1 ? '' : 's'}
+            </span>
+          </div>
+        ) : (
+          <span />
+        )}
 
         <span style={{color: '#5c706a', fontSize: 20, letterSpacing: '0.2em'}}>
           luizcasara.com/ingress/ranking
