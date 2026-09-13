@@ -1,5 +1,6 @@
 import {loadProfile} from '@/lib/ingress'
 import type {Profile} from '@/lib/ingress'
+import {loadFencherLcRadarOverride} from '@/lib/ingress-live-override'
 import {BADGES, computeAllBadges, computeBadge, nextMedal, TIERS, TIER_LABELS} from '@/lib/ingress-badges.mjs'
 import {loadCatalog, slugForStatKey} from '@/lib/ingress-catalog.mjs'
 import {annotateLaneGaps, collectAcquisitions, groupLanes} from '@/lib/ingress-timeline.mjs'
@@ -137,7 +138,13 @@ function buildNext(profile: Profile) {
   }
 }
 
-export default function IngressPage() {
+// Regenera no máximo a cada 5 min (mesma janela do debounce de
+// `casara.ingress_rankings`) em vez de consultar o banco a cada visita —
+// `/ingress` continua leve, só troca "estático pra sempre" por "estático por
+// até 5 min", que é o quanto uma submissão real leva pra valer de qualquer jeito.
+export const revalidate = 300
+
+export default async function IngressPage() {
   const profile = loadProfile()
 
   if (!profile) {
@@ -147,6 +154,12 @@ export default function IngressPage() {
       </main>
     )
   }
+
+  // Só o radar reflete a submissão mais recente do próprio FencherLC no
+  // ranking — o resto da página (medalhas, linha do tempo, portais) usa o
+  // `profile.stats` estático, que é dado que a tabela de ranking nem guarda.
+  const radarOverride = await loadFencherLcRadarOverride(profile.agent.codename)
+  const radarStats = radarOverride ? {...profile.stats, ...radarOverride} : profile.stats
 
   const acquisitions = collectAcquisitions(profile, loadCatalog())
   const medals = buildMedals(profile)
@@ -165,7 +178,7 @@ export default function IngressPage() {
       <AchievementTimeline acquisitions={acquisitions} variant="resumo" />
 
       <ProfileRadar
-        stats={profile.stats}
+        stats={radarStats}
         agentName={profile.agent.codename}
         capturedAt={profile.capturedAt}
       />
