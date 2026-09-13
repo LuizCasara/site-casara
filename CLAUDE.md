@@ -272,7 +272,13 @@ TELEGRAM_INGRESS_CHAT_ID=            # opcional; fallback = TELEGRAM_CHAT_ID
 EMAIL_USER=
 EMAIL_PASS=
 DATABASE_URL=
+UPSTASH_REDIS_REST_URL=              # rate limiting, ver lib/rate-limit.ts — sem isso, fail-open (desativado)
+UPSTASH_REDIS_REST_TOKEN=
 ```
+
+### Rate limiting
+
+`lib/rate-limit.ts` — `rateLimitOrNull(request, name)` checa um limite por IP (Upstash Redis, sliding window) antes do corpo de um handler; retorna uma `NextResponse` 429 pronta pra devolver, ou `null` pra seguir. **Fail-open por design**: sem `UPSTASH_REDIS_REST_URL`/`_TOKEN` configuradas, ou se a chamada ao Redis falhar, a rota segue sem limite — nunca trava por causa de uma dependência opcional. Aplicado nas rotas públicas onde um script sem limite algum causaria dano real: `POST /api/send-email` e `POST /api/telegram` (disparam e-mail/Telegram do dono do site), `POST /api/ingress-rankings` (escreve em `casara.ingress_rankings` e, indiretamente, dispara o alerta do Telegram a cada linha nova), `POST /api/quiz-sessions` / `POST /api/word-sessions` (criação de sessão), `POST /api/events` (mais generoso — é tráfego legítimo normal de analytics). **Deliberadamente não aplicado** nas rotas de ação de um participante dentro de uma sessão já criada (`join`, `answers`, `responses`) — várias pessoas no mesmo Wi-Fi/evento presencial compartilham IP, e o dano de abuso ali fica contido a uma sessão que o host já controla.
 
 ### Analytics
 

@@ -61,6 +61,10 @@ EMAIL_HOST=your_smtp_host
 EMAIL_PORT=your_smtp_port
 EMAIL_USER=your_email_username
 EMAIL_PASS=your_email_password
+
+# Rate limiting (Upstash Redis) — sem isso, rate limiting fica desativado
+UPSTASH_REDIS_REST_URL=your_upstash_redis_rest_url
+UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_rest_token
 ```
 
 ### Installation
