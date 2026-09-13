@@ -23,7 +23,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "leaflet": "^1.9.4",
-    "next": "^15.5.19",
+    "next": "^15.5.25",
     "nodemailer": "^8.0.10",
     "potrace": "^2.1.1",
     "qrcode": "^1.5.4",
