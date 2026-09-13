@@ -201,7 +201,10 @@ export default function ProfileRadar({
   const [active, setActive] = useState<number | null>(null)
   const [scale, setScale] = useState<Scale>(RADAR_DRAW_MAX)
   const [open, setOpen] = useState(variant === 'ranking')
-  const [mode, setMode] = useState<'vs-me' | 'two' | 'solo'>('vs-me')
+  // Em `ranking`, "só entrar" é o caminho principal (comparação é secundária)
+  // — por isso também é o modo padrão nessa variant; em `default` (uso
+  // dentro de /ingress) não existe modo "solo", então o padrão continua vs-me.
+  const [mode, setMode] = useState<'vs-me' | 'two' | 'solo'>(variant === 'ranking' ? 'solo' : 'vs-me')
   const [textA, setTextA] = useState('')
   const [textB, setTextB] = useState('')
   const [cmp, setCmp] = useState<{a: Agent; b?: Agent} | null>(null)
@@ -446,17 +449,19 @@ export default function ProfileRadar({
       {open ? (
         <div className="ing-radar__compare-box">
           <div className="ing-radar__cmp-mode" role="group" aria-label={t.whatToCompareAria}>
+            {variant === 'ranking' ? (
+              // "Só entrar" é o caminho principal em /ingress/ranking — vem
+              // primeiro, comparações (vs-me/two) são secundárias aqui.
+              <button type="button" aria-pressed={mode === 'solo'} onClick={() => setMode('solo')}>
+                {t.modeSolo}
+              </button>
+            ) : null}
             <button type="button" aria-pressed={mode === 'vs-me'} onClick={() => setMode('vs-me')}>
               {t.modeVsMe(agentName, variant === 'ranking')}
             </button>
             <button type="button" aria-pressed={mode === 'two'} onClick={() => setMode('two')}>
               {t.modeTwo(variant === 'ranking')}
             </button>
-            {variant === 'ranking' ? (
-              <button type="button" aria-pressed={mode === 'solo'} onClick={() => setMode('solo')}>
-                {t.modeSolo}
-              </button>
-            ) : null}
           </div>
 
           <label htmlFor="ing-radar-a" className="ing-radar__compare-label">
