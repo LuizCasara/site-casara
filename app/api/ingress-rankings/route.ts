@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import sql from "@/lib/db";
-import { loadProfile } from "@/lib/ingress";
-import { normalizeCodenameKey, isFencherLcCodename } from "@/lib/ingress-rankings.mjs";
+import { normalizeCodenameKey } from "@/lib/ingress-rankings.mjs";
 import { computeAxisScores, computeOverallScore, overallTierLabel, computeStatTiers } from "@/lib/ingress-tier-score.mjs";
 import { RADAR_STAT_KEYS } from "@/lib/ingress-compare-message.mjs";
 
@@ -119,31 +118,12 @@ export async function POST(request: NextRequest) {
   const stats = body.stats as Record<string, number>;
 
   try {
-    const profile = loadProfile();
-    const fencherlcCodename = profile?.agent?.codename ?? "";
-
-    if (isFencherLcCodename(codenameKey, fencherlcCodename)) {
-      // Somente-leitura: o codinome do FencherLC nunca é gravado por esta rota
-      // pública (o canônico vem só de data/ingress/fencherlc.json).
-      const [existing] = await sql`SELECT * FROM casara.ingress_rankings WHERE codename_key = ${codenameKey}`;
-      if (existing) {
-        return NextResponse.json(await buildResponseFromRow(existing, false));
-      }
-      // Linha ainda não seedada nesta tabela — computa a nota ao vivo a partir
-      // do perfil publicado, sem persistir nada.
-      const axisScores = computeAxisScores(profile?.stats ?? {});
-      const overallScore = computeOverallScore(axisScores);
-      const { rank, totalAgents } = await computeRank(overallScore, Number(profile?.stats?.lifetimeAp) || 0, new Date().toISOString());
-      return NextResponse.json({
-        written: false,
-        rank,
-        totalAgents,
-        overallScore,
-        axisScores: toAxisScoreMap(axisScores),
-        tier: overallTierLabel(axisScores),
-      });
-    }
-
+    // O codinome do FencherLC não tem mais guarda especial: se o body trouxe
+    // stats de verdade (inclusive um export fresco do próprio FencherLC), a
+    // rota escreve/atualiza normalmente, sujeito ao mesmo debounce de 5 min
+    // de qualquer outro agente. `data/ingress/fencherlc.json` continua sendo
+    // a baseline estática usada em outros lugares (radar padrão de /ingress,
+    // modo "vs-me"), mas esta tabela reflete o que foi de fato submetido.
     const axisScores = computeAxisScores(stats);
     const overallScore = computeOverallScore(axisScores);
     const axisScoreMap = toAxisScoreMap(axisScores);

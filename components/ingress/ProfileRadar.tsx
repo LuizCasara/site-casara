@@ -190,7 +190,7 @@ export default function ProfileRadar({
   agentName?: string
   capturedAt?: string
   variant?: 'default' | 'ranking'
-  onCompare?: (agents: {a: Agent; b?: Agent}) => void
+  onCompare?: (agents: {a: Agent; b?: Agent}, mode: 'vs-me' | 'two' | 'solo') => void
 }) {
   const {lang} = useLang()
   const t = T[lang]
@@ -251,7 +251,7 @@ export default function ProfileRadar({
       setError(null)
       setActive(null)
       if (variant === 'ranking') {
-        onCompare?.({a, b})
+        onCompare?.({a, b}, mode)
       } else if (b) {
         notifyTelegram(a, b, mode === 'vs-me', flagSent)
       }

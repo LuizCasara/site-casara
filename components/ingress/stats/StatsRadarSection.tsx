@@ -102,13 +102,15 @@ export default function StatsRadarSection({
   // pré-carrega o FencherLC aqui, mesmo motivo do radar nascer em branco).
   const [panelAgents, setPanelAgents] = useState<AgentScore[]>([])
 
-  const isFencherlcAgent = (agent: Agent) =>
-    normalizeCodenameKey(agent.codename) === normalizeCodenameKey(fencherlc.agentName)
-
-  const handleCompare = async ({a, b}: {a: Agent; b?: Agent}) => {
-    // vs-me manda só quem foi colado (b); dois-agentes manda os dois; solo
-    // manda só o único colado (a) — o FencherLC vindo de prop nunca é postado.
-    const toPost = [a, b].filter((agent): agent is Agent => !!agent && !isFencherlcAgent(agent))
+  const handleCompare = async ({a, b}: {a: Agent; b?: Agent}, mode: 'vs-me' | 'two' | 'solo') => {
+    // Em vs-me, `a` é sempre o `me` estático (vindo de prop, nunca postado);
+    // em two/solo, tudo que chega aqui foi colado de verdade pelo visitante —
+    // posta independente do codinome, inclusive quando alguém cola o export
+    // real do próprio FencherLC (é uma submissão dele, não a baseline
+    // estática). Antes isso era decidido comparando codinome com "FencherLC",
+    // o que também bloqueava o próprio FencherLC de se auto-atualizar.
+    const isStaticBaseline = (agent: Agent) => mode === 'vs-me' && agent === a
+    const toPost = [a, b].filter((agent): agent is Agent => !!agent && !isStaticBaseline(agent))
     const settled = await Promise.allSettled(toPost.map((agent) => postAgent(agent)))
     const responses = settled.map((s) => (s.status === 'fulfilled' ? s.value : null))
 
@@ -116,7 +118,7 @@ export default function StatsRadarSection({
     toPost.forEach((agent, i) => responseByCodename.set(normalizeCodenameKey(agent.codename), responses[i]))
 
     const agentScoreFor = (agent: Agent): AgentScore | null => {
-      if (isFencherlcAgent(agent)) {
+      if (isStaticBaseline(agent)) {
         return {label: fencherlc.agentName, overallScore: fencherlc.overallScore, axisScores: fencherlc.axisScores, tier: fencherlc.tier}
       }
       const response = responseByCodename.get(normalizeCodenameKey(agent.codename))
@@ -133,8 +135,8 @@ export default function StatsRadarSection({
 
     if (toPost.length > 0) {
       const written = responses.some((r) => r?.written)
-      if (!b) trackIngressRankingJoin(written)
-      else if (isFencherlcAgent(a)) trackIngressCompareVsMe(written)
+      if (mode === 'solo') trackIngressRankingJoin(written)
+      else if (mode === 'vs-me') trackIngressCompareVsMe(written)
       else trackIngressCompareTwoAgents(written)
     }
 
