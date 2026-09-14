@@ -424,3 +424,10 @@ export const trackIngressLanguageToggle = (para: string) =>
 // copiar-link (desktop) — mesmo par usado em `trackBookShared`.
 export const trackIngressRankingShared = (metodo: 'share' | 'clipboard') =>
   trackEvent('ingress_ranking_shared', { metodo });
+
+// Mesma dupla que `trackIngressRankingShared`, mas por linha da tabela — o
+// botão de compartilhar por agente (`?destaque=` na URL) em vez do botão
+// geral do ranking. Evento próprio porque a pergunta é diferente: quantos
+// compartilham a posição de um agente específico vs. o ranking como um todo.
+export const trackIngressAgentShared = (metodo: 'share' | 'clipboard') =>
+  trackEvent('ingress_agent_shared', { metodo });

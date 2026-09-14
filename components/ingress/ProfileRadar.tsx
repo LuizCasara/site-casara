@@ -22,7 +22,7 @@ const SCALES: {v: Scale; label: string}[] = [
   {v: 0.5, label: '½×'},
   {v: 1, label: 'Onyx'},
   {v: RADAR_DRAW_MAX, label: `${RADAR_DRAW_MAX}×`},
-  {v: 'fit', label: 'Forma'},
+  {v: 'fit', label: 'Estilo'},
 ]
 
 type Part = {
@@ -36,7 +36,16 @@ type Part = {
   noteEn: string | null
 }
 type Axis = {id: string; label: string; labelEn: string; onyxRatio: number; value: number; parts: Part[]}
-export type Agent = {codename: string; faction?: string; stats: Record<string, number>; capturedAt?: string; countryCode?: string}
+export type Agent = {
+  codename: string
+  faction?: string
+  stats: Record<string, number>
+  capturedAt?: string
+  countryCode?: string
+  recursions?: number
+  level?: number
+  monthsSubscribed?: number
+}
 
 /**
  * Textos bilíngues do componente (ISTATS-19 fix). A branch `pt` reproduz
@@ -49,8 +58,8 @@ const T = {
     panelLabel: 'Padrão de jogo',
     panelHint: 'cada eixo = média das stats vs. o Onyx da medalha',
     scaleAria: 'Escala do radar',
-    scaleShape: 'Forma',
-    fitNote: 'Cada ficha normalizada pelo próprio eixo mais forte — compara o formato do jogo, não o tamanho.',
+    scaleStyle: 'Estilo',
+    fitNote: 'Cada ficha normalizada pelo próprio eixo mais forte — compara o estilo de jogo, não o tamanho.',
     ofOnyxLevel: 'do nível Onyx',
     breakdownFootMulti: (n: number) => `média das ${n} razões`,
     breakdownFootSingle: 'razão contra o limiar de Onyx',
@@ -81,8 +90,8 @@ const T = {
     panelLabel: 'Play pattern',
     panelHint: "each axis = average of stats vs. the badge's Onyx threshold",
     scaleAria: 'Radar scale',
-    scaleShape: 'Shape',
-    fitNote: 'Each card normalized by its own strongest axis — compares the shape of play, not the size.',
+    scaleStyle: 'Style',
+    fitNote: 'Each card normalized by its own strongest axis — compares play style, not size.',
     ofOnyxLevel: 'of Onyx level',
     breakdownFootMulti: (n: number) => `average of ${n} ratios`,
     breakdownFootSingle: 'ratio against the Onyx threshold',
@@ -125,6 +134,9 @@ function toAgent(text: string, noAgentMsg: string): Agent {
     faction: p.agent.faction ?? undefined,
     stats: p.stats,
     capturedAt: p.capturedAt ?? undefined,
+    recursions: typeof p.agent.recursions === 'number' ? p.agent.recursions : undefined,
+    level: typeof p.agent.level === 'number' ? p.agent.level : undefined,
+    monthsSubscribed: typeof p.agent.monthsSubscribed === 'number' ? p.agent.monthsSubscribed : undefined,
   }
 }
 
@@ -185,7 +197,7 @@ function ringStops(drawMax: number) {
 /**
  * Radar do padrão de jogo. Cada eixo é a média das razões das suas estatísticas
  * contra o limiar de Onyx da medalha correspondente. Escala do desenho ajustável
- * (½× / Onyx / 2× / Forma). "Comparar" sobrepõe outro agente: contra o dono do
+ * (½× / Onyx / 2× / Estilo). "Comparar" sobrepõe outro agente: contra o dono do
  * perfil, ou dois exports colados um contra o outro. Leaf client component.
  * Bilíngue via `useLang()` (ISTATS-19 fix) nas duas variants (`default` e
  * `ranking`) - a branch `pt` reproduz o texto anterior sem regressão.
@@ -417,7 +429,7 @@ export default function ProfileRadar({
         <div className="ing-radar__scale" role="group" aria-label={t.scaleAria}>
           {SCALES.map((s) => (
             <button key={String(s.v)} type="button" aria-pressed={scale === s.v} onClick={() => setScale(s.v)}>
-              {s.v === 'fit' ? t.scaleShape : s.label}
+              {s.v === 'fit' ? t.scaleStyle : s.label}
             </button>
           ))}
         </div>

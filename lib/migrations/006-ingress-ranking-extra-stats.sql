@@ -1,0 +1,42 @@
+-- ════════════════════════════════════════════════════════════════════════════
+-- 006 — Guarda o resto do export do Ingress (extra_stats)
+-- ════════════════════════════════════════════════════════════════════════════
+--
+-- CONTEXTO
+-- O export do app tem 62 colunas; só ~15 delas (as do radar, `lifetime_ap`,
+-- identidade básica, e agora `recursions`) viram coluna/eixo/chip em algum
+-- lugar do ranking. O resto (Current AP, XM, drones, Machina, scanner/OPR/
+-- Scout, research days, level, meses de assinatura, etc.) sempre foi
+-- descartado no POST — se um dia quisermos um eixo novo ou um painel extra,
+-- teríamos que esperar todo mundo resubmeter de novo.
+--
+-- O QUE ESTA MIGRAÇÃO FAZ
+-- Adiciona `extra_stats JSONB` a `casara.ingress_rankings` — um balde único
+-- pra tudo que o export manda e ainda não tem lugar dedicado. Sem CHECK de
+-- formato (é só um mapa chave->número vindo do cliente, nunca lido de volta
+-- pela API ainda) e nullable, pelo mesmo motivo de `recursions`: linhas
+-- antigas nunca mandaram esse campo.
+--
+-- DELIBERADO: a rota GET (`app/api/ingress-rankings/route.ts`) NÃO foi
+-- alterada pra devolver esta coluna — grava desde já, mas não expõe nada até
+-- existir uma feature de verdade que precise ler daqui. Ver a lista completa
+-- de chaves possíveis em `lib/ingress-stats.mjs` (`STAT_COLUMNS`) — qualquer
+-- chave de lá que não seja `lifetimeAp` nem esteja em `RADAR_STAT_KEYS`
+-- (`lib/ingress-compare-message.mjs`) pode aparecer aqui, mais `level` e
+-- `monthsSubscribed`.
+--
+-- O QUE ELA NÃO TOCA
+-- Nenhuma linha existente é reescrita; nenhum outro schema/tabela é afetado.
+--
+-- COMO RODAR
+-- Cole no Neon SQL Editor. `ADD COLUMN IF NOT EXISTS` torna rodar duas vezes
+-- seguro (a segunda execução é um no-op).
+
+ALTER TABLE casara.ingress_rankings
+  ADD COLUMN IF NOT EXISTS extra_stats JSONB;
+
+-- ─── Verificação pós-migração (rodar solto) ─────────────────────────────────
+--
+-- SELECT column_name, data_type, is_nullable
+-- FROM information_schema.columns
+-- WHERE table_schema = 'casara' AND table_name = 'ingress_rankings' AND column_name = 'extra_stats';

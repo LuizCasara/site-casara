@@ -43,3 +43,6 @@ next-env.d.ts
 # superpowers brainstorming companion
 .superpowers/
 scratchpad/
+
+# artefatos de sessão do Playwright MCP (screenshots/logs de verificação manual)
+.playwright-mcp/

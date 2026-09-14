@@ -178,6 +178,13 @@ CREATE TABLE IF NOT EXISTS casara.ingress_rankings (
   -- ISO 3166-1 alpha-2, nullable (obrigatório só em POSTs novos, validado na
   -- API — ver lib/migrations/003-ingress-ranking-country.sql).
   country_code   CHAR(2) CHECK (country_code IS NULL OR country_code ~ '^[A-Z]{2}$'),
+  -- Nullable, sem exigir em POSTs novos (informativo, não entra na nota) —
+  -- ver lib/migrations/005-ingress-ranking-recursions.sql.
+  recursions     INTEGER CHECK (recursions IS NULL OR recursions >= 0),
+  -- Balde pra tudo do export sem coluna/eixo dedicado ainda (level, meses de
+  -- assinatura, e as ~40 stats fora do radar) — gravado, mas o GET não
+  -- devolve nada disto por ora. Ver lib/migrations/006-ingress-ranking-extra-stats.sql.
+  extra_stats    JSONB,
   -- created_at = "medido desde": a primeira vez que este agente foi medido
   -- NESTE ranking, não a data de criação da conta no Ingress (nenhuma fonte
   -- de dado disponível contém essa data real).

@@ -1,5 +1,6 @@
 'use client'
 
+import {Fragment} from 'react'
 import Panel from '../Panel'
 import {useLang} from '@/context/LanguageContext'
 import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
@@ -7,9 +8,65 @@ import {artPath} from '@/lib/ingress-art.mjs'
 
 type AxisId = 'construcao' | 'destruicao' | 'exploracao' | 'hacking' | 'linksCampos'
 
+/**
+ * Posições de tier fictícias (uma por stat do radar) só pra ilustrar a fórmula
+ * com números em vez de letras — não vem de nenhum agente real. `exploracao`
+ * usa de propósito uma parte > 5 (`uniquePortalsVisited: 6.0`) pra mostrar o
+ * caso "estourou Onyx" descrito no parágrafo acima, na mesma seção.
+ */
+const EXAMPLE_PART_POSITIONS: Record<string, number> = {
+  resonatorsDeployed: 4.6,
+  modsDeployed: 3.8,
+  resonatorsDestroyed: 3.4,
+  portalsNeutralized: 2.6,
+  uniquePortalsVisited: 6.0,
+  distanceWalkedKm: 5.1,
+  uniqueMissionsCompleted: 5.1,
+  hacks: 3.2,
+  glyphHackPoints: 2.6,
+  linksCreated: 4.8,
+  controlFieldsCreated: 4.5,
+  mindUnitsCaptured: 4.2,
+}
+
+/** pt-BR usa vírgula decimal; en mantém o ponto. */
+const fmt1 = (n: number, lang: 'pt' | 'en') => (lang === 'pt' ? n.toFixed(1).replace('.', ',') : n.toFixed(1))
+
+/** Monta o exemplo (eixo a eixo + resultado final) a partir de `EXAMPLE_PART_POSITIONS`, já com os textos de tooltip prontos no idioma corrente. */
+function buildExample(lang: 'pt' | 'en') {
+  const axes = RADAR_AXES.map((axis) => {
+    const parts = axis.parts.map((p) => ({
+      label: lang === 'en' ? p.labelEn : p.label,
+      position: EXAMPLE_PART_POSITIONS[p.key],
+    }))
+    const score = parts.reduce((sum, p) => sum + p.position, 0) / parts.length
+    const breakdown = parts.map((p) => `${p.label}: ${fmt1(p.position, lang)}`).join(' + ')
+    const tooltip = `${breakdown} ${lang === 'en' ? '→ average' : '→ média'} ${fmt1(score, lang)}`
+    return {
+      id: axis.id,
+      label: lang === 'en' ? axis.labelEn : axis.label,
+      score,
+      tooltip,
+    }
+  })
+  const avg = axes.reduce((sum, a) => sum + a.score, 0) / axes.length
+  const result = Math.round(avg * 20)
+  const resultTooltip = `(${axes.map((a) => fmt1(a.score, lang)).join(' + ')}) ÷ 5 × 20 = ${result}`
+  return {axes, result, resultTooltip}
+}
+
 const translations = {
   pt: {
     panelLabel: 'O que cada eixo mede',
+    formulaTitle: 'Como a nota geral é calculada',
+    formulaBody: [
+      'Cada eixo soma 2 ou 3 stats (os mesmos que dão badge, mais "portais neutralizados", que usa 1/8 dos limiares do Purifier por não ter badge própria). Para cada stat, o valor bruto vira uma "posição de tier" contínua: 0 é o piso, 1 é o limiar de Bronze, 2 de Silver, 3 de Gold, 4 de Platinum e 5 de Onyx, interpolando linearmente entre um limiar e o próximo — por isso a posição quase nunca é um número inteiro. Passar de Onyx não trava em 5: cada vez que o valor dobra o limiar de Onyx, a posição sobe mais 1 (Onyx×2 = posição 6, ×3 = posição 7, e assim por diante).',
+      'A nota do eixo é a média simples das posições dos seus stats — por isso também pode passar de 5 se o agente estourar Onyx em alguma parte.',
+      'A nota geral é a média das 5 notas de eixo, multiplicada por 20. Com todos os eixos exatamente em Onyx (posição 5), a média dá 5 e a nota fecha em 100; qualquer stat além do Onyx empurra o número acima de 100.',
+    ],
+    exampleTitle: 'Um exemplo, com números',
+    exampleIntro: 'Um agente fictício, só pra ver a fórmula com números em vez de letras:',
+    exampleHint: 'Passe o mouse nos números pra ver de onde cada um veio.',
     axes: {
       construcao: {
         title: 'Construção',
@@ -35,6 +92,15 @@ const translations = {
   },
   en: {
     panelLabel: 'What each axis measures',
+    formulaTitle: 'How the overall score is calculated',
+    formulaBody: [
+      "Each axis sums 2 or 3 stats (the same ones behind each badge, plus \"portals neutralized\", which uses 1/8 of the Purifier thresholds since it has no badge of its own). For each stat, the raw value becomes a continuous \"tier position\": 0 is the floor, 1 is the Bronze threshold, 2 is Silver, 3 is Gold, 4 is Platinum, and 5 is Onyx, interpolating linearly between one threshold and the next — which is why the position is almost never a whole number. Going past Onyx doesn't cap at 5: every time the value doubles the Onyx threshold, the position climbs another point (Onyx×2 = position 6, ×3 = position 7, and so on).",
+      'The axis score is the plain average of its stats\' positions — which is also why it can exceed 5 if the agent blows past Onyx on any part of it.',
+      "The overall score is the average of the 5 axis scores, multiplied by 20. With every axis sitting exactly at Onyx (position 5), the average is 5 and the score lands at 100; any stat beyond Onyx pushes the number past 100.",
+    ],
+    exampleTitle: 'A worked example, in numbers',
+    exampleIntro: "A fictional agent, just to see the formula with numbers instead of letters:",
+    exampleHint: 'Hover the numbers to see where each one comes from.',
     axes: {
       construcao: {
         title: 'Construction',
@@ -71,6 +137,7 @@ const translations = {
 export default function AxisExplanations() {
   const {lang} = useLang()
   const t = translations[lang]
+  const example = buildExample(lang)
 
   return (
     <Panel label={t.panelLabel}>
@@ -99,6 +166,38 @@ export default function AxisExplanations() {
           )
         })}
       </dl>
+      <div className="ing-axis-explanations__formula">
+        <p className="ing-axis-explanations__formula-title">{t.formulaTitle}</p>
+        {t.formulaBody.map((paragraph, i) => (
+          <p key={i} className="ing-axis-explanations__formula-text">
+            {paragraph}
+          </p>
+        ))}
+        <p className="ing-axis-explanations__example-title">{t.exampleTitle}</p>
+        <p className="ing-axis-explanations__example-intro">{t.exampleIntro}</p>
+        <div className="ing-axis-explanations__example-row">
+          {example.axes.map((axis, i) => (
+            <Fragment key={axis.id}>
+              {i > 0 && (
+                <span className="ing-axis-explanations__example-op" aria-hidden="true">
+                  +
+                </span>
+              )}
+              <span className="ing-axis-explanations__example-axis" title={axis.tooltip}>
+                <span className="ing-axis-explanations__example-axis-label">{axis.label}</span>
+                <span className="ing-axis-explanations__example-axis-value">{fmt1(axis.score, lang)}</span>
+              </span>
+            </Fragment>
+          ))}
+          <span className="ing-axis-explanations__example-op" aria-hidden="true">
+            ÷ 5 × 20 =
+          </span>
+          <span className="ing-axis-explanations__example-result" title={example.resultTooltip}>
+            {example.result}
+          </span>
+        </div>
+        <p className="ing-axis-explanations__example-hint">{t.exampleHint}</p>
+      </div>
     </Panel>
   )
 }

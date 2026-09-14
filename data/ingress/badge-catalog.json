@@ -891,5 +891,14 @@
     "ipArt": [
       "anomaly_darsana_prime_ZKklmqbGqA.png"
     ]
+  },
+  "simulacrum": {
+    "name": "Simulacrum",
+    "group": "event",
+    "requirement": "Reach Level 16 and Recurse once.",
+    "ipId": "tfzk04jcn2nay3l",
+    "ipArt": [
+      "unique_badge_simulacrum_HLUX9WITcI.png"
+    ]
   }
 }

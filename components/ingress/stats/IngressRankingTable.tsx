@@ -1,7 +1,8 @@
 'use client'
 
-import {useEffect, useMemo, useRef, useState} from 'react'
-import {FaEye, FaEyeSlash} from 'react-icons/fa'
+import {Fragment, useEffect, useMemo, useRef, useState} from 'react'
+import {FaShareAlt} from 'react-icons/fa'
+import {toast} from 'sonner'
 import Panel from '../Panel'
 import AgentHistoryChart from './AgentHistoryChart'
 import {fmtStat, foldText} from '@/lib/ingress-format.mjs'
@@ -10,6 +11,7 @@ import {artPath} from '@/lib/ingress-art.mjs'
 import {TIER_COLOR} from '@/lib/ingress-tiers.mjs'
 import {COUNTRIES, flagSrc} from '@/lib/ingress-countries.mjs'
 import {useLang, type Lang} from '@/context/LanguageContext'
+import {trackIngressAgentShared} from '@/utils/analytics'
 
 export type StatTier = {tier: string; badgeSlug: string | null}
 
@@ -23,6 +25,7 @@ export type RankingRow = {
   stat_values: Record<string, number>
   stat_tiers?: Record<string, StatTier>
   country_code: string | null
+  recursions: number | null
   created_at: string
   updated_at: string
 }
@@ -70,6 +73,9 @@ function axisLabel(id: AxisId, lang: Lang): string {
   if (!axis) return id
   return lang === 'en' ? axis.labelEn : axis.label
 }
+
+// rank, score, faction, country, codename, dates, ap, details (8) + os 5 eixos.
+const TOTAL_COLUMNS = 8 + AXIS_COLUMNS.length
 
 type SortableKey = 'score' | 'ap' | 'country' | AxisId
 type SortDir = 'asc' | 'desc'
@@ -135,41 +141,49 @@ function chipLabel(part: {key: string; label: string; labelEn: string}, lang: La
   return lang === 'en' ? part.labelEn : part.label
 }
 
-const SHAPE_SIZE = 150
-const SHAPE_C = SHAPE_SIZE / 2
-const SHAPE_R = 58
-function shapePoint(i: number, count: number, radius: number): [number, number] {
+const PLAYSTYLE_SIZE = 150
+const PLAYSTYLE_C = PLAYSTYLE_SIZE / 2
+const PLAYSTYLE_R = 58
+// Folga do viewBox pra caber o texto de cada ponta (pedido do Luiz: nome do
+// eixo, não só o desenho) sem cortar nas bordas — mesma lógica do `PAD_X` do
+// `ProfileRadar` grande, só escalada pro tamanho mini.
+const PLAYSTYLE_PAD_X = 42
+const PLAYSTYLE_PAD_TOP = 12
+const PLAYSTYLE_PAD_BOTTOM = 14
+function playStylePoint(i: number, count: number, radius: number): [number, number] {
   const angle = -Math.PI / 2 + (i * 2 * Math.PI) / count
-  return [SHAPE_C + radius * Math.cos(angle), SHAPE_C + radius * Math.sin(angle)]
+  return [PLAYSTYLE_C + radius * Math.cos(angle), PLAYSTYLE_C + radius * Math.sin(angle)]
 }
 
 /**
- * Radar estático "Forma" (normalizado pelo próprio eixo mais forte do
- * agente, igual à escala "Forma" do `ProfileRadar` grande) — sem escala/
+ * Radar estático "Estilo de jogo" (normalizado pelo próprio eixo mais forte
+ * do agente, igual à escala "Estilo" do `ProfileRadar` grande) — sem escala/
  * comparação/hover, é só um preview visual do formato de jogo daquele
  * agente dentro do painel expandido. Reaproveita `computeRadarAxes` (puro,
  * client-safe) e as mesmas classes CSS do radar grande.
  */
-function MiniShapeRadar({
+function MiniPlayStyleRadar({
   stats,
   ariaLabel,
   faction,
+  lang,
 }: {
   stats: Record<string, number>
   ariaLabel: string
   faction: RankingRow['faction']
+  lang: Lang
 }) {
-  const axes = computeRadarAxes(stats) as {id: string; onyxRatio: number}[]
+  const axes = computeRadarAxes(stats) as {id: string; label: string; labelEn: string; onyxRatio: number}[]
   const n = axes.length
   const maxRatio = Math.max(...axes.map((a) => a.onyxRatio), 0.01)
-  const radiusIn = (ratio: number) => SHAPE_R * Math.max(Math.min(ratio / maxRatio, 1), 0.02)
-  const shape = axes.map((a, i) => shapePoint(i, n, radiusIn(a.onyxRatio)).join(',')).join(' ')
+  const radiusIn = (ratio: number) => PLAYSTYLE_R * Math.max(Math.min(ratio / maxRatio, 1), 0.02)
+  const shape = axes.map((a, i) => playStylePoint(i, n, radiusIn(a.onyxRatio)).join(',')).join(' ')
 
   return (
     <svg
-      viewBox={`0 0 ${SHAPE_SIZE} ${SHAPE_SIZE}`}
-      width={SHAPE_SIZE}
-      height={SHAPE_SIZE}
+      viewBox={`${-PLAYSTYLE_PAD_X} ${-PLAYSTYLE_PAD_TOP} ${PLAYSTYLE_SIZE + PLAYSTYLE_PAD_X * 2} ${PLAYSTYLE_SIZE + PLAYSTYLE_PAD_TOP + PLAYSTYLE_PAD_BOTTOM}`}
+      width={PLAYSTYLE_SIZE + PLAYSTYLE_PAD_X * 2}
+      height={PLAYSTYLE_SIZE + PLAYSTYLE_PAD_TOP + PLAYSTYLE_PAD_BOTTOM}
       role="img"
       aria-label={ariaLabel}
       className={faction === 'resistance' ? 'ing-mini-radar--resistance' : undefined}
@@ -177,15 +191,31 @@ function MiniShapeRadar({
       {[0.34, 0.67, 1].map((f) => (
         <polygon
           key={f}
-          points={axes.map((_, i) => shapePoint(i, n, SHAPE_R * f).join(',')).join(' ')}
+          points={axes.map((_, i) => playStylePoint(i, n, PLAYSTYLE_R * f).join(',')).join(' ')}
           className={`ing-radar__ring${f === 1 ? ' ing-radar__ring--edge' : ''}`}
         />
       ))}
       {axes.map((a, i) => {
-        const [x, y] = shapePoint(i, n, SHAPE_R)
-        return <line key={a.id} x1={SHAPE_C} y1={SHAPE_C} x2={x} y2={y} className="ing-radar__spoke" />
+        const [x, y] = playStylePoint(i, n, PLAYSTYLE_R)
+        return <line key={a.id} x1={PLAYSTYLE_C} y1={PLAYSTYLE_C} x2={x} y2={y} className="ing-radar__spoke" />
       })}
       <polygon points={shape} className="ing-radar__shape" />
+      {axes.map((a, i) => {
+        const [lx, ly] = playStylePoint(i, n, PLAYSTYLE_R + 16)
+        const anchor = lx < PLAYSTYLE_C - 8 ? 'end' : lx > PLAYSTYLE_C + 8 ? 'start' : 'middle'
+        return (
+          <text
+            key={`label-${a.id}`}
+            x={lx}
+            y={ly}
+            textAnchor={anchor}
+            dominantBaseline="middle"
+            className="ing-mini-radar__label"
+          >
+            {lang === 'en' ? a.labelEn : a.label}
+          </text>
+        )
+      })}
     </svg>
   )
 }
@@ -197,6 +227,15 @@ const POLL_MS = 20_000
 const fmtScore = (n: number) => Math.round(n).toString()
 const fmtDate = (iso: string, lang: Lang) =>
   new Date(iso).toLocaleDateString(lang === 'en' ? 'en-US' : 'pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'})
+
+/** "há N dias"/"há N meses" (pedido do Luiz pro lado direito do "Estilo de jogo") — texto solto, não `Intl.RelativeTimeFormat`, pra controlar a troca dia->mês em 30 igual ao desenho. */
+function relativeAge(iso: string, lang: Lang): string {
+  const days = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000))
+  if (days < 1) return lang === 'en' ? 'today' : 'hoje'
+  if (days < 30) return lang === 'en' ? `${days}d ago` : `há ${days} dia${days > 1 ? 's' : ''}`
+  const months = Math.round(days / 30)
+  return lang === 'en' ? `${months}mo ago` : `há ${months} ${months > 1 ? 'meses' : 'mês'}`
+}
 
 /** Textos bilíngues (ISTATS-19 fix) — a branch `pt` reproduz o texto que já existia. */
 const T = {
@@ -218,11 +257,16 @@ const T = {
     datesTooltip: (updated: string, measured: string) => `Atualizado em ${updated} · Medido desde ${measured}`,
     colAp: 'AP total',
     colScore: 'Nota geral',
-    colDetails: 'Detalhes',
-    hideDetails: (name: string) => `Esconder detalhes de ${name}`,
-    showDetails: (name: string) => `Ver detalhes de ${name}`,
-    shapeLabel: 'Forma',
-    shapeAria: (name: string) => `Formato de jogo de ${name} (radar normalizado pelo eixo mais forte)`,
+    colShare: 'Compartilhar',
+    shareAgentAria: (name: string) => `Compartilhar o link de ${name}`,
+    shareAgentTitle: (name: string) => `${name} — Ranking de Agentes Ingress`,
+    shareAgentText: (name: string) => `Veja a posição de ${name} no ranking de agentes do Ingress!`,
+    linkCopied: 'Link copiado!',
+    playStyleLabel: 'Estilo de jogo',
+    playStyleAria: (name: string) => `Estilo de jogo de ${name} (radar normalizado pelo eixo mais forte)`,
+    recursionsAria: (n: number) => `${n} ${n === 1 ? 'recursão' : 'recursões'}`,
+    recursionsUnknown: 'Exporte novamente seus dados para atualizarmos este campo — não salvávamos ele antes.',
+    lastUpdateLabel: 'Última atualização',
     logoCredit: 'Logos de facção: cr0ybot/ingress-logos (CC BY-NC-SA 3.0)',
   },
   en: {
@@ -243,11 +287,16 @@ const T = {
     datesTooltip: (updated: string, measured: string) => `Updated on ${updated} · Measured since ${measured}`,
     colAp: 'Total AP',
     colScore: 'Overall score',
-    colDetails: 'Details',
-    hideDetails: (name: string) => `Hide details for ${name}`,
-    showDetails: (name: string) => `Show details for ${name}`,
-    shapeLabel: 'Shape',
-    shapeAria: (name: string) => `${name}'s play shape (radar normalized by its strongest axis)`,
+    colShare: 'Share',
+    shareAgentAria: (name: string) => `Share ${name}'s link`,
+    shareAgentTitle: (name: string) => `${name} — Ingress Agent Ranking`,
+    shareAgentText: (name: string) => `Check out ${name}'s spot in the Ingress agent ranking!`,
+    linkCopied: 'Link copied!',
+    playStyleLabel: 'Play style',
+    playStyleAria: (name: string) => `${name}'s play style (radar normalized by its strongest axis)`,
+    recursionsAria: (n: number) => `${n} recursion${n === 1 ? '' : 's'}`,
+    recursionsUnknown: "Re-export your stats so we can fill this in — we weren't saving it before.",
+    lastUpdateLabel: 'Last updated',
     logoCredit: 'Faction logos: cr0ybot/ingress-logos (CC BY-NC-SA 3.0)',
   },
 } as const
@@ -291,6 +340,35 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
   const [sortKey, setSortKey] = useState<SortableKey>('score')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const mounted = useRef(true)
+  // Realça/rola até a linha de `?destaque=<codename_key>` — o link que o
+  // alerta de novo registro no Telegram manda (ver `notifyTelegramNewEntry`
+  // em `api/ingress-rankings/route.ts`). Lido direto de `window.location`
+  // num efeito (não `useSearchParams`) pra não exigir um `<Suspense>` só por
+  // causa de um parâmetro opcional que só importa depois da hidratação.
+  const [highlightKey, setHighlightKey] = useState<string | null>(null)
+  const rowRefs = useRef(new Map<string, HTMLTableRowElement>())
+  // Garante que o auto-abrir + rolar só aconteça uma vez — sem isso, cada
+  // poll de 20s (`rows` ganha uma referência nova) repetiria o scroll pra
+  // sempre, inclusive depois do agente já ter fechado o detalhe na mão.
+  const highlightHandledRef = useRef(false)
+
+  useEffect(() => {
+    // `window.location` não existe no SSR — a regra normalmente sugeriria
+    // "calcule isso no render", mas aqui não dá: o servidor não tem a query
+    // string do browser, a única leitura possível é pós-hidratação.
+    const destaque = new URLSearchParams(window.location.search).get('destaque')
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (destaque) setHighlightKey(destaque)
+  }, [])
+
+  useEffect(() => {
+    if (!highlightKey || highlightHandledRef.current) return
+    const el = rowRefs.current.get(highlightKey)
+    if (!el) return
+    highlightHandledRef.current = true
+    setExpanded(highlightKey)
+    el.scrollIntoView({behavior: 'smooth', block: 'center'})
+  }, [highlightKey, rows])
 
   const handleSort = (key: SortableKey) => {
     if (key === sortKey) {
@@ -343,10 +421,39 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
     if (mounted.current) setRefreshing(false)
   }
 
-  // Baseado em `visibleRows`, não `rows`: se um filtro esconder a linha
-  // expandida, o detalhe fecha sozinho em vez de mostrar dado de uma linha
-  // que não está mais na tabela visível.
-  const expandedRow = visibleRows.find((r) => r.codename_key === expanded) ?? null
+  /**
+   * Link direto pra um agente — `?destaque=` faz esta mesma tabela rolar até
+   * a linha e abrir o detalhe sozinha (ver os dois efeitos de `highlightKey`
+   * acima). Mesmo padrão de `IngressShareButton` (Web Share API no celular,
+   * clipboard no desktop) — só que por linha, não pro ranking inteiro.
+   */
+  const shareAgent = async (row: RankingRow) => {
+    const url = `${window.location.origin}/ingress/ranking?destaque=${encodeURIComponent(row.codename_key)}`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({title: t.shareAgentTitle(row.codename), text: t.shareAgentText(row.codename), url})
+        trackIngressAgentShared('share')
+        return
+      } catch (err) {
+        // Fechar a folha sem escolher nada rejeita com AbortError — é
+        // desistência, não falha: não cai pro clipboard nesse caso.
+        if ((err as Error)?.name === 'AbortError') return
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success(t.linkCopied)
+      trackIngressAgentShared('clipboard')
+    } catch {
+      // Clipboard bloqueado — sem toast, a URL da barra de endereços já é o link.
+    }
+  }
+
+  // Se um filtro esconder a linha expandida, ela some de `visibleRows` — o
+  // `.find` dentro do `.map` abaixo simplesmente não a encontra mais, então
+  // a sub-linha de detalhe fecha sozinha sem precisar de um efeito dedicado.
 
   if (rows.length === 0) {
     return (
@@ -402,6 +509,29 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
       ) : (
       <div className="ing-ranking-table__wrap">
         <table className="ing-ranking-table">
+          {/*
+            table-layout: fixed (ver theme.css) + estas larguras é o que
+            garante que a sub-linha de detalhe NUNCA alarga a tabela: com
+            colunas de largura fixa, o conteúdo de qualquer célula (mesmo um
+            colSpan cobrindo todas) só pode quebrar linha ou ser cortado —
+            nunca estufar o <table>. `codename` é a única sem largura, então
+            é ela quem recebe o espaço restante.
+          */}
+          <colgroup>
+            <col style={{width: '2.6rem'}} />
+            <col style={{width: '5.4rem'}} />
+            <col style={{width: '2.6rem'}} />
+            <col style={{width: '3rem'}} />
+            <col />
+            <col style={{width: '6rem'}} />
+            <col style={{width: '6.4rem'}} />
+            <col style={{width: '2.3rem'}} />
+            <col style={{width: '2.3rem'}} />
+            <col style={{width: '2.3rem'}} />
+            <col style={{width: '2.3rem'}} />
+            <col style={{width: '2.5rem'}} />
+            <col style={{width: '3.2rem'}} />
+          </colgroup>
           <thead>
             <tr>
               <th scope="col" data-col="rank">{t.colRank}</th>
@@ -435,25 +565,52 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                   </button>
                 </th>
               ))}
-              <th scope="col" data-col="details" aria-label={t.colDetails} />
+              <th scope="col" data-col="details" aria-label={t.colShare} />
             </tr>
           </thead>
           <tbody>
             {visibleRows.map((row) => {
               const isOpen = expanded === row.codename_key
+              const rank = rankByKey.get(row.codename_key)
+              const toggle = () => setExpanded(isOpen ? null : row.codename_key)
+              const rowClass =
+                [
+                  isOpen ? 'is-expanded' : null,
+                  rank === 1 ? 'is-top1' : rank === 2 ? 'is-top2' : rank === 3 ? 'is-top3' : null,
+                  row.codename_key === highlightKey ? 'is-highlighted' : null,
+                ]
+                  .filter(Boolean)
+                  .join(' ') || undefined
               return (
-                  <tr key={row.codename_key} className={isOpen ? 'is-expanded' : undefined}>
-                    <td data-col="rank">{rankByKey.get(row.codename_key)}</td>
-                    <td data-col="score">{fmtScore(row.overall_score)}</td>
+                <Fragment key={row.codename_key}>
+                  <tr
+                    className={rowClass}
+                    onClick={toggle}
+                    ref={(el) => {
+                      if (el) rowRefs.current.set(row.codename_key, el)
+                      else rowRefs.current.delete(row.codename_key)
+                    }}
+                  >
+                    <td data-col="rank">{rank}</td>
+                    <td
+                      data-col="score"
+                      className={row.faction === 'resistance' ? 'ing-ranking-table__score--resistance' : undefined}
+                    >
+                      {fmtScore(row.overall_score)}
+                    </td>
                     <td data-col="faction">
-                      <img
-                        src={FACTION_ICON[row.faction]}
-                        alt={FACTION_LABEL[row.faction]}
-                        title={FACTION_LABEL[row.faction]}
-                        width={18}
-                        height={18}
-                        className="ing-ranking-table__faction-icon"
-                      />
+                      <span
+                        className={`ing-ranking-table__faction-badge${row.faction === 'resistance' ? ' is-resistance' : ''}`}
+                      >
+                        <img
+                          src={FACTION_ICON[row.faction]}
+                          alt={FACTION_LABEL[row.faction]}
+                          title={FACTION_LABEL[row.faction]}
+                          width={20}
+                          height={20}
+                          className="ing-ranking-table__faction-icon"
+                        />
+                      </span>
                     </td>
                     <td data-col="country">
                       {row.country_code ? (
@@ -484,71 +641,110 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                     <td data-col="details">
                       <button
                         type="button"
-                        className="ing-ranking-table__eye"
-                        aria-expanded={isOpen}
-                        aria-label={isOpen ? t.hideDetails(row.codename) : t.showDetails(row.codename)}
-                        onClick={() => setExpanded(isOpen ? null : row.codename_key)}
+                        className="ing-ranking-table__share"
+                        aria-label={t.shareAgentAria(row.codename)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          void shareAgent(row)
+                        }}
                       >
-                        {isOpen ? <FaEyeSlash aria-hidden="true" /> : <FaEye aria-hidden="true" />}
+                        <FaShareAlt aria-hidden="true" />
                       </button>
                     </td>
                   </tr>
+                  {isOpen ? (
+                    <tr className="ing-ranking-table__detail-row">
+                      <td className="ing-ranking-table__detail-cell" colSpan={TOTAL_COLUMNS}>
+                        <div className="ing-ranking-table__detail-inner">
+                          <div
+                            className={`ing-ranking-table__detail${row.faction === 'resistance' ? ' is-resistance' : ''}`}
+                          >
+                            <div className="ing-ranking-table__detail-playstyle">
+                              <div className="ing-ranking-table__detail-playstyle-side ing-ranking-table__detail-playstyle-side--left">
+                                <span className="ing-ranking-table__detail-playstyle-name">{row.codename}</span>
+                                <span
+                                  className={`ing-ranking-table__detail-playstyle-recursion${row.recursions === null ? ' is-unknown' : ''}`}
+                                  title={row.recursions !== null ? t.recursionsAria(row.recursions) : t.recursionsUnknown}
+                                  aria-label={row.recursions !== null ? t.recursionsAria(row.recursions) : t.recursionsUnknown}
+                                >
+                                  <img src={artPath('simulacrum', null)} alt="" width={20} height={20} />
+                                  ×{row.recursions !== null ? row.recursions : '?'}
+                                </span>
+                              </div>
+                              <div className="ing-ranking-table__detail-playstyle-center">
+                                <span className="ing-ranking-table__detail-playstyle-label">{t.playStyleLabel}</span>
+                                <MiniPlayStyleRadar
+                                  stats={row.stat_values}
+                                  ariaLabel={t.playStyleAria(row.codename)}
+                                  faction={row.faction}
+                                  lang={lang}
+                                />
+                              </div>
+                              <div className="ing-ranking-table__detail-playstyle-side ing-ranking-table__detail-playstyle-side--right">
+                                <span className="ing-ranking-table__detail-playstyle-updated-label">{t.lastUpdateLabel}</span>
+                                <span className="ing-ranking-table__detail-playstyle-updated-value">
+                                  {relativeAge(row.updated_at, lang)}
+                                </span>
+                              </div>
+                            </div>
+                            {RADAR_AXES.map((axis) => (
+                              <div key={axis.id} className="ing-ranking-table__detail-axis">
+                                <strong>{lang === 'en' ? axis.labelEn : axis.label}</strong>
+                                <div className="ing-ranking-table__chips">
+                                  {axis.parts.map((part) => {
+                                    const info = row.stat_tiers?.[part.key]
+                                    const tier = info?.tier ?? 'none'
+                                    const iconTier = tier === 'none' ? 'bronze' : tier
+                                    const iconSrc = info?.badgeSlug ? artPath(info.badgeSlug, iconTier) : null
+                                    const value = row.stat_values?.[part.key] ?? 0
+                                    // Quantas vezes o valor já passou do limiar de Onyx daquela
+                                    // parte (pedido do Luiz: um "×24" no cantinho do chip) — só a
+                                    // partir de ×2 (×1 é só "completou uma vez", o próprio chip
+                                    // colorido já diz isso, o número seria redundante).
+                                    const onyxRatio = part.ref > 0 ? value / part.ref : 0
+                                    const onyxTimes = Math.round(onyxRatio)
+                                    return (
+                                      <div
+                                        key={part.key}
+                                        className={`ing-ranking-table__chip${tier === 'none' ? ' is-none' : ''}`}
+                                        style={{borderColor: tierColor(tier)}}
+                                        title={tier}
+                                      >
+                                        {onyxTimes >= 2 ? (
+                                          <span className="ing-ranking-table__chip-times">×{onyxTimes}</span>
+                                        ) : null}
+                                        {iconSrc ? (
+                                          <img
+                                            src={iconSrc}
+                                            alt=""
+                                            width={26}
+                                            height={26}
+                                            className="ing-ranking-table__chip-icon"
+                                          />
+                                        ) : null}
+                                        <span className="ing-ranking-table__chip-text">
+                                          <span className="ing-ranking-table__chip-label">{chipLabel(part, lang)}</span>
+                                          <span className="ing-ranking-table__chip-value">{fmtStat(value)}</span>
+                                        </span>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <AgentHistoryChart codenameKey={row.codename_key} agentName={row.codename} faction={row.faction} />
+                        </div>
+                      </td>
+                    </tr>
+                  ) : null}
+                </Fragment>
               )
             })}
           </tbody>
         </table>
       </div>
       )}
-
-      {expandedRow ? (
-        <div className="ing-ranking-table__detail">
-          {RADAR_AXES.map((axis) => (
-            <div key={axis.id} className="ing-ranking-table__detail-axis">
-              <strong>{lang === 'en' ? axis.labelEn : axis.label}</strong>
-              <div className="ing-ranking-table__chips">
-                {axis.parts.map((part) => {
-                  const info = expandedRow.stat_tiers?.[part.key]
-                  const tier = info?.tier ?? 'none'
-                  const iconTier = tier === 'none' ? 'bronze' : tier
-                  const iconSrc = info?.badgeSlug ? artPath(info.badgeSlug, iconTier) : null
-                  return (
-                    <div
-                      key={part.key}
-                      className={`ing-ranking-table__chip${tier === 'none' ? ' is-none' : ''}`}
-                      style={{borderColor: tierColor(tier)}}
-                      title={tier}
-                    >
-                      {iconSrc ? (
-                        <img
-                          src={iconSrc}
-                          alt=""
-                          width={32}
-                          height={32}
-                          className="ing-ranking-table__chip-icon"
-                        />
-                      ) : null}
-                      <span className="ing-ranking-table__chip-text">
-                        <span className="ing-ranking-table__chip-label">{chipLabel(part, lang)}</span>
-                        <span className="ing-ranking-table__chip-value">
-                          {fmtStat(expandedRow.stat_values?.[part.key] ?? 0)}
-                        </span>
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-          <div className="ing-ranking-table__detail-shape">
-            <span className="ing-ranking-table__detail-shape-label">{t.shapeLabel}</span>
-            <MiniShapeRadar stats={expandedRow.stat_values} ariaLabel={t.shapeAria(expandedRow.codename)} faction={expandedRow.faction} />
-          </div>
-        </div>
-      ) : null}
-
-      {expandedRow ? (
-        <AgentHistoryChart codenameKey={expandedRow.codename_key} agentName={expandedRow.codename} faction={expandedRow.faction} />
-      ) : null}
 
       <p className="ing-ranking-table__credit">{t.logoCredit}</p>
     </Panel>

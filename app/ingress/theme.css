@@ -20,8 +20,8 @@
   --ing-teal: #12d9c4;
   --ing-cyan: #26b6ff;
   /* facção Resistance — usado só onde a cor precisa refletir a facção do
-     agente exibido (ex.: gráfico de evolução, radar "Forma" no ranking),
-     nunca na marca fixa do site (que é sempre o verde Enlightened). */
+     agente exibido (ex.: gráfico de evolução, radar "Estilo de jogo" no
+     ranking), nunca na marca fixa do site (que é sempre o verde Enlightened). */
   --ing-cyan-soft: #7dd3ff;
   --ing-xm: #b06cff;
   --ing-accent: linear-gradient(118deg, #00e676 0%, #12d9c4 52%, #26b6ff 100%);
@@ -74,6 +74,24 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+/*
+ * Só `/ingress/ranking` — a tabela tem 13 colunas (rank, nota, facção, país,
+ * codinome, datas, AP, 5 eixos, compartilhar) e precisa de mais respiro que
+ * as outras páginas do /ingress (perfil, linha do tempo, medalha), cujo
+ * conteúdo é texto/radar e já cabia bem nos 60rem. Alargar o `.ing-shell`
+ * base empurraria essas outras páginas também; esta variante troca só o
+ * `max-width`, mantendo o resto (padding, gap) igual. Chegou a ir a 76rem
+ * como tentativa (falha) de evitar o scroll-x que a sub-linha de detalhe
+ * gerava ao abrir — a causa real era table-layout:auto sem `<colgroup>` (ver
+ * `.ing-ranking-table`), já corrigida, então 68rem já sobra de respiro sem
+ * inflar o container à toa. Não elimina o scroll horizontal interno da
+ * tabela em telas estreitas (`.ing-ranking-table__wrap` continua com
+ * `overflow-x: auto` — é o fallback certo pra celular/janela estreita).
+ */
+.ing-shell--wide {
+  max-width: 68rem;
 }
 
 .ing-panel {
@@ -2041,12 +2059,27 @@
   color: var(--ing-text-dim);
 }
 
+/* `container-type: inline-size` é o que permite o `@container` mais abaixo
+   decidir se a sub-linha de detalhe cabe 5 eixos lado a lado — mede a
+   largura real deste wrap (que não muda quando uma sub-linha abre, já que
+   `overflow-x: auto` isola o scroll do conteúdo sem inflar o próprio box),
+   não o viewport como um `@media` faria. */
 .ing-ranking-table__wrap {
   overflow-x: auto;
+  container-type: inline-size;
 }
 
+/* `table-layout: fixed` (larguras por coluna vêm do `<colgroup>` no
+   componente) é o que garante que a sub-linha de detalhe nunca alarga a
+   tabela: numa tabela de layout automático, uma célula `colSpan` cobrindo
+   todas as colunas empurra a largura da tabela pro tamanho do seu conteúdo
+   mais largo — foi isso que gerava o scroll-x ao expandir uma linha. Com
+   layout fixo, a largura de cada coluna (e da tabela) é travada pelo
+   `<colgroup>`; conteúdo maior que a coluna quebra linha ou é cortado, nunca
+   estufa a tabela. */
 .ing-ranking-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.85rem;
 }
@@ -2062,12 +2095,100 @@
   white-space: nowrap;
 }
 
+/* "Nota geral"/"Overall score" e "AP total"/"Total AP" são os rótulos mais
+   compridos do cabeçalho, mas as colunas são estreitas de propósito (a
+   coluna é pro dado numérico, não pro rótulo) — sem o `nowrap` deste par,
+   se algum idioma/fonte ficar mais largo que o previsto no `<colgroup>` o
+   rótulo quebra em duas linhas em vez de vazar por cima da coluna vizinha. */
+.ing-ranking-table th[data-col='score'],
+.ing-ranking-table th[data-col='ap'] {
+  white-space: normal;
+}
+
 .ing-ranking-table tbody td {
   padding: 0.55rem 0.6rem;
   border-bottom: 1px solid var(--ing-edge-soft);
   color: var(--ing-text);
   vertical-align: middle;
   text-align: center;
+}
+
+/* A linha inteira abre/fecha os detalhes (não só o ícone de olho — no
+   celular, o olho no fim da linha passava despercebido). */
+.ing-ranking-table tbody tr {
+  cursor: pointer;
+}
+
+.ing-ranking-table tbody tr:hover td {
+  background: var(--ing-green-ghost);
+}
+
+/*
+ * A sub-linha de detalhe (aberta por clique) reaproveita as regras de
+ * `tbody tr`/`tbody td` acima — precisa neutralizar cursor/hover (ela não é
+ * clicável) e o padding/alinhamento centralizado, que aqui é ocupado pelo
+ * grid de detalhe por completo. Quem trava a largura é `table-layout: fixed`
+ * + o `<colgroup>` da tabela (ver `.ing-ranking-table` acima); `overflow:
+ * hidden` aqui é só o cinto e suspensório — se algo mesmo assim vazar (ex.:
+ * uma imagem que não encolhe), fica escondido em vez de estufar a `<td>`.
+ */
+.ing-ranking-table tbody tr.ing-ranking-table__detail-row {
+  cursor: default;
+}
+.ing-ranking-table tbody tr.ing-ranking-table__detail-row:hover td {
+  background: none;
+}
+.ing-ranking-table__detail-cell {
+  padding: 0;
+  text-align: left;
+  overflow: hidden;
+}
+.ing-ranking-table__detail-inner {
+  max-width: 100%;
+}
+
+/* Destaque do top 3 — ouro/prata/bronze, tom sutil de fundo + número da
+   posição na cor da medalha (pedido do Luiz). */
+.ing-ranking-table tbody tr.is-top1 td {
+  background: rgba(255, 215, 0, 0.07);
+}
+.ing-ranking-table tbody tr.is-top2 td {
+  background: rgba(201, 214, 227, 0.06);
+}
+.ing-ranking-table tbody tr.is-top3 td {
+  background: rgba(205, 127, 50, 0.07);
+}
+.ing-ranking-table tbody tr.is-top1 td[data-col='rank'] {
+  color: #ffd700;
+  font-weight: 700;
+}
+.ing-ranking-table tbody tr.is-top2 td[data-col='rank'] {
+  color: #c9d6e3;
+  font-weight: 700;
+}
+.ing-ranking-table tbody tr.is-top3 td[data-col='rank'] {
+  color: #cd7f32;
+  font-weight: 700;
+}
+
+/*
+ * Linha de quem chegou via `?destaque=` no link do alerta do Telegram (ver
+ * `IngressRankingTable`) — pulsa algumas vezes pra chamar o olho assim que a
+ * página abre e some, mas o `box-shadow` na borda fica: quem rolou a tabela
+ * pra longe ainda encontra a linha ao voltar. `@media (prefers-reduced-
+ * motion)` global no fim deste arquivo já neutraliza a animação.
+ */
+@keyframes ing-highlight-pulse {
+  0%, 100% {
+    background: rgba(77, 255, 166, 0.28);
+  }
+  50% {
+    background: rgba(77, 255, 166, 0.08);
+  }
+}
+.ing-ranking-table tbody tr.is-highlighted td {
+  animation: ing-highlight-pulse 1.1s ease-in-out 3;
+  box-shadow: inset 3px 0 0 var(--ing-green-soft);
 }
 
 /* # / nota / facção / codinome / data ficam centralizadas (default acima);
@@ -2091,10 +2212,38 @@
   color: var(--ing-green-soft);
 }
 
+/* Nota geral na cor da facção do agente — Resistance em azul, Enlightened
+   mantém o verde padrão do site. */
+.ing-ranking-table td[data-col='score'].ing-ranking-table__score--resistance {
+  color: var(--ing-cyan-soft);
+}
+
 .ing-ranking-table td[data-col='dates'] {
   color: var(--ing-text-dim);
   white-space: nowrap;
   cursor: help;
+}
+
+/*
+ * O SVG do logo (`enlightened.svg`/`resistance.svg`) tem um hexágono de fundo
+ * quase preto (#231F20) com o glifo colorido no centro — em telas pequenas
+ * (celular) o hexágono se funde no fundo escuro do painel e sobra só um
+ * traço colorido minúsculo, difícil de notar (era o "o time não aparece" do
+ * Luiz). O halo circular na cor da facção resolve o contraste sem tocar no
+ * arquivo do logo.
+ */
+.ing-ranking-table__faction-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: rgba(0, 230, 118, 0.14);
+}
+
+.ing-ranking-table__faction-badge.is-resistance {
+  background: rgba(38, 182, 255, 0.14);
 }
 
 .ing-ranking-table__faction-icon {
@@ -2112,7 +2261,7 @@
   font-weight: 600;
 }
 
-.ing-ranking-table__eye {
+.ing-ranking-table__share {
   display: inline-grid;
   place-items: center;
   width: 2rem;
@@ -2125,36 +2274,63 @@
   transition: color 0.15s ease, border-color 0.15s ease;
 }
 
-.ing-ranking-table__eye:hover,
-.ing-ranking-table__eye:focus-visible {
+.ing-ranking-table__share:hover,
+.ing-ranking-table__share:focus-visible {
   color: var(--ing-green-soft);
   border-color: var(--ing-edge);
 }
 
 /*
- * O painel de detalhe fica FORA da <table> (irmão do `.ing-ranking-table__wrap`,
- * direto no Panel) — não é mais uma <tr colSpan> com hack de largura. Um
- * colspan dentro de table-layout:auto sempre acaba ditando a largura da
- * tabela pelo conteúdo mais largo (mesmo com truques de width:1px), o que
- * quebrava a quebra de linha no mobile; como bloco normal fora da tabela,
- * o flex-wrap dos chips reage à largura da viewport sem gambiarra.
+ * O painel de detalhe é uma <tr colSpan> — uma sub-linha aberta bem abaixo
+ * da linha clicada, não um painel fixo depois da tabela inteira (que ficava
+ * "longe" conforme o ranking crescia). O risco de sempre usar colspan é real
+ * em table-layout:auto (o conteúdo mais largo da sub-linha dita a largura da
+ * tabela toda), mas aqui a tabela é table-layout:fixed com colunas travadas
+ * por `<colgroup>` (ver acima) — a sub-linha não tem como alargar a tabela,
+ * só quebrar linha ou ser cortada dentro do espaço que já tinha.
  */
 .ing-ranking-table__detail {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.4rem 1.2rem;
+  gap: 1rem 0.9rem;
   margin-top: 1rem;
-  padding: 0.9rem 1rem;
+  /*
+   * Padding interno normal — o corte que isso "resolvia" nunca foi causado
+   * pelo padding, e sim por `1fr` puro no grid da faixa "Estilo de jogo"
+   * (ver `.ing-ranking-table__detail-playstyle` abaixo): sem `minmax(0, ...)`, o
+   * mínimo automático da coluna é o min-content do texto, e uma vez
+   * ultrapassado isso é a própria sub-linha (contida por `overflow: hidden`
+   * na célula) que corta o texto no meio da palavra. Zerar o padding só
+   * deixava o conteúdo colado na borda sem resolver a causa.
+   */
+  padding: 0.7rem 0.8rem;
   border-top: 1px solid var(--ing-edge-soft);
   background: var(--ing-green-ghost);
   border-radius: 10px;
 }
 
-/* 5 eixos lado a lado só quando há espaço de verdade — abaixo disso, 1
-   coluna só (cada eixo empilhado, chips em coluna dentro dele). */
-@media (min-width: 860px) {
+/* Tom azulado quando o agente é da Resistance — mesmo espírito da nota geral
+   e do radar "Estilo de jogo", que já ficam na cor da facção em vez do verde
+   fixo do site. */
+.ing-ranking-table__detail.is-resistance {
+  background: rgba(38, 182, 255, 0.07);
+}
+
+/*
+ * 5 eixos lado a lado só quando há espaço de verdade. `@container`, não
+ * `@media`: mede a largura real de `.ing-ranking-table__wrap` (que declara
+ * `container-type: inline-size` acima), não o viewport — essa sub-linha é
+ * mais estreita que o viewport na maioria das telas, então um `@media`
+ * abriria 5 colunas num espaço que só cabia 1.
+ */
+@container (min-width: 860px) {
   .ing-ranking-table__detail {
-    grid-template-columns: repeat(5, 1fr);
+    /* `minmax(0, 1fr)`, não `1fr` puro — uma track `1fr` sozinha tem mínimo
+       automático = min-content do conteúdo (o rótulo mais longo do chip), e
+       ultrapassar esse mínimo é o que cortava o texto na sub-linha estreita.
+       Com `minmax(0, ...)` a track encolhe de verdade e o texto do chip
+       quebra em vez de estufar a grade. */
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
@@ -2177,11 +2353,12 @@
 }
 
 .ing-ranking-table__chip {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   width: 100%;
-  padding: 0.35rem 0.6rem;
+  padding: 0.3rem 0.55rem;
   border: 1px solid;
   border-radius: 10px;
   background: var(--ing-panel-solid);
@@ -2195,6 +2372,25 @@
   flex-shrink: 0;
 }
 
+/* "×N" — quantas vezes o valor já passou do limiar de Onyx daquela stat
+   (pedido do Luiz). Só existe quando já completou pelo menos 1 vez. */
+.ing-ranking-table__chip-times {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.4rem;
+  min-width: 1.4rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: 999px;
+  border: 1px solid var(--ing-edge);
+  background: var(--ing-panel-solid);
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.62rem;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--ing-green-soft);
+}
+
 .ing-ranking-table__chip.is-none .ing-ranking-table__chip-icon {
   filter: grayscale(1);
 }
@@ -2203,6 +2399,12 @@
   display: flex;
   flex-direction: column;
   line-height: 1.2;
+  /* Item flex sem `flex-grow`/`min-width` tem mínimo automático = largura
+     do rótulo numa linha só — `min-width: 0` deixa o texto quebrar em vez
+     de forçar o chip (e a coluna do grid) a ficar mais largo que o espaço
+     disponível. */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .ing-ranking-table__chip-label {
@@ -2217,17 +2419,108 @@
   color: var(--ing-text);
 }
 
-.ing-ranking-table__detail-shape {
+/*
+ * "Estilo de jogo" agora abre a sub-linha (antes vinha depois das estatísticas) e
+ * ganhou dois lados — codinome + recursões à esquerda, última atualização à
+ * direita (pedido do Luiz, riscado à mão no print) — com o radar no centro.
+ * Grid de 3 faixas: as laterais dividem o espaço que sobra, o centro fica
+ * do tamanho do próprio radar.
+ */
+.ing-ranking-table__detail-playstyle {
   grid-column: 1 / -1;
+  display: grid;
+  /* `minmax(0, 1fr)`, não `1fr` puro — é o mesmo bug do grid de eixos: uma
+     track `1fr` sozinha tem mínimo automático = min-content do conteúdo
+     ("atualização" como palavra inteira), e ultrapassar isso é o que
+     cortava o texto no meio em vez de quebrar linha. */
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--ing-edge-soft);
+}
+
+.ing-ranking-table__detail-playstyle svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.ing-ranking-table__detail-playstyle-center {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
-  padding-top: 0.6rem;
-  border-top: 1px solid var(--ing-edge-soft);
+  min-width: 0;
 }
 
-.ing-ranking-table__detail-shape-label {
+.ing-ranking-table__detail-playstyle-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.ing-ranking-table__detail-playstyle-side--left {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.ing-ranking-table__detail-playstyle-side--right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.ing-ranking-table__detail-playstyle-name {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ing-text);
+  overflow-wrap: anywhere;
+}
+
+.ing-ranking-table__detail-playstyle-recursion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: var(--ing-green-soft);
+}
+
+/* Emblema "Simulacrum" (o do Ingress pra quem recursou) — já tem hexágono e
+   cor próprios na arte, então só flex-shrink:0 pra não espremer ao lado do
+   número. */
+.ing-ranking-table__detail-playstyle-recursion img {
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+
+.ing-ranking-table__detail.is-resistance .ing-ranking-table__detail-playstyle-recursion {
+  color: var(--ing-cyan-soft);
+}
+
+/* "?" pra quem nunca resubmeteu desde que a coluna passou a existir — sem a
+   cor de destaque, é um estado "não sabemos", não um valor real. */
+.ing-ranking-table__detail-playstyle-recursion.is-unknown,
+.ing-ranking-table__detail.is-resistance .ing-ranking-table__detail-playstyle-recursion.is-unknown {
+  color: var(--ing-text-dim);
+  cursor: help;
+}
+
+.ing-ranking-table__detail-playstyle-updated-label {
+  font-size: 0.66rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-ranking-table__detail-playstyle-updated-value {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--ing-text);
+}
+
+.ing-ranking-table__detail-playstyle-label {
   font-family: var(--ing-font-display);
   font-weight: 600;
   font-size: 0.78rem;
@@ -2363,6 +2656,102 @@
   color: var(--ing-text-dim);
   font-size: 0.85rem;
   line-height: 1.5;
+}
+
+.ing-axis-explanations__formula {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ing-edge-soft);
+}
+
+.ing-axis-explanations__formula-title {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-green-soft);
+  margin: 0 0 0.5rem;
+}
+
+.ing-axis-explanations__formula-text {
+  margin: 0 0 0.6rem;
+  color: var(--ing-text-dim);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.ing-axis-explanations__formula-text:last-child {
+  margin-bottom: 0;
+}
+
+.ing-axis-explanations__example-title {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-green-soft);
+  margin: 1.2rem 0 0.25rem;
+}
+
+.ing-axis-explanations__example-intro {
+  margin: 0 0 0.9rem;
+  color: var(--ing-text-dim);
+  font-size: 0.85rem;
+}
+
+.ing-axis-explanations__example-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.6rem;
+  padding: 1rem;
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 12px;
+}
+
+.ing-axis-explanations__example-axis {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  cursor: help;
+}
+
+.ing-axis-explanations__example-axis-label {
+  font-size: 0.68rem;
+  color: var(--ing-text-dim);
+  text-align: center;
+  max-width: 6.5rem;
+}
+
+.ing-axis-explanations__example-axis-value {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--ing-text);
+  border-bottom: 1px dotted var(--ing-text-dim);
+}
+
+.ing-axis-explanations__example-op {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-text-dim);
+  font-size: 0.95rem;
+}
+
+.ing-axis-explanations__example-result {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 1.8rem;
+  color: var(--ing-green-soft);
+  border-bottom: 1px dotted var(--ing-green-soft);
+  cursor: help;
+  line-height: 1;
+}
+
+.ing-axis-explanations__example-hint {
+  margin: 0.6rem 0 0;
+  color: var(--ing-text-dim);
+  font-size: 0.75rem;
+  text-align: center;
 }
 
 @media (max-width: 640px) {
@@ -2601,7 +2990,7 @@
   fill: var(--ing-green-soft);
 }
 
-/* Radar "Forma" (ranking) na cor da facção do agente exibido, não fixo verde. */
+/* Radar "Estilo de jogo" (ranking) na cor da facção do agente exibido, não fixo verde. */
 .ing-mini-radar--resistance .ing-radar__ring--edge {
   stroke: var(--ing-cyan);
 }
@@ -2609,6 +2998,12 @@
 .ing-mini-radar--resistance .ing-radar__shape {
   fill: rgba(38, 182, 255, 0.14);
   stroke: var(--ing-cyan);
+}
+
+.ing-mini-radar__label {
+  fill: var(--ing-text-dim);
+  font-family: var(--ing-font-body);
+  font-size: 8px;
 }
 
 .ing-radar__label {

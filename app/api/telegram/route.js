@@ -4,6 +4,7 @@ import {compareMessages} from '@/lib/ingress-compare-message.mjs';
 import {radarPng} from './ingress-radar.jsx';
 import {rateLimitOrNull} from '@/lib/rate-limit';
 import {escapeTelegramMarkdown as esc} from '@/lib/telegram-markdown.mjs';
+import {countryFlagEmoji} from '@/lib/ingress-format.mjs';
 
 /**
  * Envia a comparação de fichas do radar do /ingress para o tópico do Ingress:
@@ -63,12 +64,24 @@ async function sendIngressCompare(data) {
 /**
  * Alerta direto (sem imagem, sem detalhe extra) toda vez que uma submissão em
  * `/ingress/ranking` grava de verdade (nunca quando o debounce bloqueia).
- * @param {{codename:string, rank:number, totalAgents:number, top3:{codename:string, overallScore:number}[]}} data
+ * Em vez do antigo "top 3 fixo" (irrelevante pra quem entra longe do topo),
+ * mostra uma janela de até 2 colocados antes + a posição nova + até 2 depois
+ * — mesma janela calculada por `getRankWindow` em `api/ingress-rankings`,
+ * então a ordem que chega aqui já é a final. `rankingUrl` carrega
+ * `?destaque=<codenameKey>`, que `IngressRankingTable` lê pra rolar/realçar
+ * a linha de quem entrou quando alguém clica no link vindo do Telegram.
+ * `isNewAgent` distingue um codinome nunca visto (INSERT) de um agente já
+ * rankeado que atualizou os stats (UPDATE do upsert, calculado via `xmax` em
+ * `api/ingress-rankings`) — muda o título/verbo da mensagem, já que "entrou
+ * no ranking" não faz sentido pra quem só está reenviando um export novo.
+ * @param {{codename:string, rank:number, totalAgents:number, isNewAgent:boolean,
+ *   window:{codenameKey:string, codename:string, overallScore:number, countryCode:string|null, rank:number}[],
+ *   rankingUrl:string}} data
  */
 async function sendIngressRankingEntry(data) {
-    const {codename, rank, totalAgents, top3} = data;
-    if (!codename || !rank || !Array.isArray(top3)) {
-        throw new Error('ingress-ranking-entry: faltam codename/rank/top3');
+    const {codename, rank, totalAgents, isNewAgent, window: rankWindow, rankingUrl} = data;
+    if (!codename || !rank || !Array.isArray(rankWindow) || !rankingUrl) {
+        throw new Error('ingress-ranking-entry: faltam codename/rank/window/rankingUrl');
     }
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -78,12 +91,19 @@ async function sendIngressRankingEntry(data) {
         throw new Error('Telegram bot token or chat ID not configured');
     }
 
-    const medal = ['🥇', '🥈', '🥉'];
-    const top3Lines = top3
-        .map((a, i) => `${medal[i] ?? `${i + 1}.`} ${esc(a.codename)} — ${Math.round(a.overallScore)}`)
+    const windowLines = rankWindow
+        .map((entry) => {
+            const flag = countryFlagEmoji(entry.countryCode) || '🏳️';
+            const line = `${flag} *${entry.rank}º* ${esc(entry.codename)} — ${Math.round(entry.overallScore)}`;
+            return entry.rank === rank ? `➡️ ${line}` : `　 ${line}`;
+        })
         .join('\n');
 
-    const text = `🏆 *Novo registro no ranking do Ingress!*\n\n*${esc(codename)}* entrou na *${rank}ª posição* (de ${totalAgents}).\n\n*Top 3 atual:*\n${top3Lines}`;
+    const headline = isNewAgent
+        ? `🆕 *Novo agente no ranking do Ingress!*\n\n*${esc(codename)}* entrou na *${rank}ª posição* (de ${totalAgents}).`
+        : `📈 *Atualização no ranking do Ingress!*\n\n*${esc(codename)}* atualizou os stats e está na *${rank}ª posição* (de ${totalAgents}).`;
+
+    const text = `${headline}\n\n*Ranking ao redor:*\n${windowLines}\n\n[Ver ranking completo »](${rankingUrl})`;
 
     const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',

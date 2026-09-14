@@ -52,30 +52,68 @@ async function computeRank(overallScore: number, lifetimeAp: number, createdAt: 
   return { rank: count + 1, totalAgents: total };
 }
 
-/** Top 3 atual, mesma ordenação de `computeRank`/`lib/ingress-rankings.mjs`. */
-async function getTop3(): Promise<{ codename: string; overallScore: number }[]> {
+type RankWindowEntry = { codenameKey: string; codename: string; overallScore: number; countryCode: string | null; rank: number };
+
+/**
+ * Janela ao redor de `rank`: até 2 colocados antes + a própria posição + até
+ * 2 depois (mesma ordenação de `computeRank`/`lib/ingress-rankings.mjs`) —
+ * substitui o antigo "top 3 fixo" por contexto relevante pra quem acabou de
+ * entrar, mesmo quando está longe do topo. Perto das pontas a janela encolhe
+ * (menos "antes" perto do 1º lugar, menos "depois" perto do último) em vez de
+ * inventar posições que não existem.
+ */
+async function getRankWindow(rank: number, totalAgents: number): Promise<RankWindowEntry[]> {
+  const offset = Math.max(rank - 3, 0);
+  const limit = Math.max(0, Math.min(5, totalAgents - offset));
+  if (limit === 0) return [];
   const rows = await sql`
-    SELECT codename, overall_score FROM casara.ingress_rankings
+    SELECT codename_key, codename, overall_score, country_code FROM casara.ingress_rankings
     ORDER BY overall_score DESC, lifetime_ap DESC, created_at ASC
-    LIMIT 3
+    LIMIT ${limit} OFFSET ${offset}
   `;
-  return rows.map((r) => ({ codename: r.codename as string, overallScore: Number(r.overall_score) }));
+  return rows.map((r, i) => ({
+    codenameKey: r.codename_key as string,
+    codename: r.codename as string,
+    overallScore: Number(r.overall_score),
+    countryCode: r.country_code as string | null,
+    rank: offset + i + 1,
+  }));
 }
 
 /**
  * Alerta fire-and-forget pro Telegram a cada escrita real (nunca quando o
  * debounce bloqueia) — só em produção, mesmo espírito do `notifyTelegram`
  * client-side de `ProfileRadar.tsx` (dev/preview não deve spammar o chat).
- * Nunca lança: uma falha aqui não pode derrubar a resposta da rota.
+ * `isNewAgent` distingue "codinome nunca visto" de "agente já rankeado
+ * atualizando os stats" (ver o cálculo via `xmax` no `POST`) — o texto da
+ * mensagem no Telegram muda conforme isso. Nunca lança: uma falha aqui não
+ * pode derrubar a resposta da rota.
  */
-function notifyTelegramNewEntry(origin: string, codename: string, rank: number, totalAgents: number) {
+function notifyTelegramRankingWrite(
+  origin: string,
+  codenameKey: string,
+  codename: string,
+  rank: number,
+  totalAgents: number,
+  isNewAgent: boolean
+) {
   if (process.env.NODE_ENV !== "production") return;
-  getTop3()
-    .then((top3) =>
+  getRankWindow(rank, totalAgents)
+    .then((rankWindow) =>
       fetch(`${origin}/api/telegram`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "ingress-ranking-entry", codename, rank, totalAgents, top3 }),
+        body: JSON.stringify({
+          type: "ingress-ranking-entry",
+          codename,
+          rank,
+          totalAgents,
+          isNewAgent,
+          window: rankWindow,
+          // `destaque` faz a página do ranking rolar/realçar essa linha ao
+          // abrir o link — ver o efeito de highlight em IngressRankingTable.
+          rankingUrl: `${origin}/ingress/ranking?destaque=${encodeURIComponent(codenameKey)}`,
+        }),
       })
     )
     .catch((err) => console.error("[api/ingress-rankings] alerta do Telegram falhou:", err));
@@ -102,7 +140,7 @@ export async function POST(request: NextRequest) {
   // uma linha. O debounce de 5min abaixo é por codename — não impede um
   // script de gerar codenames diferentes a cada chamada, então o limite por
   // IP é a camada que segura isso (e o flood do Telegram que uma escrita
-  // nova dispara via notifyTelegramNewEntry).
+  // nova dispara via notifyTelegramRankingWrite).
   const limited = await rateLimitOrNull(request, "INGRESS_RANKING_WRITE");
   if (limited) return limited;
 
@@ -140,6 +178,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "countryCode é obrigatório e deve ser um código ISO 3166-1 válido" }, { status: 400 });
   }
 
+  // Informativo (não entra na nota/tier) — por isso, ao contrário de
+  // country_code, um valor ausente ou inválido não rejeita o POST, só grava
+  // NULL (mesmo estado de uma linha nunca migrada).
+  const recursionsRaw = Number(body.recursions);
+  const recursions = Number.isFinite(recursionsRaw) && recursionsRaw >= 0 ? Math.floor(recursionsRaw) : null;
+
+  // Tudo do export que hoje não tem coluna/eixo dedicado (level, meses de
+  // assinatura, e o resto das stats fora do radar) — guardado sem validar
+  // formato, exatamente como o cliente mandou. Puramente informativo: nunca
+  // lido de volta pelo GET, nunca usado em nota/tier/rank. Só aceita objeto
+  // plano (não array, não string) pra não gravar lixo incompatível com JSONB
+  // como se fosse um mapa de chave->valor.
+  const extra =
+    body.extra && typeof body.extra === "object" && !Array.isArray(body.extra) ? body.extra : null;
+
   try {
     // O codinome do FencherLC não tem mais guarda especial: se o body trouxe
     // stats de verdade (inclusive um export fresco do próprio FencherLC), a
@@ -155,9 +208,9 @@ export async function POST(request: NextRequest) {
     // mais de 5 minutos. Sem conflito (agente novo), o INSERT sempre vale.
     const [inserted] = await sql`
       INSERT INTO casara.ingress_rankings
-        (codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, country_code, created_at, updated_at)
+        (codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, country_code, recursions, extra_stats, created_at, updated_at)
       VALUES
-        (${codenameKey}, ${codename}, ${faction}, ${lifetimeAp}, ${overallScore}, ${JSON.stringify(axisScoreMap)}, ${JSON.stringify(stats)}, ${countryCode}, NOW(), NOW())
+        (${codenameKey}, ${codename}, ${faction}, ${lifetimeAp}, ${overallScore}, ${JSON.stringify(axisScoreMap)}, ${JSON.stringify(stats)}, ${countryCode}, ${recursions}, ${extra ? JSON.stringify(extra) : null}, NOW(), NOW())
       ON CONFLICT (codename_key) DO UPDATE SET
         codename = EXCLUDED.codename,
         faction = EXCLUDED.faction,
@@ -166,12 +219,19 @@ export async function POST(request: NextRequest) {
         axis_scores = EXCLUDED.axis_scores,
         stat_values = EXCLUDED.stat_values,
         country_code = EXCLUDED.country_code,
+        recursions = EXCLUDED.recursions,
+        extra_stats = EXCLUDED.extra_stats,
         updated_at = NOW()
       WHERE casara.ingress_rankings.updated_at < NOW() - INTERVAL '5 minutes'
-      RETURNING *
+      -- xmax = 0 é o truque padrão de upsert do Postgres pra saber, sem uma
+      -- 2a query, se ESTA linha veio do INSERT (agente nunca visto) ou do
+      -- UPDATE do ON CONFLICT (agente existente atualizando stats): um INSERT
+      -- puro deixa xmax em 0; um UPDATE sempre grava a transacao atual ali.
+      RETURNING *, (xmax = 0) AS is_new_agent
     `;
 
     const written = !!inserted;
+    const isNewAgent = Boolean(inserted?.is_new_agent);
     const finalRow = inserted ?? (await sql`SELECT * FROM casara.ingress_rankings WHERE codename_key = ${codenameKey}`)[0];
 
     if (!finalRow) {
@@ -196,7 +256,7 @@ export async function POST(request: NextRequest) {
 
     const responseBody = await buildResponseFromRow(finalRow, written);
     if (written) {
-      notifyTelegramNewEntry(request.nextUrl.origin, codename, responseBody.rank, responseBody.totalAgents);
+      notifyTelegramRankingWrite(request.nextUrl.origin, codenameKey, codename, responseBody.rank, responseBody.totalAgents, isNewAgent);
     }
     return NextResponse.json(responseBody);
   } catch (err) {
@@ -211,7 +271,7 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(MAX_LIMIT, Math.max(1, Number.isFinite(requested) && requested > 0 ? requested : DEFAULT_LIMIT));
 
     const rows = await sql`
-      SELECT codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, country_code, created_at, updated_at
+      SELECT codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, country_code, recursions, created_at, updated_at
       FROM casara.ingress_rankings
       ORDER BY overall_score DESC, lifetime_ap DESC, created_at ASC
       LIMIT ${limit}
@@ -227,6 +287,7 @@ export async function GET(request: NextRequest) {
       stat_values: row.stat_values,
       stat_tiers: computeStatTiers(row.stat_values as Record<string, number>),
       country_code: row.country_code,
+      recursions: row.recursions === null || row.recursions === undefined ? null : Number(row.recursions),
       created_at: row.created_at,
       updated_at: row.updated_at,
     }));

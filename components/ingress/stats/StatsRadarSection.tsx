@@ -62,6 +62,24 @@ function radarStats(stats: Record<string, number>): Record<string, number> {
   return out
 }
 
+/**
+ * Tudo do export que HOJE não vira coluna/eixo/chip nenhum (o resto das ~54
+ * stats — Current AP, drones, Machina, scanner/OPR/Scout, research days,
+ * etc.) — guardado em `extra_stats` (JSONB) só pra não perder o dado, sem
+ * exibir nada com ele ainda. Dinâmico em vez de uma lista de chaves na mão:
+ * assim, se `RADAR_STAT_KEYS` ganhar um eixo novo no futuro, a chave sai
+ * daqui automaticamente sem precisar lembrar de tocar neste arquivo.
+ */
+const RADAR_KEY_SET = new Set(RADAR_STAT_KEYS as string[])
+function extraStats(stats: Record<string, number>): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const [k, v] of Object.entries(stats)) {
+    if (k === 'lifetimeAp' || RADAR_KEY_SET.has(k)) continue
+    out[k] = v
+  }
+  return out
+}
+
 async function postAgent(agent: Agent): Promise<RankingResponse | null> {
   try {
     const res = await fetch('/api/ingress-rankings', {
@@ -73,6 +91,12 @@ async function postAgent(agent: Agent): Promise<RankingResponse | null> {
         lifetimeAp: Number(agent.stats.lifetimeAp) || 0,
         stats: radarStats(agent.stats),
         countryCode: agent.countryCode ?? '',
+        recursions: agent.recursions,
+        extra: {
+          level: agent.level,
+          monthsSubscribed: agent.monthsSubscribed,
+          ...extraStats(agent.stats),
+        },
       }),
     })
     if (!res.ok) return null
