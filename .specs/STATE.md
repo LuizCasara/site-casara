@@ -31,6 +31,13 @@
 - **Uncommitted files**: nenhum (working tree limpo).
 - **Branch**: `feat/ingress-ranking-history` — **atenção**: esta branch já vinha com 2 commits de uma feature anterior não relacionada (histórico de AP no ranking, `81e0cf0`/`9fef370`) quando esta feature começou; não pushada ainda, não é `main`.
 
+### Trabalho adicional na mesma branch (fora do fluxo tlc-spec-driven, 13/09/2026)
+
+- **O quê**: filtros e ordenação em `/ingress/ranking` — busca por codinome, toggle de facção, e ordenação clicável (nota geral, AP total, país, e 5 colunas novas de nota por eixo `C/D/E/H/LF` — Construção/Destruição/Exploração/Hacking/Links e campos). Tudo client-side em `IngressRankingTable.tsx`, lendo `axis_scores` que já vinha na API — nenhuma mudança de schema/migração/rota.
+- **Commit**: `7d1cee5` (`feat(ingress): add filters, sorting, and per-axis columns to ranking table`), na mesma branch `feat/ingress-ranking-history`.
+- **Por que fora do fluxo**: classificado como bounded no brainstorming (mudança pequena num fluxo já existente, sem subsistema novo) — sem spec/design/tasks própria em `.specs/features/`.
+- **Verificado**: `tsc --noEmit` limpo, lint sem erro novo, `npm test` (393 testes) passando, SSR de `/ingress/ranking` responde 200. UAT visual ainda pendente (o Luiz testar na tela), mesmo passo que já estava em aberto pra feature de país.
+
 ---
 
 ### Handoff anterior (feature `ingress-stats-ranking`, arquivado — ver `.specs/features/ingress-stats-ranking/`)
