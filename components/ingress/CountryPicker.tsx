@@ -95,6 +95,10 @@ export default function CountryPicker({
             setActiveIndex((cur) => (cur === null ? 0 : Math.min(cur + 1, filtered.length - 1)))
         } else if (e.key === 'ArrowUp') {
             e.preventDefault()
+            if (!open) {
+                setOpen(true)
+                return
+            }
             setActiveIndex((cur) => (cur === null ? 0 : Math.max(cur - 1, 0)))
         } else if (e.key === 'Enter') {
             e.preventDefault()

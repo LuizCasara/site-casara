@@ -322,6 +322,13 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
     return [...filtered].sort((a, b) => compareRows(a, b, sortKey, sortDir, lang))
   }, [rows, search, factionFilter, sortKey, sortDir, lang])
 
+  // `rows` chega do servidor já na ordem canônica (overall_score desc ->
+  // lifetime_ap desc -> created_at asc — mesma de compareRankingRows), então
+  // o índice aqui É a posição real no ranking geral. A coluna "#" usa isso,
+  // nunca o índice de `visibleRows` (que muda com filtro/busca/ordenação
+  // local e pararia de refletir o rank de verdade).
+  const rankByKey = useMemo(() => new Map(rows.map((r, i) => [r.codename_key, i + 1])), [rows])
+
   useEffect(() => {
     mounted.current = true
     const id = window.setInterval(async () => {
@@ -437,11 +444,11 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
             </tr>
           </thead>
           <tbody>
-            {visibleRows.map((row, i) => {
+            {visibleRows.map((row) => {
               const isOpen = expanded === row.codename_key
               return (
                   <tr key={row.codename_key} className={isOpen ? 'is-expanded' : undefined}>
-                    <td data-col="rank">{i + 1}</td>
+                    <td data-col="rank">{rankByKey.get(row.codename_key)}</td>
                     <td data-col="score">{fmtScore(row.overall_score)}</td>
                     <td data-col="faction">
                       <img

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import sql from "@/lib/db";
-import { isValidHistoryBucket } from "@/lib/ingress-rankings.mjs";
+import { isValidHistoryBucket, normalizeCodenameKey } from "@/lib/ingress-rankings.mjs";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,12 @@ const DEFAULT_BUCKET = "day";
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ codenameKey: string }> }) {
   try {
-    const { codenameKey } = await params;
+    const { codenameKey: rawCodenameKey } = await params;
+    // Mesma normalização usada em toda escrita/leitura de identidade nesta
+    // feature (POST /api/ingress-rankings) — sem isso, um link com casing
+    // diferente do valor salvo (sempre lowercase) casaria com nada e devolveria
+    // silenciosamente {points: []} em vez do histórico real.
+    const codenameKey = normalizeCodenameKey(rawCodenameKey);
     const bucketParam = request.nextUrl.searchParams.get("bucket") ?? DEFAULT_BUCKET;
     if (!isValidHistoryBucket(bucketParam)) {
       return NextResponse.json({ error: "bucket deve ser day, month ou year" }, { status: 400 });
