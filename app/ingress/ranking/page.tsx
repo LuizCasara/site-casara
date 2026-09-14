@@ -1,3 +1,4 @@
+import type {Metadata} from 'next'
 import {loadProfile} from '@/lib/ingress'
 import sql from '@/lib/db'
 import {computeAxisScores, computeOverallScore, overallTierLabel, computeStatTiers} from '@/lib/ingress-tier-score.mjs'
@@ -10,6 +11,15 @@ import IngressRankingTable, {type RankingRow} from '@/components/ingress/stats/I
 import IngressTutorial from '@/components/ingress/stats/IngressTutorial'
 
 export const dynamic = 'force-dynamic'
+
+// Título próprio — sem isso, herda "FencherLC — Agente Ingress" do layout, e
+// esta página é sobre o ranking público, não sobre o FencherLC (mesmo espírito
+// do opengraph-image.tsx desta rota).
+export const metadata: Metadata = {
+  title: 'Ranking de agentes — Ingress',
+  description:
+    'Cole o export de estatísticas do app, compare seu padrão de jogo e veja sua posição no ranking público de agentes do Ingress.',
+}
 
 /**
  * Ranking inicial (SSR), consultado direto no banco em vez de `fetch` pra
