@@ -1,7 +1,8 @@
 'use client'
 
 import {useMemo, useState} from 'react'
-import {COUNTRIES} from '@/lib/ingress-countries.mjs'
+import {COUNTRIES, flagSrc} from '@/lib/ingress-countries.mjs'
+import {foldText} from '@/lib/ingress-format.mjs'
 import {useLang, type Lang} from '@/context/LanguageContext'
 
 type CountryOption = {code: string; namePt: string; nameEn: string}
@@ -18,12 +19,6 @@ const T = {
 } as const
 
 const nameFor = (c: CountryOption, lang: Lang) => (lang === 'en' ? c.nameEn : c.namePt)
-const flagSrc = (code: string) => `/ingress/flags/${code.toLowerCase()}.svg`
-
-/** Remove acentos e baixa a caixa, pra comparar digitação livre com nomes acentuados. */
-function fold(s: string): string {
-    return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
-}
 
 /**
  * Combobox com filtro por digitação (nome no idioma ativo, ou código) e
@@ -56,10 +51,10 @@ export default function CountryPicker({
     const inputText = open ? query : selected ? nameFor(selected, lang) : ''
 
     const filtered = useMemo(() => {
-        const q = fold(query.trim())
+        const q = foldText(query.trim())
         if (!q) return COUNTRIES as CountryOption[]
         return (COUNTRIES as CountryOption[]).filter(
-            (c) => fold(nameFor(c, lang)).includes(q) || fold(c.code).includes(q)
+            (c) => foldText(nameFor(c, lang)).includes(q) || foldText(c.code).includes(q)
         )
     }, [query, lang])
 
@@ -163,6 +158,7 @@ export default function CountryPicker({
                                 alt=""
                                 width={18}
                                 height={13}
+                                loading="lazy"
                                 className="ing-country-picker__flag"
                                 onError={(e) => {
                                     e.currentTarget.style.visibility = 'hidden'
