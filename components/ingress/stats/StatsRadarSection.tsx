@@ -72,6 +72,7 @@ async function postAgent(agent: Agent): Promise<RankingResponse | null> {
         faction: agent.faction ?? '',
         lifetimeAp: Number(agent.stats.lifetimeAp) || 0,
         stats: radarStats(agent.stats),
+        countryCode: agent.countryCode ?? '',
       }),
     })
     if (!res.ok) return null

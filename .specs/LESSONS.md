@@ -50,6 +50,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: app/ingress/stats/page.tsx:52 (T12); cf. bilingual sibling components/ingress/IngressPagePanels.tsx:32 EmptySignalPanel (T33) (i18n)
 - last seen: 2026-09-12T01:38:38Z
 
+### L-007 - A lib module imported by any client component must not use Node-only APIs (fs, createRequire) to load static data, even for a small JSON file — bundlers refuse to bundle node:fs/node:module for the browser; use a static import (e.g. import data with {type:'json'}) instead of readFileSync+createRequire.
+- signal: `gate_fail` · recurrence: 1 feature(s) · scope: `next-bundling` · harmful: 0
+- features: ingress-ranking-country
+- evidence: lib/ingress-countries.mjs:6-11 (next-bundling)
+- last seen: 2026-09-13T21:16:07Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

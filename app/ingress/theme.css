@@ -19,6 +19,10 @@
   --ing-green-soft: #4dffa6;
   --ing-teal: #12d9c4;
   --ing-cyan: #26b6ff;
+  /* facção Resistance — usado só onde a cor precisa refletir a facção do
+     agente exibido (ex.: gráfico de evolução, radar "Forma" no ranking),
+     nunca na marca fixa do site (que é sempre o verde Enlightened). */
+  --ing-cyan-soft: #7dd3ff;
   --ing-xm: #b06cff;
   --ing-accent: linear-gradient(118deg, #00e676 0%, #12d9c4 52%, #26b6ff 100%);
   --ing-green-ghost: rgba(0, 230, 118, 0.07);
@@ -1949,10 +1953,92 @@
 
 /* ─── Ranking table (iteração de UI: alinhamento, largura total, ícones) ─── */
 
-.ing-ranking-table__actions {
+.ing-ranking-table__toolbar {
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
   margin-bottom: 0.6rem;
+}
+
+.ing-ranking-table__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ing-ranking-table__search {
+  background: var(--ing-panel-soft, transparent);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  color: var(--ing-text);
+  font-size: 0.82rem;
+  min-width: 0;
+  width: 11rem;
+}
+
+.ing-ranking-table__faction-filter {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.ing-ranking-table__faction-filter button {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  color: var(--ing-text-dim);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.ing-ranking-table__faction-filter button.is-active {
+  color: var(--ing-text);
+  border-color: var(--ing-green-soft);
+}
+
+.ing-ranking-table__no-results {
+  color: var(--ing-text-dim);
+  padding: 1rem 0;
+}
+
+.ing-ranking-table__sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.ing-ranking-table__sort-arrow {
+  font-size: 0.65em;
+  color: var(--ing-green-soft);
+}
+
+.ing-ranking-table th[data-col='construcao'],
+.ing-ranking-table th[data-col='destruicao'],
+.ing-ranking-table th[data-col='exploracao'],
+.ing-ranking-table th[data-col='hacking'],
+.ing-ranking-table th[data-col='linksCampos'],
+.ing-ranking-table td[data-col='construcao'],
+.ing-ranking-table td[data-col='destruicao'],
+.ing-ranking-table td[data-col='exploracao'],
+.ing-ranking-table td[data-col='hacking'],
+.ing-ranking-table td[data-col='linksCampos'] {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--ing-text-dim);
 }
 
 .ing-ranking-table__wrap {
@@ -2013,6 +2099,11 @@
 
 .ing-ranking-table__faction-icon {
   border-radius: 3px;
+}
+
+.ing-ranking-table__country-flag {
+  border-radius: 2px;
+  display: block;
 }
 
 .ing-ranking-table__codename {
@@ -2406,6 +2497,82 @@
   color: #ff8f6b;
 }
 
+.ing-country-picker {
+  position: relative;
+  margin-top: 0.4rem;
+}
+
+.ing-country-picker__input {
+  width: 100%;
+  font-family: var(--ing-font-body);
+  font-size: 0.8rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--ing-edge);
+  background: var(--ing-bg-2);
+  color: var(--ing-text);
+}
+
+.ing-country-picker__input:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 1px;
+}
+
+.ing-country-picker.is-invalid .ing-country-picker__input {
+  border-color: #ff8f6b;
+}
+
+.ing-country-picker__flag {
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.ing-country-picker > .ing-country-picker__flag {
+  position: absolute;
+  left: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.ing-country-picker:has(> .ing-country-picker__flag) .ing-country-picker__input {
+  padding-left: 2.2rem;
+}
+
+.ing-country-picker__list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.2rem);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  border-radius: 8px;
+  border: 1px solid var(--ing-edge);
+  background: var(--ing-bg-2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.ing-country-picker__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+  cursor: pointer;
+}
+
+.ing-country-picker__option.is-active,
+.ing-country-picker__option:hover {
+  background: rgba(0, 230, 118, 0.12);
+  color: var(--ing-green-soft);
+}
+
 .ing-radar__compare-sent {
   margin: 0;
   font-size: 0.76rem;
@@ -2431,6 +2598,16 @@
 
 .ing-radar__dot {
   fill: var(--ing-green-soft);
+}
+
+/* Radar "Forma" (ranking) na cor da facção do agente exibido, não fixo verde. */
+.ing-mini-radar--resistance .ing-radar__ring--edge {
+  stroke: var(--ing-cyan);
+}
+
+.ing-mini-radar--resistance .ing-radar__shape {
+  fill: rgba(38, 182, 255, 0.14);
+  stroke: var(--ing-cyan);
 }
 
 .ing-radar__label {
@@ -2618,6 +2795,135 @@
   fill: var(--ing-text-faint);
   font-family: var(--ing-font-body);
   font-size: 10px;
+}
+
+/* --- evolução do agente (AgentHistoryChart, painel expandido do ranking) --- */
+
+.ing-evo {
+  margin-top: 1.3rem;
+}
+
+.ing-evo__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.ing-evo__title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+
+.ing-evo__title strong {
+  font-family: var(--ing-font-display);
+  font-size: 0.88rem;
+  color: var(--ing-text);
+}
+
+.ing-evo__title span {
+  font-size: 0.72rem;
+  color: var(--ing-text-faint);
+}
+
+.ing-evo__stats {
+  display: flex;
+  gap: 1.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+
+.ing-evo__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.ing-evo__stat-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ing-text-faint);
+}
+
+.ing-evo__stat-value {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--ing-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-evo__stat-value.is-up {
+  color: var(--ing-green-soft);
+}
+
+.ing-evo__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--ing-font-body);
+  overflow: visible;
+}
+
+.ing-evo__grid {
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+}
+
+.ing-evo__axis-label {
+  fill: var(--ing-text-faint);
+  font-size: 9px;
+}
+
+.ing-evo__line {
+  fill: none;
+  stroke: var(--ing-green);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.ing-evo__dot {
+  fill: var(--ing-bg-2);
+  stroke: var(--ing-green-soft);
+  stroke-width: 1.5;
+}
+
+.ing-evo__dot.is-last {
+  fill: var(--ing-green);
+  stroke: var(--ing-green-soft);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 5px rgba(0, 230, 118, 0.6));
+}
+
+.ing-evo__empty {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--ing-text-dim);
+}
+
+/* Facção Resistance: gráfico em azul, não na cor-marca (verde) do site. */
+.ing-evo--resistance .ing-evo__stat-value.is-up {
+  color: var(--ing-cyan-soft);
+}
+
+.ing-evo--resistance .ing-evo__line {
+  stroke: var(--ing-cyan);
+}
+
+.ing-evo--resistance .ing-evo__dot {
+  stroke: var(--ing-cyan-soft);
+}
+
+.ing-evo--resistance .ing-evo__dot.is-last {
+  fill: var(--ing-cyan);
+  stroke: var(--ing-cyan-soft);
+  filter: drop-shadow(0 0 5px rgba(38, 182, 255, 0.6));
 }
 
 @media (prefers-reduced-motion: reduce) {

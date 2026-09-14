@@ -23,7 +23,7 @@ export const dynamic = 'force-dynamic'
 async function loadInitialRows(): Promise<RankingRow[]> {
   try {
     const rows = await sql`
-      SELECT codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, created_at, updated_at
+      SELECT codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, country_code, created_at, updated_at
       FROM casara.ingress_rankings
       ORDER BY overall_score DESC, lifetime_ap DESC, created_at ASC
       LIMIT 100
@@ -37,6 +37,7 @@ async function loadInitialRows(): Promise<RankingRow[]> {
       axis_scores: row.axis_scores,
       stat_values: row.stat_values,
       stat_tiers: computeStatTiers(row.stat_values as Record<string, number>),
+      country_code: row.country_code,
       created_at: row.created_at,
       updated_at: row.updated_at,
     })) as RankingRow[];

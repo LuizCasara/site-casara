@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import sql from "@/lib/db";
 import { normalizeCodenameKey } from "@/lib/ingress-rankings.mjs";
+import { normalizeCountryCode, isValidCountryCode } from "@/lib/ingress-countries.mjs";
 import { computeAxisScores, computeOverallScore, overallTierLabel, computeStatTiers } from "@/lib/ingress-tier-score.mjs";
 import { RADAR_STAT_KEYS } from "@/lib/ingress-compare-message.mjs";
 import { rateLimitOrNull } from "@/lib/rate-limit";
@@ -134,6 +135,11 @@ export async function POST(request: NextRequest) {
   }
   const stats = body.stats as Record<string, number>;
 
+  const countryCode = normalizeCountryCode(body.countryCode);
+  if (!isValidCountryCode(countryCode)) {
+    return NextResponse.json({ error: "countryCode é obrigatório e deve ser um código ISO 3166-1 válido" }, { status: 400 });
+  }
+
   try {
     // O codinome do FencherLC não tem mais guarda especial: se o body trouxe
     // stats de verdade (inclusive um export fresco do próprio FencherLC), a
@@ -149,9 +155,9 @@ export async function POST(request: NextRequest) {
     // mais de 5 minutos. Sem conflito (agente novo), o INSERT sempre vale.
     const [inserted] = await sql`
       INSERT INTO casara.ingress_rankings
-        (codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, created_at, updated_at)
+        (codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, country_code, created_at, updated_at)
       VALUES
-        (${codenameKey}, ${codename}, ${faction}, ${lifetimeAp}, ${overallScore}, ${JSON.stringify(axisScoreMap)}, ${JSON.stringify(stats)}, NOW(), NOW())
+        (${codenameKey}, ${codename}, ${faction}, ${lifetimeAp}, ${overallScore}, ${JSON.stringify(axisScoreMap)}, ${JSON.stringify(stats)}, ${countryCode}, NOW(), NOW())
       ON CONFLICT (codename_key) DO UPDATE SET
         codename = EXCLUDED.codename,
         faction = EXCLUDED.faction,
@@ -159,6 +165,7 @@ export async function POST(request: NextRequest) {
         overall_score = EXCLUDED.overall_score,
         axis_scores = EXCLUDED.axis_scores,
         stat_values = EXCLUDED.stat_values,
+        country_code = EXCLUDED.country_code,
         updated_at = NOW()
       WHERE casara.ingress_rankings.updated_at < NOW() - INTERVAL '5 minutes'
       RETURNING *
@@ -171,6 +178,20 @@ export async function POST(request: NextRequest) {
       // Não deveria acontecer: sem conflito o INSERT sempre grava; com
       // conflito e debounce ativo, a linha bloqueada já existe.
       return NextResponse.json({ error: "falha ao gravar o registro" }, { status: 500 });
+    }
+
+    if (written) {
+      // Um snapshot append-only por escrita real (nunca sob debounce) —
+      // alimenta o gráfico de evolução. Erro aqui não pode derrubar a
+      // resposta principal: o ranking já foi gravado com sucesso.
+      try {
+        await sql`
+          INSERT INTO casara.ingress_ranking_history (codename_key, lifetime_ap, overall_score, axis_scores)
+          VALUES (${codenameKey}, ${lifetimeAp}, ${overallScore}, ${JSON.stringify(axisScoreMap)})
+        `;
+      } catch (err) {
+        console.error("[api/ingress-rankings] falha ao gravar snapshot de histórico:", err);
+      }
     }
 
     const responseBody = await buildResponseFromRow(finalRow, written);
@@ -190,7 +211,7 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(MAX_LIMIT, Math.max(1, Number.isFinite(requested) && requested > 0 ? requested : DEFAULT_LIMIT));
 
     const rows = await sql`
-      SELECT codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, created_at, updated_at
+      SELECT codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, country_code, created_at, updated_at
       FROM casara.ingress_rankings
       ORDER BY overall_score DESC, lifetime_ap DESC, created_at ASC
       LIMIT ${limit}
@@ -205,6 +226,7 @@ export async function GET(request: NextRequest) {
       axis_scores: row.axis_scores,
       stat_values: row.stat_values,
       stat_tiers: computeStatTiers(row.stat_values as Record<string, number>),
+      country_code: row.country_code,
       created_at: row.created_at,
       updated_at: row.updated_at,
     }));

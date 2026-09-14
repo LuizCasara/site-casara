@@ -1,12 +1,14 @@
 'use client'
 
-import {useEffect, useRef, useState} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
 import {FaEye, FaEyeSlash} from 'react-icons/fa'
 import Panel from '../Panel'
+import AgentHistoryChart from './AgentHistoryChart'
 import {fmtStat} from '@/lib/ingress-format.mjs'
 import {RADAR_AXES, computeRadarAxes} from '@/lib/ingress-radar.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import {TIER_COLOR} from '@/lib/ingress-tiers.mjs'
+import {COUNTRIES} from '@/lib/ingress-countries.mjs'
 import {useLang, type Lang} from '@/context/LanguageContext'
 
 export type StatTier = {tier: string; badgeSlug: string | null}
@@ -20,6 +22,7 @@ export type RankingRow = {
   axis_scores: Record<string, number>
   stat_values: Record<string, number>
   stat_tiers?: Record<string, StatTier>
+  country_code: string | null
   created_at: string
   updated_at: string
 }
@@ -37,6 +40,83 @@ const FACTION_LABEL: Record<RankingRow['faction'], string> = {
 const FACTION_ICON: Record<RankingRow['faction'], string> = {
   enlightened: '/ingress/factions/enlightened.svg',
   resistance: '/ingress/factions/resistance.svg',
+}
+
+type CountryOption = {code: string; namePt: string; nameEn: string}
+const COUNTRY_BY_CODE = new Map((COUNTRIES as CountryOption[]).map((c) => [c.code, c]))
+function countryName(code: string, lang: Lang): string | null {
+  const c = COUNTRY_BY_CODE.get(code)
+  if (!c) return null
+  return lang === 'en' ? c.nameEn : c.namePt
+}
+const flagSrc = (code: string) => `/ingress/flags/${code.toLowerCase()}.svg`
+
+/**
+ * Colunas compactas de nota por eixo (pedido do Luiz: "C D E H LF" em vez do
+ * nome inteiro, pra caber na tabela) — a abreviação é a mesma em pt/en porque
+ * as 5 iniciais batem nos dois idiomas (Construção/Construction -> C, etc.),
+ * então não precisa de par pt/en como o resto de `T`. O rótulo completo por
+ * idioma vem de `RADAR_AXES` via `axisLabel`, usado no `title`/aria-label.
+ */
+type AxisId = 'construcao' | 'destruicao' | 'exploracao' | 'hacking' | 'linksCampos'
+const AXIS_COLUMNS: {id: AxisId; short: string}[] = [
+  {id: 'construcao', short: 'C'},
+  {id: 'destruicao', short: 'D'},
+  {id: 'exploracao', short: 'E'},
+  {id: 'hacking', short: 'H'},
+  {id: 'linksCampos', short: 'LF'},
+]
+function axisLabel(id: AxisId, lang: Lang): string {
+  const axis = (RADAR_AXES as {id: string; label: string; labelEn: string}[]).find((a) => a.id === id)
+  if (!axis) return id
+  return lang === 'en' ? axis.labelEn : axis.label
+}
+
+type SortableKey = 'score' | 'ap' | 'country' | AxisId
+type SortDir = 'asc' | 'desc'
+const SORT_DEFAULT_DIR: Record<SortableKey, SortDir> = {
+  score: 'desc',
+  ap: 'desc',
+  country: 'asc',
+  construcao: 'desc',
+  destruicao: 'desc',
+  exploracao: 'desc',
+  hacking: 'desc',
+  linksCampos: 'desc',
+}
+
+const DIACRITICS_RE = new RegExp(`[${String.fromCodePoint(0x300)}-${String.fromCodePoint(0x36f)}]`, 'g')
+function normalizeText(s: string): string {
+  return s.normalize('NFD').replace(DIACRITICS_RE, '').toLowerCase()
+}
+
+/** Desempate padrão (mesma ordem que a tabela tinha antes de existir sort por coluna): nota geral desc -> AP desc -> mais antigo primeiro. */
+function baseTieBreak(a: RankingRow, b: RankingRow): number {
+  if (b.overall_score !== a.overall_score) return b.overall_score - a.overall_score
+  if (b.lifetime_ap !== a.lifetime_ap) return b.lifetime_ap - a.lifetime_ap
+  return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+}
+
+function numericSortValue(row: RankingRow, key: Exclude<SortableKey, 'country'>): number {
+  if (key === 'score') return row.overall_score
+  if (key === 'ap') return row.lifetime_ap
+  return row.axis_scores?.[key] ?? 0
+}
+
+/** País ordena pelo nome exibido (localizado); sem país sempre vai pro fim, nas duas direções. */
+function compareRows(a: RankingRow, b: RankingRow, key: SortableKey, dir: SortDir, lang: Lang): number {
+  if (key === 'country') {
+    const an = a.country_code ? countryName(a.country_code, lang) ?? a.country_code : null
+    const bn = b.country_code ? countryName(b.country_code, lang) ?? b.country_code : null
+    if (an === null && bn === null) return baseTieBreak(a, b)
+    if (an === null) return 1
+    if (bn === null) return -1
+    const cmp = an.localeCompare(bn, lang === 'en' ? 'en' : 'pt-BR')
+    return cmp !== 0 ? (dir === 'asc' ? cmp : -cmp) : baseTieBreak(a, b)
+  }
+  const av = numericSortValue(a, key)
+  const bv = numericSortValue(b, key)
+  return av !== bv ? (dir === 'asc' ? av - bv : bv - av) : baseTieBreak(a, b)
 }
 
 /** Cor do selo de tier por medalha — `TIER_COLOR` não cobre `'none'` (medalha ainda não alcançada). */
@@ -75,7 +155,15 @@ function shapePoint(i: number, count: number, radius: number): [number, number] 
  * agente dentro do painel expandido. Reaproveita `computeRadarAxes` (puro,
  * client-safe) e as mesmas classes CSS do radar grande.
  */
-function MiniShapeRadar({stats, ariaLabel}: {stats: Record<string, number>; ariaLabel: string}) {
+function MiniShapeRadar({
+  stats,
+  ariaLabel,
+  faction,
+}: {
+  stats: Record<string, number>
+  ariaLabel: string
+  faction: RankingRow['faction']
+}) {
   const axes = computeRadarAxes(stats) as {id: string; onyxRatio: number}[]
   const n = axes.length
   const maxRatio = Math.max(...axes.map((a) => a.onyxRatio), 0.01)
@@ -83,7 +171,14 @@ function MiniShapeRadar({stats, ariaLabel}: {stats: Record<string, number>; aria
   const shape = axes.map((a, i) => shapePoint(i, n, radiusIn(a.onyxRatio)).join(',')).join(' ')
 
   return (
-    <svg viewBox={`0 0 ${SHAPE_SIZE} ${SHAPE_SIZE}`} width={SHAPE_SIZE} height={SHAPE_SIZE} role="img" aria-label={ariaLabel}>
+    <svg
+      viewBox={`0 0 ${SHAPE_SIZE} ${SHAPE_SIZE}`}
+      width={SHAPE_SIZE}
+      height={SHAPE_SIZE}
+      role="img"
+      aria-label={ariaLabel}
+      className={faction === 'resistance' ? 'ing-mini-radar--resistance' : undefined}
+    >
       {[0.34, 0.67, 1].map((f) => (
         <polygon
           key={f}
@@ -113,11 +208,16 @@ const T = {
   pt: {
     panelLabel: 'Ranking de agentes',
     panelHint: (n: number) => `${n} agente${n > 1 ? 's' : ''} medido${n > 1 ? 's' : ''}`,
+    panelHintFiltered: (v: number, n: number) => `${v} de ${n} agente${n > 1 ? 's' : ''} medido${n > 1 ? 's' : ''}`,
     emptyBody: 'Ainda ninguém foi medido por aqui — cole seu export num dos botões acima pra ser o primeiro agente do ranking.',
+    noResultsBody: 'Nenhum agente encontrado com esses filtros.',
+    searchPlaceholder: 'Buscar codinome…',
+    factionAll: 'Todas',
     refreshBtn: 'Atualizar',
     refreshingBtn: 'Atualizando…',
     colRank: '#',
     colFaction: 'Facção',
+    colCountry: 'País',
     colCodename: 'Codinome',
     colDates: 'Datas',
     datesTooltip: (updated: string, measured: string) => `Atualizado em ${updated} · Medido desde ${measured}`,
@@ -133,11 +233,16 @@ const T = {
   en: {
     panelLabel: 'Agent ranking',
     panelHint: (n: number) => `${n} agent${n > 1 ? 's' : ''} measured`,
+    panelHintFiltered: (v: number, n: number) => `${v} of ${n} agent${n > 1 ? 's' : ''} measured`,
     emptyBody: "No one's been measured here yet — paste your export in one of the buttons above to be the ranking's first agent.",
+    noResultsBody: 'No agents found for these filters.',
+    searchPlaceholder: 'Search codename…',
+    factionAll: 'All',
     refreshBtn: 'Refresh',
     refreshingBtn: 'Refreshing…',
     colRank: '#',
     colFaction: 'Faction',
+    colCountry: 'Country',
     colCodename: 'Codename',
     colDates: 'Dates',
     datesTooltip: (updated: string, measured: string) => `Updated on ${updated} · Measured since ${measured}`,
@@ -186,7 +291,43 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
   const [rows, setRows] = useState(initialRows)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [search, setSearch] = useState('')
+  const [factionFilter, setFactionFilter] = useState<'all' | RankingRow['faction']>('all')
+  const [sortKey, setSortKey] = useState<SortableKey>('score')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
   const mounted = useRef(true)
+
+  const handleSort = (key: SortableKey) => {
+    if (key === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir(SORT_DEFAULT_DIR[key])
+    }
+  }
+
+  const sortArrow = (key: SortableKey) =>
+    sortKey === key ? (
+      <span className="ing-ranking-table__sort-arrow" aria-hidden="true">{sortDir === 'asc' ? '▲' : '▼'}</span>
+    ) : null
+
+  const ariaSort = (key: SortableKey): 'ascending' | 'descending' | 'none' =>
+    sortKey !== key ? 'none' : sortDir === 'asc' ? 'ascending' : 'descending'
+
+  const visibleRows = useMemo(() => {
+    const q = normalizeText(search.trim())
+    const filtered = rows.filter(
+      (r) => (factionFilter === 'all' || r.faction === factionFilter) && (!q || normalizeText(r.codename).includes(q))
+    )
+    return [...filtered].sort((a, b) => compareRows(a, b, sortKey, sortDir, lang))
+  }, [rows, search, factionFilter, sortKey, sortDir, lang])
+
+  // `rows` chega do servidor já na ordem canônica (overall_score desc ->
+  // lifetime_ap desc -> created_at asc — mesma de compareRankingRows), então
+  // o índice aqui É a posição real no ranking geral. A coluna "#" usa isso,
+  // nunca o índice de `visibleRows` (que muda com filtro/busca/ordenação
+  // local e pararia de refletir o rank de verdade).
+  const rankByKey = useMemo(() => new Map(rows.map((r, i) => [r.codename_key, i + 1])), [rows])
 
   useEffect(() => {
     mounted.current = true
@@ -207,7 +348,10 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
     if (mounted.current) setRefreshing(false)
   }
 
-  const expandedRow = rows.find((r) => r.codename_key === expanded) ?? null
+  // Baseado em `visibleRows`, não `rows`: se um filtro esconder a linha
+  // expandida, o detalhe fecha sozinho em vez de mostrar dado de uma linha
+  // que não está mais na tabela visível.
+  const expandedRow = visibleRows.find((r) => r.codename_key === expanded) ?? null
 
   if (rows.length === 0) {
     return (
@@ -218,31 +362,93 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
   }
 
   return (
-    <Panel label={t.panelLabel} hint={t.panelHint(rows.length)}>
-      <div className="ing-ranking-table__actions">
+    <Panel
+      label={t.panelLabel}
+      hint={visibleRows.length !== rows.length ? t.panelHintFiltered(visibleRows.length, rows.length) : t.panelHint(rows.length)}
+    >
+      <div className="ing-ranking-table__toolbar">
+        <div className="ing-ranking-table__filters">
+          <input
+            type="search"
+            className="ing-ranking-table__search"
+            placeholder={t.searchPlaceholder}
+            aria-label={t.searchPlaceholder}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <div className="ing-ranking-table__faction-filter" role="group" aria-label={t.colFaction}>
+            <button
+              type="button"
+              className={factionFilter === 'all' ? 'is-active' : undefined}
+              onClick={() => setFactionFilter('all')}
+            >
+              {t.factionAll}
+            </button>
+            {(['enlightened', 'resistance'] as const).map((faction) => (
+              <button
+                key={faction}
+                type="button"
+                className={factionFilter === faction ? 'is-active' : undefined}
+                onClick={() => setFactionFilter(faction)}
+              >
+                <img src={FACTION_ICON[faction]} alt="" width={16} height={16} />
+                {FACTION_LABEL[faction]}
+              </button>
+            ))}
+          </div>
+        </div>
         <button type="button" className="ing-radar__btn" onClick={refreshNow} disabled={refreshing}>
           {refreshing ? t.refreshingBtn : t.refreshBtn}
         </button>
       </div>
+
+      {visibleRows.length === 0 ? (
+        <p className="ing-ranking-table__no-results">{t.noResultsBody}</p>
+      ) : (
       <div className="ing-ranking-table__wrap">
         <table className="ing-ranking-table">
           <thead>
             <tr>
               <th scope="col" data-col="rank">{t.colRank}</th>
-              <th scope="col" data-col="score">{t.colScore}</th>
+              <th scope="col" data-col="score" aria-sort={ariaSort('score')}>
+                <button type="button" className="ing-ranking-table__sort-btn" onClick={() => handleSort('score')}>
+                  {t.colScore}{sortArrow('score')}
+                </button>
+              </th>
               <th scope="col" data-col="faction" aria-label={t.colFaction} />
+              <th scope="col" data-col="country" aria-sort={ariaSort('country')}>
+                <button type="button" className="ing-ranking-table__sort-btn" onClick={() => handleSort('country')}>
+                  {t.colCountry}{sortArrow('country')}
+                </button>
+              </th>
               <th scope="col" data-col="codename">{t.colCodename}</th>
               <th scope="col" data-col="dates">{t.colDates}</th>
-              <th scope="col" data-col="ap">{t.colAp}</th>
+              <th scope="col" data-col="ap" aria-sort={ariaSort('ap')}>
+                <button type="button" className="ing-ranking-table__sort-btn" onClick={() => handleSort('ap')}>
+                  {t.colAp}{sortArrow('ap')}
+                </button>
+              </th>
+              {AXIS_COLUMNS.map((col) => (
+                <th key={col.id} scope="col" data-col={col.id} title={axisLabel(col.id, lang)} aria-sort={ariaSort(col.id)}>
+                  <button
+                    type="button"
+                    className="ing-ranking-table__sort-btn"
+                    aria-label={axisLabel(col.id, lang)}
+                    onClick={() => handleSort(col.id)}
+                  >
+                    {col.short}{sortArrow(col.id)}
+                  </button>
+                </th>
+              ))}
               <th scope="col" data-col="details" aria-label={t.colDetails} />
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, i) => {
+            {visibleRows.map((row) => {
               const isOpen = expanded === row.codename_key
               return (
                   <tr key={row.codename_key} className={isOpen ? 'is-expanded' : undefined}>
-                    <td data-col="rank">{i + 1}</td>
+                    <td data-col="rank">{rankByKey.get(row.codename_key)}</td>
                     <td data-col="score">{fmtScore(row.overall_score)}</td>
                     <td data-col="faction">
                       <img
@@ -254,6 +460,21 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                         className="ing-ranking-table__faction-icon"
                       />
                     </td>
+                    <td data-col="country">
+                      {row.country_code ? (
+                        <img
+                          src={flagSrc(row.country_code)}
+                          alt={countryName(row.country_code, lang) ?? row.country_code}
+                          title={countryName(row.country_code, lang) ?? row.country_code}
+                          width={20}
+                          height={15}
+                          className="ing-ranking-table__country-flag"
+                          onError={(e) => {
+                            e.currentTarget.style.visibility = 'hidden'
+                          }}
+                        />
+                      ) : null}
+                    </td>
                     <td data-col="codename">
                       <span className="ing-ranking-table__codename">{row.codename}</span>
                     </td>
@@ -261,6 +482,9 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                       {fmtDate(row.updated_at, lang)}
                     </td>
                     <td data-col="ap">{fmtStat(row.lifetime_ap)}</td>
+                    {AXIS_COLUMNS.map((col) => (
+                      <td key={col.id} data-col={col.id}>{fmtScore(row.axis_scores?.[col.id] ?? 0)}</td>
+                    ))}
                     <td data-col="details">
                       <button
                         type="button"
@@ -278,6 +502,7 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
           </tbody>
         </table>
       </div>
+      )}
 
       {expandedRow ? (
         <div className="ing-ranking-table__detail">
@@ -320,9 +545,13 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
           ))}
           <div className="ing-ranking-table__detail-shape">
             <span className="ing-ranking-table__detail-shape-label">{t.shapeLabel}</span>
-            <MiniShapeRadar stats={expandedRow.stat_values} ariaLabel={t.shapeAria(expandedRow.codename)} />
+            <MiniShapeRadar stats={expandedRow.stat_values} ariaLabel={t.shapeAria(expandedRow.codename)} faction={expandedRow.faction} />
           </div>
         </div>
+      ) : null}
+
+      {expandedRow ? (
+        <AgentHistoryChart codenameKey={expandedRow.codename_key} agentName={expandedRow.codename} faction={expandedRow.faction} />
       ) : null}
 
       <p className="ing-ranking-table__credit">{t.logoCredit}</p>
