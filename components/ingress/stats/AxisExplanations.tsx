@@ -67,6 +67,7 @@ const translations = {
     exampleTitle: 'Um exemplo, com números',
     exampleIntro: 'Um agente fictício, só pra ver a fórmula com números em vez de letras:',
     exampleHint: 'Passe o mouse nos números pra ver de onde cada um veio.',
+    summary: 'Ver o que cada eixo mede e como a nota é calculada',
     axes: {
       construcao: {
         title: 'Construção',
@@ -101,6 +102,7 @@ const translations = {
     exampleTitle: 'A worked example, in numbers',
     exampleIntro: "A fictional agent, just to see the formula with numbers instead of letters:",
     exampleHint: 'Hover the numbers to see where each one comes from.',
+    summary: 'See what each axis measures and how the score is calculated',
     axes: {
       construcao: {
         title: 'Construction',
@@ -141,63 +143,73 @@ export default function AxisExplanations() {
 
   return (
     <Panel label={t.panelLabel}>
-      <dl className="ing-axis-explanations">
-        {RADAR_AXES.map((axis) => {
-          const entry = t.axes[axis.id as AxisId]
-          return (
-            <div key={axis.id} className="ing-axis-explanations__item">
-              <div className="ing-axis-explanations__icons" aria-hidden="true">
-                {axis.parts
-                  .filter((part) => part.badge)
-                  .map((part) => (
-                    <img
-                      key={part.key}
-                      src={artPath(part.badge as string, 'onyx')}
-                      alt=""
-                      width={40}
-                      height={40}
-                      className="ing-axis-explanations__icon"
-                    />
-                  ))}
+      {/*
+        Fechado por padrão (sem `open`) — é texto de referência lido uma vez
+        (pedido do Luiz: "vai ser usado 1 vez só"), não algo que precise
+        ocupar espaço permanente no fim da página do ranking. `<details>`
+        nativo em vez de estado em React: não tem nenhuma outra parte da
+        página que precise saber se está aberto, então dispensa `useState`.
+      */}
+      <details className="ing-axis-explanations__details">
+        <summary className="ing-axis-explanations__summary">{t.summary}</summary>
+        <dl className="ing-axis-explanations">
+          {RADAR_AXES.map((axis) => {
+            const entry = t.axes[axis.id as AxisId]
+            return (
+              <div key={axis.id} className="ing-axis-explanations__item">
+                <div className="ing-axis-explanations__icons" aria-hidden="true">
+                  {axis.parts
+                    .filter((part) => part.badge)
+                    .map((part) => (
+                      <img
+                        key={part.key}
+                        src={artPath(part.badge as string, 'onyx')}
+                        alt=""
+                        width={40}
+                        height={40}
+                        className="ing-axis-explanations__icon"
+                      />
+                    ))}
+                </div>
+                <dt>{entry.title}</dt>
+                <dd>{entry.body}</dd>
               </div>
-              <dt>{entry.title}</dt>
-              <dd>{entry.body}</dd>
-            </div>
-          )
-        })}
-      </dl>
-      <div className="ing-axis-explanations__formula">
-        <p className="ing-axis-explanations__formula-title">{t.formulaTitle}</p>
-        {t.formulaBody.map((paragraph, i) => (
-          <p key={i} className="ing-axis-explanations__formula-text">
-            {paragraph}
-          </p>
-        ))}
-        <p className="ing-axis-explanations__example-title">{t.exampleTitle}</p>
-        <p className="ing-axis-explanations__example-intro">{t.exampleIntro}</p>
-        <div className="ing-axis-explanations__example-row">
-          {example.axes.map((axis, i) => (
-            <Fragment key={axis.id}>
-              {i > 0 && (
-                <span className="ing-axis-explanations__example-op" aria-hidden="true">
-                  +
-                </span>
-              )}
-              <span className="ing-axis-explanations__example-axis" title={axis.tooltip}>
-                <span className="ing-axis-explanations__example-axis-label">{axis.label}</span>
-                <span className="ing-axis-explanations__example-axis-value">{fmt1(axis.score, lang)}</span>
-              </span>
-            </Fragment>
+            )
+          })}
+        </dl>
+        <div className="ing-axis-explanations__formula">
+          <p className="ing-axis-explanations__formula-title">{t.formulaTitle}</p>
+          {t.formulaBody.map((paragraph, i) => (
+            <p key={i} className="ing-axis-explanations__formula-text">
+              {paragraph}
+            </p>
           ))}
-          <span className="ing-axis-explanations__example-op" aria-hidden="true">
-            ÷ 5 × 20 =
-          </span>
-          <span className="ing-axis-explanations__example-result" title={example.resultTooltip}>
-            {example.result}
-          </span>
+          <p className="ing-axis-explanations__example-title">{t.exampleTitle}</p>
+          <p className="ing-axis-explanations__example-intro">{t.exampleIntro}</p>
+          <div className="ing-axis-explanations__example-row">
+            {example.axes.map((axis, i) => (
+              <Fragment key={axis.id}>
+                {i > 0 && (
+                  <span className="ing-axis-explanations__example-op" aria-hidden="true">
+                    +
+                  </span>
+                )}
+                <span className="ing-axis-explanations__example-axis" title={axis.tooltip}>
+                  <span className="ing-axis-explanations__example-axis-label">{axis.label}</span>
+                  <span className="ing-axis-explanations__example-axis-value">{fmt1(axis.score, lang)}</span>
+                </span>
+              </Fragment>
+            ))}
+            <span className="ing-axis-explanations__example-op" aria-hidden="true">
+              ÷ 5 × 20 =
+            </span>
+            <span className="ing-axis-explanations__example-result" title={example.resultTooltip}>
+              {example.result}
+            </span>
+          </div>
+          <p className="ing-axis-explanations__example-hint">{t.exampleHint}</p>
         </div>
-        <p className="ing-axis-explanations__example-hint">{t.exampleHint}</p>
-      </div>
+      </details>
     </Panel>
   )
 }

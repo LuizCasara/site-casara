@@ -510,27 +510,35 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
       <div className="ing-ranking-table__wrap">
         <table className="ing-ranking-table">
           {/*
-            table-layout: fixed (ver theme.css) + estas larguras é o que
+            table-layout: fixed (ver theme.css) + larguras por coluna é o que
             garante que a sub-linha de detalhe NUNCA alarga a tabela: com
             colunas de largura fixa, o conteúdo de qualquer célula (mesmo um
             colSpan cobrindo todas) só pode quebrar linha ou ser cortado —
             nunca estufar o <table>. `codename` é a única sem largura, então
-            é ela quem recebe o espaço restante.
+            é ela quem recebe o espaço restante (inclusive o que os
+            breakpoints mobile liberam ao esconder coluna).
+
+            As larguras em si viraram CSS (`col[data-col=…]` em theme.css) em
+            vez de inline style: inline style tem especificidade maior que
+            qualquer regra de classe/atributo, então um `@media` não
+            conseguiria sobrescrever a largura pra comprimir/esconder coluna
+            no celular. `data-col` aqui espelha o mesmo atributo usado nos
+            `th`/`td` de cada coluna.
           */}
           <colgroup>
-            <col style={{width: '2.6rem'}} />
-            <col style={{width: '6.25rem'}} />
-            <col style={{width: '2.6rem'}} />
-            <col style={{width: '3rem'}} />
-            <col />
-            <col style={{width: '6rem'}} />
-            <col style={{width: '6.4rem'}} />
-            <col style={{width: '2.3rem'}} />
-            <col style={{width: '2.3rem'}} />
-            <col style={{width: '2.3rem'}} />
-            <col style={{width: '2.3rem'}} />
-            <col style={{width: '2.5rem'}} />
-            <col style={{width: '3.2rem'}} />
+            <col data-col="rank" />
+            <col data-col="score" />
+            <col data-col="faction" />
+            <col data-col="country" />
+            <col data-col="codename" />
+            <col data-col="dates" />
+            <col data-col="ap" />
+            <col data-col="construcao" />
+            <col data-col="destruicao" />
+            <col data-col="exploracao" />
+            <col data-col="hacking" />
+            <col data-col="linksCampos" />
+            <col data-col="details" />
           </colgroup>
           <thead>
             <tr>
@@ -661,7 +669,27 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                           >
                             <div className="ing-ranking-table__detail-playstyle">
                               <div className="ing-ranking-table__detail-playstyle-side ing-ranking-table__detail-playstyle-side--left">
-                                <span className="ing-ranking-table__detail-playstyle-name">{row.codename}</span>
+                                <span className="ing-ranking-table__detail-playstyle-name-row">
+                                  <span className="ing-ranking-table__detail-playstyle-name">{row.codename}</span>
+                                  {/*
+                                    Só aparece no celular (`.ing-ranking-table__detail-share`,
+                                    ver theme.css) — é onde a coluna de compartilhar some da
+                                    linha da tabela pra sobrar espaço pro codinome; aqui dentro
+                                    do detalhe tem espaço de sobra e o agente já está com o
+                                    nome na tela, então o botão fica ao lado dele.
+                                  */}
+                                  <button
+                                    type="button"
+                                    className="ing-ranking-table__share ing-ranking-table__detail-share"
+                                    aria-label={t.shareAgentAria(row.codename)}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      void shareAgent(row)
+                                    }}
+                                  >
+                                    <FaShareAlt aria-hidden="true" />
+                                  </button>
+                                </span>
                                 <span
                                   className={`ing-ranking-table__detail-playstyle-recursion${row.recursions === null ? ' is-unknown' : ''}`}
                                   title={row.recursions !== null ? t.recursionsAria(row.recursions) : t.recursionsUnknown}

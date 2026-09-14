@@ -2084,6 +2084,25 @@
   font-size: 0.85rem;
 }
 
+/*
+ * Largura de cada coluna (antes inline no `<col style>`, ver comentário no
+ * componente) — `codename` de propósito não tem regra: é a única coluna sem
+ * largura fixa, então em table-layout:fixed ela recebe todo o espaço que
+ * sobra, inclusive o que os breakpoints abaixo liberam ao esconder colunas.
+ */
+.ing-ranking-table col[data-col='rank'] { width: 2.6rem; }
+.ing-ranking-table col[data-col='score'] { width: 6.25rem; }
+.ing-ranking-table col[data-col='faction'] { width: 2.6rem; }
+.ing-ranking-table col[data-col='country'] { width: 3rem; }
+.ing-ranking-table col[data-col='dates'] { width: 6rem; }
+.ing-ranking-table col[data-col='ap'] { width: 6.4rem; }
+.ing-ranking-table col[data-col='construcao'],
+.ing-ranking-table col[data-col='destruicao'],
+.ing-ranking-table col[data-col='exploracao'],
+.ing-ranking-table col[data-col='hacking'] { width: 2.3rem; }
+.ing-ranking-table col[data-col='linksCampos'] { width: 2.5rem; }
+.ing-ranking-table col[data-col='details'] { width: 3.2rem; }
+
 .ing-ranking-table thead th {
   text-align: center;
   padding: 0.5rem 0.6rem;
@@ -2470,12 +2489,30 @@
   text-align: right;
 }
 
+.ing-ranking-table__detail-playstyle-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .ing-ranking-table__detail-playstyle-name {
   font-family: var(--ing-font-display);
   font-weight: 700;
   font-size: 0.85rem;
   color: var(--ing-text);
   overflow-wrap: anywhere;
+}
+
+/*
+ * Duplicata do botão de compartilhar de cada linha, só que morando dentro do
+ * detalhe — existe só pro celular (a regra base esconde, o `@media` de 640px
+ * mostra), que é justamente onde a coluna de compartilhar some da tabela (ver
+ * `td[data-col='details']` no mesmo breakpoint) pra sobrar espaço pro
+ * codinome. No desktop a coluna original continua sendo o único jeito de
+ * compartilhar — sem isso o botão apareceria duas vezes na mesma tela.
+ */
+.ing-ranking-table__detail-share {
+  display: none;
 }
 
 .ing-ranking-table__detail-playstyle-recursion {
@@ -2619,6 +2656,58 @@
 
 /* ─── "O que cada eixo mede" (iteração de UI: cartões + ícones de medalha) ─── */
 
+/*
+ * Acordeon fechado por padrão (pedido do Luiz: texto de referência lido uma
+ * vez só, não vale ocupar espaço permanente no fim da página). `<details>`
+ * nativo, sem marcador default do navegador (`::-webkit-details-marker` +
+ * `list-style: none` no `summary`, que também precisa de `display: list-item`
+ * pra virar alvo de clique em todo o browser) — o "▸"/"▾" próprio já cobre o
+ * papel do marcador nativo, só que consistente com o resto do tema.
+ */
+.ing-axis-explanations__details summary {
+  list-style: none;
+}
+.ing-axis-explanations__details summary::-webkit-details-marker {
+  display: none;
+}
+
+.ing-axis-explanations__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--ing-text);
+  user-select: none;
+}
+
+.ing-axis-explanations__summary::before {
+  content: '▸';
+  display: inline-block;
+  color: var(--ing-green-soft);
+  transition: transform 0.15s ease;
+}
+
+.ing-axis-explanations__details[open] > .ing-axis-explanations__summary::before {
+  transform: rotate(90deg);
+}
+
+.ing-axis-explanations__summary:hover {
+  color: var(--ing-green-soft);
+}
+
+.ing-axis-explanations__summary:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.ing-axis-explanations__details[open] > .ing-axis-explanations__summary {
+  margin-bottom: 1rem;
+}
+
 .ing-axis-explanations {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
@@ -2754,16 +2843,160 @@
   text-align: center;
 }
 
+/*
+ * >760px: tabela completa, igual à versão web (nada muda até aqui — é
+ * exatamente o breakpoint que o Luiz pediu pra não mexer).
+ *
+ * <=760px: somem as 5 colunas de eixo (C/D/E/H/LF) — são o dado mais denso
+ * e o menos essencial pra reconhecer um agente batendo o olho na tabela; a
+ * mesma informação (com nome completo, não a sigla) já está na sub-linha de
+ * detalhe que abre ao clicar.
+ *
+ * Só `visibility: collapse` no `<col>` — NENHUM `display: none` no `th`/`td`
+ * correspondente. Motivo (achado inspecionando o DOM renderizado, não só o
+ * CSS): num `<table>` com `table-layout: fixed`, o Chromium casa célula com
+ * coluna pela ORDEM das células que ainda estão no fluxo — uma célula com
+ * `display: none` sai da contagem, mas o `<col>` dela continua ocupando uma
+ * posição no `<colgroup>`. Resultado: cada célula visível DEPOIS da
+ * escondida desliza uma posição pra trás e herda a largura do `<col>`
+ * errado (foi assim que a coluna "AP total" ficou com largura 0 — ela
+ * "roubava" a largura da coluna anterior escondida). `visibility: collapse`
+ * sozinho não tem esse problema: a célula continua contando pra ordem, só
+ * não é desenhada (o próprio spec de CSS Tables existe pra isso).
+ */
+@media (max-width: 760px) {
+  .ing-ranking-table col[data-col='construcao'],
+  .ing-ranking-table col[data-col='destruicao'],
+  .ing-ranking-table col[data-col='exploracao'],
+  .ing-ranking-table col[data-col='hacking'],
+  .ing-ranking-table col[data-col='linksCampos'] {
+    visibility: collapse;
+    width: 0;
+  }
+}
+
 @media (max-width: 640px) {
   .ing-ranking-table {
     font-size: 0.78rem;
   }
   .ing-ranking-table thead th,
   .ing-ranking-table tbody td {
-    padding: 0.45rem 0.4rem;
+    padding: 0.45rem 0.35rem;
   }
   .ing-ranking-table__chip {
     padding: 0.3rem 0.5rem;
+  }
+
+  /*
+   * "Datas" some também (junto dos eixos): coluna estreita + `white-space:
+   * nowrap` (ver `td[data-col='dates']` acima) é o que fazia a data invadir
+   * visualmente a coluna do codinome vizinha no celular — não dava só pra
+   * apertar, tinha que sair da tabela. Continua disponível no título (hover)
+   * de quem tem mouse, e a sub-linha de detalhe mostra "última atualização"
+   * por extenso. Só o `<col>` colapsa (ver comentário grande no breakpoint
+   * de 760px acima sobre por que NÃO existe `display: none` no `td`/`th`
+   * aqui — foi exatamente essa combinação que fazia a coluna "AP total"
+   * ficar com largura 0, ela "herdava" a largura de uma coluna escondida
+   * vizinha).
+   */
+  .ing-ranking-table col[data-col='dates'] {
+    visibility: collapse;
+    width: 0;
+  }
+
+  /*
+   * Compartilhar some da linha da tabela — era a coluna mais dispensável
+   * (o mesmo botão reaparece dentro do detalhe, ver
+   * `.ing-ranking-table__detail-share` acima) e sobrava um respiro vazio
+   * depois dela em telas estreitas, sem servir pro nome do agente por estar
+   * centralizado numa coluna de largura fixa longe do fim do texto. Some
+   * junto o espaço que ela ocupava.
+   */
+  .ing-ranking-table col[data-col='details'] {
+    visibility: collapse;
+    width: 0;
+  }
+  .ing-ranking-table__detail-share {
+    display: inline-grid;
+  }
+
+  /*
+   * Rank/nota/país/facção mais estreitas (sem alterar o que cada um mostra);
+   * AP total ganha mais respiro que antes — sobrava espaço depois de tirar
+   * eixos, datas e compartilhar da linha, e o valor (às vezes 6-7 dígitos
+   * com separador de milhar) precisava dele. O resto do espaço liberado vai
+   * pro codinome, a única coluna sem largura fixa.
+   */
+  .ing-ranking-table col[data-col='rank'] { width: 1.5rem; }
+  .ing-ranking-table col[data-col='score'] { width: 3.4rem; }
+  .ing-ranking-table col[data-col='faction'] { width: 1.7rem; }
+  .ing-ranking-table col[data-col='country'] { width: 1.7rem; }
+  .ing-ranking-table col[data-col='ap'] { width: 5rem; }
+  /* AP total pode chegar a 9 dígitos + separador de milhar ("816.680.453")
+     — mais largo do que qualquer badge, então é o único valor numérico da
+     linha com risco real de não caber nem em 5rem. Quebra pra 2 linhas em
+     vez de vazar pro lado (`overflow-wrap: anywhere` sozinho não quebra
+     dígito a dígito sem espaço/hífen; `word-break: break-all` força). */
+  .ing-ranking-table td[data-col='ap'] {
+    word-break: break-all;
+  }
+
+  .ing-ranking-table__faction-badge {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+  .ing-ranking-table__faction-icon {
+    width: 15px;
+    height: 15px;
+  }
+  .ing-ranking-table__country-flag {
+    width: 15px;
+    height: 11px;
+  }
+  .ing-ranking-table__share {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+
+  /*
+   * Codinome alinhado à esquerda só no celular (no desktop continua
+   * centralizado, igual sempre foi — a régua de largura livre sobra bem
+   * mais nessa coluna aqui, e centralizar um nome curto numa coluna larga
+   * é o que lia como "espaço recuado/desperdiçado" no meio da linha; à
+   * esquerda, o nome fica colado no país/facção como o resto da linha, e a
+   * sobra de espaço vai pro fim, antes do AP, onde é normal e esperado.
+   */
+  .ing-ranking-table td[data-col='codename'] {
+    text-align: left;
+  }
+  .ing-ranking-table__codename {
+    overflow-wrap: anywhere;
+  }
+
+  /*
+   * "Estilo de jogo" em 2 linhas (informações em cima, radar embaixo) em vez
+   * de 3 colunas lado a lado — a coluna central era `auto`, dimensionada
+   * pelo tamanho intrínseco do SVG (~234px): um track `auto` mede pelo
+   * conteúdo e ignora o `max-width: 100%` do próprio SVG nessa fase do
+   * cálculo (percentual não resolve em sizing intrínseco). Era esse o
+   * motivo do painel de detalhe cortando texto na borda (a célula tem
+   * `overflow: hidden`) em vez de simplesmente encolher. Com `1fr` (não
+   * `auto`) o track já nasce do espaço realmente disponível, então o
+   * `max-width: 100%` do SVG passa a valer.
+   */
+  .ing-ranking-table__detail-playstyle {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: 'left right' 'center center';
+    row-gap: 0.6rem;
+  }
+  .ing-ranking-table__detail-playstyle-side--left {
+    grid-area: left;
+  }
+  .ing-ranking-table__detail-playstyle-side--right {
+    grid-area: right;
+  }
+  .ing-ranking-table__detail-playstyle-center {
+    grid-area: center;
   }
 }
 
