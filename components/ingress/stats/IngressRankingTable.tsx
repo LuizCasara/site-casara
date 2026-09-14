@@ -4,11 +4,11 @@ import {useEffect, useMemo, useRef, useState} from 'react'
 import {FaEye, FaEyeSlash} from 'react-icons/fa'
 import Panel from '../Panel'
 import AgentHistoryChart from './AgentHistoryChart'
-import {fmtStat} from '@/lib/ingress-format.mjs'
+import {fmtStat, foldText} from '@/lib/ingress-format.mjs'
 import {RADAR_AXES, computeRadarAxes} from '@/lib/ingress-radar.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import {TIER_COLOR} from '@/lib/ingress-tiers.mjs'
-import {COUNTRIES} from '@/lib/ingress-countries.mjs'
+import {COUNTRIES, flagSrc} from '@/lib/ingress-countries.mjs'
 import {useLang, type Lang} from '@/context/LanguageContext'
 
 export type StatTier = {tier: string; badgeSlug: string | null}
@@ -49,7 +49,6 @@ function countryName(code: string, lang: Lang): string | null {
   if (!c) return null
   return lang === 'en' ? c.nameEn : c.namePt
 }
-const flagSrc = (code: string) => `/ingress/flags/${code.toLowerCase()}.svg`
 
 /**
  * Colunas compactas de nota por eixo (pedido do Luiz: "C D E H LF" em vez do
@@ -85,10 +84,6 @@ const SORT_DEFAULT_DIR: Record<SortableKey, SortDir> = {
   linksCampos: 'desc',
 }
 
-const DIACRITICS_RE = new RegExp(`[${String.fromCodePoint(0x300)}-${String.fromCodePoint(0x36f)}]`, 'g')
-function normalizeText(s: string): string {
-  return s.normalize('NFD').replace(DIACRITICS_RE, '').toLowerCase()
-}
 
 /** Desempate padrão (mesma ordem que a tabela tinha antes de existir sort por coluna): nota geral desc -> AP desc -> mais antigo primeiro. */
 function baseTieBreak(a: RankingRow, b: RankingRow): number {
@@ -315,9 +310,9 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
     sortKey !== key ? 'none' : sortDir === 'asc' ? 'ascending' : 'descending'
 
   const visibleRows = useMemo(() => {
-    const q = normalizeText(search.trim())
+    const q = foldText(search.trim())
     const filtered = rows.filter(
-      (r) => (factionFilter === 'all' || r.faction === factionFilter) && (!q || normalizeText(r.codename).includes(q))
+      (r) => (factionFilter === 'all' || r.faction === factionFilter) && (!q || foldText(r.codename).includes(q))
     )
     return [...filtered].sort((a, b) => compareRows(a, b, sortKey, sortDir, lang))
   }, [rows, search, factionFilter, sortKey, sortDir, lang])
@@ -468,6 +463,7 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                           title={countryName(row.country_code, lang) ?? row.country_code}
                           width={20}
                           height={15}
+                          loading="lazy"
                           className="ing-ranking-table__country-flag"
                           onError={(e) => {
                             e.currentTarget.style.visibility = 'hidden'
