@@ -27,7 +27,8 @@
 - **Backfill pontual autorizado pelo Luiz (13/09)**: as 6 linhas que já existiam em `casara.ingress_rankings` antes da migração (todas com `country_code IS NULL`) foram atualizadas para `'BR'` via `UPDATE ... WHERE country_code IS NULL`, a pedido direto dele — os 6 agentes cadastrados até agora são todos brasileiros. Isso é uma correção pontual de dado, não uma mudança da spec: a Out of Scope original ("preencher retroativamente sem fonte confiável") continua valendo como regra padrão para o caso geral; aqui o Luiz é a fonte confiável para os 6 casos que existiam.
 - **Bug real achado pelo Verifier na 1ª rodada (corrigido antes de fechar)**: `lib/ingress-countries.mjs` usava `readFileSync`+`createRequire` (API exclusiva de Node) para carregar o JSON de países — como esse módulo é importado por Client Components (`CountryPicker`, `IngressRankingTable`), o Turbopack não conseguia colocar isso no bundle do navegador e `npm run build` quebrava. A correção (`import ... with {type:'json'}`, já testada manualmente) tinha ficado só no working tree por várias tasks sem ser commitada — só foi pega porque o Verifier roda em worktree isolado a partir do HEAD real, não do working tree. **Lição registrada** (`.specs/lessons.json`): módulo `lib/*.mjs` alcançável por Client Component nunca pode usar API de Node (`node:fs`, `node:module`) — usar `import ... with {type:'json'}` pra dado estático.
 - **Autorizações concedidas pelo Luiz nesta feature**: aplicar a migração de coluna em produção (banco é sempre produção, sem diferença de ambiente — mesmo padrão já registrado na feature anterior).
-- **Next step**: nenhum pendente no código; UAT visual (o Luiz testar `/ingress/ranking` na tela) é o único passo que falta, e não bloqueia o fechamento desta feature.
+- **UAT visual confirmado pelo Luiz (13/09)**: revisou `/ingress/ranking` na tela e confirmou que está tudo ok.
+- **Next step**: nenhum pendente no código nem na verificação — falta só decidir se/quando dar push e abrir PR (branch só local até agora).
 - **Uncommitted files**: nenhum (working tree limpo).
 - **Branch**: `feat/ingress-ranking-history` — **atenção**: esta branch já vinha com 2 commits de uma feature anterior não relacionada (histórico de AP no ranking, `81e0cf0`/`9fef370`) quando esta feature começou; não pushada ainda, não é `main`.
 
@@ -36,7 +37,7 @@
 - **O quê**: filtros e ordenação em `/ingress/ranking` — busca por codinome, toggle de facção, e ordenação clicável (nota geral, AP total, país, e 5 colunas novas de nota por eixo `C/D/E/H/LF` — Construção/Destruição/Exploração/Hacking/Links e campos). Tudo client-side em `IngressRankingTable.tsx`, lendo `axis_scores` que já vinha na API — nenhuma mudança de schema/migração/rota.
 - **Commit**: `7d1cee5` (`feat(ingress): add filters, sorting, and per-axis columns to ranking table`), na mesma branch `feat/ingress-ranking-history`.
 - **Por que fora do fluxo**: classificado como bounded no brainstorming (mudança pequena num fluxo já existente, sem subsistema novo) — sem spec/design/tasks própria em `.specs/features/`.
-- **Verificado**: `tsc --noEmit` limpo, lint sem erro novo, `npm test` (393 testes) passando, SSR de `/ingress/ranking` responde 200. UAT visual ainda pendente (o Luiz testar na tela), mesmo passo que já estava em aberto pra feature de país.
+- **Verificado**: `tsc --noEmit` limpo, lint sem erro novo, `npm test` (393 testes) passando, SSR de `/ingress/ranking` responde 200. UAT visual confirmado pelo Luiz em 13/09 (junto com a revisão da feature de país).
 
 ---
 
