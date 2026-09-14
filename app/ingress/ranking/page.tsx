@@ -12,13 +12,28 @@ import IngressTutorial from '@/components/ingress/stats/IngressTutorial'
 
 export const dynamic = 'force-dynamic'
 
-// Título próprio — sem isso, herda "FencherLC — Agente Ingress" do layout, e
-// esta página é sobre o ranking público, não sobre o FencherLC (mesmo espírito
-// do opengraph-image.tsx desta rota).
+const TITLE = 'Ranking de Agentes Ingress — comparação pública de estatísticas'
+const DESCRIPTION =
+  'Ranking público e ao vivo de agentes do jogo Ingress (Niantic): cole o export de estatísticas do app e compare Access Points, recursões, resonators e outras métricas com o FencherLC e outros agentes cadastrados.'
+
 export const metadata: Metadata = {
-  title: 'Ranking de agentes — Ingress',
-  description:
-    'Cole o export de estatísticas do app, compare seu padrão de jogo e veja sua posição no ranking público de agentes do Ingress.',
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: {
+    canonical: 'https://luizcasara.com/ingress/ranking',
+  },
+  openGraph: {
+    type: 'website',
+    url: 'https://luizcasara.com/ingress/ranking',
+    siteName: 'Luiz Casara',
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE,
+    description: DESCRIPTION,
+  },
 }
 
 /**
@@ -58,6 +73,37 @@ async function loadInitialRows(): Promise<RankingRow[]> {
   }
 }
 
+/**
+ * `ItemList` schema.org com o top 50 do ranking — limitado pra não inflar o
+ * HTML com os 100 registros de `loadInitialRows`. Top 50 já cobre qualquer
+ * uso razoável (rich results, resumo por um agente de IA).
+ */
+function buildRankingJsonLd(rows: RankingRow[]) {
+  if (rows.length === 0) return null
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Ranking de Agentes Ingress',
+    description: DESCRIPTION,
+    url: 'https://luizcasara.com/ingress/ranking',
+    numberOfItems: rows.length,
+    itemListElement: rows.slice(0, 50).map((row, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'Thing',
+        name: row.codename,
+        additionalProperty: [
+          {'@type': 'PropertyValue', name: 'Facção', value: row.faction},
+          {'@type': 'PropertyValue', name: 'Access Points (lifetime)', value: row.lifetime_ap},
+          {'@type': 'PropertyValue', name: 'Pontuação geral', value: row.overall_score},
+        ],
+      },
+    })),
+  }
+}
+
 export default async function IngressRankingPage() {
   const profile = loadProfile()
 
@@ -79,9 +125,21 @@ export default async function IngressRankingPage() {
   const axisScoreMap = Object.fromEntries(axisScores.map((a) => [a.id, a.score]))
 
   const initialRows = await loadInitialRows()
+  const rankingJsonLd = buildRankingJsonLd(initialRows)
 
   return (
     <main className="ing-shell ing-shell--wide">
+      {rankingJsonLd && (
+        <script
+          type="application/ld+json"
+          // JSON-LD (schema.org ItemList) pro ranking: é o formato que
+          // buscadores/IAs de fato reconhecem pra listas ordenadas — nada de
+          // texto oculto ou comentário instruindo crawler, que não é um
+          // mecanismo real e pode ser tratado como cloaking.
+          dangerouslySetInnerHTML={{__html: JSON.stringify(rankingJsonLd).replace(/</g, '\\u003c')}}
+        />
+      )}
+
       <BackLink fallback="/ingress" />
 
       <RankingHero center={profile.s2.center} totalAgents={initialRows.length} />

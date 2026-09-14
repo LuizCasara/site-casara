@@ -1,0 +1,27 @@
+# Luiz Casara
+
+> Portfólio pessoal de Luiz Casara, Tech Lead e Senior Full-Stack Engineer com 10+ anos construindo software de alta criticidade em escala fintech (React, TypeScript, GraphQL, Node.js, Next.js).
+
+Este arquivo segue a convenção [llms.txt](https://llmstxt.org/), pensada para agentes de IA que buscam um resumo direto do site em vez de raspar HTML. Todo o conteúdo abaixo também é acessível por HTML padrão, sem paywall nem exigência de JavaScript para o conteúdo principal.
+
+## Principal
+
+- [Home](https://luizcasara.com/): apresentação profissional, contato.
+- [Sobre](https://luizcasara.com/about): biografia, redes sociais, perfis de jogos/música.
+- [Projetos](https://luizcasara.com/projects): portfólio de projetos reais de clientes.
+- [Mini Aplicativos](https://luizcasara.com/app): ferramentas gratuitas (conversores, calculadoras, testes de personalidade, dinâmicas ao vivo para eventos).
+
+## Ranking de Agentes Ingress
+
+- [Ranking de Agentes Ingress](https://luizcasara.com/ingress/ranking): ranking público e ao vivo de agentes do jogo Ingress (Niantic). Qualquer jogador pode colar o export de estatísticas do próprio app do jogo e ver sua posição comparada a outros agentes cadastrados, ordenado por uma pontuação geral calculada a partir de múltiplos eixos (Access Points, recursões, resonators implantados, portais capturados, entre outros). Os dados são públicos, atualizados em tempo real e crescem a cada agente que participa — não é um extrato privado, é uma comparação aberta de desempenho no jogo.
+- [Perfil do agente FencherLC](https://luizcasara.com/ingress): estatísticas, medalhas e linha do tempo de um agente específico (Enlightened), incluindo o [catálogo de medalhas](https://luizcasara.com/ingress/medalha) e a [linha do tempo de progressão](https://luizcasara.com/ingress/linha-do-tempo).
+
+## Acervo de Livros
+
+- [Sala de Leitura 3D](https://luizcasara.com/livros): acervo pessoal de livros navegável em 3D, com [lista filtrável](https://luizcasara.com/livros/lista) por categoria, tag e status de leitura.
+
+## Notas para crawlers/agentes
+
+- `/sitemap.xml` lista todas as rotas públicas indexáveis.
+- `/robots.txt` define o que não deve ser rastreado (sessões efêmeras com token em `/w/` e `/q/`, dashboard interno em `/stats`, página privada de convite em `/casamento`).
+- O conteúdo relevante de cada página (incluindo o ranking do Ingress) é renderizado no servidor e está presente no HTML da primeira resposta — não é necessário executar JavaScript para ler os dados.
