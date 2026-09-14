@@ -1,0 +1,33 @@
+-- ════════════════════════════════════════════════════════════════════════════
+-- 008 — Segundo ponto real de histórico pro FencherLC (a partir do dump estático)
+-- ════════════════════════════════════════════════════════════════════════════
+--
+-- CONTEXTO
+-- A 007 excluiu de propósito quem já tinha ≥1 linha em
+-- `ingress_ranking_history` — era o caso do FencherLC, que só tinha o ponto
+-- criado pelo próprio reenvio em 2026-09-14 (a `ingress_rankings` guarda só o
+-- valor ATUAL, então um 2º ponto "de ontem" só poderia repetir esses mesmos
+-- números com outra data — uma linha reta fabricada, não uma evolução real).
+--
+-- A DIFERENÇA AQUI
+-- `data/ingress/fencherlc.json` (o dump estático usado no radar padrão de
+-- `/ingress` e no modo "vs-me" de `ProfileRadar`) é um snapshot INDEPENDENTE
+-- e mais antigo — `capturedAt: 2026-09-07T16:21:02`, `lifetimeAp: 94990303`
+-- (vs. 95413432 gravado em `ingress_rankings` em 14/09). É dado real, só não
+-- vive na mesma tabela.
+--
+-- O QUE ESTE SCRIPT FEZ (não é DDL — insert de 1 linha, rodado uma vez)
+-- Recalculou axis_scores/overall_score desse dump com as mesmas funções da
+-- rota (`computeAxisScores`/`computeOverallScore` de `lib/ingress-tier-score.mjs`)
+-- e inseriu 1 linha em `ingress_ranking_history` pro FencherLC, datada do
+-- `capturedAt` do dump. Resultado: 2 pontos reais (07/09 nota 90.70, 14/09
+-- nota 90.77) — id 16, ao lado do id 10 já existente.
+--
+-- Rodado uma vez em produção em 2026-09-14. Não idempotente por si só (sem
+-- WHERE NOT EXISTS) — não deve ser rodado de novo; este arquivo é só o
+-- registro histórico, seguindo o padrão de 004/007.
+
+-- (o INSERT real usou os valores computados pelo script acima, não literais
+-- fixos aqui — reproduzido por referência; os dados já estão gravados)
+-- INSERT INTO casara.ingress_ranking_history (codename_key, lifetime_ap, overall_score, axis_scores, recorded_at)
+-- VALUES ('fencherlc', 94990303, 90.69867106349206, '{"construcao":3.90423,"destruicao":3.8637357142857143,"exploracao":4.838183333333333,"hacking":4.491972857142857,"linksCampos":5.576545861111111}', '2026-09-07T16:21:02');
