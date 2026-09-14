@@ -519,7 +519,7 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
           */}
           <colgroup>
             <col style={{width: '2.6rem'}} />
-            <col style={{width: '5.4rem'}} />
+            <col style={{width: '6.25rem'}} />
             <col style={{width: '2.6rem'}} />
             <col style={{width: '3rem'}} />
             <col />

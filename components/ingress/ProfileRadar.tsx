@@ -56,6 +56,7 @@ const T = {
   pt: {
     radarAria: 'Radar do padrão de jogo',
     panelLabel: 'Padrão de jogo',
+    panelLabelRanking: 'Exporte seus status',
     panelHint: 'cada eixo = média das stats vs. o Onyx da medalha',
     scaleAria: 'Escala do radar',
     scaleStyle: 'Estilo',
@@ -88,6 +89,7 @@ const T = {
   en: {
     radarAria: 'Play-pattern radar',
     panelLabel: 'Play pattern',
+    panelLabelRanking: 'Export your stats',
     panelHint: "each axis = average of stats vs. the badge's Onyx threshold",
     scaleAria: 'Radar scale',
     scaleStyle: 'Style',
@@ -415,8 +417,10 @@ export default function ProfileRadar({
     </div>
   )
 
-  return (
-    <Panel label={t.panelLabel} hint={t.panelHint}>
+  const panelLabel = variant === 'ranking' ? t.panelLabelRanking : t.panelLabel
+
+  const chartBlock = (
+    <>
       <div className="ing-radar__topbar">
         {agentB ? (
           <p className="ing-radar__legend">
@@ -514,108 +518,124 @@ export default function ProfileRadar({
       ) : !agentB ? (
         <p className="ing-radar__hint">{isBlank ? t.blankHint : t.hoverHint}</p>
       ) : null}
+    </>
+  )
 
-      {open ? (
-        <div className="ing-radar__compare-box">
-          <div className="ing-radar__cmp-mode" role="group" aria-label={t.whatToCompareAria}>
-            {variant === 'ranking' ? (
-              // "Só entrar" é o caminho principal em /ingress/ranking — vem
-              // primeiro, comparações (vs-me/two) são secundárias aqui.
-              <button type="button" aria-pressed={mode === 'solo'} onClick={() => setMode('solo')}>
-                {t.modeSolo}
-              </button>
-            ) : null}
-            <button type="button" aria-pressed={mode === 'vs-me'} onClick={() => setMode('vs-me')}>
-              {t.modeVsMe(agentName, variant === 'ranking')}
-            </button>
-            <button type="button" aria-pressed={mode === 'two'} onClick={() => setMode('two')}>
-              {t.modeTwo(variant === 'ranking')}
-            </button>
-          </div>
+  const formBlock = open ? (
+    <div className="ing-radar__compare-box">
+      <div className="ing-radar__cmp-mode" role="group" aria-label={t.whatToCompareAria}>
+        {variant === 'ranking' ? (
+          // "Só entrar" é o caminho principal em /ingress/ranking — vem
+          // primeiro, comparações (vs-me/two) são secundárias aqui.
+          <button type="button" aria-pressed={mode === 'solo'} onClick={() => setMode('solo')}>
+            {t.modeSolo}
+          </button>
+        ) : null}
+        <button type="button" aria-pressed={mode === 'vs-me'} onClick={() => setMode('vs-me')}>
+          {t.modeVsMe(agentName, variant === 'ranking')}
+        </button>
+        <button type="button" aria-pressed={mode === 'two'} onClick={() => setMode('two')}>
+          {t.modeTwo(variant === 'ranking')}
+        </button>
+      </div>
 
+      <div className="ing-radar__label-row">
+        <label htmlFor="ing-radar-a" className="ing-radar__compare-label">
+          {mode === 'two' ? t.labelTwoA : mode === 'solo' ? t.labelSolo : t.labelVsMe}
+        </label>
+        <button
+          type="button"
+          className="ing-radar__btn ing-radar__btn--paste"
+          onClick={() => pasteInto(setTextA, 'ing-radar-a')}
+        >
+          <FaPaste aria-hidden="true" />
+          {t.pasteBtn}
+        </button>
+      </div>
+      <textarea
+        id="ing-radar-a"
+        className="ing-radar__textarea"
+        rows={3}
+        value={textA}
+        onChange={(e) => setTextA(e.target.value)}
+        placeholder="Time Span	Agent Name	Agent Faction	Date…	…"
+      />
+      {variant === 'ranking' ? (
+        <CountryPicker
+          id="ing-radar-a-country"
+          value={countryA}
+          onChange={setCountryA}
+          invalid={error === t.countryRequiredError && countryA === null}
+        />
+      ) : null}
+      {mode === 'two' ? (
+        <>
           <div className="ing-radar__label-row">
-            <label htmlFor="ing-radar-a" className="ing-radar__compare-label">
-              {mode === 'two' ? t.labelTwoA : mode === 'solo' ? t.labelSolo : t.labelVsMe}
+            <label htmlFor="ing-radar-b" className="ing-radar__compare-label">
+              {t.labelTwoB}
             </label>
             <button
               type="button"
               className="ing-radar__btn ing-radar__btn--paste"
-              onClick={() => pasteInto(setTextA, 'ing-radar-a')}
+              onClick={() => pasteInto(setTextB, 'ing-radar-b')}
             >
               <FaPaste aria-hidden="true" />
               {t.pasteBtn}
             </button>
           </div>
           <textarea
-            id="ing-radar-a"
+            id="ing-radar-b"
             className="ing-radar__textarea"
             rows={3}
-            value={textA}
-            onChange={(e) => setTextA(e.target.value)}
+            value={textB}
+            onChange={(e) => setTextB(e.target.value)}
             placeholder="Time Span	Agent Name	Agent Faction	Date…	…"
           />
           {variant === 'ranking' ? (
             <CountryPicker
-              id="ing-radar-a-country"
-              value={countryA}
-              onChange={setCountryA}
-              invalid={error === t.countryRequiredError && countryA === null}
+              id="ing-radar-b-country"
+              value={countryB}
+              onChange={setCountryB}
+              invalid={error === t.countryRequiredError && countryB === null}
             />
           ) : null}
-          {mode === 'two' ? (
-            <>
-              <div className="ing-radar__label-row">
-                <label htmlFor="ing-radar-b" className="ing-radar__compare-label">
-                  {t.labelTwoB}
-                </label>
-                <button
-                  type="button"
-                  className="ing-radar__btn ing-radar__btn--paste"
-                  onClick={() => pasteInto(setTextB, 'ing-radar-b')}
-                >
-                  <FaPaste aria-hidden="true" />
-                  {t.pasteBtn}
-                </button>
-              </div>
-              <textarea
-                id="ing-radar-b"
-                className="ing-radar__textarea"
-                rows={3}
-                value={textB}
-                onChange={(e) => setTextB(e.target.value)}
-                placeholder="Time Span	Agent Name	Agent Faction	Date…	…"
-              />
-              {variant === 'ranking' ? (
-                <CountryPicker
-                  id="ing-radar-b-country"
-                  value={countryB}
-                  onChange={setCountryB}
-                  invalid={error === t.countryRequiredError && countryB === null}
-                />
-              ) : null}
-            </>
-          ) : null}
+        </>
+      ) : null}
 
-          {error ? <p className="ing-radar__compare-error">{error}</p> : null}
-          {sentNote ? <p className="ing-radar__compare-sent">{t.sentNote}</p> : null}
-          <div className="ing-radar__compare-actions">
-            <button
-              type="button"
-              className="ing-radar__btn ing-radar__btn--primary"
-              onClick={runCompare}
-              disabled={!canCompare}
-            >
-              {mode === 'solo' ? t.submitBtn : t.compareBtn}
-            </button>
-            <button type="button" className="ing-radar__btn" onClick={clear}>
-              {t.clearBtn}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button type="button" className="ing-radar__btn ing-radar__compare-open" onClick={() => setOpen(true)}>
-          {t.openCompareBtn}
+      {error ? <p className="ing-radar__compare-error">{error}</p> : null}
+      {sentNote ? <p className="ing-radar__compare-sent">{t.sentNote}</p> : null}
+      <div className="ing-radar__compare-actions">
+        <button
+          type="button"
+          className="ing-radar__btn ing-radar__btn--primary"
+          onClick={runCompare}
+          disabled={!canCompare}
+        >
+          {mode === 'solo' ? t.submitBtn : t.compareBtn}
         </button>
+        <button type="button" className="ing-radar__btn" onClick={clear}>
+          {t.clearBtn}
+        </button>
+      </div>
+    </div>
+  ) : (
+    <button type="button" className="ing-radar__btn ing-radar__compare-open" onClick={() => setOpen(true)}>
+      {t.openCompareBtn}
+    </button>
+  )
+
+  return (
+    <Panel label={panelLabel} hint={t.panelHint}>
+      {variant === 'ranking' ? (
+        <>
+          {formBlock}
+          {chartBlock}
+        </>
+      ) : (
+        <>
+          {chartBlock}
+          {formBlock}
+        </>
       )}
     </Panel>
   )
