@@ -112,7 +112,16 @@ export default function CountryPicker({
     return (
         <div className={`ing-country-picker${invalid ? ' is-invalid' : ''}`}>
             {selected ? (
-                <img src={flagSrc(selected.code)} alt="" width={18} height={13} className="ing-country-picker__flag" />
+                <img
+                    src={flagSrc(selected.code)}
+                    alt=""
+                    width={18}
+                    height={13}
+                    className="ing-country-picker__flag"
+                    onError={(e) => {
+                        e.currentTarget.style.visibility = 'hidden'
+                    }}
+                />
             ) : null}
             <input
                 id={id}
@@ -145,7 +154,16 @@ export default function CountryPicker({
                             }}
                             onMouseEnter={() => setActiveIndex(i)}
                         >
-                            <img src={flagSrc(c.code)} alt="" width={18} height={13} className="ing-country-picker__flag" />
+                            <img
+                                src={flagSrc(c.code)}
+                                alt=""
+                                width={18}
+                                height={13}
+                                className="ing-country-picker__flag"
+                                onError={(e) => {
+                                    e.currentTarget.style.visibility = 'hidden'
+                                }}
+                            />
                             {nameFor(c, lang)}
                         </li>
                     ))}

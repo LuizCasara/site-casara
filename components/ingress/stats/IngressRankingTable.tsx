@@ -293,6 +293,9 @@ export default function IngressRankingTable({initialRows}: {initialRows: Ranking
                           width={20}
                           height={15}
                           className="ing-ranking-table__country-flag"
+                          onError={(e) => {
+                            e.currentTarget.style.visibility = 'hidden'
+                          }}
                         />
                       ) : null}
                     </td>

@@ -12,9 +12,11 @@ import {fileURLToPath} from 'node:url'
 import {createRequire} from 'node:module'
 import countries from 'i18n-iso-countries'
 
-// `createRequire` em vez de `import ... with {type:'json'}` — mantém compatibilidade
-// com o mínimo de Node declarado em `package.json` (engines >= 20.9.0), sem depender
-// de import attributes que só estabilizaram em versões mais recentes.
+// `createRequire` em vez de `import ... with {type:'json'}` — este é um script
+// CLI standalone, nunca passa pelo bundler do Next (Turbopack), então não tem o
+// motivo técnico que obriga `lib/ingress-countries.mjs` a usar import attributes
+// (ver o comentário lá: aquele módulo é importado por Client Components).
+
 const require = createRequire(import.meta.url)
 countries.registerLocale(JSON.parse(readFileSync(require.resolve('i18n-iso-countries/langs/en.json'), 'utf8')))
 countries.registerLocale(JSON.parse(readFileSync(require.resolve('i18n-iso-countries/langs/pt.json'), 'utf8')))
