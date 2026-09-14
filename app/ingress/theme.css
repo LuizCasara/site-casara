@@ -2104,6 +2104,7 @@
 .ing-ranking-table__country-flag {
   border-radius: 2px;
   display: block;
+  margin-inline: auto;
 }
 
 .ing-ranking-table__codename {
