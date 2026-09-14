@@ -165,76 +165,78 @@ export default function AgentHistoryChart({
         </div>
       </div>
 
-      {failed ? (
-        <p className="ing-evo__empty">{t.error}</p>
-      ) : !points ? (
-        <p className="ing-evo__empty">{t.loading}</p>
-      ) : !geometry || !stats ? (
-        <p className="ing-evo__empty">{t.empty}</p>
-      ) : (
-        <>
-          <div className="ing-evo__stats">
-            <div className="ing-evo__stat">
-              <span className="ing-evo__stat-label">{t.delta}</span>
-              <span className="ing-evo__stat-value is-up">+{fmtStat(stats.delta)}</span>
+      <div className="ing-evo__body">
+        {failed ? (
+          <p className="ing-evo__empty">{t.error}</p>
+        ) : !points ? (
+          <p className="ing-evo__empty">{t.loading}</p>
+        ) : !geometry || !stats ? (
+          <p className="ing-evo__empty">{t.empty}</p>
+        ) : (
+          <>
+            <div className="ing-evo__stats">
+              <div className="ing-evo__stat">
+                <span className="ing-evo__stat-label">{t.delta}</span>
+                <span className="ing-evo__stat-value is-up">+{fmtStat(stats.delta)}</span>
+              </div>
+              <div className="ing-evo__stat">
+                <span className="ing-evo__stat-label">{t.avg}</span>
+                <span className="ing-evo__stat-value">+{fmtStat(stats.avg)}</span>
+              </div>
+              <div className="ing-evo__stat">
+                <span className="ing-evo__stat-label">{t.last}</span>
+                <span className="ing-evo__stat-value">{fmtStat(stats.last)}</span>
+              </div>
             </div>
-            <div className="ing-evo__stat">
-              <span className="ing-evo__stat-label">{t.avg}</span>
-              <span className="ing-evo__stat-value">+{fmtStat(stats.avg)}</span>
-            </div>
-            <div className="ing-evo__stat">
-              <span className="ing-evo__stat-label">{t.last}</span>
-              <span className="ing-evo__stat-value">{fmtStat(stats.last)}</span>
-            </div>
-          </div>
 
-          <svg className="ing-evo__svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t.ariaChart(agentName)}>
-            <defs>
-              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={accentColor} stopOpacity="0.22" />
-                <stop offset="100%" stopColor={accentColor} stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            {geometry.gridLines.map((g, i) => (
-              <g key={i}>
-                <line x1={PAD_L} x2={W - PAD_R} y1={g.y} y2={g.y} className="ing-evo__grid" strokeDasharray={i === 0 ? undefined : '2 4'} />
-                <text x={PAD_L - 8} y={g.y + 3} textAnchor="end" className="ing-evo__axis-label">
-                  {g.label}
-                </text>
-              </g>
-            ))}
-            <path d={geometry.areaPts} fill={`url(#${gradientId})`} />
-            <path d={`M ${geometry.linePts}`} className="ing-evo__line" />
-            {points.map((p, i) => {
-              const isLast = i === points.length - 1
-              const cx = geometry.x(i)
-              const cy = geometry.y(p.lifetimeAp)
-              return (
-                <g key={p.period}>
-                  <circle cx={cx} cy={cy} r={isLast ? 5 : 3.5} className={`ing-evo__dot${isLast ? ' is-last' : ''}`} />
-                  <circle
-                    cx={cx}
-                    cy={cy}
-                    r={12}
-                    fill="transparent"
-                    className="ing-tl__hit"
-                    onMouseEnter={(e) => setHover({x: e.clientX, y: e.clientY, text: `${fmtStat(p.lifetimeAp)} AP — ${fmtPeriod(p.period, bucket, lang)}`})}
-                    onMouseMove={(e) => setHover((h) => (h ? {...h, x: e.clientX, y: e.clientY} : h))}
-                    onMouseLeave={() => setHover(null)}
-                  >
-                    <title>{`${fmtStat(p.lifetimeAp)} AP — ${fmtPeriod(p.period, bucket, lang)}`}</title>
-                  </circle>
+            <svg className="ing-evo__svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t.ariaChart(agentName)}>
+              <defs>
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={accentColor} stopOpacity="0.22" />
+                  <stop offset="100%" stopColor={accentColor} stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              {geometry.gridLines.map((g, i) => (
+                <g key={i}>
+                  <line x1={PAD_L} x2={W - PAD_R} y1={g.y} y2={g.y} className="ing-evo__grid" strokeDasharray={i === 0 ? undefined : '2 4'} />
+                  <text x={PAD_L - 8} y={g.y + 3} textAnchor="end" className="ing-evo__axis-label">
+                    {g.label}
+                  </text>
                 </g>
-              )
-            })}
-            {geometry.xLabels.map(({i, x, text}) => (
-              <text key={i} x={x} y={H - 6} textAnchor="middle" className="ing-evo__axis-label">
-                {text}
-              </text>
-            ))}
-          </svg>
-        </>
-      )}
+              ))}
+              <path d={geometry.areaPts} fill={`url(#${gradientId})`} />
+              <path d={`M ${geometry.linePts}`} className="ing-evo__line" />
+              {points.map((p, i) => {
+                const isLast = i === points.length - 1
+                const cx = geometry.x(i)
+                const cy = geometry.y(p.lifetimeAp)
+                return (
+                  <g key={p.period}>
+                    <circle cx={cx} cy={cy} r={isLast ? 5 : 3.5} className={`ing-evo__dot${isLast ? ' is-last' : ''}`} />
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={12}
+                      fill="transparent"
+                      className="ing-tl__hit"
+                      onMouseEnter={(e) => setHover({x: e.clientX, y: e.clientY, text: `${fmtStat(p.lifetimeAp)} AP — ${fmtPeriod(p.period, bucket, lang)}`})}
+                      onMouseMove={(e) => setHover((h) => (h ? {...h, x: e.clientX, y: e.clientY} : h))}
+                      onMouseLeave={() => setHover(null)}
+                    >
+                      <title>{`${fmtStat(p.lifetimeAp)} AP — ${fmtPeriod(p.period, bucket, lang)}`}</title>
+                    </circle>
+                  </g>
+                )
+              })}
+              {geometry.xLabels.map(({i, x, text}) => (
+                <text key={i} x={x} y={H - 6} textAnchor="middle" className="ing-evo__axis-label">
+                  {text}
+                </text>
+              ))}
+            </svg>
+          </>
+        )}
+      </div>
 
       {hover ? (
         <div

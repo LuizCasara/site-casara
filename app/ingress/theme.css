@@ -3225,6 +3225,19 @@
   color: var(--ing-text-faint);
 }
 
+/* Mesmo tratamento visual do card de "detalhes" acima (`.ing-ranking-table__detail`)
+   — fundo + padding — mas só a partir daqui: o título "Evolução — AP total"
+   fica de fora, como cabeçalho solto acima da caixa. */
+.ing-evo__body {
+  padding: 0.7rem 0.8rem;
+  background: var(--ing-green-ghost);
+  border-radius: 10px;
+}
+
+.ing-evo--resistance .ing-evo__body {
+  background: rgba(38, 182, 255, 0.07);
+}
+
 .ing-evo__stats {
   display: flex;
   gap: 1.4rem;
