@@ -123,6 +123,16 @@ export async function GET(request: Request) {
       WHERE created_at > NOW() - INTERVAL '1 day' * ${days}
     `;
 
+    const [livros] = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE event_name = 'room_object_click')    AS total_room_object_click,
+        COUNT(*) FILTER (WHERE event_name = 'book_card_click')      AS total_book_card_click,
+        COUNT(*) FILTER (WHERE event_name = 'book_shared')          AS total_book_shared,
+        COUNT(*) FILTER (WHERE event_name = 'caderno_desbloqueado') AS total_caderno_desbloqueado
+      FROM casara.events
+      WHERE created_at > NOW() - INTERVAL '1 day' * ${days}
+    `;
+
     const loveLanguagesByPrimary = await sql`
       SELECT payload->>'primary' AS language, COUNT(*) AS count
       FROM casara.events
@@ -164,6 +174,12 @@ export async function GET(request: Request) {
         total_ranking_join:      Number(ingress.total_ranking_join),
         written_ranking_join:    Number(ingress.written_ranking_join),
         total_language_toggled:  Number(ingress.total_language_toggled),
+      },
+      livros: {
+        total_room_object_click:    Number(livros.total_room_object_click),
+        total_book_card_click:      Number(livros.total_book_card_click),
+        total_book_shared:          Number(livros.total_book_shared),
+        total_caderno_desbloqueado: Number(livros.total_caderno_desbloqueado),
       },
       love_languages: {
         total_started:        Number(loveLanguages.total_started),

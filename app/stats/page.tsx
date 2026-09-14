@@ -41,6 +41,12 @@ type StatsData = {
     written_ranking_join:       number;
     total_language_toggled:     number;
   };
+  livros: {
+    total_room_object_click:    number;
+    total_book_card_click:      number;
+    total_book_shared:          number;
+    total_caderno_desbloqueado: number;
+  };
 };
 
 type Period = "7d" | "30d" | "all";
@@ -679,6 +685,22 @@ export default function StatsPage() {
                   <p className="text-green-800 text-xs">TROCA_IDIOMA</p>
                   <p className="text-green-200 font-bold text-xl">{data.ingress.total_language_toggled}</p>
                 </div>
+              </div>
+            </Panel>
+
+            <Panel title="LIVROS_ANALYSIS">
+              <div className="grid grid-cols-2 gap-3 text-center">
+                {[
+                  { label: "OBJETOS_CLICADOS", value: data.livros.total_room_object_click },
+                  { label: "COMPARTILHAMENTOS", value: data.livros.total_book_shared },
+                  { label: "LIVROS_CLICADOS", value: data.livros.total_book_card_click },
+                  { label: "CADERNO_DESBLOQUEADO", value: data.livros.total_caderno_desbloqueado },
+                ].map(({ label, value }) => (
+                  <div key={label} className="border border-green-900/50 rounded p-2">
+                    <p className="text-green-800 text-xs">{label}</p>
+                    <p className="text-green-200 font-bold text-xl">{value}</p>
+                  </div>
+                ))}
               </div>
             </Panel>
 
