@@ -1953,10 +1953,92 @@
 
 /* ─── Ranking table (iteração de UI: alinhamento, largura total, ícones) ─── */
 
-.ing-ranking-table__actions {
+.ing-ranking-table__toolbar {
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
   margin-bottom: 0.6rem;
+}
+
+.ing-ranking-table__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ing-ranking-table__search {
+  background: var(--ing-panel-soft, transparent);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  color: var(--ing-text);
+  font-size: 0.82rem;
+  min-width: 0;
+  width: 11rem;
+}
+
+.ing-ranking-table__faction-filter {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.ing-ranking-table__faction-filter button {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  color: var(--ing-text-dim);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.ing-ranking-table__faction-filter button.is-active {
+  color: var(--ing-text);
+  border-color: var(--ing-green-soft);
+}
+
+.ing-ranking-table__no-results {
+  color: var(--ing-text-dim);
+  padding: 1rem 0;
+}
+
+.ing-ranking-table__sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.ing-ranking-table__sort-arrow {
+  font-size: 0.65em;
+  color: var(--ing-green-soft);
+}
+
+.ing-ranking-table th[data-col='construcao'],
+.ing-ranking-table th[data-col='destruicao'],
+.ing-ranking-table th[data-col='exploracao'],
+.ing-ranking-table th[data-col='hacking'],
+.ing-ranking-table th[data-col='linksCampos'],
+.ing-ranking-table td[data-col='construcao'],
+.ing-ranking-table td[data-col='destruicao'],
+.ing-ranking-table td[data-col='exploracao'],
+.ing-ranking-table td[data-col='hacking'],
+.ing-ranking-table td[data-col='linksCampos'] {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--ing-text-dim);
 }
 
 .ing-ranking-table__wrap {
