@@ -1,7 +1,7 @@
 # Ingress Ranking Country Design
 
 **Spec**: `.specs/features/ingress-ranking-country/spec.md`
-**Status**: Draft
+**Status**: Approved
 
 ---
 

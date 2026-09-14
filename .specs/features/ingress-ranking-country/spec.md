@@ -88,21 +88,21 @@
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| RKCTY-01 | P1: Escolher país ao entrar no ranking | T7 | Implementing |
-| RKCTY-02 | P1: Escolher país ao entrar no ranking | T7, T8 | Implementing |
-| RKCTY-03 | P1: Escolher país ao entrar no ranking | T8 | Implementing |
-| RKCTY-04 | P1: Escolher país ao entrar no ranking | T3, T4 | Implementing |
-| RKCTY-05 | P1: Escolher país ao entrar no ranking | T2, T4 | Implementing |
-| RKCTY-06 | P1: Escolher país ao entrar no ranking | T8 | Implementing |
-| RKCTY-07 | P2: Ver o país de cada agente na tabela de ranking | T5, T6, T10 | Implementing |
-| RKCTY-08 | P2: Ver o país de cada agente na tabela de ranking | T10 | Implementing |
-| RKCTY-09 | P2: Ver o país de cada agente na tabela de ranking | T10 | Implementing |
+| RKCTY-01 | P1: Escolher país ao entrar no ranking | T7 | Verified |
+| RKCTY-02 | P1: Escolher país ao entrar no ranking | T7, T8 | Verified |
+| RKCTY-03 | P1: Escolher país ao entrar no ranking | T8 | Verified |
+| RKCTY-04 | P1: Escolher país ao entrar no ranking | T3, T4 | Verified |
+| RKCTY-05 | P1: Escolher país ao entrar no ranking | T2, T4 | Verified |
+| RKCTY-06 | P1: Escolher país ao entrar no ranking | T8 | Verified |
+| RKCTY-07 | P2: Ver o país de cada agente na tabela de ranking | T5, T6, T10 | Verified |
+| RKCTY-08 | P2: Ver o país de cada agente na tabela de ranking | T10 | Verified |
+| RKCTY-09 | P2: Ver o país de cada agente na tabela de ranking | T10 | Verified |
 
 **ID format:** `RKCTY-NN` (Ranking + CounTrY).
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 9 total, 9 mapped to tasks, 0 unmapped. Todas as 10 tasks (T1-T10) implementadas e commitadas; aguardando verificação independente (Verifier) antes de "Verified".
+**Coverage:** 9 total, 9 mapped to tasks, 0 unmapped. Verificação independente concluída (`.specs/features/ingress-ranking-country/validation.md`, PASS na segunda rodada) — a primeira rodada achou um build quebrado (fixado em `49c8a9f`) e 2 gaps menores (fixados em `7fbe4ff`).
 
 ---
 

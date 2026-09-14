@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 7,
+  "next_id": 8,
   "lessons": [
     {
       "id": "L-001",
@@ -112,6 +112,24 @@
       ],
       "created": "2026-09-12T01:38:38Z",
       "last_seen": "2026-09-12T01:38:38Z"
+    },
+    {
+      "id": "L-007",
+      "key": "gate_fail::a lib module imported by any client component must not use node only apis fs createrequire to load static data even for a small json file bundlers refuse to bundle node fs node module for the browser use a static import e g import data with type json instead of readfilesync createrequire",
+      "text": "A lib module imported by any client component must not use Node-only APIs (fs, createRequire) to load static data, even for a small JSON file — bundlers refuse to bundle node:fs/node:module for the browser; use a static import (e.g. import data with {type:'json'}) instead of readFileSync+createRequire.",
+      "signal": "gate_fail",
+      "scope": "next-bundling",
+      "status": "candidate",
+      "features": [
+        "ingress-ranking-country"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "lib/ingress-countries.mjs:6-11 (next-bundling)"
+      ],
+      "created": "2026-09-13T21:16:07Z",
+      "last_seen": "2026-09-13T21:16:07Z"
     }
   ]
 }

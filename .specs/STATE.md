@@ -20,20 +20,22 @@
 
 ## Handoff
 
-- **Feature**: ingress-stats-ranking (`.specs/features/ingress-stats-ranking/`) — **FECHADA, PR aberto contra `main`**.
-- **Phase / Task**: Execute COMPLETO (37 tasks + 6 fix tasks, Verifier PASS) + rodada extensa de refinamento iterativo pós-launch com o Luiz (UAT ao vivo, ~24 commits extras). `validate_state.py` confirma o relatório original.
-- **Completed**: internacionalização PT/EN de toda `/ingress`; rota `/ingress/ranking` (renomeada de `/ingress/stats`) com radar, explicação dos 5 eixos, nota geral tier-based, tabela de ranking completa (facção com logo, colunas reordenadas/alinhadas, expansão em grid de 5 colunas + mini-radar de forma), hero dedicado; tabela `casara.ingress_rankings` (upsert guardado por debounce de 5 min, desempate nota→AP→data, **sem guarda especial pro FencherLC** — corrigida em 12/09 pra ele conseguir se auto-atualizar); ponte de leitura AD-002 (`/ingress` raiz reflete a última submissão do próprio FencherLC no radar, via ISR de 5 min); 3 caminhos de entrada com "só entrar no ranking" como padrão/principal; alerta de Telegram por submissão (top 3 + posição); botão de compartilhar em `/ingress/ranking`; painel dedicado de analytics do Ingress em `/stats`; tutorial de exportação com print real. 387 testes, gate lint/build/test verde.
-- **In-progress**: nenhum — feature code-complete, verificada e fechada nesta versão.
-- **Achados registrados como lição** (`.specs/lessons.json`): i18n retrofit deve recobrir os componentes NOVOS da própria feature, não só as páginas pré-existentes; componente forçado a virar Client Component não pode manter cálculo dependente de `node:fs` — precisa receber via prop do Server Component pai.
-- **Gap de baixa severidade, não-bloqueante (L-006)**: fallback "Sinal perdido" de `/ingress/ranking` ficou hardcoded PT. Praticamente inalcançável em produção (perfil do FencherLC sempre committado); polish futuro se entrar um segundo perfil.
-- **Bloqueio operacional resolvido (12/09)**: `casara.ingress_rankings` criada em produção com autorização explícita do Luiz; smoke test real (upsert, debounce) passou contra o banco real.
-- **Autorizações concedidas pelo Luiz nesta feature** (ver `.specs/features/ingress-stats-ranking/tasks.md` → `## Execution Notes` e memória `project_ingress_feature.md`): Playwright autorizado pra ver/testar telas (escopado a esta feature); banco é sempre produção, sem diferença de ambiente.
-- **Next step**: revisão do PR pelo Luiz no GitHub e merge quando aprovado.
+- **Feature**: ingress-ranking-country (`.specs/features/ingress-ranking-country/`) — **FECHADA. Execute completo (T1-T10) + Verifier PASS na 2ª rodada** (`validate_state.py` confirma).
+- **Completed**: seletor de país (`CountryPicker`, combobox com filtro por digitação PT/EN/código + bandeira, ARIA combobox+listbox) obrigatório em toda submissão nova de `/ingress/ranking`, um por textarea colada (A e B independentes no modo comparação); persistido em `casara.ingress_rankings.country_code` (CHAR(2), nullable, `CHECK` de formato — migração `lib/migrations/003-ingress-ranking-country.sql`); `POST /api/ingress-rankings` rejeita (400) submissão sem país válido; `GET`/SSR devolvem `country_code`; `IngressRankingTable` ganhou coluna de bandeira (célula vazia pra linhas legadas sem país). Dado de 250 países (ISO 3166-1, nomes PT/EN) e as 250 bandeiras SVG são gerados uma vez por `scripts/gen-ingress-countries.mjs` (usa `i18n-iso-countries`+`flag-icons` só como devDependencies, nunca em runtime) e versionados em `lib/ingress/countries.json`/`public/ingress/flags/`.
+- **In-progress**: nenhum — feature code-complete e verificada.
+- **Bloqueio operacional resolvido (13/09)**: migração `003-ingress-ranking-country.sql` aplicada em produção no Neon com autorização explícita do Luiz; confirmado via query direta que a coluna existe e a query real do ranking funciona.
+- **Bug real achado pelo Verifier na 1ª rodada (corrigido antes de fechar)**: `lib/ingress-countries.mjs` usava `readFileSync`+`createRequire` (API exclusiva de Node) para carregar o JSON de países — como esse módulo é importado por Client Components (`CountryPicker`, `IngressRankingTable`), o Turbopack não conseguia colocar isso no bundle do navegador e `npm run build` quebrava. A correção (`import ... with {type:'json'}`, já testada manualmente) tinha ficado só no working tree por várias tasks sem ser commitada — só foi pega porque o Verifier roda em worktree isolado a partir do HEAD real, não do working tree. **Lição registrada** (`.specs/lessons.json`): módulo `lib/*.mjs` alcançável por Client Component nunca pode usar API de Node (`node:fs`, `node:module`) — usar `import ... with {type:'json'}` pra dado estático.
+- **Autorizações concedidas pelo Luiz nesta feature**: aplicar a migração de coluna em produção (banco é sempre produção, sem diferença de ambiente — mesmo padrão já registrado na feature anterior).
+- **Next step**: nenhum pendente no código; UAT visual (o Luiz testar `/ingress/ranking` na tela) é o único passo que falta, e não bloqueia o fechamento desta feature.
 - **Uncommitted files**: nenhum (working tree limpo).
-- **Branch**: `feat/ingress-stats-ranking`, pushada, PR aberto contra `main`.
+- **Branch**: `feat/ingress-ranking-history` — **atenção**: esta branch já vinha com 2 commits de uma feature anterior não relacionada (histórico de AP no ranking, `81e0cf0`/`9fef370`) quando esta feature começou; não pushada ainda, não é `main`.
 
 ---
 
+### Handoff anterior (feature `ingress-stats-ranking`, arquivado — ver `.specs/features/ingress-stats-ranking/`)
+
+Rota `/ingress/ranking` (radar, tabela de ranking, hero), tabela `casara.ingress_rankings`, i18n PT/EN de `/ingress`. Mergeada em `main` (`dc2f539`, PR #40) antes desta sessão começar. 387 testes na época.
+
 ### Handoff anterior (feature `ingress` original, arquivado — ver `.specs/features/ingress/`)
 
-Feature completa e mergeada antes desta (`ingress-stats-ranking`) começar: perfil `/ingress`, linha do tempo, grade de medalhas (`MedalGrid`), `/ingress/medalha/[slug]`. 338 testes na época. Branch `feat/ingress` (histórica, já mergeada). Dívida técnica então pendente (CSS morto em `theme.css`, dump GDPR, `medal-lore.json` a calibrar) continua relevante e não foi tocada por esta feature nova.
+Feature completa e mergeada antes da `ingress-stats-ranking` começar: perfil `/ingress`, linha do tempo, grade de medalhas (`MedalGrid`), `/ingress/medalha/[slug]`. 338 testes na época. Branch `feat/ingress` (histórica, já mergeada). Dívida técnica então pendente (CSS morto em `theme.css`, dump GDPR, `medal-lore.json` a calibrar) continua relevante e não foi tocada por nenhuma feature nova desde então.
