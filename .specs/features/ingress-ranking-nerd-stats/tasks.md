@@ -309,7 +309,7 @@ T1 → T18
 
 ---
 
-### T10: `NerdStatTiles` (P1 — UI)
+### T10: `NerdStatTiles` (P1 — UI) ✅
 
 **What**: Componente apresentacional que recebe `NerdStats['totals']` e renderiza os 6 tiles (agentes, AP total, envios, tiers concedidos por cor, Onyx concedidos, clube Onyx).
 **Where**: `components/ingress/stats/NerdStatTiles.tsx`
