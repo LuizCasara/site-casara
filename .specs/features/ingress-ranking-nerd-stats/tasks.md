@@ -112,7 +112,7 @@ T1 → T18
 
 ---
 
-### T2: `POST /api/ingress-rankings` aceita `monthsSubscribed`
+### T2: `POST /api/ingress-rankings` aceita `monthsSubscribed` ✅
 
 **What**: Adiciona parsing opcional de `body.monthsSubscribed` (mesmo tratamento não-rejeitante de `recursions`: finito e ≥0 → `Math.floor`, senão `null`), grava em `months_subscribed` no INSERT/UPDATE.
 **Where**: `app/api/ingress-rankings/route.ts` (modifica)
