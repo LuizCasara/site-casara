@@ -35,7 +35,9 @@ const APP_SLUGS = [
  *
  * `/ingress/ranking` recebe a prioridade e o `changeFrequency` mais altos do
  * site: é a página que muda com mais frequência (ranking público, atualizado
- * a cada agente que entra) e o alvo principal deste sitemap.
+ * a cada agente que entra) e o alvo principal deste sitemap. `/ingress`
+ * (hub) tem prioridade baixa de propósito — é só a porta de entrada pra
+ * `/ingress/fencherlc` (perfil) e `/ingress/ranking`, não conteúdo em si.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [livros, medalhas] = await Promise.all([
@@ -50,9 +52,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {url: `${BASE_URL}/app`, changeFrequency: 'monthly', priority: 0.6},
     {url: `${BASE_URL}/livros`, changeFrequency: 'weekly', priority: 0.6},
     {url: `${BASE_URL}/livros/lista`, changeFrequency: 'weekly', priority: 0.5},
-    {url: `${BASE_URL}/ingress`, changeFrequency: 'weekly', priority: 0.7},
+    {url: `${BASE_URL}/ingress`, changeFrequency: 'monthly', priority: 0.5},
+    {url: `${BASE_URL}/ingress/fencherlc`, changeFrequency: 'weekly', priority: 0.7},
     {url: `${BASE_URL}/ingress/ranking`, changeFrequency: 'hourly', priority: 1.0},
-    {url: `${BASE_URL}/ingress/linha-do-tempo`, changeFrequency: 'weekly', priority: 0.5},
+    {url: `${BASE_URL}/ingress/fencherlc/linha-do-tempo`, changeFrequency: 'weekly', priority: 0.5},
   ]
 
   const appRoutes: MetadataRoute.Sitemap = APP_SLUGS.map((slug) => ({
@@ -69,7 +72,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   const medalhaRoutes: MetadataRoute.Sitemap = medalhas.map((badge: {slug: string}) => ({
-    url: `${BASE_URL}/ingress/medalha/${badge.slug}`,
+    url: `${BASE_URL}/ingress/fencherlc/medalha/${badge.slug}`,
     changeFrequency: 'monthly' as const,
     priority: 0.4,
   }))

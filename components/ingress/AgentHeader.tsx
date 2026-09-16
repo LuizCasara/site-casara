@@ -1,17 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import {
-  FaBookOpen,
-  FaGlobe,
-  FaMapMarkedAlt,
-  FaQuestion,
-  FaTelegramPlane,
-  FaTrophy,
-  FaYoutube,
-} from 'react-icons/fa'
+import {FaQuestion, FaTrophy} from 'react-icons/fa'
 import {heroMeshPolygons} from '@/lib/ingress-s2.mjs'
 import type {Profile} from '@/lib/ingress'
+import {INGRESS_LINKS} from '@/lib/ingress-links'
 import {useLang} from '@/context/LanguageContext'
 import HeroMesh from './HeroMesh'
 import HeroGlobe from './HeroGlobe'
@@ -20,18 +13,6 @@ const FACTION_LABEL: Record<Profile['agent']['faction'], string> = {
   enlightened: 'Enlightened',
   resistance: 'Resistance',
 }
-
-const LINKS = [
-  {href: 'https://ingress.com', label: 'Ingress', Icon: FaGlobe},
-  {href: 'https://intel.ingress.com', label: 'Intel Map', Icon: FaMapMarkedAlt},
-  {href: 'https://www.youtube.com/@Ingress', label: 'YouTube', Icon: FaYoutube},
-  {
-    href: 'https://ingress.fandom.com',
-    label: {pt: 'Como funciona', en: 'How it works'},
-    Icon: FaBookOpen,
-  },
-  {href: 'https://t.me/FencherLC', label: '@FencherLC', Icon: FaTelegramPlane},
-] as const
 
 const T = {
   pt: {
@@ -89,7 +70,7 @@ export default function AgentHeader({profile}: {profile: Profile}) {
           {t.rankingCta}
         </Link>
         <nav className="ing-hero__links" aria-label={t.linksAria}>
-          {LINKS.map(({href, label, Icon}) => (
+          {INGRESS_LINKS.map(({href, label, Icon}) => (
             <a
               key={href}
               className="ing-hero__link"

@@ -27,7 +27,7 @@ const T = {
 const PASTE_FIELD_ID = 'ing-radar-a'
 
 /**
- * Hero de `/ingress/ranking` — mesmo tratamento visual do hero de `/ingress`
+ * Hero de `/ingress/ranking` — mesmo tratamento visual do hero de `/ingress/fencherlc`
  * (`AgentHeader`: malha S2 + globo decorativo), mas sem identidade de um
  * agente específico (não há "o agente" nesta página, é o ranking de todos).
  * A âncora geográfica da malha/globo é `s2.center` do FencherLC (mesma fonte

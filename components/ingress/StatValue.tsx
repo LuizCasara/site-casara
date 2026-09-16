@@ -41,7 +41,7 @@ export default function StatValue({
       <div className="ing-stat__label">{label}</div>
       {badge ? (
         <Link
-          href={`/ingress/medalha/${badge.slug}`}
+          href={`/ingress/fencherlc/medalha/${badge.slug}`}
           className={`ing-stat__badge ing-stat__badge--${badge.tier}`}
           aria-label={T[lang].medal(badge.name, badge.tierLabel)}
         >

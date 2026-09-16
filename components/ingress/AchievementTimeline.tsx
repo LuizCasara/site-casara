@@ -157,7 +157,7 @@ function Resumo({rows}: {rows: Row[]}) {
 
   return (
     <Panel label={tr.heading} hint={tr.resumoHint(rows.length)}>
-      <a className="ing-tl__teaser" href="/ingress/linha-do-tempo">
+      <a className="ing-tl__teaser" href="/ingress/fencherlc/linha-do-tempo">
         <svg className="ing-tl__svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={tr.resumoSvgAria}>
           <defs>
             <linearGradient id="ing-tl-fill" x1="0" y1="0" x2="0" y2="1">

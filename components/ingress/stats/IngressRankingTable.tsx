@@ -129,7 +129,7 @@ function tierColor(tier: string): string {
 /**
  * "Ressonadores" -> "Res." só neste chip (largura fixa, pedido do Luiz) —
  * as outras exibições do mesmo stat (breakdown do `ProfileRadar`, painéis de
- * `/ingress`) continuam com o nome completo; `RADAR_AXES` não muda.
+ * `/ingress/fencherlc`) continuam com o nome completo; `RADAR_AXES` não muda.
  */
 const CHIP_LABEL_OVERRIDE: Record<string, {pt: string; en: string}> = {
   resonatorsDeployed: {pt: 'Res. implantados', en: 'Res. deployed'},

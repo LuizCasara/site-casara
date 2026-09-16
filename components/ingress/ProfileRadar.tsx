@@ -50,7 +50,7 @@ export type Agent = {
 /**
  * Textos bilíngues do componente (ISTATS-19 fix). A branch `pt` reproduz
  * literalmente o texto que existia antes deste componente ganhar `useLang()`
- * - não pode regredir o uso existente em `/ingress` (variant `default`).
+ * - não pode regredir o uso existente em `/ingress/fencherlc` (variant `default`).
  */
 const T = {
   pt: {
@@ -228,7 +228,7 @@ export default function ProfileRadar({
   const [open, setOpen] = useState(variant === 'ranking')
   // Em `ranking`, "só entrar" é o caminho principal (comparação é secundária)
   // — por isso também é o modo padrão nessa variant; em `default` (uso
-  // dentro de /ingress) não existe modo "solo", então o padrão continua vs-me.
+  // dentro de /ingress/fencherlc) não existe modo "solo", então o padrão continua vs-me.
   const [mode, setMode] = useState<'vs-me' | 'two' | 'solo'>(variant === 'ranking' ? 'solo' : 'vs-me')
   const [textA, setTextA] = useState('')
   const [textB, setTextB] = useState('')
@@ -242,7 +242,7 @@ export default function ProfileRadar({
 
   const me: Agent = {codename: agentName, stats: stats as Record<string, number>, capturedAt}
   // No modo ranking, o radar nasce em branco — não pré-carrega o padrão do
-  // FencherLC (isso é exclusivo do uso em /ingress). `me` continua disponível
+  // FencherLC (isso é exclusivo do uso em /ingress/fencherlc). `me` continua disponível
   // pro modo "vs-me" comparar contra o FencherLC real quando o visitante cola algo.
   const isBlank = variant === 'ranking' && !cmp
   const agentA = cmp ? cmp.a : isBlank ? BLANK_AGENT : me

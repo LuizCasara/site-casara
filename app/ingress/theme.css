@@ -3756,6 +3756,182 @@
   .ing-activity__feed::before { left: 1.05rem; }
 }
 
+/*
+ * Hub `/ingress` — placeholder simples enquanto o design final (mini-cards de
+ * ferramentas/links/Telegram) não é feito; ver `components/ingress/IngressHub.tsx`.
+ */
+.ing-hub__intro {
+  text-align: center;
+  padding: 1.5rem 0 0.5rem;
+}
+
+.ing-hub__eyebrow {
+  font-family: var(--ing-font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ing-teal);
+}
+
+.ing-hub__heading {
+  font-size: 2rem;
+  margin-top: 0.5rem;
+}
+
+.ing-hub__body {
+  max-width: 34rem;
+  margin: 0.6rem auto 0;
+  color: var(--ing-text-dim);
+}
+
+.ing-hub__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 34rem) {
+  .ing-hub__cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ing-hub__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--ing-panel);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--ing-edge);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--ing-lift);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.ing-hub__card svg {
+  font-size: 1.6rem;
+  color: var(--ing-green);
+}
+
+.ing-hub__card strong {
+  font-family: var(--ing-font-display);
+  font-size: 1.15rem;
+}
+
+.ing-hub__card span {
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-hub__card:hover,
+.ing-hub__card:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--ing-green);
+}
+
+.ing-hub__card:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-hub__links {
+  display: flex;
+  flex-direction: column;
+}
+
+.ing-hub__divider {
+  border: none;
+  border-top: 1px solid var(--ing-edge-soft);
+  margin: 1.35rem 0;
+}
+
+.ing-hub__linkgroup-label {
+  font-family: var(--ing-font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ing-teal);
+  margin-bottom: 0.65rem;
+}
+
+.ing-hub__linkgrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.ing-hub__linkcard {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 999px;
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.ing-hub__linkcard svg {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.85;
+}
+
+.ing-hub__linkcard:hover,
+.ing-hub__linkcard:focus-visible {
+  color: var(--ing-text);
+  border-color: var(--ing-edge);
+  background: rgba(0, 230, 118, 0.12);
+  transform: translateY(-1px);
+}
+
+.ing-hub__linkcard:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-footer {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2.5rem;
+  text-align: center;
+  border-top: 1px solid var(--ing-edge-soft);
+}
+
+.ing-footer p {
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--ing-text-faint);
+}
+
+.ing-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--ing-teal);
+  text-decoration: none;
+}
+
+.ing-footer a:hover,
+.ing-footer a:focus-visible {
+  color: var(--ing-green-soft);
+}
+
+.ing-footer a svg {
+  width: 0.85em;
+  height: 0.85em;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ingress-prime * {
     animation-duration: 0.001ms !important;

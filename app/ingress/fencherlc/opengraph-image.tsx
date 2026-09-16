@@ -84,7 +84,7 @@ export default function Image() {
         </div>
 
         <span style={{color: '#5c706a', fontSize: 20, letterSpacing: '0.2em'}}>
-          luizcasara.com/ingress
+          luizcasara.com/ingress/fencherlc
         </span>
       </div>
     ),

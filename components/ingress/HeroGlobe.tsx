@@ -53,7 +53,8 @@ function arcPoints(va: Vec3, vb: Vec3, lift: number, n: number): Vec3[] {
 }
 
 /**
- * Globo decorativo do hero de `/ingress`, no espírito do hero de ingress.com:
+ * Globo decorativo do hero de `/ingress/fencherlc` e `/ingress/ranking`, no
+ * espírito do hero de ingress.com:
  * Terra escura girando sozinha, continentes pontilhados (verde na América do
  * Sul — território Enlightened —, ciano no resto, costas em dourado), poucos
  * arcos "link" varrendo o globo com a luz viajando, e o portal-casa (Cascavel,

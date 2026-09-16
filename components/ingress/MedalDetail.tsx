@@ -159,7 +159,7 @@ export default function MedalDetail({
           </b>
           {range ? <span className="ing-tl__detail-sub">{range}</span> : null}
           {isCore ? (
-            <a className="ing-tl__detail-link" href={`/ingress/medalha/${medal.slug}`}>
+            <a className="ing-tl__detail-link" href={`/ingress/fencherlc/medalha/${medal.slug}`}>
               {tr.openPage(medal.name)}
             </a>
           ) : null}

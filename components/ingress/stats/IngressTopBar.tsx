@@ -7,9 +7,10 @@ import IngressShareButton from './IngressShareButton'
 /**
  * Container fixo no canto superior direito de toda `/ingress` — sempre o
  * toggle PT/EN, e o ícone de compartilhar só em `/ingress/ranking` (é a
- * página que faz sentido mandar pra alguém comparar; `/ingress` é o perfil
- * de um dono só). Fica num só componente, montado uma vez no layout, pra não
- * duplicar a lógica de posicionamento fixa entre os dois botões.
+ * página que faz sentido mandar pra alguém comparar; o hub `/ingress` e o
+ * perfil `/ingress/fencherlc` são de um dono só). Fica num só componente,
+ * montado uma vez no layout, pra não duplicar a lógica de posicionamento
+ * fixa entre os dois botões.
  */
 export default function IngressTopBar() {
   const pathname = usePathname()
