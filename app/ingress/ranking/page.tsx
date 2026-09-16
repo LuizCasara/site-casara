@@ -10,7 +10,9 @@ import AxisExplanations from '@/components/ingress/stats/AxisExplanations'
 import IngressRankingTabs from '@/components/ingress/stats/IngressRankingTabs'
 import type {RankingRow} from '@/components/ingress/stats/IngressRankingTable'
 import type {ActivityRow} from '@/components/ingress/stats/IngressActivityFeed'
+import type {NerdStats} from '@/components/ingress/stats/IngressNerdStats'
 import IngressTutorial from '@/components/ingress/stats/IngressTutorial'
+import {computeNerdStats} from '@/lib/ingress-nerd-stats.mjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -125,6 +127,30 @@ async function loadInitialActivity(): Promise<ActivityRow[]> {
 }
 
 /**
+ * Estatísticas para nerds (aba estática, sem poll) — busca TODAS as linhas de
+ * `casara.ingress_rankings` (sem `LIMIT`, ao contrário de `loadInitialRows`)
+ * mais o total de envios de `casara.ingress_ranking_history`, e agrega tudo
+ * de uma vez via `computeNerdStats` (lib/ingress-nerd-stats.mjs). Mesmo
+ * espírito de degradação de `loadInitialRows`/`loadInitialActivity`.
+ */
+async function loadNerdStats(): Promise<NerdStats | null> {
+  try {
+    const [rows, [{count}]] = await Promise.all([
+      sql`
+        SELECT codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values,
+               recursions, extra_stats, months_subscribed, created_at
+        FROM casara.ingress_rankings
+      `,
+      sql`SELECT COUNT(*)::int AS count FROM casara.ingress_ranking_history`,
+    ]);
+    return computeNerdStats(rows, count) as NerdStats;
+  } catch (err) {
+    console.error('[app/ingress/ranking] falha ao calcular estatísticas para nerds:', err);
+    return null;
+  }
+}
+
+/**
  * `ItemList` schema.org com o top 50 do ranking — limitado pra não inflar o
  * HTML com os 100 registros de `loadInitialRows`. Top 50 já cobre qualquer
  * uso razoável (rich results, resumo por um agente de IA).
@@ -175,7 +201,11 @@ export default async function IngressRankingPage() {
   const tier = overallTierLabel(axisScores)
   const axisScoreMap = Object.fromEntries(axisScores.map((a) => [a.id, a.score]))
 
-  const [initialRows, initialEvents] = await Promise.all([loadInitialRows(), loadInitialActivity()])
+  const [initialRows, initialEvents, nerdStats] = await Promise.all([
+    loadInitialRows(),
+    loadInitialActivity(),
+    loadNerdStats(),
+  ])
   const rankingJsonLd = buildRankingJsonLd(initialRows)
 
   return (
@@ -195,7 +225,7 @@ export default async function IngressRankingPage() {
 
       <RankingHero center={profile.s2.center} totalAgents={initialRows.length} />
 
-      <IngressRankingTabs initialRows={initialRows} initialEvents={initialEvents} />
+      <IngressRankingTabs initialRows={initialRows} initialEvents={initialEvents} nerdStats={nerdStats} />
 
       <StatsRadarSection
         fencherlc={{

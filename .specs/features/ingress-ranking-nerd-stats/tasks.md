@@ -493,7 +493,7 @@ T1 → T18
 
 ---
 
-### T18: Integração final — SSR + terceira aba
+### T18: Integração final — SSR + terceira aba ✅
 
 **What**: Adiciona `loadNerdStats()` a `app/ingress/ranking/page.tsx` (SELECT sem `LIMIT` em `casara.ingress_rankings`, incluindo `months_subscribed`, + `COUNT(*)` de `casara.ingress_ranking_history`, chamando `computeNerdStats`); `IngressRankingTabs` ganha a aba `'nerd'` (terceiro botão + só monta `IngressNerdStats` quando ativa, mesmo padrão de `'ranking'`/`'activity'`).
 **Where**: `app/ingress/ranking/page.tsx` (modifica), `components/ingress/stats/IngressRankingTabs.tsx` (modifica)
