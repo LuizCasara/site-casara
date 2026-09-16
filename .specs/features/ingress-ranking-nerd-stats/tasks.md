@@ -355,7 +355,7 @@ T1 → T18
 
 ---
 
-### T12: `CommunityRadarChart` (P3 — UI, radar consolidado)
+### T12: `CommunityRadarChart` (P3 — UI, radar consolidado) ✅
 
 **What**: Componente SVG presentational-only (sem paste, sem comparação) que desenha o polígono do radar a partir de `Record<string,number>` (médias dos 5 eixos), reaproveitando as classes CSS `ing-radar__*` de `theme.css` para paridade visual com o radar individual de `ProfileRadar`, sem importar esse componente.
 **Where**: `components/ingress/stats/CommunityRadarChart.tsx`
