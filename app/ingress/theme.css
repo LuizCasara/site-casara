@@ -1849,13 +1849,15 @@
   margin: 0;
 }
 
-.ing-radar__scale {
+.ing-radar__scale,
+.ing-activity__period {
   display: flex;
   gap: 0.2rem;
   flex: none;
 }
 
-.ing-radar__scale button {
+.ing-radar__scale button,
+.ing-activity__period button {
   font-family: var(--ing-font-body);
   font-size: 0.72rem;
   padding: 0.2rem 0.5rem;
@@ -1866,13 +1868,15 @@
   cursor: pointer;
 }
 
-.ing-radar__scale button[aria-pressed='true'] {
+.ing-radar__scale button[aria-pressed='true'],
+.ing-activity__period button[aria-pressed='true'] {
   background: rgba(0, 230, 118, 0.12);
   border-color: var(--ing-green);
   color: var(--ing-green-soft);
 }
 
-.ing-radar__scale button:focus-visible {
+.ing-radar__scale button:focus-visible,
+.ing-activity__period button:focus-visible {
   outline: 2px solid var(--ing-cyan);
   outline-offset: 2px;
 }
@@ -1971,7 +1975,8 @@
 
 /* ─── Ranking table (iteração de UI: alinhamento, largura total, ícones) ─── */
 
-.ing-ranking-table__toolbar {
+.ing-ranking-table__toolbar,
+.ing-activity__toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1998,12 +2003,14 @@
   width: 11rem;
 }
 
-.ing-ranking-table__faction-filter {
+.ing-ranking-table__faction-filter,
+.ing-activity__kind-filter {
   display: flex;
   gap: 0.35rem;
 }
 
-.ing-ranking-table__faction-filter button {
+.ing-ranking-table__faction-filter button,
+.ing-activity__kind-filter button {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -2016,12 +2023,14 @@
   cursor: pointer;
 }
 
-.ing-ranking-table__faction-filter button.is-active {
+.ing-ranking-table__faction-filter button.is-active,
+.ing-activity__kind-filter button.is-active {
   color: var(--ing-text);
   border-color: var(--ing-green-soft);
 }
 
-.ing-ranking-table__no-results {
+.ing-ranking-table__no-results,
+.ing-activity__empty {
   color: var(--ing-text-dim);
   padding: 1rem 0;
 }
@@ -3566,6 +3575,185 @@
   fill: var(--ing-cyan);
   stroke: var(--ing-cyan-soft);
   filter: drop-shadow(0 0 5px rgba(38, 182, 255, 0.6));
+}
+
+/* --- alterna Ranking / Radar de atividade (topo de /ingress/ranking) --- */
+
+.ing-ranking-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: -1px;
+}
+
+.ing-ranking-tabs button {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--ing-edge-soft);
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  background: transparent;
+  color: var(--ing-text-faint);
+  cursor: pointer;
+}
+
+.ing-ranking-tabs button[aria-selected='true'] {
+  color: var(--ing-text);
+  background: var(--ing-panel);
+  border-color: var(--ing-edge);
+}
+
+.ing-ranking-tabs button:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+/* --- radar de atividade (feed de eventos do ranking) --- */
+
+.ing-activity__toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ing-activity__feed {
+  position: relative;
+}
+
+.ing-activity__feed::before {
+  content: '';
+  position: absolute;
+  top: 0.2rem;
+  bottom: 0.2rem;
+  left: 1.2rem;
+  width: 2px;
+  background: linear-gradient(to bottom, rgba(0, 230, 118, 0.3), rgba(255, 255, 255, 0.03) 90%);
+}
+
+.ing-activity__entry {
+  --kind-color: var(--ing-teal);
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  column-gap: 0.8rem;
+  align-items: start;
+  padding: 0.8rem 0;
+}
+
+.ing-activity__entry + .ing-activity__entry {
+  border-top: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+.ing-activity__node {
+  position: relative;
+  z-index: 1;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ing-bg-2);
+  border: 2px solid var(--kind-color);
+  box-shadow: 0 0 0 5px var(--ing-bg), 0 0 14px -2px var(--kind-color);
+  font-size: 0.9rem;
+  color: var(--kind-color);
+}
+
+.ing-activity__body { min-width: 0; padding-top: 0.1rem; }
+
+.ing-activity__line1 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.ing-activity__flag {
+  width: 18px;
+  height: 13px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.ing-activity__fac-icon {
+  flex: none;
+  border-radius: 3px;
+}
+
+.ing-activity__codename {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--ing-green-soft);
+}
+
+.ing-activity__codename.is-resistance {
+  color: var(--ing-cyan-soft);
+}
+
+.ing-activity__tag {
+  font-family: var(--ing-font-display);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--kind-color);
+  color: var(--kind-color);
+}
+
+.ing-activity__desc {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+  line-height: 1.5;
+}
+
+.ing-activity__num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.ing-activity__num.is-up { color: var(--ing-green-soft); }
+.ing-activity__num.is-score { color: var(--ing-cyan-soft); }
+
+.ing-activity__time {
+  font-size: 0.75rem;
+  color: var(--ing-text-faint);
+  white-space: nowrap;
+  padding-top: 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-activity__entry.is-new {
+  animation: ing-activity-flash 2.4s ease-out;
+}
+
+@keyframes ing-activity-flash {
+  0% { background: rgba(0, 230, 118, 0.1); }
+  100% { background: transparent; }
+}
+
+.ing-activity__entry.enter {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.ing-activity__entry.enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+@media (max-width: 30rem) {
+  .ing-activity__entry { grid-template-columns: 2.1rem 1fr; }
+  .ing-activity__time { grid-column: 2; padding-top: 0; }
+  .ing-activity__node { width: 2.1rem; height: 2.1rem; font-size: 0.8rem; }
+  .ing-activity__feed::before { left: 1.05rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
