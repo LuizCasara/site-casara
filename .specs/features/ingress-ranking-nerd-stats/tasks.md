@@ -186,7 +186,7 @@ T1 → T18
 
 ---
 
-### T5: `computeAveragesSection` (P3 — médias/distribuição)
+### T5: `computeAveragesSection` (P3 — médias/distribuição) ✅
 
 **What**: Função pura devolvendo `{avgApPerAgent, overallScoreHistogram, communityAxisAverage, recursions: {avg, max, reportedCount}}` — histograma em 6 faixas fixas de 20 pontos sobre `overall_score`; `recursions` só entre `recursions IS NOT NULL`.
 **Where**: `lib/ingress-nerd-stats.mjs` (modifica), `lib/ingress-nerd-stats.test.mjs` (modifica)
