@@ -236,7 +236,7 @@ T1 → T18
 
 ---
 
-### T7: `computeSeasonalEngagement` (P5 — eventos sazonais)
+### T7: `computeSeasonalEngagement` (P5 — eventos sazonais) ✅
 
 **What**: Função pura que soma, para cada uma das 9 chaves (`firstSaturdayEvents`, `secondSundayEvents`, `clearFieldsEvents`, `battleBeaconCombatant`, `apolloTokens`, `apolloModBattlePoints`, `seerPoints`, `xmRecharged`, `agentsRecruited`) lidas de `extra_stats`, devolvendo `{sum, reportedCount}` por chave — ausência OU valor não-numérico exclui o agente do somatório E do divisor daquela métrica especificamente (nunca vira 0).
 **Where**: `lib/ingress-nerd-stats.mjs` (modifica), `lib/ingress-nerd-stats.test.mjs` (modifica)
