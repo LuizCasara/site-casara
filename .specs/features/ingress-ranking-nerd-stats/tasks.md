@@ -162,7 +162,7 @@ T1 → T18
 
 ---
 
-### T4: `computeFactionComparison` (P2 — facção)
+### T4: `computeFactionComparison` (P2 — facção) ✅
 
 **What**: Função pura `{enlightened, resistance} -> {agentCount, totalAp, avgOverallScore, onyxBadges}` por facção; facção sem nenhum agente devolve zeros (nunca omite a chave).
 **Where**: `lib/ingress-nerd-stats.mjs` (modifica), `lib/ingress-nerd-stats.test.mjs` (modifica)
