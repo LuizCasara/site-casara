@@ -3939,3 +3939,58 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ── Aba "Estatísticas para Nerds" (/ingress/ranking) ──────────────────── */
+
+.ing-nerd-divergent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.ing-nerd-divergent-row {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr 3.5rem;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ing-nerd-divergent-value {
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-divergent-value--left {
+  text-align: right;
+}
+
+.ing-nerd-divergent-bars {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ing-nerd-divergent-bar {
+  height: 0.5rem;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.ing-nerd-divergent-bar--enlightened {
+  justify-self: end;
+  background: var(--ing-green);
+}
+
+.ing-nerd-divergent-bar--resistance {
+  justify-self: start;
+  background: var(--ing-cyan);
+}
+
+.ing-nerd-divergent-label {
+  font-size: 0.75rem;
+  color: var(--ing-text-dim);
+  text-align: center;
+  white-space: nowrap;
+}

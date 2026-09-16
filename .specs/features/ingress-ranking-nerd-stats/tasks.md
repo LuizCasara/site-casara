@@ -332,7 +332,7 @@ T1 → T18
 
 ---
 
-### T11: `NerdFactionCompare` (P2 — UI)
+### T11: `NerdFactionCompare` (P2 — UI) ✅
 
 **What**: Componente que recebe `NerdStats['byFaction']` e renderiza as barras divergentes (rótulo central, Enlightened cresce à esquerda em verde, Resistance à direita em azul), uma linha por métrica (agentes, AP, nota média, Onyx).
 **Where**: `components/ingress/stats/NerdFactionCompare.tsx`
