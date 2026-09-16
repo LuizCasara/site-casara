@@ -211,7 +211,7 @@ T1 → T18
 
 ---
 
-### T6: `computeHallOfFame` (P4 — recordes)
+### T6: `computeHallOfFame` (P4 — recordes) ✅
 
 **What**: Função pura devolvendo, para cada um dos 12 `RADAR_STAT_KEYS` + `lifetime_ap` + `recursions`, `{codenameKey, codename, value} | null` — maior valor vence, empate exato resolvido pelo `created_at` mais antigo (mesmo critério de `compareRankingRows`).
 **Where**: `lib/ingress-nerd-stats.mjs` (modifica), `lib/ingress-nerd-stats.test.mjs` (modifica)
