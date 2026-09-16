@@ -447,7 +447,7 @@ T1 → T18
 
 ---
 
-### T16: `NerdSubscription` (P6 — UI)
+### T16: `NerdSubscription` (P6 — UI) ✅
 
 **What**: Componente que renderiza `%` e média de `NerdStats['subscription']`, ou "sem dados suficientes" quando `hasData === false`.
 **Where**: `components/ingress/stats/NerdSubscription.tsx`
