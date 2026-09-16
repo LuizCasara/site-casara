@@ -89,7 +89,7 @@ T1 → T18
 
 ## Task Breakdown
 
-### T1: Migration `months_subscribed`
+### T1: Migration `months_subscribed` ✅
 
 **What**: Cria `lib/migrations/009-ingress-ranking-months-subscribed.sql`, adicionando `months_subscribed INTEGER` (nullable, `CHECK >= 0`) a `casara.ingress_rankings` — mesmo padrão exato de `005-ingress-ranking-recursions.sql`.
 **Where**: `lib/migrations/009-ingress-ranking-months-subscribed.sql`
