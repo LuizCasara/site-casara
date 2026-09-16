@@ -470,7 +470,7 @@ T1 → T18
 
 ---
 
-### T17: `IngressNerdStats` — orquestrador visual
+### T17: `IngressNerdStats` — orquestrador visual ✅
 
 **What**: Componente que recebe `NerdStats | null` inteiro e renderiza as 6 seções (T10-T11, T13-T16) em ordem, ou o painel "Sinal perdido" quando `stats === null` ou `stats.totals.totalAgents === 0`.
 **Where**: `components/ingress/stats/IngressNerdStats.tsx`
