@@ -260,7 +260,7 @@ T1 → T18
 
 ---
 
-### T8: `computeSubscription` (P6 — assinatura paga)
+### T8: `computeSubscription` (P6 — assinatura paga) ✅
 
 **What**: Função pura devolvendo `{hasData, percentSubscribed, avgMonthsAmongSubscribed}` a partir de `months_subscribed` — `hasData: false` quando nenhum agente tem o campo preenchido; percentual é `agentes com months_subscribed > 0` sobre `agentes com months_subscribed IS NOT NULL`.
 **Where**: `lib/ingress-nerd-stats.mjs` (modifica), `lib/ingress-nerd-stats.test.mjs` (modifica)
