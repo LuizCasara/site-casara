@@ -284,7 +284,7 @@ T1 → T18
 
 ---
 
-### T9: `computeNerdStats` — orquestrador
+### T9: `computeNerdStats` — orquestrador ✅
 
 **What**: Função pública `computeNerdStats(rows, totalSubmissions) -> NerdStats` que chama T3-T8 e monta o objeto único `NerdStats`; trata explicitamente `rows.length === 0` (todos os totais zerados, sem lançar).
 **Where**: `lib/ingress-nerd-stats.mjs` (modifica), `lib/ingress-nerd-stats.test.mjs` (modifica)
