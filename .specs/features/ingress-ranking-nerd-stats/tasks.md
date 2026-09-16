@@ -378,7 +378,7 @@ T1 → T18
 
 ---
 
-### T13: `NerdAverages` (P3 — UI)
+### T13: `NerdAverages` (P3 — UI) ✅
 
 **What**: Componente que compõe `CommunityRadarChart` + histograma (barras SVG simples) + bloco de recursões (média/máximo/"sem dados suficientes"), a partir de `NerdStats['averages']`.
 **Where**: `components/ingress/stats/NerdAverages.tsx`

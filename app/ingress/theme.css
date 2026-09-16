@@ -3994,3 +3994,54 @@
   text-align: center;
   white-space: nowrap;
 }
+
+.ing-nerd-subhead {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-averages {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ing-nerd-histogram-row {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr 2.5rem;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.ing-nerd-histogram-label {
+  font-size: 0.75rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-histogram-track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--ing-edge-soft);
+  overflow: hidden;
+}
+
+.ing-nerd-histogram-bar {
+  height: 100%;
+  background: var(--ing-accent);
+  transition: width 0.3s ease;
+}
+
+.ing-nerd-histogram-count {
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+  text-align: right;
+}
+
+.ing-nerd-empty-note {
+  font-size: 0.85rem;
+  color: var(--ing-text-faint);
+}
