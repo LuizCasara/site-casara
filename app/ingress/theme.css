@@ -4081,3 +4081,7 @@
 .ing-nerd-record-value--empty {
   color: var(--ing-text-faint);
 }
+
+.ing-nerd-seasonal .ing-nerd-empty-note {
+  margin: 0 0 0.9rem;
+}

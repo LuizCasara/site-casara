@@ -424,7 +424,7 @@ T1 → T18
 
 ---
 
-### T15: `NerdSeasonalEngagement` (P5 — UI)
+### T15: `NerdSeasonalEngagement` (P5 — UI) ✅
 
 **What**: Componente que lista as 9 métricas sazonais a partir de `NerdStats['seasonalEngagement']`, cada uma com soma + "N agentes informaram", mais um aviso fixo de que os números são parciais.
 **Where**: `components/ingress/stats/NerdSeasonalEngagement.tsx`
