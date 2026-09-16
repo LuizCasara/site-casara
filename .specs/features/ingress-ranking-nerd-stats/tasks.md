@@ -137,7 +137,7 @@ T1 → T18
 
 ---
 
-### T3: `computeCommunityTotals` (P1 — totais)
+### T3: `computeCommunityTotals` (P1 — totais) ✅
 
 **What**: Função pura que recebe as linhas do ranking e devolve `{totalAgents, totalLifetimeAp, badgeTiersGranted, onyxBadgesGranted, onyxClubCount}` — soma AP, conta tiers concedidos nos 12 stats via `computeStatTiers` (excluindo `'none'`), conta agentes com os 12 stats em onyx.
 **Where**: `lib/ingress-nerd-stats.mjs` (cria o arquivo), `lib/ingress-nerd-stats.test.mjs` (cria)
