@@ -3945,12 +3945,43 @@
 .ing-nerd-divergent {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 1.1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--ing-edge);
+  border-radius: 10px;
+  background: var(--ing-green-ghost);
+}
+
+.ing-nerd-divergent-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin: 0 0 0.2rem;
+}
+
+.ing-nerd-divergent-head-side {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-divergent-head-side img {
+  width: 1rem;
+  height: 1rem;
+}
+
+.ing-nerd-divergent-head-side--right {
+  justify-content: flex-end;
 }
 
 .ing-nerd-divergent-row {
   display: grid;
-  grid-template-columns: 3.5rem 1fr 3.5rem;
+  /* colunas de valor crescem com o conteúdo (auto), nunca cortam/sobrepõem
+     um AP na casa dos bilhões — só o miolo (as barras) encolhe. */
+  grid-template-columns: minmax(3.5rem, auto) 1fr minmax(3.5rem, auto);
   align-items: center;
   gap: 0.6rem;
 }
@@ -3959,6 +3990,7 @@
   font-family: var(--font-space-mono, monospace);
   font-size: 0.85rem;
   color: var(--ing-text-dim);
+  white-space: nowrap;
 }
 
 .ing-nerd-divergent-value--left {
@@ -3993,6 +4025,12 @@
   color: var(--ing-text-dim);
   text-align: center;
   white-space: nowrap;
+}
+
+.ing-nerd-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .ing-nerd-subhead {
@@ -4080,6 +4118,28 @@
 
 .ing-nerd-record-value--empty {
   color: var(--ing-text-faint);
+}
+
+@media (max-width: 480px) {
+  /* Rótulo + valor um sobre o outro em vez de lado a lado — "1.058.981.917
+     — gal0daxj" não cabe ao lado do rótulo numa tela de celular sem estourar
+     a largura (`white-space: nowrap` existe de propósito pra não quebrar o
+     "valor — codinome" no meio, então quem cede é o layout, não o texto). */
+  .ing-nerd-record-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+  }
+
+  .ing-nerd-record-value {
+    text-align: left;
+    /* Rede de segurança pra um codinome no limite de 40 caracteres (ver
+       CODENAME_MAX_LEN em app/api/ingress-rankings/route.ts): o `nowrap` de
+       desktop já não se aplica aqui (empilhado), mas sem isso um valor
+       excepcionalmente longo ainda estouraria a largura numa linha só. */
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
 
 .ing-nerd-seasonal .ing-nerd-empty-note {
