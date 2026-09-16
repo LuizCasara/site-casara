@@ -4045,3 +4045,39 @@
   font-size: 0.85rem;
   color: var(--ing-text-faint);
 }
+
+.ing-nerd-hall {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.ing-nerd-record-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--ing-edge-soft);
+}
+
+.ing-nerd-record-row:last-child {
+  border-bottom: none;
+}
+
+.ing-nerd-record-label {
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-record-value {
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.85rem;
+  color: var(--ing-text);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ing-nerd-record-value--empty {
+  color: var(--ing-text-faint);
+}

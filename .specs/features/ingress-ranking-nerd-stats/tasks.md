@@ -401,7 +401,7 @@ T1 → T18
 
 ---
 
-### T14: `NerdHallOfFame` (P4 — UI)
+### T14: `NerdHallOfFame` (P4 — UI) ✅
 
 **What**: Componente que lista os 12 recordes por stat + AP + recursões a partir de `NerdStats['hallOfFame']`, cada linha com codinome + valor (ou "-" quando `null`).
 **Where**: `components/ingress/stats/NerdHallOfFame.tsx`
