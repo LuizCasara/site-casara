@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/ingress-ranking-nerd-stats/design.md`
-**Status**: Approved
+**Status**: Done — Verifier PASS (`.specs/features/ingress-ranking-nerd-stats/validation.md`)
 
 **Scope of this file**: MVP only — spec's P1-P6 (`NERD-01` a `NERD-32`, todas marcadas ⭐ MVP). P7-P9 (geografia, crescimento, correlação — `NERD-33` a `NERD-37`) ficam deliberadamente de fora, sem tarefa própria: não têm ⭐ MVP na spec e o design já as trata como fast-follow.
 
