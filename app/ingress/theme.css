@@ -4027,10 +4027,34 @@
   white-space: nowrap;
 }
 
-.ing-nerd-stats {
+/* Um painel só pra aba inteira (o `.ing-panel` cuida de fundo/borda/sombra);
+   cada seção é uma divisão interna, não um cartão à parte. */
+.ing-nerd-shell {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+}
+
+.ing-nerd-section {
+  padding-block: 1.4rem;
+}
+
+.ing-nerd-section:first-child {
+  padding-top: 0;
+}
+
+.ing-nerd-section:last-child {
+  padding-bottom: 0;
+}
+
+.ing-nerd-section + .ing-nerd-section {
+  border-top: 1px solid var(--ing-edge);
+}
+
+.ing-nerd-section-title {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ing-text);
 }
 
 .ing-nerd-subhead {
@@ -4038,12 +4062,31 @@
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--ing-text-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ing-nerd-subhead-icon {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .ing-nerd-averages {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.ing-stat--corner {
+  position: relative;
+}
+
+.ing-stat--corner .ing-nerd-agent {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.6rem;
+  font-size: 0.68rem;
 }
 
 .ing-nerd-histogram-row {
@@ -4084,31 +4127,48 @@
   color: var(--ing-text-faint);
 }
 
-.ing-nerd-hall {
+.ing-nerd-hof {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
 }
 
-.ing-nerd-record-row {
+.ing-nerd-hof-row {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  padding: 0.55rem 0;
   border-bottom: 1px solid var(--ing-edge-soft);
 }
 
-.ing-nerd-record-row:last-child {
+.ing-nerd-hof-row:last-child {
   border-bottom: none;
 }
 
-.ing-nerd-record-label {
+.ing-nerd-hof-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ing-nerd-hof-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ing-nerd-hof-label {
+  flex: 1 1 8rem;
+  min-width: 6rem;
   font-size: 0.85rem;
   color: var(--ing-text-dim);
 }
 
-.ing-nerd-record-value {
+.ing-nerd-hof-value {
+  flex: 0 0 auto;
   font-family: var(--font-space-mono, monospace);
   font-size: 0.85rem;
   color: var(--ing-text);
@@ -4116,32 +4176,77 @@
   white-space: nowrap;
 }
 
-.ing-nerd-record-value--empty {
+.ing-nerd-hof-value--empty {
   color: var(--ing-text-faint);
 }
 
-@media (max-width: 480px) {
-  /* Rótulo + valor um sobre o outro em vez de lado a lado — "1.058.981.917
-     — gal0daxj" não cabe ao lado do rótulo numa tela de celular sem estourar
-     a largura (`white-space: nowrap` existe de propósito pra não quebrar o
-     "valor — codinome" no meio, então quem cede é o layout, não o texto). */
-  .ing-nerd-record-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.2rem;
-  }
+/* Identidade de agente (nick + facção + bandeira) — hall da fama, "top 1" de
+   evento sazonal, maior recursão. Sempre empurrado pro fim da linha
+   (`margin-left: auto`), pra ficar alinhado à direita mesmo quando o valor
+   ao lado varia de largura entre linhas. */
+.ing-nerd-agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+  max-width: 12rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
 
-  .ing-nerd-record-value {
-    text-align: left;
-    /* Rede de segurança pra um codinome no limite de 40 caracteres (ver
-       CODENAME_MAX_LEN em app/api/ingress-rankings/route.ts): o `nowrap` de
-       desktop já não se aplica aqui (empilhado), mas sem isso um valor
-       excepcionalmente longo ainda estouraria a largura numa linha só. */
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
+.ing-nerd-agent-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ing-nerd-agent-flag,
+.ing-nerd-agent-faction {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: 0 0 auto;
+}
+
+.ing-nerd-seasonal-row {
+  align-items: flex-start;
+}
+
+.ing-nerd-seasonal-figures {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
+
+.ing-nerd-seasonal-reported {
+  font-size: 0.68rem;
+  color: var(--ing-text-faint);
+  white-space: nowrap;
 }
 
 .ing-nerd-seasonal .ing-nerd-empty-note {
   margin: 0 0 0.9rem;
+}
+
+@media (max-width: 480px) {
+  /* Nick+facção+bandeira desce pra linha de baixo, alinhado com o rótulo —
+     tudo numa linha só não cabe com "1.058.981.917" + "gal0daxj" numa tela
+     de celular sem estourar a largura. */
+  .ing-nerd-hof-row {
+    padding-left: 2rem;
+    position: relative;
+  }
+
+  .ing-nerd-hof-icon {
+    position: absolute;
+    left: 0;
+    top: 0.55rem;
+  }
+
+  .ing-nerd-agent {
+    flex-basis: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+    max-width: none;
+  }
 }

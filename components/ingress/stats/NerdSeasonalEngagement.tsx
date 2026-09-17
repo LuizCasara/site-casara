@@ -1,9 +1,12 @@
 'use client'
 
 import {fmtStat} from '@/lib/ingress-format.mjs'
+import {artPath} from '@/lib/ingress-art.mjs'
 import {useLang} from '@/context/LanguageContext'
+import NerdAgentTag from './NerdAgentTag'
+import type {HallOfFameRecord} from './NerdHallOfFame'
 
-export type SeasonalMetric = {sum: number; reportedCount: number}
+export type SeasonalMetric = {sum: number; reportedCount: number; badgeSlug: string | null; top: HallOfFameRecord}
 
 const LABELS = {
   pt: {
@@ -34,12 +37,14 @@ type SeasonalKey = keyof typeof LABELS.pt
 
 const T = {
   pt: {
-    reportedBy: (n: number) => `${n} agente${n === 1 ? '' : 's'} informou${n === 1 ? '' : 'ram'}`,
+    total: 'Total somado',
+    reportedBy: 'Agentes contabilizados',
     partialNote:
       'Números parciais — dependem do que cada agente colou no export, não é um censo completo da comunidade.',
   },
   en: {
-    reportedBy: (n: number) => `${n} agent${n === 1 ? '' : 's'} reported`,
+    total: 'Total sum',
+    reportedBy: 'Agents counted',
     partialNote: "Partial numbers — depend on what each agent pasted in their export, not a full community census.",
   },
 } as const
@@ -53,16 +58,31 @@ export default function NerdSeasonalEngagement({metrics}: {metrics: Record<strin
   return (
     <div className="ing-nerd-seasonal">
       <p className="ing-nerd-empty-note">{t.partialNote}</p>
-      <div className="ing-nerd-hall">
+      <div className="ing-nerd-hof">
         {(Object.keys(labels) as SeasonalKey[]).map((key) => {
-          const metric = metrics[key] ?? {sum: 0, reportedCount: 0}
+          const metric = metrics[key] ?? {sum: 0, reportedCount: 0, badgeSlug: null, top: null}
           return (
-            <div className="ing-nerd-record-row" key={key}>
-              <span className="ing-nerd-record-label">{labels[key]}</span>
-              <span className="ing-nerd-record-value">
-                {fmtStat(metric.sum)}
-                <span className="ing-nerd-record-value--empty"> · {t.reportedBy(metric.reportedCount)}</span>
+            <div className="ing-nerd-hof-row ing-nerd-seasonal-row" key={key}>
+              <span className="ing-nerd-hof-icon">
+                {metric.badgeSlug ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={artPath(metric.badgeSlug, 'onyx')} alt="" />
+                ) : null}
               </span>
+              <span className="ing-nerd-hof-label">{labels[key]}</span>
+              <span className="ing-nerd-seasonal-figures">
+                <span className="ing-nerd-hof-value" title={t.total}>
+                  {fmtStat(metric.sum)}
+                </span>
+                <span className="ing-nerd-seasonal-reported" title={t.reportedBy}>
+                  {fmtStat(metric.reportedCount)} {t.reportedBy.toLowerCase()}
+                </span>
+              </span>
+              {metric.top ? (
+                <NerdAgentTag codename={metric.top.codename} faction={metric.top.faction} countryCode={metric.top.countryCode} />
+              ) : (
+                <span />
+              )}
             </div>
           )
         })}

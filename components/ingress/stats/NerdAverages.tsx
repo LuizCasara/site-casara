@@ -1,11 +1,17 @@
 'use client'
 
 import {fmtStat} from '@/lib/ingress-format.mjs'
+import {artPath} from '@/lib/ingress-art.mjs'
 import {useLang} from '@/context/LanguageContext'
 import CommunityRadarChart from './CommunityRadarChart'
+import NerdAgentTag from './NerdAgentTag'
+import type {HallOfFameRecord} from './NerdHallOfFame'
 
 export type OverallScoreBand = {label: string; min: number; max: number | null; count: number}
 export type RecursionsSummary = {avg: number | null; max: number | null; reportedCount: number}
+
+/** "Simulacrum" — badge de evento único (grupo `event` no catálogo) ligada à primeira recursão do agente; não tem tiers, é sempre a mesma arte. */
+const SIMULACRUM_ART = artPath('simulacrum', null)
 
 const T = {
   pt: {
@@ -36,11 +42,13 @@ export default function NerdAverages({
   overallScoreHistogram,
   communityAxisAverage,
   recursions,
+  recursionsHolder,
 }: {
   avgApPerAgent: number
   overallScoreHistogram: OverallScoreBand[]
   communityAxisAverage: Record<string, number>
   recursions: RecursionsSummary
+  recursionsHolder: HallOfFameRecord
 }) {
   const {lang} = useLang()
   const t = T[lang]
@@ -72,7 +80,11 @@ export default function NerdAverages({
       </div>
 
       <div>
-        <h3 className="ing-nerd-subhead">{t.recursionsTitle}</h3>
+        <h3 className="ing-nerd-subhead ing-nerd-subhead--icon">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={SIMULACRUM_ART} alt="" className="ing-nerd-subhead-icon" />
+          {t.recursionsTitle}
+        </h3>
         {recursions.reportedCount === 0 ? (
           <p className="ing-nerd-empty-note">{t.recursionsEmpty}</p>
         ) : (
@@ -81,7 +93,14 @@ export default function NerdAverages({
               <div className="ing-stat__value">{fmtStat(Math.round(recursions.avg ?? 0))}</div>
               <div className="ing-stat__label">{t.recursionsAvg}</div>
             </div>
-            <div className="ing-stat">
+            <div className="ing-stat ing-stat--corner">
+              {recursionsHolder ? (
+                <NerdAgentTag
+                  codename={recursionsHolder.codename}
+                  faction={recursionsHolder.faction}
+                  countryCode={recursionsHolder.countryCode}
+                />
+              ) : null}
               <div className="ing-stat__value">{fmtStat(recursions.max ?? 0)}</div>
               <div className="ing-stat__label">{t.recursionsMax}</div>
             </div>

@@ -138,7 +138,7 @@ async function loadNerdStats(): Promise<NerdStats | null> {
     const [rows, [{count}]] = await Promise.all([
       sql`
         SELECT codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values,
-               recursions, extra_stats, months_subscribed, created_at
+               country_code, recursions, extra_stats, months_subscribed, created_at
         FROM casara.ingress_rankings
       `,
       sql`SELECT COUNT(*)::int AS count FROM casara.ingress_ranking_history`,

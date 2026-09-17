@@ -2,9 +2,21 @@
 
 import {fmtStat} from '@/lib/ingress-format.mjs'
 import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
+import {artPath} from '@/lib/ingress-art.mjs'
 import {useLang} from '@/context/LanguageContext'
+import NerdAgentTag from './NerdAgentTag'
 
-export type HallOfFameRecord = {codenameKey: string; codename: string; value: number} | null
+export type HallOfFameRecord = {
+  codenameKey: string
+  codename: string
+  faction: 'enlightened' | 'resistance'
+  countryCode: string | null
+  value: number
+} | null
+
+export type HallOfFameStatRecord =
+  | (NonNullable<HallOfFameRecord> & {badgeSlug: string | null; tier: string | null})
+  | null
 
 const T = {
   pt: {
@@ -19,16 +31,35 @@ const T = {
   },
 } as const
 
-function RecordRow({label, record, empty}: {label: string; record: HallOfFameRecord; empty: string}) {
+function RecordRow({
+  label,
+  record,
+  empty,
+  badgeSlug,
+  tier,
+}: {
+  label: string
+  record: HallOfFameRecord | HallOfFameStatRecord
+  empty: string
+  badgeSlug?: string | null
+  tier?: string | null
+}) {
   return (
-    <div className="ing-nerd-record-row">
-      <span className="ing-nerd-record-label">{label}</span>
+    <div className="ing-nerd-hof-row">
+      <span className="ing-nerd-hof-icon">
+        {badgeSlug && tier ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={artPath(badgeSlug, tier)} alt="" />
+        ) : null}
+      </span>
+      <span className="ing-nerd-hof-label">{label}</span>
       {record ? (
-        <span className="ing-nerd-record-value">
-          {fmtStat(record.value)} — <strong>{record.codename}</strong>
-        </span>
+        <>
+          <span className="ing-nerd-hof-value">{fmtStat(record.value)}</span>
+          <NerdAgentTag codename={record.codename} faction={record.faction} countryCode={record.countryCode} />
+        </>
       ) : (
-        <span className="ing-nerd-record-value ing-nerd-record-value--empty">{empty}</span>
+        <span className="ing-nerd-hof-value ing-nerd-hof-value--empty">{empty}</span>
       )}
     </div>
   )
@@ -40,7 +71,7 @@ export default function NerdHallOfFame({
   lifetimeAp,
   recursions,
 }: {
-  perStat: Record<string, HallOfFameRecord>
+  perStat: Record<string, HallOfFameStatRecord>
   lifetimeAp: HallOfFameRecord
   recursions: HallOfFameRecord
 }) {
@@ -48,18 +79,23 @@ export default function NerdHallOfFame({
   const t = T[lang]
 
   return (
-    <div className="ing-nerd-hall">
+    <div className="ing-nerd-hof">
       <RecordRow label={t.ap} record={lifetimeAp} empty={t.empty} />
       <RecordRow label={t.recursions} record={recursions} empty={t.empty} />
       {RADAR_AXES.flatMap((axis) =>
-        axis.parts.map((part) => (
-          <RecordRow
-            key={part.key}
-            label={lang === 'en' ? part.labelEn : part.label}
-            record={perStat[part.key] ?? null}
-            empty={t.empty}
-          />
-        ))
+        axis.parts.map((part) => {
+          const stat = perStat[part.key] ?? null
+          return (
+            <RecordRow
+              key={part.key}
+              label={lang === 'en' ? part.labelEn : part.label}
+              record={stat}
+              empty={t.empty}
+              badgeSlug={stat?.badgeSlug}
+              tier={stat?.tier}
+            />
+          )
+        })
       )}
     </div>
   )
