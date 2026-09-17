@@ -2,6 +2,7 @@ import type {Metadata} from 'next'
 import {Sora, Barlow} from 'next/font/google'
 import {Toaster} from 'sonner'
 import IngressTopBar from '@/components/ingress/stats/IngressTopBar'
+import IngressFooter from '@/components/ingress/IngressFooter'
 import './theme.css'
 
 // Display / números / codinome — geométrica moderna, o registro do Ingress Prime.
@@ -20,13 +21,25 @@ const barlow = Barlow({
   display: 'swap',
 })
 
-const TITLE = 'FencherLC — Agente Ingress'
-const DESCRIPTION =
-  'O perfil de campo do agente FencherLC (Enlightened): estatísticas, medalhas e o padrão de jogo, direto do scanner.'
+// Metadata genérica do hub `/ingress` — cada sub-rota (`fencherlc/`, `ranking/`)
+// já define a própria (ver `fencherlc/layout.tsx` e `ranking/page.tsx`); este
+// bloco só vale pra própria página do hub, que não tem layout próprio.
+const TITLE = 'Ingress — Luiz Casara'
+const DESCRIPTION = 'Hub de Ingress: perfil de agente, ranking de agentes e links úteis do jogo.'
 
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
+  // `icons` não herda por merge no Next (o ancestral mais próximo que declarar
+  // vence pra toda a subárvore) — declarado aqui, uma vez, cobre o hub e todas
+  // as sub-rotas (`fencherlc`, `ranking`, `medalha`, `linha-do-tempo`), que não
+  // redeclaram o próprio. Explícito em vez de só a convenção de arquivo
+  // (`icon.png` neste mesmo diretório) porque, testado nesta versão do Next,
+  // a convenção de arquivo não vence sozinha quando a raiz já declara `icons`
+  // como campo — os dois lados como campo explícito é o caminho que funciona.
+  icons: {
+    icon: [{url: '/ingress/icon.png', type: 'image/png', sizes: '256x256'}],
+  },
   openGraph: {
     type: 'website',
     url: 'https://luizcasara.com/ingress',
@@ -46,6 +59,7 @@ export default function IngressLayout({children}: {children: React.ReactNode}) {
     <div className={`${sora.variable} ${barlow.variable} ingress-prime`}>
       <IngressTopBar />
       {children}
+      <IngressFooter />
       <Toaster />
     </div>
   )

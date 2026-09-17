@@ -1849,13 +1849,15 @@
   margin: 0;
 }
 
-.ing-radar__scale {
+.ing-radar__scale,
+.ing-activity__period {
   display: flex;
   gap: 0.2rem;
   flex: none;
 }
 
-.ing-radar__scale button {
+.ing-radar__scale button,
+.ing-activity__period button {
   font-family: var(--ing-font-body);
   font-size: 0.72rem;
   padding: 0.2rem 0.5rem;
@@ -1866,13 +1868,15 @@
   cursor: pointer;
 }
 
-.ing-radar__scale button[aria-pressed='true'] {
+.ing-radar__scale button[aria-pressed='true'],
+.ing-activity__period button[aria-pressed='true'] {
   background: rgba(0, 230, 118, 0.12);
   border-color: var(--ing-green);
   color: var(--ing-green-soft);
 }
 
-.ing-radar__scale button:focus-visible {
+.ing-radar__scale button:focus-visible,
+.ing-activity__period button:focus-visible {
   outline: 2px solid var(--ing-cyan);
   outline-offset: 2px;
 }
@@ -1971,7 +1975,8 @@
 
 /* ─── Ranking table (iteração de UI: alinhamento, largura total, ícones) ─── */
 
-.ing-ranking-table__toolbar {
+.ing-ranking-table__toolbar,
+.ing-activity__toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1998,12 +2003,14 @@
   width: 11rem;
 }
 
-.ing-ranking-table__faction-filter {
+.ing-ranking-table__faction-filter,
+.ing-activity__kind-filter {
   display: flex;
   gap: 0.35rem;
 }
 
-.ing-ranking-table__faction-filter button {
+.ing-ranking-table__faction-filter button,
+.ing-activity__kind-filter button {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -2016,12 +2023,14 @@
   cursor: pointer;
 }
 
-.ing-ranking-table__faction-filter button.is-active {
+.ing-ranking-table__faction-filter button.is-active,
+.ing-activity__kind-filter button.is-active {
   color: var(--ing-text);
   border-color: var(--ing-green-soft);
 }
 
-.ing-ranking-table__no-results {
+.ing-ranking-table__no-results,
+.ing-activity__empty {
   color: var(--ing-text-dim);
   padding: 1rem 0;
 }
@@ -3568,10 +3577,676 @@
   filter: drop-shadow(0 0 5px rgba(38, 182, 255, 0.6));
 }
 
+/* --- alterna Ranking / Radar de atividade (topo de /ingress/ranking) --- */
+
+.ing-ranking-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: -1px;
+}
+
+.ing-ranking-tabs button {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--ing-edge-soft);
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  background: transparent;
+  color: var(--ing-text-faint);
+  cursor: pointer;
+}
+
+.ing-ranking-tabs button[aria-selected='true'] {
+  color: var(--ing-text);
+  background: var(--ing-panel);
+  border-color: var(--ing-edge);
+}
+
+.ing-ranking-tabs button:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+/* --- radar de atividade (feed de eventos do ranking) --- */
+
+.ing-activity__toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ing-activity__feed {
+  position: relative;
+}
+
+.ing-activity__feed::before {
+  content: '';
+  position: absolute;
+  top: 0.2rem;
+  bottom: 0.2rem;
+  left: 1.2rem;
+  width: 2px;
+  background: linear-gradient(to bottom, rgba(0, 230, 118, 0.3), rgba(255, 255, 255, 0.03) 90%);
+}
+
+.ing-activity__entry {
+  --kind-color: var(--ing-teal);
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  column-gap: 0.8rem;
+  align-items: start;
+  padding: 0.8rem 0;
+}
+
+.ing-activity__entry + .ing-activity__entry {
+  border-top: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+.ing-activity__node {
+  position: relative;
+  z-index: 1;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ing-bg-2);
+  border: 2px solid var(--kind-color);
+  box-shadow: 0 0 0 5px var(--ing-bg), 0 0 14px -2px var(--kind-color);
+  font-size: 0.9rem;
+  color: var(--kind-color);
+}
+
+.ing-activity__body { min-width: 0; padding-top: 0.1rem; }
+
+.ing-activity__line1 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.ing-activity__flag {
+  width: 18px;
+  height: 13px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.ing-activity__fac-icon {
+  flex: none;
+  border-radius: 3px;
+}
+
+.ing-activity__codename {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--ing-green-soft);
+}
+
+.ing-activity__codename.is-resistance {
+  color: var(--ing-cyan-soft);
+}
+
+.ing-activity__tag {
+  font-family: var(--ing-font-display);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--kind-color);
+  color: var(--kind-color);
+}
+
+.ing-activity__desc {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+  line-height: 1.5;
+}
+
+.ing-activity__num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.ing-activity__num.is-up { color: var(--ing-green-soft); }
+.ing-activity__num.is-score { color: var(--ing-cyan-soft); }
+
+.ing-activity__time {
+  font-size: 0.75rem;
+  color: var(--ing-text-faint);
+  white-space: nowrap;
+  padding-top: 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-activity__entry.is-new {
+  animation: ing-activity-flash 2.4s ease-out;
+}
+
+@keyframes ing-activity-flash {
+  0% { background: rgba(0, 230, 118, 0.1); }
+  100% { background: transparent; }
+}
+
+.ing-activity__entry.enter {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.ing-activity__entry.enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+@media (max-width: 30rem) {
+  .ing-activity__entry { grid-template-columns: 2.1rem 1fr; }
+  .ing-activity__time { grid-column: 2; padding-top: 0; }
+  .ing-activity__node { width: 2.1rem; height: 2.1rem; font-size: 0.8rem; }
+  .ing-activity__feed::before { left: 1.05rem; }
+}
+
+/*
+ * Hub `/ingress` — placeholder simples enquanto o design final (mini-cards de
+ * ferramentas/links/Telegram) não é feito; ver `components/ingress/IngressHub.tsx`.
+ */
+.ing-hub__intro {
+  text-align: center;
+  padding: 1.5rem 0 0.5rem;
+}
+
+.ing-hub__eyebrow {
+  font-family: var(--ing-font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ing-teal);
+}
+
+.ing-hub__heading {
+  font-size: 2rem;
+  margin-top: 0.5rem;
+}
+
+.ing-hub__body {
+  max-width: 34rem;
+  margin: 0.6rem auto 0;
+  color: var(--ing-text-dim);
+}
+
+.ing-hub__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 34rem) {
+  .ing-hub__cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ing-hub__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--ing-panel);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--ing-edge);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--ing-lift);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.ing-hub__card svg {
+  font-size: 1.6rem;
+  color: var(--ing-green);
+}
+
+.ing-hub__card strong {
+  font-family: var(--ing-font-display);
+  font-size: 1.15rem;
+}
+
+.ing-hub__card span {
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-hub__card:hover,
+.ing-hub__card:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--ing-green);
+}
+
+.ing-hub__card:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-hub__links {
+  display: flex;
+  flex-direction: column;
+}
+
+.ing-hub__divider {
+  border: none;
+  border-top: 1px solid var(--ing-edge-soft);
+  margin: 1.35rem 0;
+}
+
+.ing-hub__linkgroup-label {
+  font-family: var(--ing-font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ing-teal);
+  margin-bottom: 0.65rem;
+}
+
+.ing-hub__linkgrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.ing-hub__linkcard {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 999px;
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.ing-hub__linkcard svg {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.85;
+}
+
+.ing-hub__linkcard:hover,
+.ing-hub__linkcard:focus-visible {
+  color: var(--ing-text);
+  border-color: var(--ing-edge);
+  background: rgba(0, 230, 118, 0.12);
+  transform: translateY(-1px);
+}
+
+.ing-hub__linkcard:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-footer {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2.5rem;
+  text-align: center;
+  border-top: 1px solid var(--ing-edge-soft);
+}
+
+.ing-footer p {
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--ing-text-faint);
+}
+
+.ing-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--ing-teal);
+  text-decoration: none;
+}
+
+.ing-footer a:hover,
+.ing-footer a:focus-visible {
+  color: var(--ing-green-soft);
+}
+
+.ing-footer a svg {
+  width: 0.85em;
+  height: 0.85em;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ingress-prime * {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+}
+
+/* ── Aba "Estatísticas para Nerds" (/ingress/ranking) ──────────────────── */
+
+.ing-nerd-divergent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--ing-edge);
+  border-radius: 10px;
+  background: var(--ing-green-ghost);
+}
+
+.ing-nerd-divergent-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin: 0 0 0.2rem;
+}
+
+.ing-nerd-divergent-head-side {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-divergent-head-side img {
+  width: 1rem;
+  height: 1rem;
+}
+
+.ing-nerd-divergent-head-side--right {
+  justify-content: flex-end;
+}
+
+.ing-nerd-divergent-row {
+  display: grid;
+  /* colunas de valor crescem com o conteúdo (auto), nunca cortam/sobrepõem
+     um AP na casa dos bilhões — só o miolo (as barras) encolhe. */
+  grid-template-columns: minmax(3.5rem, auto) 1fr minmax(3.5rem, auto);
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ing-nerd-divergent-value {
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+  white-space: nowrap;
+}
+
+.ing-nerd-divergent-value--left {
+  text-align: right;
+}
+
+.ing-nerd-divergent-bars {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ing-nerd-divergent-bar {
+  height: 0.5rem;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.ing-nerd-divergent-bar--enlightened {
+  justify-self: end;
+  background: var(--ing-green);
+}
+
+.ing-nerd-divergent-bar--resistance {
+  justify-self: start;
+  background: var(--ing-cyan);
+}
+
+.ing-nerd-divergent-label {
+  font-size: 0.75rem;
+  color: var(--ing-text-dim);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Um painel só pra aba inteira (o `.ing-panel` cuida de fundo/borda/sombra);
+   cada seção é uma divisão interna, não um cartão à parte. */
+.ing-nerd-shell {
+  display: flex;
+  flex-direction: column;
+}
+
+.ing-nerd-section {
+  padding-block: 1.4rem;
+}
+
+.ing-nerd-section:first-child {
+  padding-top: 0;
+}
+
+.ing-nerd-section:last-child {
+  padding-bottom: 0;
+}
+
+.ing-nerd-section + .ing-nerd-section {
+  border-top: 1px solid var(--ing-edge);
+}
+
+.ing-nerd-section-title {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ing-text);
+}
+
+.ing-nerd-subhead {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ing-text-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ing-nerd-subhead-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.ing-nerd-averages {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ing-stat--corner {
+  position: relative;
+}
+
+.ing-stat--corner .ing-nerd-agent {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.6rem;
+  font-size: 0.68rem;
+}
+
+.ing-nerd-histogram-row {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr 2.5rem;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.ing-nerd-histogram-label {
+  font-size: 0.75rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-histogram-track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--ing-edge-soft);
+  overflow: hidden;
+}
+
+.ing-nerd-histogram-bar {
+  height: 100%;
+  background: var(--ing-accent);
+  transition: width 0.3s ease;
+}
+
+.ing-nerd-histogram-count {
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+  text-align: right;
+}
+
+.ing-nerd-empty-note {
+  font-size: 0.85rem;
+  color: var(--ing-text-faint);
+}
+
+.ing-nerd-hof {
+  display: flex;
+  flex-direction: column;
+}
+
+.ing-nerd-hof-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--ing-edge-soft);
+}
+
+.ing-nerd-hof-row:last-child {
+  border-bottom: none;
+}
+
+.ing-nerd-hof-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ing-nerd-hof-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ing-nerd-hof-label {
+  flex: 1 1 8rem;
+  min-width: 6rem;
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-hof-value {
+  flex: 0 0 auto;
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.85rem;
+  color: var(--ing-text);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ing-nerd-hof-value--empty {
+  color: var(--ing-text-faint);
+}
+
+/* Identidade de agente (nick + facção + bandeira) — hall da fama, "top 1" de
+   evento sazonal, maior recursão. Sempre empurrado pro fim da linha
+   (`margin-left: auto`), pra ficar alinhado à direita mesmo quando o valor
+   ao lado varia de largura entre linhas. */
+.ing-nerd-agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+  max-width: 12rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.ing-nerd-agent-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ing-nerd-agent-flag,
+.ing-nerd-agent-faction {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: 0 0 auto;
+}
+
+.ing-nerd-seasonal-row {
+  align-items: flex-start;
+}
+
+.ing-nerd-seasonal-figures {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
+
+.ing-nerd-seasonal-reported {
+  font-size: 0.68rem;
+  color: var(--ing-text-faint);
+  white-space: nowrap;
+}
+
+.ing-nerd-seasonal .ing-nerd-empty-note {
+  margin: 0 0 0.9rem;
+}
+
+@media (max-width: 480px) {
+  /* Nick+facção+bandeira desce pra linha de baixo, alinhado com o rótulo —
+     tudo numa linha só não cabe com "1.058.981.917" + "gal0daxj" numa tela
+     de celular sem estourar a largura. */
+  .ing-nerd-hof-row {
+    padding-left: 2rem;
+    position: relative;
+  }
+
+  .ing-nerd-hof-icon {
+    position: absolute;
+    left: 0;
+    top: 0.55rem;
+  }
+
+  .ing-nerd-agent {
+    flex-basis: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+    max-width: none;
   }
 }

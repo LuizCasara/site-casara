@@ -7,8 +7,12 @@ import BackLink from '@/components/ingress/BackLink'
 import RankingHero from '@/components/ingress/stats/RankingHero'
 import StatsRadarSection from '@/components/ingress/stats/StatsRadarSection'
 import AxisExplanations from '@/components/ingress/stats/AxisExplanations'
-import IngressRankingTable, {type RankingRow} from '@/components/ingress/stats/IngressRankingTable'
+import IngressRankingTabs from '@/components/ingress/stats/IngressRankingTabs'
+import type {RankingRow} from '@/components/ingress/stats/IngressRankingTable'
+import type {ActivityRow} from '@/components/ingress/stats/IngressActivityFeed'
+import type {NerdStats} from '@/components/ingress/stats/IngressNerdStats'
 import IngressTutorial from '@/components/ingress/stats/IngressTutorial'
+import {computeNerdStats} from '@/lib/ingress-nerd-stats.mjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,6 +78,79 @@ async function loadInitialRows(): Promise<RankingRow[]> {
 }
 
 /**
+ * SSR direto no banco (mesmo espírito de `loadInitialRows`) — mesma query de
+ * `GET /api/ingress-rankings/activity`, evitando o round-trip no primeiro
+ * paint da aba "Radar de atividade".
+ */
+async function loadInitialActivity(): Promise<ActivityRow[]> {
+  try {
+    const rows = await sql`
+      WITH deltas AS (
+        SELECT
+          codename_key,
+          lifetime_ap,
+          overall_score,
+          recorded_at,
+          LAG(lifetime_ap) OVER w AS prev_ap,
+          LAG(overall_score) OVER w AS prev_score
+        FROM casara.ingress_ranking_history
+        WINDOW w AS (PARTITION BY codename_key ORDER BY recorded_at)
+      )
+      SELECT
+        r.codename_key, r.codename, r.faction, r.country_code,
+        d.lifetime_ap, d.overall_score, d.prev_ap, d.prev_score, d.recorded_at
+      FROM deltas d
+      JOIN casara.ingress_rankings r ON r.codename_key = d.codename_key
+      WHERE d.prev_ap IS NULL OR d.lifetime_ap <> d.prev_ap OR d.overall_score <> d.prev_score
+      ORDER BY d.recorded_at DESC
+      LIMIT 100
+    `;
+    return rows.map((row) => {
+      const isNewAgent = row.prev_ap === null;
+      return {
+        codename_key: row.codename_key,
+        codename: row.codename,
+        faction: row.faction,
+        country_code: row.country_code,
+        kind: isNewAgent ? 'novo_agente' : 'atualizacao',
+        lifetime_ap: Number(row.lifetime_ap),
+        overall_score: Number(row.overall_score),
+        ap_delta: isNewAgent ? null : Number(row.lifetime_ap) - Number(row.prev_ap),
+        score_delta: isNewAgent ? null : Number(row.overall_score) - Number(row.prev_score),
+        recorded_at: row.recorded_at,
+      };
+    }) as ActivityRow[];
+  } catch (err) {
+    console.error('[app/ingress/ranking] falha ao consultar casara.ingress_ranking_history:', err);
+    return [];
+  }
+}
+
+/**
+ * Estatísticas para nerds (aba estática, sem poll) — busca TODAS as linhas de
+ * `casara.ingress_rankings` (sem `LIMIT`, ao contrário de `loadInitialRows`)
+ * mais o total de envios de `casara.ingress_ranking_history`, e agrega tudo
+ * de uma vez via `computeNerdStats` (lib/ingress-nerd-stats.mjs). Mesmo
+ * espírito de degradação de `loadInitialRows`/`loadInitialActivity`.
+ */
+async function loadNerdStats(): Promise<NerdStats | null> {
+  try {
+    const [rows, [{count}]] = await Promise.all([
+      sql`
+        SELECT codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values,
+               country_code, recursions, extra_stats, months_subscribed, created_at
+        FROM casara.ingress_rankings
+      `,
+      sql`SELECT COUNT(*)::int AS count FROM casara.ingress_ranking_history`,
+    ]);
+    return computeNerdStats(rows, count) as NerdStats;
+  } catch (err) {
+    console.error('[app/ingress/ranking] falha ao calcular estatísticas para nerds:', err);
+    return null;
+  }
+}
+
+/**
  * `ItemList` schema.org com o top 50 do ranking — limitado pra não inflar o
  * HTML com os 100 registros de `loadInitialRows`. Top 50 já cobre qualquer
  * uso razoável (rich results, resumo por um agente de IA).
@@ -124,7 +201,11 @@ export default async function IngressRankingPage() {
   const tier = overallTierLabel(axisScores)
   const axisScoreMap = Object.fromEntries(axisScores.map((a) => [a.id, a.score]))
 
-  const initialRows = await loadInitialRows()
+  const [initialRows, initialEvents, nerdStats] = await Promise.all([
+    loadInitialRows(),
+    loadInitialActivity(),
+    loadNerdStats(),
+  ])
   const rankingJsonLd = buildRankingJsonLd(initialRows)
 
   return (
@@ -144,7 +225,7 @@ export default async function IngressRankingPage() {
 
       <RankingHero center={profile.s2.center} totalAgents={initialRows.length} />
 
-      <IngressRankingTable initialRows={initialRows} />
+      <IngressRankingTabs initialRows={initialRows} initialEvents={initialEvents} nerdStats={nerdStats} />
 
       <StatsRadarSection
         fencherlc={{

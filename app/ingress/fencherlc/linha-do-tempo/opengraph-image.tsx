@@ -79,7 +79,7 @@ export default function Image() {
           />
         </svg>
 
-        <span style={{color: '#5c706a', fontSize: 20, letterSpacing: '0.2em'}}>luizcasara.com/ingress/linha-do-tempo</span>
+        <span style={{color: '#5c706a', fontSize: 20, letterSpacing: '0.2em'}}>luizcasara.com/ingress/fencherlc/linha-do-tempo</span>
       </div>
     ),
     {width: 1200, height: 630},

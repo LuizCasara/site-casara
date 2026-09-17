@@ -112,7 +112,7 @@ export default function MedalGrid({medals, next}: {medals: GridMedal[]; next?: N
       </div>
 
       {next ? (
-        <a className="ing-mgrid__next" href={`/ingress/medalha/${next.slug}`}>
+        <a className="ing-mgrid__next" href={`/ingress/fencherlc/medalha/${next.slug}`}>
           <span className="ing-mgrid__next-label">{tr.nextMedal}</span>
           <strong>
             {next.name} → {next.nextTier}

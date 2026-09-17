@@ -23,11 +23,12 @@ const T = {
 }
 
 /**
- * Estado vazio de `/ingress` quando `loadProfile()` retorna `null`. Componente
- * client próprio (ISTATS-19): `app/ingress/page.tsx` é Server Component (usa
- * `medalArt`/`slugForStatKey`, dependentes de `node:fs`, em outras funções do
- * mesmo arquivo — não pode virar client inteiro), e `Panel.label`/`hint` são
- * `string` simples, então o texto bilíngue precisa nascer aqui, num leaf.
+ * Estado vazio de `/ingress/fencherlc` quando `loadProfile()` retorna `null`.
+ * Componente client próprio (ISTATS-19): `app/ingress/fencherlc/page.tsx` é
+ * Server Component (usa `medalArt`/`slugForStatKey`, dependentes de
+ * `node:fs`, em outras funções do mesmo arquivo — não pode virar client
+ * inteiro), e `Panel.label`/`hint` são `string` simples, então o texto
+ * bilíngue precisa nascer aqui, num leaf.
  */
 export function EmptySignalPanel() {
   const {lang} = useLang()

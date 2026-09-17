@@ -184,6 +184,12 @@ export async function POST(request: NextRequest) {
   const recursionsRaw = Number(body.recursions);
   const recursions = Number.isFinite(recursionsRaw) && recursionsRaw >= 0 ? Math.floor(recursionsRaw) : null;
 
+  // Mesmo tratamento não-rejeitante de `recursions` acima — informativo (não
+  // entra na nota/tier), então ausente ou inválido só grava NULL.
+  const monthsSubscribedRaw = Number(body.monthsSubscribed);
+  const monthsSubscribed =
+    Number.isFinite(monthsSubscribedRaw) && monthsSubscribedRaw >= 0 ? Math.floor(monthsSubscribedRaw) : null;
+
   // Tudo do export que hoje não tem coluna/eixo dedicado (level, meses de
   // assinatura, e o resto das stats fora do radar) — guardado sem validar
   // formato, exatamente como o cliente mandou. Puramente informativo: nunca
@@ -208,9 +214,9 @@ export async function POST(request: NextRequest) {
     // mais de 5 minutos. Sem conflito (agente novo), o INSERT sempre vale.
     const [inserted] = await sql`
       INSERT INTO casara.ingress_rankings
-        (codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, country_code, recursions, extra_stats, created_at, updated_at)
+        (codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, country_code, recursions, extra_stats, months_subscribed, created_at, updated_at)
       VALUES
-        (${codenameKey}, ${codename}, ${faction}, ${lifetimeAp}, ${overallScore}, ${JSON.stringify(axisScoreMap)}, ${JSON.stringify(stats)}, ${countryCode}, ${recursions}, ${extra ? JSON.stringify(extra) : null}, NOW(), NOW())
+        (${codenameKey}, ${codename}, ${faction}, ${lifetimeAp}, ${overallScore}, ${JSON.stringify(axisScoreMap)}, ${JSON.stringify(stats)}, ${countryCode}, ${recursions}, ${extra ? JSON.stringify(extra) : null}, ${monthsSubscribed}, NOW(), NOW())
       ON CONFLICT (codename_key) DO UPDATE SET
         codename = EXCLUDED.codename,
         faction = EXCLUDED.faction,
@@ -221,6 +227,7 @@ export async function POST(request: NextRequest) {
         country_code = EXCLUDED.country_code,
         recursions = EXCLUDED.recursions,
         extra_stats = EXCLUDED.extra_stats,
+        months_subscribed = EXCLUDED.months_subscribed,
         updated_at = NOW()
       WHERE casara.ingress_rankings.updated_at < NOW() - INTERVAL '5 minutes'
       -- xmax = 0 é o truque padrão de upsert do Postgres pra saber, sem uma

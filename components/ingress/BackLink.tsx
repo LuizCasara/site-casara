@@ -5,21 +5,20 @@ import type {ReactNode} from 'react'
 import {useLang} from '@/context/LanguageContext'
 
 const T = {
-  pt: {label: '← Perfil de FencherLC'},
-  en: {label: '← FencherLC profile'},
+  pt: {label: '← Ingress Hub'},
+  en: {label: '← Ingress Hub'},
 }
 
 /**
  * "Voltar" que preserva a posição de rolagem: usa `router.back()` quando há
  * histórico (o App Router restaura o scroll no back), e só cai no `fallback`
- * quando a página de detalhe foi aberta direto por link. Leaf client.
+ * quando a página foi aberta direto por link. Leaf client.
  *
- * `children` é opcional (ISTATS-19): as duas páginas Server que usam este
- * componente (`linha-do-tempo`, `medalha/[slug]`) não sabem o idioma ativo no
- * toggle client, então quando `children` é omitido o próprio `BackLink`
- * escolhe o rótulo bilíngue via `useLang()`. Continua aceitando `children`
- * explícito por compatibilidade, caso um futuro call site precise de outro
- * texto.
+ * `children` é opcional (ISTATS-19): as páginas Server que usam este
+ * componente (`fencherlc`, `linha-do-tempo`, `medalha/[slug]`, `ranking`) não
+ * sabem o idioma ativo no toggle client, então quando `children` é omitido o
+ * próprio `BackLink` escolhe o rótulo bilíngue via `useLang()`. `fallback` é
+ * sempre `/ingress` (o hub) nos quatro call sites — o rótulo já anuncia isso.
  */
 export default function BackLink({fallback, children}: {fallback: string; children?: ReactNode}) {
   const router = useRouter()

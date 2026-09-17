@@ -2,7 +2,7 @@ import sql from "@/lib/db";
 import { normalizeCodenameKey } from "@/lib/ingress-rankings.mjs";
 
 /**
- * Sobreposição ao vivo do perfil estático de `/ingress`, vinda da última
+ * Sobreposição ao vivo do perfil estático de `/ingress/fencherlc`, vinda da última
  * submissão do próprio FencherLC em `casara.ingress_rankings` (a mesma tabela
  * multi-escritor do ranking — ver AD-001 em `.specs/STATE.md`: essa tabela é
  * o caso explicitamente fora do escopo do arquivo estático, por ser
@@ -11,7 +11,7 @@ import { normalizeCodenameKey } from "@/lib/ingress-rankings.mjs";
  * nível/recursões) continua vindo só de `data/ingress/fencherlc.json`, que é
  * dado que essa tabela nem guarda.
  *
- * Falha de rede/DB nunca derruba `/ingress` — devolve `null` e a página cai
+ * Falha de rede/DB nunca derruba `/ingress/fencherlc` — devolve `null` e a página cai
  * pro baseline estático, exatamente como antes desta sobreposição existir.
  */
 export async function loadFencherLcRadarOverride(
