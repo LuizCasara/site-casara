@@ -1,6 +1,6 @@
 'use client'
 
-import {FaTrophy, FaKeyboard} from 'react-icons/fa'
+import {FaTrophy, FaKeyboard, FaTelegramPlane} from 'react-icons/fa'
 import {heroMeshPolygons} from '@/lib/ingress-s2.mjs'
 import {useLang} from '@/context/LanguageContext'
 import HeroMesh from '../HeroMesh'
@@ -13,6 +13,7 @@ const T = {
     body: 'Cole o export de estatísticas do app, compare com o FencherLC ou com outro agente, e veja sua posição — o ranking é público, atualiza na hora e cresce a cada agente que entra.',
     countLabel: (n: number) => `${n} agente${n === 1 ? '' : 's'} medido${n === 1 ? '' : 's'}`,
     participateCta: 'Participar',
+    telegram: 'Comunidade no Telegram',
   },
   en: {
     eyebrow: 'Agent ranking',
@@ -20,8 +21,12 @@ const T = {
     body: "Paste your app's stats export, compare with FencherLC or another agent, and see your position — the ranking is public, updates instantly, and grows with every new agent.",
     countLabel: (n: number) => `${n} agent${n === 1 ? '' : 's'} measured`,
     participateCta: 'Join in',
+    telegram: 'Telegram community',
   },
 } as const
+
+/** Grupo do Telegram da comunidade do ranking — diferente do contato pessoal `@FencherLC` já usado no rodapé. */
+const TELEGRAM_URL = 'https://t.me/ingressAgentRanking'
 
 /** Id da textarea principal do `ProfileRadar` (variant `ranking`) — mesmo elemento em qualquer modo (solo/vs-me/two-A). */
 const PASTE_FIELD_ID = 'ing-radar-a'
@@ -69,6 +74,12 @@ export default function RankingHero({
           <FaKeyboard aria-hidden="true" />
           {t.participateCta}
         </button>
+        <div className="ing-hero__links">
+          <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer" className="ing-hero__link">
+            <FaTelegramPlane aria-hidden="true" />
+            {t.telegram}
+          </a>
+        </div>
       </div>
     </header>
   )
