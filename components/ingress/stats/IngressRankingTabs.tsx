@@ -21,13 +21,11 @@ const LABEL = {
  * pollers rodando à toa). `nerdStats` é calculado uma vez no SSR
  * (`computeNerdStats`) e só passado como prop.
  *
- * Dona do estado compartilhado entre a tabela (futuro atalho "Comparar" por
- * linha, ver T15) e a aba Comparação (seleção de Agente A/B) — os dois são
- * filhos diretos deste componente, então uma prop/callback comum resolve sem
- * o problema de fronteira Server/Client que `IngressRankingTable` documenta
- * pro seu poll (aqui não há Server Component no meio). `handleChangeA`/
- * `handleChangeB` já ficam prontos aqui pra T15 reaproveitar sem precisar
- * reabrir a lógica de estado.
+ * Dona do estado compartilhado entre a tabela (atalho "Comparar" por linha)
+ * e a aba Comparação (seleção de Agente A/B) — os dois são filhos diretos
+ * deste componente, então uma prop/callback comum resolve sem o problema de
+ * fronteira Server/Client que `IngressRankingTable` documenta pro seu poll
+ * (aqui não há Server Component no meio).
  *
  * Precedência de pré-preenchimento no mount (IRCMP-24 a 27): 1) parâmetros
  * de URL válidos (`?tab=compare&a=&b=`) > 2) atalho de linha (evento
@@ -108,6 +106,13 @@ export default function IngressRankingTabs({
     setBFromUrl(false)
   }
 
+  /** Atalho "Comparar" de uma linha (P2, IRCMP-31/32): A vazio -> preenche A; senão -> substitui B. */
+  const handleCompareRow = (codenameKey: string) => {
+    if (!agentAKey) handleChangeA(codenameKey)
+    else handleChangeB(codenameKey)
+    setTab('compare')
+  }
+
   return (
     <div>
       <div className="ing-ranking-tabs" role="tablist">
@@ -125,7 +130,7 @@ export default function IngressRankingTabs({
         </button>
       </div>
       {tab === 'ranking' ? (
-        <IngressRankingTable initialRows={initialRows} />
+        <IngressRankingTable initialRows={initialRows} onCompareRow={handleCompareRow} />
       ) : tab === 'activity' ? (
         <IngressActivityFeed initialEvents={initialEvents} />
       ) : tab === 'nerd' ? (

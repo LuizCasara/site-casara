@@ -461,19 +461,20 @@ T16 → T17
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Tamanho de página padrão 20; opções 20/50/100 disponíveis
-- [ ] Trocar tamanho/ordenação/facção/busca sempre volta pra página 1
-- [ ] Coluna "#" sempre mostra o rank canônico vindo do servidor, nunca recalculado no cliente
-- [ ] Clicar num cabeçalho ordenável reordena o ranking INTEIRO no servidor (não só a página carregada) e recarrega a página 1 nessa ordem
-- [ ] Busca por codinome filtra no servidor (substring, case-insensitive), mantendo a ordenação vigente
-- [ ] Filtro de facção continua funcionando, agora aplicado no servidor junto com busca/ordenação, antes da paginação
-- [ ] Sem resultados (busca/facção) → estado vazio explicativo, não tabela em branco
-- [ ] Botão "Comparar" por linha chama `onCompareRow` com o `codename_key` certo
-- [ ] Highlight/scroll de `?destaque=` continua funcionando mesmo que o agente destacado esteja fora da página 1 carregada (buscar a página dele ou, no mínimo, degradar sem quebrar — documentar a escolha se não achar automaticamente)
-- [ ] Gate check passes: `npm run build` (fim de fase — build completo)
+- [x] Tamanho de página padrão 20; opções 20/50/100 disponíveis (`RANKING_PAGE_SIZES` importado de `lib/ingress-rankings.mjs`, única fonte)
+- [x] Trocar tamanho/ordenação/facção/busca sempre volta pra página 1 (`handlePageSizeChange`/`handleSort`/`handleFactionFilter` chamam `setPage(1)`; debounce da busca idem)
+- [x] Coluna "#" sempre mostra `row.rank` vindo do servidor, nunca recalculado no cliente — confirmado no smoke test: filtro `faction=resistance` + `sort=ap&dir=asc` devolveu ranks `24,22,13` (fora de ordem entre si, exatamente porque é o rank CANÔNICO, não a posição na lista filtrada/ordenada)
+- [x] Clicar num cabeçalho ordenável reordena o ranking INTEIRO no servidor — confirmado: `sort=ap&dir=asc` reordenou por AP ascendente de verdade (40.396.886 < 82.666.045 < 150.553.491)
+- [x] Busca por codinome filtra no servidor (substring, case-insensitive) — confirmado: `search=fencher` → só `FencherLC`
+- [x] Filtro de facção aplicado no servidor junto com busca/ordenação, antes da paginação — confirmado: `faction=resistance` devolveu só os 3 agentes resistance
+- [x] Sem resultados (busca/facção) → `t.noResultsBody` (`rows.length===0 && !loading`, distinto do `trulyEmpty` que cobre "ranking nunca teve ninguém")
+- [x] Botão "Comparar" por linha chama `onCompareRow(row.codename_key)` — wireado em `IngressRankingTabs.tsx` (`handleCompareRow`, nesta mesma task, ver SPEC_DEVIATION de T14)
+- [x] Highlight/scroll de `?destaque=` — decisão tomada: degrada em silêncio se o agente não estiver na página/filtro/ordenação atual (documentado inline no código); é exatamente o comportamento que o efeito já tinha (`if (!el) return`), sem mudança de lógica
+- [x] Gate check passes: `npm run build` (limpo) — smoke test manual confirma paginação/ordenação/busca/filtro reais contra o banco (30 agentes cadastrados), `/ingress/ranking` 200, zero erros no log do dev server
 
 **Tests**: none (componente — ver matrix)
 **Gate**: build
+**Status**: ✅ Complete
 
 ---
 
