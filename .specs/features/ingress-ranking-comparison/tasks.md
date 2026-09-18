@@ -206,15 +206,16 @@ T16 → T17
 - Skill: NONE
 
 **Done when**:
-- [ ] Resposta: `{rows: {codename_key,codename,faction,country_code,lifetime_ap}[], hasMore, nextCursor}`
-- [ ] `hasMore=false` quando o total de agentes cabe numa página (IRCMP AC4 do seletor)
-- [ ] Ranking vazio → `{rows:[], hasMore:false, nextCursor:null}` (200, não erro)
-- [ ] Sem token/autenticação exigida
-- [ ] Checagem manual: `curl` sem `cursor` retorna ordenado por `codename_key` asc; com `search=` retorna substring case-insensitive
-- [ ] Gate check passes: `npm test && npx tsc --noEmit && npm run lint`
+- [x] Resposta: `{rows: {codename_key,codename,faction,country_code,lifetime_ap}[], hasMore, nextCursor}`
+- [x] `hasMore=false` quando o total de agentes cabe numa página (confirmado no smoke test: 10 agentes cadastrados, `hasMore:false`)
+- [x] Ranking vazio → `{rows:[], hasMore:false, nextCursor:null}` (200, não erro) — por inspeção do código (`rows.slice`/`hasMore` sempre calculados a partir do array, nunca lança em array vazio)
+- [x] Sem token/autenticação exigida
+- [x] Checagem manual: `curl` sem `cursor` retornou ordenado por `codename_key` asc; `?search=fencher` retornou só `fencherlc`, case-insensitive substring
+- [x] Gate check passes: `npm test && npx tsc --noEmit && npm run lint`
 
 **Tests**: none (rota — ver matrix)
 **Gate**: full
+**Status**: ✅ Complete
 
 ---
 
