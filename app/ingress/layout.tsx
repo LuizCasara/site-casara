@@ -1,8 +1,9 @@
-import type {Metadata} from 'next'
+import type {Metadata, Viewport} from 'next'
 import {Sora, Barlow} from 'next/font/google'
 import {Toaster} from 'sonner'
 import IngressTopBar from '@/components/ingress/stats/IngressTopBar'
 import IngressFooter from '@/components/ingress/IngressFooter'
+import InstallPwaRegister from '@/components/ingress/InstallPwaRegister'
 import './theme.css'
 
 // Display / números / codinome — geométrica moderna, o registro do Ingress Prime.
@@ -38,7 +39,22 @@ export const metadata: Metadata = {
   // a convenção de arquivo não vence sozinha quando a raiz já declara `icons`
   // como campo — os dois lados como campo explícito é o caminho que funciona.
   icons: {
-    icon: [{url: '/ingress/icon.png', type: 'image/png', sizes: '256x256'}],
+    icon: [
+      {url: '/ingress/icon.png', type: 'image/png', sizes: '256x256'},
+      {url: '/ingress/pwa/icon.svg', type: 'image/svg+xml'},
+    ],
+    apple: [{url: '/ingress/pwa/apple-touch-icon.png', type: 'image/png', sizes: '180x180'}],
+  },
+  // PWA isolado (ver app/ingress/manifest.webmanifest/route.ts — `manifest.ts`,
+  // a convenção de arquivo do Next, só é reconhecida na raiz de `app/`, então
+  // esta é uma Route Handler manual): scope/start_url ali cobrem Android;
+  // `appleWebApp` é o que faz o iOS abrir em modo standalone (o Safari não usa
+  // o manifest pra decidir isso).
+  manifest: '/ingress/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Ingress',
   },
   openGraph: {
     type: 'website',
@@ -54,9 +70,14 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  themeColor: '#0b0f14',
+}
+
 export default function IngressLayout({children}: {children: React.ReactNode}) {
   return (
     <div className={`${sora.variable} ${barlow.variable} ingress-prime`}>
+      <InstallPwaRegister />
       <IngressTopBar />
       {children}
       <IngressFooter />
