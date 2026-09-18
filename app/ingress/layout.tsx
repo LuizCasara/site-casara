@@ -4,6 +4,7 @@ import {Toaster} from 'sonner'
 import IngressTopBar from '@/components/ingress/stats/IngressTopBar'
 import IngressFooter from '@/components/ingress/IngressFooter'
 import InstallPwaRegister from '@/components/ingress/InstallPwaRegister'
+import IngressLanguageProvider from '@/components/ingress/IngressLanguageProvider'
 import MotionProvider from '@/components/MotionProvider'
 import './theme.css'
 
@@ -26,8 +27,10 @@ const barlow = Barlow({
 // Metadata genérica do hub `/ingress` — cada sub-rota (`fencherlc/`, `ranking/`)
 // já define a própria (ver `fencherlc/layout.tsx` e `ranking/page.tsx`); este
 // bloco só vale pra própria página do hub, que não tem layout próprio.
+// EN de propósito: bots de preview (fóruns, Discord, WhatsApp) não rodam JS nem
+// mandam o idioma do visitante, e o padrão do `/ingress` é inglês.
 const TITLE = 'Ingress — Luiz Casara'
-const DESCRIPTION = 'Hub de Ingress: perfil de agente, ranking de agentes e links úteis do jogo.'
+const DESCRIPTION = 'Ingress hub: agent profile, agent ranking and useful game links.'
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -78,11 +81,13 @@ export const viewport: Viewport = {
 export default function IngressLayout({children}: {children: React.ReactNode}) {
   return (
     <div className={`${sora.variable} ${barlow.variable} ingress-prime`}>
-      <InstallPwaRegister />
-      <IngressTopBar />
-      <MotionProvider>{children}</MotionProvider>
-      <IngressFooter />
-      <Toaster />
+      <IngressLanguageProvider>
+        <InstallPwaRegister />
+        <IngressTopBar />
+        <MotionProvider>{children}</MotionProvider>
+        <IngressFooter />
+        <Toaster />
+      </IngressLanguageProvider>
     </div>
   )
 }

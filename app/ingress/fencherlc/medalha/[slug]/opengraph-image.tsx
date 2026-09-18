@@ -1,8 +1,8 @@
 import {ImageResponse} from 'next/og'
 import {loadProfile} from '@/lib/ingress'
-import {BADGES, computeBadge, TIER_LABELS} from '@/lib/ingress-badges.mjs'
+import {BADGES, computeBadge} from '@/lib/ingress-badges.mjs'
 import {catalogEntry, coreBadges} from '@/lib/ingress-catalog.mjs'
-import {fmtStat} from '@/lib/ingress-format.mjs'
+import {tierLabel} from '@/lib/ingress-tiers.mjs'
 
 export const runtime = 'nodejs'
 export const size = {width: 1200, height: 630}
@@ -22,10 +22,10 @@ export default async function Image({params}: {params: Promise<{slug: string}>})
   const def = (
     BADGES as {key: string; name: string; statKey: string; tiers: Record<string, number>}[]
   ).find((b) => b.key === slug)
-  const name = entry?.name ?? 'Medalha'
+  const name = entry?.name ?? 'Medal'
   const value = def ? (loadProfile()?.stats?.[def.statKey] ?? 0) : 0
   const badge = def ? computeBadge(def, value) : {tier: 'none'}
-  const tierLabel = (TIER_LABELS as Record<string, string>)[badge.tier] ?? badge.tier
+  const tierText = tierLabel(badge.tier, 'en') as string
 
   return new ImageResponse(
     (
@@ -44,14 +44,14 @@ export default async function Image({params}: {params: Promise<{slug: string}>})
         }}
       >
         <span style={{color: DIM, fontSize: 24, letterSpacing: '0.2em', textTransform: 'uppercase'}}>
-          Medalha de FencherLC
+          FencherLC&apos;s medal
         </span>
         <span style={{color: GREEN, fontSize: 104, fontWeight: 700, lineHeight: 1.05, marginTop: 16}}>
           {name}
         </span>
         <span style={{color: INK, fontSize: 40, marginTop: 22}}>
-          {tierLabel}
-          {badge.tier !== 'none' ? ` · ${fmtStat(value)}` : ''}
+          {tierText}
+          {badge.tier !== 'none' ? ` · ${value.toLocaleString('en-US')}` : ''}
         </span>
       </div>
     ),

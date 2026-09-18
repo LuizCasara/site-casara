@@ -18,14 +18,14 @@ function compact(n: number) {
 
 export default function Image() {
   const p = loadProfile()
-  const agent = p?.agent ?? {codename: 'Agente', faction: 'enlightened', level: 0}
+  const agent = p?.agent ?? {codename: 'Agent', faction: 'enlightened', level: 0}
   const s = p?.stats ?? {}
 
   const highlights: {label: string; value: string}[] = [
     {label: 'AP total', value: compact(s.lifetimeAp ?? 0)},
-    {label: 'Portais capturados', value: compact(s.portalsCaptured ?? 0)},
-    {label: 'Km caminhados', value: compact(s.distanceWalkedKm ?? 0)},
-    {label: 'Links criados', value: compact(s.linksCreated ?? 0)},
+    {label: 'Portals captured', value: compact(s.portalsCaptured ?? 0)},
+    {label: 'Km walked', value: compact(s.distanceWalkedKm ?? 0)},
+    {label: 'Links created', value: compact(s.linksCreated ?? 0)},
   ]
 
   return new ImageResponse(
@@ -53,13 +53,13 @@ export default function Image() {
         />
         <div style={{display: 'flex', flexDirection: 'column'}}>
           <span style={{color: CYAN, fontSize: 22, letterSpacing: '0.24em', textTransform: 'uppercase'}}>
-            Agente de campo
+            Field agent
           </span>
           <span style={{color: GREEN, fontSize: 116, fontWeight: 700, lineHeight: 1, marginTop: 12}}>
             {agent.codename}
           </span>
           <span style={{color: DIM, fontSize: 30, marginTop: 18}}>
-            {agent.faction === 'enlightened' ? 'Enlightened' : 'Resistance'} · Nível {agent.level}
+            {agent.faction === 'enlightened' ? 'Enlightened' : 'Resistance'} · Level {agent.level}
           </span>
         </div>
 

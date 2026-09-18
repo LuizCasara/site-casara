@@ -30,8 +30,9 @@ export async function generateMetadata({
   const entry = catalogEntry(slug) as CatalogEntry | null
   if (!entry) return {}
   return {
-    title: `${entry.name} — Medalha de FencherLC`,
-    description: entry.requirement || `A medalha ${entry.name} no perfil do agente FencherLC.`,
+    // EN de propósito — ver o comentário em `app/ingress/layout.tsx`.
+    title: `${entry.name} — FencherLC's medal`,
+    description: entry.requirement || `The ${entry.name} medal on agent FencherLC's profile.`,
   }
 }
 

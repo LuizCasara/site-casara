@@ -1,6 +1,7 @@
 'use client'
 
 import {useLang} from '@/context/LanguageContext'
+import {INGRESS_LANG_STORAGE_KEY} from '@/lib/ingress-lang.mjs'
 import {trackIngressLanguageToggle} from '@/utils/analytics'
 
 /**
@@ -14,14 +15,23 @@ import {trackIngressLanguageToggle} from '@/utils/analytics'
  * que também decide se mostra o botão de compartilhar ao lado.
  */
 export default function IngressLanguageToggle() {
-  const {lang, toggle} = useLang()
+  const {lang, setLang} = useLang()
 
   return (
     <button
       type="button"
       onClick={() => {
-        trackIngressLanguageToggle(lang === 'pt' ? 'en' : 'pt')
-        toggle()
+        const next = lang === 'pt' ? 'en' : 'pt'
+        trackIngressLanguageToggle(next)
+        setLang(next)
+        // Escolha explícita: passa a valer sobre o idioma do navegador (ver
+        // `IngressLanguageProvider`). Sempre grava, inclusive de volta ao idioma
+        // que o navegador já teria escolhido — não existe estado "automático".
+        try {
+          localStorage.setItem(INGRESS_LANG_STORAGE_KEY, next)
+        } catch {
+          // localStorage bloqueado — a troca vale só para esta visita
+        }
       }}
       aria-label={lang === 'pt' ? 'Switch to English' : 'Mudar para português'}
       style={{

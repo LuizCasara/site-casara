@@ -17,9 +17,10 @@ import {computeNerdStats} from '@/lib/ingress-nerd-stats.mjs'
 
 export const dynamic = 'force-dynamic'
 
-const TITLE = 'Ranking de Agentes Ingress — comparação pública de estatísticas'
+// Metadata em EN de propósito — ver o comentário em `app/ingress/layout.tsx`.
+const TITLE = 'Ingress Agent Ranking — public stats comparison'
 const DESCRIPTION =
-  'Ranking público e ao vivo de agentes do jogo Ingress (Niantic): cole o export de estatísticas do app e compare Access Points, recursões, resonators e outras métricas com o FencherLC e outros agentes cadastrados.'
+  'Public, live ranking of Ingress (Niantic) agents: paste your stats export from the app and compare Access Points, recursions, resonators and other metrics with FencherLC and other registered agents.'
 
 export const metadata: Metadata = {
   title: TITLE,

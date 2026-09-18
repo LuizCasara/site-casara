@@ -1,8 +1,9 @@
 import type {Metadata} from 'next'
 
-const TITLE = 'FencherLC — Agente Ingress'
+// Metadata em EN de propósito — ver o comentário em `app/ingress/layout.tsx`.
+const TITLE = 'FencherLC — Ingress Agent'
 const DESCRIPTION =
-  'O perfil de campo do agente FencherLC (Enlightened): estatísticas, medalhas e o padrão de jogo, direto do scanner.'
+  "Field profile of agent FencherLC (Enlightened): stats, medals and play style, straight from the scanner."
 
 export const metadata: Metadata = {
   title: TITLE,

@@ -59,13 +59,13 @@ export default async function Image() {
         />
         <div style={{display: 'flex', flexDirection: 'column'}}>
           <span style={{color: CYAN, fontSize: 22, letterSpacing: '0.24em', textTransform: 'uppercase'}}>
-            Ranking de agentes · Ingress
+            Agent ranking · Ingress
           </span>
           <span style={{color: GREEN, fontSize: 108, fontWeight: 700, lineHeight: 1, marginTop: 12}}>
-            Onde você fica?
+            Where do you stand?
           </span>
           <span style={{color: DIM, fontSize: 30, marginTop: 18, maxWidth: 980}}>
-            Cole o export de estatísticas do app, compare seu padrão de jogo e veja sua posição no ranking público.
+            Paste your stats export from the app, compare your play style and see your place in the public ranking.
           </span>
         </div>
 
@@ -83,7 +83,7 @@ export default async function Image() {
           >
             <span style={{color: INK, fontSize: 48, fontWeight: 700}}>{totalAgents}</span>
             <span style={{color: DIM, fontSize: 20, marginTop: 6}}>
-              agente{totalAgents === 1 ? '' : 's'} medido{totalAgents === 1 ? '' : 's'}
+              agent{totalAgents === 1 ? '' : 's'} measured
             </span>
           </div>
         ) : (

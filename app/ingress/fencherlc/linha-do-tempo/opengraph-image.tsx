@@ -58,13 +58,13 @@ export default function Image() {
         />
         <div style={{display: 'flex', flexDirection: 'column'}}>
           <span style={{color: CYAN, fontSize: 22, letterSpacing: '0.24em', textTransform: 'uppercase'}}>
-            FencherLC · Agente Ingress
+            FencherLC · Ingress Agent
           </span>
           <span style={{color: GREEN, fontSize: 92, fontWeight: 700, lineHeight: 1, marginTop: 12}}>
-            Linha do tempo
+            Timeline
           </span>
           <span style={{color: DIM, fontSize: 30, marginTop: 18}}>
-            {acquisitions.length} conquistas · {anos[0]}–{anos[1]}
+            {acquisitions.length} achievements ·{anos[0]}–{anos[1]}
           </span>
         </div>
 
