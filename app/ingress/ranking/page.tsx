@@ -1,6 +1,7 @@
 import type {Metadata} from 'next'
 import {loadProfile} from '@/lib/ingress'
 import sql from '@/lib/db'
+import {buildRankingPageQuery} from '@/lib/ingress-rankings.mjs'
 import {computeAxisScores, computeOverallScore, overallTierLabel, computeStatTiers} from '@/lib/ingress-tier-score.mjs'
 import Panel from '@/components/ingress/Panel'
 import BackLink from '@/components/ingress/BackLink'
@@ -41,21 +42,60 @@ export const metadata: Metadata = {
 }
 
 /**
- * Ranking inicial (SSR), consultado direto no banco em vez de `fetch` pra
- * própria rota (evita um round-trip desnecessário no primeiro paint — mesma
- * ordenação de `lib/ingress-rankings.mjs`/`GET /api/ingress-rankings`).
+ * Página 1 do ranking (SSR), consultado direto no banco em vez de `fetch` pra
+ * própria rota (evita um round-trip desnecessário no primeiro paint) — MESMA
+ * query paginada de `GET /api/ingress-rankings` (via `buildRankingPageQuery`,
+ * `lib/ingress-rankings.mjs`), página 1, ordenação/tamanho padrão. `total` é
+ * o total REAL de agentes (sem busca/filtro aplicados) — usado tanto pela
+ * tabela quanto pelo hero (`RankingHero totalAgents`), que antes da paginação
+ * usava `initialRows.length` (capado em 100, e ficaria capado em 20 se
+ * usasse só a página carregada).
  *
  * `casara.ingress_rankings` pode ainda não existir: a DDL de T1 é aplicada
  * manualmente no Neon SQL Editor, fora do controle deste código. Degrada pro
  * estado vazio (mesmo espírito do resto do site) em vez de derrubar a página.
  */
-async function loadInitialRows(): Promise<RankingRow[]> {
+async function loadRankingFirstPage(): Promise<{rows: (RankingRow & {rank: number})[]; total: number}> {
+  try {
+    const {text, values} = buildRankingPageQuery({page: 1, pageSize: 20});
+    const rows = await sql.query(text, values);
+    const total = rows.length > 0 ? Number((rows[0] as Record<string, unknown>).total_count) : 0;
+    return {
+      rows: rows.map((row) => ({
+        codename_key: row.codename_key,
+        codename: row.codename,
+        faction: row.faction,
+        lifetime_ap: Number(row.lifetime_ap),
+        overall_score: Number(row.overall_score),
+        axis_scores: row.axis_scores,
+        stat_values: row.stat_values,
+        stat_tiers: computeStatTiers(row.stat_values as Record<string, number>),
+        country_code: row.country_code,
+        recursions: row.recursions === null || row.recursions === undefined ? null : Number(row.recursions),
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        rank: Number(row.rank),
+      })) as (RankingRow & {rank: number})[],
+      total,
+    };
+  } catch (err) {
+    console.error('[app/ingress/ranking] falha ao consultar casara.ingress_rankings:', err);
+    return {rows: [], total: 0};
+  }
+}
+
+/**
+ * Top 50 pro JSON-LD (`ItemList`), independente da paginação da tabela —
+ * antes vinha de `loadInitialRows` (até 100 linhas), que agora só carrega 20
+ * (página 1). Query isolada pra não reduzir o JSON-LD de 50 pra 20 itens.
+ */
+async function loadTop50ForJsonLd(): Promise<RankingRow[]> {
   try {
     const rows = await sql`
       SELECT codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, country_code, recursions, created_at, updated_at
       FROM casara.ingress_rankings
       ORDER BY overall_score DESC, lifetime_ap DESC, created_at ASC
-      LIMIT 100
+      LIMIT 50
     `;
     return rows.map((row) => ({
       codename_key: row.codename_key,
@@ -72,15 +112,15 @@ async function loadInitialRows(): Promise<RankingRow[]> {
       updated_at: row.updated_at,
     })) as RankingRow[];
   } catch (err) {
-    console.error('[app/ingress/ranking] falha ao consultar casara.ingress_rankings:', err);
+    console.error('[app/ingress/ranking] falha ao consultar casara.ingress_rankings (JSON-LD):', err);
     return [];
   }
 }
 
 /**
- * SSR direto no banco (mesmo espírito de `loadInitialRows`) — mesma query de
- * `GET /api/ingress-rankings/activity`, evitando o round-trip no primeiro
- * paint da aba "Radar de atividade".
+ * SSR direto no banco (mesmo espírito de `loadRankingFirstPage`) — mesma
+ * query de `GET /api/ingress-rankings/activity`, evitando o round-trip no
+ * primeiro paint da aba "Radar de atividade".
  */
 async function loadInitialActivity(): Promise<ActivityRow[]> {
   try {
@@ -128,10 +168,10 @@ async function loadInitialActivity(): Promise<ActivityRow[]> {
 
 /**
  * Estatísticas para nerds (aba estática, sem poll) — busca TODAS as linhas de
- * `casara.ingress_rankings` (sem `LIMIT`, ao contrário de `loadInitialRows`)
+ * `casara.ingress_rankings` (sem `LIMIT`, ao contrário de `loadRankingFirstPage`)
  * mais o total de envios de `casara.ingress_ranking_history`, e agrega tudo
  * de uma vez via `computeNerdStats` (lib/ingress-nerd-stats.mjs). Mesmo
- * espírito de degradação de `loadInitialRows`/`loadInitialActivity`.
+ * espírito de degradação de `loadRankingFirstPage`/`loadInitialActivity`.
  */
 async function loadNerdStats(): Promise<NerdStats | null> {
   try {
@@ -151,9 +191,10 @@ async function loadNerdStats(): Promise<NerdStats | null> {
 }
 
 /**
- * `ItemList` schema.org com o top 50 do ranking — limitado pra não inflar o
- * HTML com os 100 registros de `loadInitialRows`. Top 50 já cobre qualquer
- * uso razoável (rich results, resumo por um agente de IA).
+ * `ItemList` schema.org com o top 50 do ranking, vindo de `loadTop50ForJsonLd`
+ * — independente da paginação da tabela (`loadRankingFirstPage` só carrega
+ * 20). Top 50 já cobre qualquer uso razoável (rich results, resumo por um
+ * agente de IA).
  */
 function buildRankingJsonLd(rows: RankingRow[]) {
   if (rows.length === 0) return null
@@ -201,12 +242,13 @@ export default async function IngressRankingPage() {
   const tier = overallTierLabel(axisScores)
   const axisScoreMap = Object.fromEntries(axisScores.map((a) => [a.id, a.score]))
 
-  const [initialRows, initialEvents, nerdStats] = await Promise.all([
-    loadInitialRows(),
+  const [{rows: initialRows, total: initialTotal}, jsonLdRows, initialEvents, nerdStats] = await Promise.all([
+    loadRankingFirstPage(),
+    loadTop50ForJsonLd(),
     loadInitialActivity(),
     loadNerdStats(),
   ])
-  const rankingJsonLd = buildRankingJsonLd(initialRows)
+  const rankingJsonLd = buildRankingJsonLd(jsonLdRows)
 
   return (
     <main className="ing-shell ing-shell--wide">
@@ -223,7 +265,7 @@ export default async function IngressRankingPage() {
 
       <BackLink fallback="/ingress" />
 
-      <RankingHero center={profile.s2.center} totalAgents={initialRows.length} />
+      <RankingHero center={profile.s2.center} totalAgents={initialTotal} />
 
       <IngressRankingTabs initialRows={initialRows} initialEvents={initialEvents} nerdStats={nerdStats} />
 

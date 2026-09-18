@@ -258,14 +258,16 @@ T16 → T17
 - Skill: NONE
 
 **Done when**:
-- [ ] `RankingHero` mostra o total REAL de agentes (não capado em 20 nem em 100)
-- [ ] JSON-LD continua com até 50 itens mesmo com a tabela paginada em 20
-- [ ] `IngressRankingTabs` recebe `initialRows` (página 1, 20 linhas) + `initialTotal`
-- [ ] `casara.ingress_rankings` vazia → hero mostra 0, tabela mostra estado vazio, sem 500
-- [ ] Gate check passes: `npm run build` (SSR precisa compilar e a página precisa responder 200 em dev)
+- [x] `RankingHero` mostra o total REAL de agentes (não capado em 20 nem em 100) — `totalAgents={initialTotal}`, vindo do `total_count` da própria query paginada (página 1, sem filtro)
+- [x] JSON-LD continua com até 50 itens mesmo com a tabela paginada em 20 — `loadTop50ForJsonLd()` isolada
+- [x] `casara.ingress_rankings` vazia → hero mostra 0, tabela mostra estado vazio, sem 500 (por inspeção: `try/catch` degrada pra `{rows:[], total:0}`, mesmo padrão já usado no arquivo)
+- [x] Gate check passes: `npm run build` — build de produção completo, `/ingress/ranking` responde 200 em dev com dados reais
+
+**SPEC_DEVIATION**: `IngressRankingTabs` continua recebendo só `initialRows` (não `initialTotal`) — o `total` real só importa pra paginação da TABELA, que ainda é client-side/`rankByKey` local até T15. Passar `initialTotal` agora criaria uma prop não usada em `IngressRankingTabs` (não é essa task que consome). Reason: T15 (reescrita de `IngressRankingTable` pra paginação server-side) vai buscar o total no mount via fetch imediato à API já paginada (mesmos parâmetros da SSR), em vez de precisar de uma prop adicional — evita estender a assinatura de `IngressRankingTabs` numa task que não a consome.
 
 **Tests**: none (Server Component — ver matrix)
 **Gate**: build
+**Status**: ✅ Complete
 
 ---
 
@@ -437,7 +439,7 @@ T16 → T17
 
 ### T15: `IngressRankingTable` — paginação/ordenação/busca server-side + atalho "Comparar"
 
-**What**: Reescrever `IngressRankingTable` para não guardar mais `rows` completo em memória com filtro/sort client-side: `search`/`factionFilter`/`sortKey`/`sortDir`/`page`/`pageSize` viram parâmetros de uma busca ao servidor (`GET /api/ingress-rankings`, T4), com debounce na busca por texto; qualquer mudança de `pageSize`/ordenação/facção/busca volta pra página 1; `rank` vem pronto em cada linha da resposta (remove o cálculo local `rankByKey`); adiciona controles de paginação (seletor 20/50/100 + anterior/próxima + indicador de posição) e um botão "Comparar" por linha (alvo de toque ≥44px) que chama a nova prop `onCompareRow(codenameKey)`. Poll (20s) e botão "Atualizar" passam a refazer a página/filtro/ordenação ATUAIS, não mais um "top 100" fixo. Mantém expand/detalhe/compartilhar/`?destaque=` como estão.
+**What**: Reescrever `IngressRankingTable` para não guardar mais `rows` completo em memória com filtro/sort client-side: `search`/`factionFilter`/`sortKey`/`sortDir`/`page`/`pageSize` viram parâmetros de uma busca ao servidor (`GET /api/ingress-rankings`, T4), com debounce na busca por texto; qualquer mudança de `pageSize`/ordenação/facção/busca volta pra página 1; `rank` vem pronto em cada linha da resposta (remove o cálculo local `rankByKey`); adiciona controles de paginação (seletor 20/50/100 + anterior/próxima + indicador de posição) e um botão "Comparar" por linha (alvo de toque ≥44px) que chama a nova prop `onCompareRow(codenameKey)`. Poll (20s) e botão "Atualizar" passam a refazer a página/filtro/ordenação ATUAIS, não mais um "top 100" fixo. Mantém expand/detalhe/compartilhar/`?destaque=` como estão. **Nota de T7**: `total` real não vem mais de uma prop (`IngressRankingTabs` não foi estendido pra isso) — este componente busca o `total` fazendo, no mount, um fetch imediato com os MESMOS parâmetros da SSR (page=1/score desc/sem busca), substituindo o antigo poll-só-depois-de-20s por um fetch logo na montagem + poll subsequente.
 **Where**: `components/ingress/stats/IngressRankingTable.tsx`
 **Depends on**: T4, T14
 **Reuses**: expand/detail/`MiniPlayStyleRadar`/share/highlight (inalterados)
