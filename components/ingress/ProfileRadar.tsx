@@ -33,9 +33,8 @@ const T = {
     panelLabelRanking: 'Exporte seus status',
     panelHint: 'cada eixo = média das stats vs. o Onyx da medalha',
     whatToCompareAria: 'O que comparar',
-    modeVsMe: (name: string, ranking: boolean) => (ranking ? `Comparar com ${name}` : `Contra ${name}`),
-    modeTwo: (ranking: boolean) => (ranking ? 'Comparar com outro agente' : 'Dois agentes'),
-    modeSolo: 'Entrar no ranking',
+    modeVsMe: (name: string) => `Contra ${name}`,
+    modeTwo: 'Dois agentes',
     labelTwoA: 'Export do agente A (verde):',
     labelTwoB: 'Export do agente B (roxo):',
     labelSolo: 'Cole seu export de estatísticas do app:',
@@ -56,9 +55,8 @@ const T = {
     panelLabelRanking: 'Export your stats',
     panelHint: "each axis = average of stats vs. the badge's Onyx threshold",
     whatToCompareAria: 'What to compare',
-    modeVsMe: (name: string, ranking: boolean) => (ranking ? `Compare with ${name}` : `Against ${name}`),
-    modeTwo: (ranking: boolean) => (ranking ? 'Compare with another agent' : 'Two agents'),
-    modeSolo: 'Just join the ranking',
+    modeVsMe: (name: string) => `Against ${name}`,
+    modeTwo: 'Two agents',
     labelTwoA: 'Agent A export (green):',
     labelTwoB: 'Agent B export (purple):',
     labelSolo: 'Paste your app stats export:',
@@ -266,21 +264,19 @@ export default function ProfileRadar({
 
   const formBlock = open ? (
     <div className="ing-radar__compare-box">
-      <div className="ing-radar__cmp-mode" role="group" aria-label={t.whatToCompareAria}>
-        {variant === 'ranking' ? (
-          // "Só entrar" é o caminho principal em /ingress/ranking — vem
-          // primeiro, comparações (vs-me/two) são secundárias aqui.
-          <button type="button" aria-pressed={mode === 'solo'} onClick={() => setMode('solo')}>
-            {t.modeSolo}
+      {variant === 'ranking' ? null : (
+        // Só a variant `default` (/ingress/fencherlc) ainda troca de modo —
+        // em `ranking`, o único fluxo é "colar export + país + enviar"
+        // (mode fica travado em 'solo', sem UI pra trocar; ver IRCMP-28/29).
+        <div className="ing-radar__cmp-mode" role="group" aria-label={t.whatToCompareAria}>
+          <button type="button" aria-pressed={mode === 'vs-me'} onClick={() => setMode('vs-me')}>
+            {t.modeVsMe(agentName)}
           </button>
-        ) : null}
-        <button type="button" aria-pressed={mode === 'vs-me'} onClick={() => setMode('vs-me')}>
-          {t.modeVsMe(agentName, variant === 'ranking')}
-        </button>
-        <button type="button" aria-pressed={mode === 'two'} onClick={() => setMode('two')}>
-          {t.modeTwo(variant === 'ranking')}
-        </button>
-      </div>
+          <button type="button" aria-pressed={mode === 'two'} onClick={() => setMode('two')}>
+            {t.modeTwo}
+          </button>
+        </div>
+      )}
 
       <div className="ing-radar__label-row">
         <label htmlFor="ing-radar-a" className="ing-radar__compare-label">

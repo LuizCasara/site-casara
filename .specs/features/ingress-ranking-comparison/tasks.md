@@ -309,13 +309,14 @@ T16 → T17
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] `/ingress/ranking`: painel de envio mostra só textarea + `CountryPicker` + botão "Enviar" — nenhum botão de troca de modo, nenhum texto "Comparar com..."
-- [ ] `/ingress/fencherlc`: os 3 modos originais (`vs-me`/`two`, já que `solo` nunca existiu ali) continuam intactos, sem regressão visual/funcional
-- [ ] `grep -n "t.modeSolo"` não retorna nada (string morta removida)
-- [ ] Gate check passes: `npx tsc --noEmit && npm run lint`
+- [x] `/ingress/ranking`: `variant==='ranking'` não renderiza mais o bloco `ing-radar__cmp-mode` (verificado por leitura do JSX: `{variant === 'ranking' ? null : (<div className="ing-radar__cmp-mode">...)}`) — só textarea + `CountryPicker` + botão "Enviar"; 200 confirmado via `curl` em dev
+- [x] `/ingress/fencherlc`: os 2 modos originais (`vs-me`/`two`) continuam intactos no código (bloco `ing-radar__cmp-mode` inalterado pra `variant==='default'`); 200 confirmado via `curl` em dev — **UAT visual completo continua pendente do Luiz**
+- [x] `grep -n "modeSolo"` não retorna nada (string morta removida)
+- [x] Gate check passes: `npx tsc --noEmit && npm run lint`
 
 **Tests**: none (componente — ver matrix)
 **Gate**: full
+**Status**: ✅ Complete
 
 ---
 
