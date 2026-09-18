@@ -92,9 +92,6 @@ function toAgent(text: string, noAgentMsg: string): Agent {
   }
 }
 
-/** Estado vazio do radar em `variant="ranking"`, antes de qualquer submissão. */
-const BLANK_AGENT: Agent = {codename: '', stats: {}}
-
 const DEDUPE_MS = 10 * 60 * 1000
 const SENT_KEY = 'ing-cmp-sent'
 
@@ -183,11 +180,13 @@ export default function ProfileRadar({
   const [sentNote, setSentNote] = useState(false)
 
   const me: Agent = {codename: agentName, stats: stats as Record<string, number>, capturedAt}
-  // No modo ranking, o radar nasce em branco — não pré-carrega o padrão do
-  // FencherLC (isso é exclusivo do uso em /ingress/fencherlc). `me` continua disponível
-  // pro modo "vs-me" comparar contra o FencherLC real quando o visitante cola algo.
-  const isBlank = variant === 'ranking' && !cmp
-  const agentA = cmp ? cmp.a : isBlank ? BLANK_AGENT : me
+  // No modo ranking, o radar nem aparece até o visitante enviar um export —
+  // antes disso só ficam o formulário (export + país) e os botões, e o painel
+  // não pré-carrega o padrão do FencherLC (isso é exclusivo do uso em
+  // /ingress/fencherlc). `me` continua disponível pro modo "vs-me" comparar
+  // contra o FencherLC real quando o visitante cola algo.
+  const chartHidden = variant === 'ranking' && !cmp
+  const agentA = cmp ? cmp.a : me
   const agentB = cmp ? cmp.b : undefined
 
   const flagSent = () => {
@@ -265,7 +264,7 @@ export default function ProfileRadar({
 
   const panelLabel = variant === 'ranking' ? t.panelLabelRanking : t.panelLabel
 
-  const chartBlock = <RadarOverlay agentA={agentA} agentB={agentB} blank={isBlank} />
+  const chartBlock = chartHidden ? null : <RadarOverlay agentA={agentA} agentB={agentB} />
 
   const formBlock = open ? (
     <div className="ing-radar__compare-box">
@@ -369,7 +368,8 @@ export default function ProfileRadar({
   )
 
   return (
-    <Panel label={panelLabel} hint={t.panelHint}>
+    // O hint ("cada eixo = média das stats...") explica o gráfico — sem gráfico, sem hint.
+    <Panel label={panelLabel} hint={chartHidden ? undefined : t.panelHint}>
       {variant === 'ranking' ? (
         <>
           {formBlock}

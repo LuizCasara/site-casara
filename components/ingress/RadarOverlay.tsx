@@ -42,7 +42,6 @@ const T = {
     breakdownFootSingle: 'razão contra o limiar de Onyx',
     breakdownFootCapped: (pct: number) => ` · o que passa de ${pct}% entra travado`,
     hoverHint: 'Passe o mouse ou toque num eixo para ver o cálculo.',
-    blankHint: 'Cole seu export de estatísticas abaixo para ver o seu padrão de jogo.',
     overallScore: 'Nota geral',
     rankOf: (rank: number, total: number) => `${rank}º de ${total}`,
   },
@@ -56,7 +55,6 @@ const T = {
     breakdownFootSingle: 'ratio against the Onyx threshold',
     breakdownFootCapped: (pct: number) => ` · anything past ${pct}% is capped`,
     hoverHint: 'Hover or tap an axis to see the math.',
-    blankHint: "Paste your stats export below to see your play pattern.",
     overallScore: 'Overall score',
     rankOf: (rank: number, total: number) => `#${rank} of ${total}`,
   },
@@ -82,7 +80,7 @@ function ringStops(drawMax: number) {
  * sem duplicar a matemática do polígono. Puramente apresentacional a partir
  * de `Agent`s já prontos: não parseia texto, não fala com API nenhuma.
  */
-export default function RadarOverlay({agentA, agentB, blank = false}: {agentA: Agent; agentB?: Agent; blank?: boolean}) {
+export default function RadarOverlay({agentA, agentB}: {agentA: Agent; agentB?: Agent}) {
   const {lang} = useLang()
   const t = T[lang]
   const axisLabel = (a: Axis) => (lang === 'en' ? a.labelEn : a.label)
@@ -97,7 +95,7 @@ export default function RadarOverlay({agentA, agentB, blank = false}: {agentA: A
   const n = aAxes.length
   const rows = agentB ? compareRadar(agentA.stats, agentB.stats) : null
 
-  const sel = active != null && !blank ? aAxes[active] : null
+  const sel = active != null ? aAxes[active] : null
   const selB = active != null && bAxes ? bAxes[active] : null
 
   // quando os dois lados são o mesmo agente (você agora vs. um export antigo),
@@ -181,12 +179,10 @@ export default function RadarOverlay({agentA, agentB, blank = false}: {agentA: A
               <text x={lx} y={ly - 5} textAnchor={anchor} className="ing-radar__label">
                 {axisLabel(a)}
               </text>
-              {blank ? null : (
-                <text x={lx} y={ly + 6} textAnchor={anchor} className="ing-radar__pct">
-                  {pct(a.onyxRatio)}
-                  {bAxes ? <tspan className="ing-radar__pct-them"> · {pct(bAxes[i].onyxRatio)}</tspan> : null}
-                </text>
-              )}
+              <text x={lx} y={ly + 6} textAnchor={anchor} className="ing-radar__pct">
+                {pct(a.onyxRatio)}
+                {bAxes ? <tspan className="ing-radar__pct-them"> · {pct(bAxes[i].onyxRatio)}</tspan> : null}
+              </text>
               <circle cx={x} cy={y} r={18} fill="transparent" />
             </g>
           )
@@ -300,7 +296,7 @@ export default function RadarOverlay({agentA, agentB, blank = false}: {agentA: A
           </p>
         </div>
       ) : !agentB ? (
-        <p className="ing-radar__hint">{blank ? t.blankHint : t.hoverHint}</p>
+        <p className="ing-radar__hint">{t.hoverHint}</p>
       ) : null}
     </>
   )

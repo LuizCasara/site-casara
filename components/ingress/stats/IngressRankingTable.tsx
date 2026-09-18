@@ -1,7 +1,7 @@
 'use client'
 
 import {Fragment, useEffect, useRef, useState} from 'react'
-import {FaShareAlt} from 'react-icons/fa'
+import {FaBalanceScale, FaShareAlt} from 'react-icons/fa'
 import {toast} from 'sonner'
 import Panel from '../Panel'
 import AgentHistoryChart from './AgentHistoryChart'
@@ -327,10 +327,13 @@ async function fetchPage(params: FetchParams): Promise<{rows: RankingRow[]; tota
 export default function IngressRankingTable({
   initialRows,
   onCompareRow,
+  pendingCompareKey,
 }: {
   initialRows: RankingRow[]
-  /** Atalho "Comparar" por linha (P2, IRCMP-31/32) — troca a aba ativa e preenche Agente A/B em `IngressRankingTabs`. */
+  /** Atalho "Comparar" por linha (P2, IRCMP-31/32) — 1º clique marca, 2º clique (em `IngressRankingTabs`) preenche Agente A/B e troca a aba. */
   onCompareRow: (codenameKey: string) => void
+  /** Agente já marcado pelo 1º clique, esperando o segundo — a linha dele fica destacada. */
+  pendingCompareKey: string | null
 }) {
   const {lang} = useLang()
   const t = T[lang]
@@ -649,6 +652,7 @@ export default function IngressRankingTable({
           <tbody>
             {rows.map((row) => {
               const isOpen = expanded === row.codename_key
+              const isCompareMarked = pendingCompareKey === row.codename_key
               const rank = row.rank
               const toggle = () => setExpanded(isOpen ? null : row.codename_key)
               const rowClass =
@@ -656,6 +660,7 @@ export default function IngressRankingTable({
                   isOpen ? 'is-expanded' : null,
                   rank === 1 ? 'is-top1' : rank === 2 ? 'is-top2' : rank === 3 ? 'is-top3' : null,
                   row.codename_key === highlightKey ? 'is-highlighted' : null,
+                  isCompareMarked ? 'is-compare-pick' : null,
                 ]
                   .filter(Boolean)
                   .join(' ') || undefined
@@ -717,28 +722,33 @@ export default function IngressRankingTable({
                       <td key={col.id} data-col={col.id}>{fmtScore(row.axis_scores?.[col.id] ?? 0)}</td>
                     ))}
                     <td data-col="details">
-                      <button
-                        type="button"
-                        className="ing-ranking-table__compare"
-                        aria-label={t.compareAgentAria(row.codename)}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onCompareRow(row.codename_key)
-                        }}
-                      >
-                        {t.compareBtn}
-                      </button>
-                      <button
-                        type="button"
-                        className="ing-ranking-table__share"
-                        aria-label={t.shareAgentAria(row.codename)}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          void shareAgent(row)
-                        }}
-                      >
-                        <FaShareAlt aria-hidden="true" />
-                      </button>
+                      {/* O flex mora neste div, não no `td`: um `td` com `display: flex` deixa de ser célula de tabela e a borda dele cai 1px fora das vizinhas em linhas de altura fracionada. */}
+                      <div className="ing-ranking-table__actions">
+                        <button
+                          type="button"
+                          className="ing-ranking-table__compare"
+                          aria-label={t.compareAgentAria(row.codename)}
+                          aria-pressed={isCompareMarked}
+                          title={t.compareBtn}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onCompareRow(row.codename_key)
+                          }}
+                        >
+                          <FaBalanceScale aria-hidden="true" />
+                        </button>
+                        <button
+                          type="button"
+                          className="ing-ranking-table__share"
+                          aria-label={t.shareAgentAria(row.codename)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            void shareAgent(row)
+                          }}
+                        >
+                          <FaShareAlt aria-hidden="true" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   {isOpen ? (
@@ -763,12 +773,14 @@ export default function IngressRankingTable({
                                     type="button"
                                     className="ing-ranking-table__compare ing-ranking-table__detail-share"
                                     aria-label={t.compareAgentAria(row.codename)}
+                                    aria-pressed={isCompareMarked}
+                                    title={t.compareBtn}
                                     onClick={(e) => {
                                       e.stopPropagation()
                                       onCompareRow(row.codename_key)
                                     }}
                                   >
-                                    {t.compareBtn}
+                                    <FaBalanceScale aria-hidden="true" />
                                   </button>
                                   <button
                                     type="button"

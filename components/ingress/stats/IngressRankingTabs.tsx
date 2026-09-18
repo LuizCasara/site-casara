@@ -51,6 +51,10 @@ export default function IngressRankingTabs({
   const [agentBKey, setAgentBKey] = useState<string | null>(null)
   const [aFromUrl, setAFromUrl] = useState(false)
   const [bFromUrl, setBFromUrl] = useState(false)
+  // Primeiro agente marcado pelo atalho "Comparar" das linhas, esperando o
+  // segundo — vive aqui (não na tabela) porque a tabela desmonta ao trocar de
+  // aba, e a marcação tem que sobreviver a um passeio por outra aba.
+  const [pendingKey, setPendingKey] = useState<string | null>(null)
   const urlReadRef = useRef(false)
 
   useEffect(() => {
@@ -107,18 +111,25 @@ export default function IngressRankingTabs({
   }
 
   /**
-   * Atalho "Comparar" de uma linha (P2, IRCMP-31/32) — alternável (pedido do
-   * Luiz depois do UAT): clicar de novo no agente que já está em A ou B
-   * libera aquele campo (toggle off), em vez de só empilhar. Clicar num
-   * agente novo preenche A se estiver vazio; senão substitui B (o 3º clique
-   * "roda" o segundo campo, nunca o primeiro).
+   * Atalho "Comparar" de uma linha (P2, IRCMP-31/32) — em dois cliques (pedido
+   * do Luiz): o 1º só marca o agente (a linha fica destacada, segue no
+   * ranking); o 2º, em outro agente, fecha o par — o 1º vira Agente A, o 2º
+   * Agente B — e aí sim pula pra aba Comparação. Clicar de novo no agente
+   * marcado desfaz a marcação. O par sempre sobrescreve A/B (inclusive o "meu
+   * agente" pré-preenchido do `localStorage`): quem clicou em duas linhas
+   * escolheu esses dois.
    */
   const handleCompareRow = (codenameKey: string) => {
-    if (agentAKey === codenameKey) handleChangeA(null)
-    else if (agentBKey === codenameKey) handleChangeB(null)
-    else if (!agentAKey) handleChangeA(codenameKey)
-    else handleChangeB(codenameKey)
-    setTab('compare')
+    if (pendingKey === codenameKey) {
+      setPendingKey(null)
+    } else if (pendingKey === null) {
+      setPendingKey(codenameKey)
+    } else {
+      handleChangeA(pendingKey)
+      handleChangeB(codenameKey)
+      setPendingKey(null)
+      setTab('compare')
+    }
   }
 
   return (
@@ -138,7 +149,7 @@ export default function IngressRankingTabs({
         </button>
       </div>
       {tab === 'ranking' ? (
-        <IngressRankingTable initialRows={initialRows} onCompareRow={handleCompareRow} />
+        <IngressRankingTable initialRows={initialRows} onCompareRow={handleCompareRow} pendingCompareKey={pendingKey} />
       ) : tab === 'activity' ? (
         <IngressActivityFeed initialEvents={initialEvents} />
       ) : tab === 'nerd' ? (

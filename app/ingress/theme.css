@@ -2329,7 +2329,10 @@
   font-weight: 600;
 }
 
-.ing-ranking-table__share {
+/* Comparar e compartilhar são o mesmo botão circular só-ícone (o "Comparar"
+   em texto ocupava mais que os dois ícones juntos e empurrava o codinome). */
+.ing-ranking-table__share,
+.ing-ranking-table__compare {
   display: inline-grid;
   place-items: center;
   width: 2rem;
@@ -2343,9 +2346,27 @@
 }
 
 .ing-ranking-table__share:hover,
-.ing-ranking-table__share:focus-visible {
+.ing-ranking-table__share:focus-visible,
+.ing-ranking-table__compare:hover,
+.ing-ranking-table__compare:focus-visible {
   color: var(--ing-green-soft);
   border-color: var(--ing-edge);
+}
+
+/* Agente marcado pelo 1º clique do atalho "Comparar", esperando o 2º — a linha
+   ganha o tom verde da marca (mesma barra lateral do `is-highlighted`, mas
+   parada, sem o pulso) e o ícone fica preenchido. Vem depois dos `is-top*` pra
+   vencer o fundo de pódio na mesma especificidade. */
+.ing-ranking-table tbody tr.is-compare-pick td {
+  background: rgba(77, 255, 166, 0.14);
+}
+.ing-ranking-table tbody tr.is-compare-pick td:first-child {
+  box-shadow: inset 3px 0 0 var(--ing-green-soft);
+}
+.ing-ranking-table__compare[aria-pressed='true'] {
+  color: var(--ing-bg);
+  background: var(--ing-green-soft);
+  border-color: var(--ing-green-soft);
 }
 
 /*
@@ -2619,27 +2640,12 @@
   color: var(--ing-text-faint);
 }
 
-.ing-tutorial__suggestion {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin-top: 1.1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--ing-edge-soft);
-}
-
-.ing-tutorial__suggestion p {
-  margin: 0;
-  color: var(--ing-text-dim);
-}
-
 .ing-tutorial__img {
   display: block;
   width: 100%;
   max-width: 32rem;
   height: auto;
-  margin: 0.9rem 0;
+  margin: 0.9rem 0 0;
   border: 1px solid var(--ing-edge-soft);
   border-radius: 12px;
 }
@@ -2788,6 +2794,34 @@
 
   .ing-score-panel__stat {
     min-width: 0;
+  }
+}
+
+/* Celular: cada agente é um cartão com o nome sozinho no topo e os demais
+   campos em 2 colunas fixas logo abaixo. Com o `flex-wrap` solto de antes, o
+   "Nota geral" ficava ao lado do nome quando ele era curto ("gal0daxj") e caía
+   pra baixo quando era comprido ("BayBadMan"), então os dois cartões da
+   comparação quebravam diferente e as colunas não alinhavam. Grade fixa = a
+   mesma quebra pra qualquer nome ou valor. */
+@media (max-width: 35.99rem) {
+  .ing-score-panel__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 0.7rem 1rem;
+  }
+
+  .ing-score-panel__agent {
+    grid-column: 1 / -1;
+    margin-right: 0;
+  }
+
+  .ing-score-panel__stat {
+    min-width: 0;
+  }
+
+  .ing-score-panel__stat-value {
+    overflow-wrap: anywhere;
   }
 }
 
@@ -3090,7 +3124,8 @@
     width: 15px;
     height: 11px;
   }
-  .ing-ranking-table__share {
+  .ing-ranking-table__share,
+  .ing-ranking-table__compare {
     width: 1.6rem;
     height: 1.6rem;
   }
@@ -4466,50 +4501,42 @@
   }
 }
 
-/* Botão "Comparar" por linha (P2, IRCMP-31/32) — pill compacta ao lado do
-   ícone de compartilhar, mesma altura/paleta. No celular a coluna inteira
-   (`details`) colapsa como já acontecia com o compartilhar; a duplicata
-   dentro do detalhe (`.ing-ranking-table__detail-share`, classe já
-   compartilhada com o botão de compartilhar) ganha alvo de toque de 44px —
-   só ali, porque é o único lugar onde esse controle é de fato tocado num
-   celular (na linha "de mesa" ele some via `col[data-col='details']`
-   colapsado, igual ao compartilhar). */
+/* Ícone "Comparar" por linha (P2, IRCMP-31/32) — ao lado do de compartilhar,
+   mesmo tamanho/paleta (estilo base junto de `.ing-ranking-table__share`).
+   No celular a coluna inteira (`details`) colapsa; as duplicatas dentro do
+   detalhe (`.ing-ranking-table__detail-share`, classe compartilhada pelos dois
+   ícones) ganham alvo de toque de 44px — só ali, porque é o único lugar onde
+   esses controles são de fato tocados num celular. */
 .ing-ranking-table col[data-col='details'] {
-  width: 6.4rem;
+  width: 5.5rem;
 }
-.ing-ranking-table td[data-col='details'] {
+/* O flex vai num `div` interno, não no `td`: `display: flex` no próprio `td` o
+   tira do layout de tabela, e a borda dele passava a cair 1px fora da das
+   outras células (o "degrau" na divisória, em linhas de altura fracionada). */
+.ing-ranking-table__actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.35rem;
-}
-.ing-ranking-table__compare {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.3rem 0.6rem;
-  border-radius: 999px;
-  border: 1px solid var(--ing-edge-soft);
-  background: transparent;
-  color: var(--ing-text-dim);
-  font-size: 0.72rem;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-.ing-ranking-table__compare:hover,
-.ing-ranking-table__compare:focus-visible {
-  color: var(--ing-green-soft);
-  border-color: var(--ing-edge);
+  gap: 0.3rem;
 }
 @media (max-width: 640px) {
   .ing-ranking-table col[data-col='details'] {
     visibility: collapse;
     width: 0;
   }
-  .ing-ranking-table__compare.ing-ranking-table__detail-share {
-    min-height: 2.75rem;
-    padding-inline: 0.9rem;
+  .ing-ranking-table__detail-share {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+  }
+  /* A coluna esquerda do "Estilo de jogo" tem ~140px no celular: nome numa
+     linha só dele (senão quebra no meio, "gal0d/axj") e os dois ícones de 44px
+     logo abaixo, sem o flex achatá-los em oval. */
+  .ing-ranking-table__detail-playstyle-name-row {
+    flex-wrap: wrap;
+  }
+  .ing-ranking-table__detail-playstyle-name {
+    flex-basis: 100%;
   }
 }
 
