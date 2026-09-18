@@ -197,7 +197,6 @@ export default function AgentSelect({
     <div className={`ing-agent-select${invalid ? ' is-invalid' : ''}`}>
       {selected ? (
         <span className="ing-agent-select__selected-badges">
-          <img src={FACTION_ICON[selected.faction]} alt="" width={16} height={16} />
           {selected.country_code ? (
             <img
               src={flagSrc(selected.country_code)}
@@ -209,6 +208,7 @@ export default function AgentSelect({
               }}
             />
           ) : null}
+          <img src={FACTION_ICON[selected.faction]} alt="" width={16} height={16} />
         </span>
       ) : null}
       <input
@@ -261,7 +261,6 @@ export default function AgentSelect({
                   }}
                   onMouseEnter={() => setActiveIndex(i)}
                 >
-                  <img src={FACTION_ICON[opt.faction]} alt="" width={18} height={18} />
                   {opt.country_code ? (
                     <img
                       src={flagSrc(opt.country_code)}
@@ -276,6 +275,7 @@ export default function AgentSelect({
                   ) : (
                     <span className="ing-agent-select__flag-placeholder" />
                   )}
+                  <img src={FACTION_ICON[opt.faction]} alt="" width={18} height={18} />
                   <span className="ing-agent-select__option-name">{opt.codename}</span>
                   <span className="ing-agent-select__option-ap">{fmtAp(opt.lifetime_ap, lang)}</span>
                 </li>

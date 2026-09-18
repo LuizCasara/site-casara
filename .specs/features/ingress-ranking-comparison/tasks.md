@@ -111,7 +111,7 @@ T16 → T17
 - [x] `buildRankingPageQuery` calcula o rank ANTES de aplicar busca/filtro (numa CTE separada), preservando o rank canônico mesmo com filtro ativo
 - [x] `buildAgentOptionsQuery` sem `cursor` nem `search` retorna a query da 1ª página; com `cursor`, usa `codename_key > $cursor`; com `search`, ignora `cursor` e busca por substring
 - [x] Gate check passes: `npm test`
-- [x] Test count: suíte de `lib/ingress-rankings.test.mjs` cresce em 16 testes novos (420 → 436) — nenhum teste existente removido
+- [x] Test count: suíte de `lib/ingress-rankings.test.mjs` cresce em 13 testes novos (423 → 436 no total do repo, medido em `2ddfe9d..28f5dc5`) — nenhum teste existente removido
 
 **Tests**: unit
 **Gate**: quick
@@ -633,3 +633,12 @@ Execução estritamente sequencial: dentro de cada fase, as tasks rodam na ordem
 | T17: verificação | — | — | none | ✅ OK |
 
 Nenhuma violação — todas as tasks que tocam a única camada com teste automatizado no repo (`lib/ingress-rankings.mjs`, em T1) declaram `Tests: unit` e incluem os testes na mesma task.
+
+---
+
+## Fix 1 (pós-Verifier): ordem dos emblemas em `AgentSelect`
+
+**Gap reportado**: `.specs/features/ingress-ranking-comparison/validation.md` — IRCMP-06 (AC1) exige a ordem `<emblema país><emblema facção> <nickname> <AP total>`; `components/ingress/AgentSelect.tsx` renderizava facção antes de país (campo fechado e cada opção da lista).
+**Fix**: trocada a ordem dos dois `<img>` em dois pontos (`AgentSelect.tsx` — badges do campo fechado e cada `<li>` de opção). Nenhuma mudança de CSS necessária (flex row, ordem visual segue a ordem no DOM).
+**Verificado**: `npx tsc --noEmit` limpo, `npx eslint components/ingress/AgentSelect.tsx` só os 4 warnings `<img>` já esperados, `npm test` 436/436, `npm run build` limpo.
+**Também corrigido**: T1's "Done when" tinha aritmética errada de contagem de testes ("420 → 436, 16 novos") — medição real (`git diff 2ddfe9d..28f5dc5 -- lib/ingress-rankings.test.mjs | grep -c '^+test('`) é 13 testes novos (423 → 436). Corrigido na task acima.
