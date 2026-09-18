@@ -43,6 +43,8 @@ const T = {
     breakdownFootCapped: (pct: number) => ` · o que passa de ${pct}% entra travado`,
     hoverHint: 'Passe o mouse ou toque num eixo para ver o cálculo.',
     blankHint: 'Cole seu export de estatísticas abaixo para ver o seu padrão de jogo.',
+    overallScore: 'Nota geral',
+    rankOf: (rank: number, total: number) => `${rank}º de ${total}`,
   },
   en: {
     radarAria: 'Play-pattern radar',
@@ -55,6 +57,8 @@ const T = {
     breakdownFootCapped: (pct: number) => ` · anything past ${pct}% is capped`,
     hoverHint: 'Hover or tap an axis to see the math.',
     blankHint: "Paste your stats export below to see your play pattern.",
+    overallScore: 'Overall score',
+    rankOf: (rank: number, total: number) => `#${rank} of ${total}`,
   },
 } as const
 
@@ -102,6 +106,14 @@ export default function RadarOverlay({agentA, agentB, blank = false}: {agentA: A
   const dmy = (iso?: string) => (iso ? iso.slice(0, 10).split('-').reverse().join('/') : '')
   const labelA = selfCmp && agentA.capturedAt ? `${agentA.codename} · ${dmy(agentA.capturedAt)}` : agentA.codename
   const labelB = selfCmp && agentB?.capturedAt ? `${agentB.codename} · ${dmy(agentB.capturedAt)}` : (agentB?.codename ?? '')
+
+  // sub-linha da legenda — só existe pra agente que está no ranking (aba Comparação)
+  const legendMeta = (a?: Agent) =>
+    a?.overallScore != null && a.rank != null && a.totalAgents != null ? (
+      <small className="ing-radar__legend-meta">
+        {t.overallScore} <b>{Math.round(a.overallScore)}</b> · {t.rankOf(a.rank, a.totalAgents)}
+      </small>
+    ) : null
 
   const fit = scale === 'fit'
   const maxOf = (as: Axis[]) => (fit ? Math.max(...as.map((a) => a.onyxRatio), 0.01) : (scale as number))
@@ -188,8 +200,14 @@ export default function RadarOverlay({agentA, agentB, blank = false}: {agentA: A
       <div className="ing-radar__topbar">
         {agentB ? (
           <p className="ing-radar__legend">
-            <span className="ing-radar__legend-me">● {labelA}</span>
-            <span className="ing-radar__legend-them">● {labelB}</span>
+            <span className="ing-radar__legend-item ing-radar__legend-me">
+              <span>● {labelA}</span>
+              {legendMeta(agentA)}
+            </span>
+            <span className="ing-radar__legend-item ing-radar__legend-them">
+              <span>● {labelB}</span>
+              {legendMeta(agentB)}
+            </span>
           </p>
         ) : (
           <span />
@@ -231,10 +249,12 @@ export default function RadarOverlay({agentA, agentB, blank = false}: {agentA: A
                       <tr key={p.key} className="is-part">
                         <td>{partLabel(p)}</td>
                         <td>
-                          {fmtStat(p.value)} <small>{pct(p.ratio)}</small>
+                          <span className="ing-radar__cmp-value">{fmtStat(p.value)}</span>{' '}
+                          <small>{pct(p.ratio)}</small>
                         </td>
                         <td>
-                          {fmtStat(bAxes[i].parts[pi].value)} <small>{pct(bAxes[i].parts[pi].ratio)}</small>
+                          <span className="ing-radar__cmp-value">{fmtStat(bAxes[i].parts[pi].value)}</span>{' '}
+                          <small>{pct(bAxes[i].parts[pi].ratio)}</small>
                         </td>
                       </tr>
                     ))}

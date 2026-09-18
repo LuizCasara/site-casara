@@ -18,6 +18,8 @@ type CompareRow = {
   axis_scores: Record<string, number>
   stat_values: Record<string, number>
   country_code: string | null
+  rank: number
+  total_agents: number
 }
 
 type FetchResult =
@@ -58,6 +60,9 @@ function toAgent(row: CompareRow): Agent {
     faction: row.faction,
     stats: row.stat_values,
     countryCode: row.country_code ?? undefined,
+    overallScore: row.overall_score,
+    rank: row.rank,
+    totalAgents: row.total_agents,
   }
 }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import Panel from '../Panel'
-import {TIER_COLOR, tierLabel} from '@/lib/ingress-tiers.mjs'
+import {tierLabel} from '@/lib/ingress-tiers.mjs'
 import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
 import {flagSrc} from '@/lib/ingress-countries.mjs'
 import {fmtStat} from '@/lib/ingress-format.mjs'
@@ -23,10 +23,10 @@ const FACTION_LABEL: Record<'enlightened' | 'resistance', string> = {
 /** Mesma escada de `lib/ingress-tier-score.mjs`, reconstruída aqui só pra escolher a cor do selo a partir da nota geral (já na escala 0-100). */
 const RANK_TO_TIER_KEY = ['none', 'bronze', 'silver', 'gold', 'platinum', 'onyx'] as const
 
-function tierColorFromScore(overallScore: number): string | undefined {
+/** Chave do tier → modificador CSS do selo (`.ing-score-panel__badge--<key>`), que define fundo/borda/texto de cada tier. */
+function tierKeyFromScore(overallScore: number): (typeof RANK_TO_TIER_KEY)[number] {
   const floor = Math.floor(overallScore / 20)
-  const key = RANK_TO_TIER_KEY[Math.max(0, Math.min(5, floor))]
-  return (TIER_COLOR as Record<string, string>)[key]
+  return RANK_TO_TIER_KEY[Math.max(0, Math.min(5, floor))]
 }
 
 /**
@@ -36,7 +36,7 @@ function tierColorFromScore(overallScore: number): string | undefined {
  * (`lib/ingress-badges.mjs` -> `lib/ingress-catalog.mjs`, que lê
  * `badge-catalog.json` via `node:fs` no topo do arquivo) e quebraria o bundle
  * do navegador se importado por este componente client — mesmo motivo pelo
- * qual `tierColorFromScore` acima já duplicava `RANK_TO_TIER` localmente em
+ * qual `tierKeyFromScore` acima já duplicava `RANK_TO_TIER` localmente em
  * vez de importar de lá.
  */
 function tierLabelFromScore(overallScore: number, lang: 'pt' | 'en'): string {
@@ -128,12 +128,9 @@ export default function OverallScorePanel({agents}: {agents: AgentScore[]}) {
                 <span className="ing-score-panel__stat-value">{fmtStat(agent.lifetimeAp)}</span>
               </span>
             ) : null}
-            <span
-              className="ing-score-panel__stat ing-score-panel__stat--tier"
-              style={{borderColor: tierColorFromScore(agent.overallScore)}}
-            >
+            <span className="ing-score-panel__stat">
               <span className="ing-score-panel__stat-label">{t.tierRow}</span>
-              <span className="ing-score-panel__stat-value" style={{color: tierColorFromScore(agent.overallScore)}}>
+              <span className={`ing-score-panel__badge ing-score-panel__badge--${tierKeyFromScore(agent.overallScore)}`}>
                 {tierLabelFromScore(agent.overallScore, lang)}
               </span>
             </span>

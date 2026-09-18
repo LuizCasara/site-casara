@@ -1794,21 +1794,28 @@
 
 /* --- comparar fichas --- */
 
-.ing-radar__shape--muted {
+/*
+ * Seletores duplos de propósito: `.ing-radar__shape` e `.ing-radar__dot` são
+ * redeclarados bem mais abaixo neste arquivo (radar do perfil/ranking) com a
+ * mesma especificidade de um único modificador, e por vir depois venciam —
+ * o polígono e os pontos do agente B saíam verdes em vez de roxos. A cor é
+ * `--ing-xm`, a mesma da legenda, do nome e dos números do agente B.
+ */
+.ing-radar__shape.ing-radar__shape--muted {
   fill: rgba(0, 230, 118, 0.06);
 }
 
-.ing-radar__shape--them {
+.ing-radar__shape.ing-radar__shape--them {
   fill: none;
-  stroke: #c58cff;
+  stroke: var(--ing-xm);
   stroke-width: 2.5;
   stroke-linejoin: round;
   stroke-dasharray: 5 3;
   filter: drop-shadow(0 0 3px rgba(176, 108, 255, 0.55));
 }
 
-.ing-radar__dot--them {
-  fill: #c58cff;
+.ing-radar__dot.ing-radar__dot--them {
+  fill: var(--ing-xm);
   stroke: var(--ing-bg);
   stroke-width: 1;
 }
@@ -1833,6 +1840,26 @@
 
 .ing-radar__legend-them {
   color: var(--ing-xm);
+}
+
+/* nick em cima, nota geral + posição embaixo */
+.ing-radar__legend-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.ing-radar__legend-meta {
+  font-family: var(--ing-font-body);
+  font-size: 0.68rem;
+  color: var(--ing-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-radar__legend-meta b {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  color: var(--ing-text);
 }
 
 /* topo: legenda + toggle de escala */
@@ -1969,7 +1996,20 @@
   color: var(--ing-text-dim);
 }
 
+/* Largura fixa pro valor e pro percentual dentro da mesma célula — sem
+   isso, "266.795 133%" e "94.748 47%" ficam com o "%" em posições
+   diferentes entre as linhas, já que o número muda de largura mas o
+   texto inteiro da célula é um bloco só alinhado à direita. */
+.ing-radar__cmp-value {
+  display: inline-block;
+  min-width: 3.4em;
+  text-align: right;
+}
+
 .ing-radar__cmp-table tr.is-part small {
+  display: inline-block;
+  min-width: 2.5em;
+  text-align: right;
   color: var(--ing-text-faint);
 }
 
@@ -2643,10 +2683,57 @@
   font-size: 1.3rem;
 }
 
-.ing-score-panel__stat--tier {
-  padding: 0.2rem 0.6rem;
-  border: 1px solid var(--ing-edge-soft);
-  border-radius: 999px;
+/* Selo do tier: borda grossa, padding mínimo e cores próprias por tier.
+   Não usa `TIER_COLOR` (lib/ingress-tiers.mjs) porque aquelas cores são as da
+   medalha do jogo — Onyx é #0c0f14 e Platinum um cinza opaco, ilegíveis sobre
+   o carvão do painel. Aqui cada tier tem fundo, borda e texto pensados pra
+   este fundo escuro. */
+.ing-score-panel__badge {
+  --badge-fg: var(--ing-text-dim);
+  --badge-border: var(--ing-edge-soft);
+  --badge-bg: transparent;
+  align-self: flex-start;
+  margin-top: 0.05rem;
+  padding: 0 0.45rem;
+  border: 2px solid var(--badge-border);
+  border-radius: 6px;
+  background: var(--badge-bg);
+  color: var(--badge-fg);
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.ing-score-panel__badge--bronze {
+  --badge-fg: #f0b27a;
+  --badge-border: #d08a4e;
+  --badge-bg: rgba(208, 138, 78, 0.16);
+}
+
+.ing-score-panel__badge--silver {
+  --badge-fg: #d5dde3;
+  --badge-border: #9aa4ac;
+  --badge-bg: rgba(154, 164, 172, 0.16);
+}
+
+.ing-score-panel__badge--gold {
+  --badge-fg: #ffe07a;
+  --badge-border: #ffd24a;
+  --badge-bg: rgba(255, 210, 74, 0.16);
+}
+
+.ing-score-panel__badge--platinum {
+  --badge-fg: #c4dcf5;
+  --badge-border: #8fb4dc;
+  --badge-bg: rgba(143, 180, 220, 0.18);
+}
+
+.ing-score-panel__badge--onyx {
+  --badge-fg: #f1f5f9;
+  --badge-border: #aab4c0;
+  --badge-bg: linear-gradient(180deg, #232a35, #090b0f);
 }
 
 .ing-score-panel__stat-label {
@@ -2661,6 +2748,47 @@
   font-weight: 700;
   font-size: 1.05rem;
   color: var(--ing-text);
+}
+
+/* Acima de ~36rem há espaço pra alinhar as duas linhas (2 agentes) em
+   colunas retas — cada coluna some com o valor mais largo que ela recebe
+   dos DOIS agentes (não só do seu próprio), o que um flex por linha nunca
+   consegue: o nome do 2º agente ("BayBadMan" vs "tm404") empurrava tudo à
+   direita dele por uma largura diferente da 1ª linha. `display: contents`
+   na linha tira sua própria caixa (perde o cartão arredondado individual)
+   e deixa os `<span>` filhos participarem direto do grid do pai — a linha
+   divisória (`border-bottom`) substitui o cartão. Abaixo do breakpoint,
+   cada agente continua empilhado/quebrando como cartão independente (T11
+   original) — 2 agentes forçados nas mesmas 9 colunas não cabem num
+   celular sem rolagem horizontal ou fonte ilegível. */
+@media (min-width: 36rem) {
+  .ing-score-panel {
+    display: grid;
+    grid-template-columns: max-content repeat(8, max-content);
+    column-gap: 1.4rem;
+    row-gap: 0;
+  }
+
+  .ing-score-panel__row {
+    display: contents;
+  }
+
+  .ing-score-panel__row > * {
+    padding: 0.75rem 0;
+  }
+
+  /* Divisória como item próprio do grid (o `::before` de um `display:
+     contents` vira filho do grid), e não `border-bottom` nas células — a
+     borda do selo de tier é dele e não pode ser sobrescrita por ela. */
+  .ing-score-panel__row + .ing-score-panel__row::before {
+    content: '';
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--ing-edge-soft);
+  }
+
+  .ing-score-panel__stat {
+    min-width: 0;
+  }
 }
 
 /* ─── "O que cada eixo mede" (iteração de UI: cartões + ícones de medalha) ─── */

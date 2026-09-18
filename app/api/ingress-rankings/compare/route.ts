@@ -13,6 +13,8 @@ type CompareRow = {
   axis_scores: Record<string, number>;
   stat_values: Record<string, number>;
   country_code: string | null;
+  rank: number;
+  total_agents: number;
 };
 
 function serialize(row: Record<string, unknown> | undefined): CompareRow | null {
@@ -26,6 +28,8 @@ function serialize(row: Record<string, unknown> | undefined): CompareRow | null 
     axis_scores: row.axis_scores as Record<string, number>,
     stat_values: row.stat_values as Record<string, number>,
     country_code: row.country_code as string | null,
+    rank: Number(row.rank),
+    total_agents: Number(row.total_agents),
   };
 }
 
@@ -52,10 +56,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ a: null, b: null });
     }
 
+    // `rank` usa a mesma ordenação canônica de `buildRankingPageQuery`
+    // (lib/ingress-rankings.mjs): nota geral desc -> AP total desc -> primeira
+    // medição asc. Precisa ser calculado sobre a tabela inteira, por isso o
+    // filtro por chave vem DEPOIS da CTE e não dentro dela.
     const rows = await sql`
-      SELECT codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, country_code
-      FROM casara.ingress_rankings
-      WHERE codename_key = ANY(${keys})
+      WITH ranked AS (
+        SELECT codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, country_code,
+               ROW_NUMBER() OVER (ORDER BY overall_score DESC, lifetime_ap DESC, created_at ASC) AS rank,
+               COUNT(*) OVER () AS total_agents
+        FROM casara.ingress_rankings
+      )
+      SELECT * FROM ranked WHERE codename_key = ANY(${keys})
     `;
     const byKey = new Map(rows.map((row) => [row.codename_key as string, row]));
 

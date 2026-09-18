@@ -20,6 +20,10 @@ export type Agent = {
   recursions?: number
   level?: number
   monthsSubscribed?: number
+  /** Só a aba Comparação preenche (agentes que estão no ranking) — a legenda do radar mostra nota geral e posição quando presentes. */
+  overallScore?: number
+  rank?: number
+  totalAgents?: number
 }
 
 /**
