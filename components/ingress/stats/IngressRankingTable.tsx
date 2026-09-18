@@ -1,6 +1,7 @@
 'use client'
 
 import {Fragment, useEffect, useRef, useState} from 'react'
+import {motion} from 'framer-motion'
 import {FaBalanceScale, FaShareAlt} from 'react-icons/fa'
 import {toast} from 'sonner'
 import Panel from '../Panel'
@@ -187,6 +188,9 @@ function MiniPlayStyleRadar({
 // tem por que o cliente pedir dado mais fresco do que o próprio cache permite.
 const POLL_MS = 20_000
 const SEARCH_DEBOUNCE_MS = 300
+
+/** Mola das linhas que trocam de lugar (ordenação, ou o poll de 20s reposicionando alguém). */
+const ROW_LAYOUT_TRANSITION = {type: 'spring', stiffness: 420, damping: 40} as const
 
 const fmtScore = (n: number) => Math.round(n).toString()
 const fmtDate = (iso: string, lang: Lang) =>
@@ -650,7 +654,7 @@ export default function IngressRankingTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => {
+            {rows.map((row, index) => {
               const isOpen = expanded === row.codename_key
               const isCompareMarked = pendingCompareKey === row.codename_key
               const rank = row.rank
@@ -666,7 +670,18 @@ export default function IngressRankingTable({
                   .join(' ') || undefined
               return (
                 <Fragment key={row.codename_key}>
-                  <tr
+                  {/*
+                    `layout="position"` só anima a troca de lugar, sem esticar a linha.
+                    `layoutDependency={index}` é o que segura o resto: sem ele o Framer mede
+                    as linhas a cada render (cada tecla na busca), e ao abrir um detalhe as
+                    de baixo deslizariam por cima da sub-linha, que aparece instantânea.
+                    Com o índice como dependência, só quem de fato mudou de posição na lista
+                    anima. Aberto/fechado não muda o índice de ninguém.
+                  */}
+                  <motion.tr
+                    layout="position"
+                    layoutDependency={index}
+                    transition={ROW_LAYOUT_TRANSITION}
                     className={rowClass}
                     onClick={toggle}
                     ref={(el) => {
@@ -750,7 +765,7 @@ export default function IngressRankingTable({
                         </button>
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                   {isOpen ? (
                     <tr className="ing-ranking-table__detail-row">
                       <td className="ing-ranking-table__detail-cell" colSpan={TOTAL_COLUMNS}>

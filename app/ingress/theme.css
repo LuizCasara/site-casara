@@ -65,6 +65,33 @@
   color: var(--ing-bg);
 }
 
+/*
+ * Barras de rolagem — a padrão do Windows (cinza-claro, com setas nas pontas)
+ * quebrava o tema escuro toda vez que a tabela, a tira de abas ou a própria
+ * página passavam a rolar em tela estreita. Só as propriedades padrão
+ * (`scrollbar-width`/`scrollbar-color`: Chrome 121+, Firefox, Safari 18.2+), sem
+ * `::-webkit-scrollbar`: onde as duas existem a padrão vence e a pseudo-elemento
+ * seria código morto. `scrollbar-color` herda e `scrollbar-width` não, daí o `*`.
+ *
+ * A página (o `html`) fica FORA do wrapper `.ingress-prime`, então não enxerga
+ * os tokens `--ing-*` e o `:has` a escopa só ao /ingress — sem ele a barra
+ * escura vazaria pro resto do site. Lá a trilha tem cor própria (#0b0f14, o
+ * `--ing-bg`), senão ela mostraria o fundo do `html`; dentro do wrapper a trilha
+ * é transparente pra não formar uma faixa diferente do painel em que está.
+ */
+html:has(.ingress-prime) {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(147, 167, 160, 0.4) #0b0f14;
+}
+
+.ingress-prime {
+  scrollbar-color: rgba(147, 167, 160, 0.4) transparent;
+}
+
+.ingress-prime * {
+  scrollbar-width: thin;
+}
+
 /* --- primitivas --- */
 
 .ing-shell {
@@ -4489,12 +4516,17 @@
    o rótulo mais longo do grupo, então abaixo de ~480px a régua vira uma tira
    com rolagem horizontal PRÓPRIA (não a página) em vez de quebrar linha —
    quebrar destruiria o visual "aba colada no painel" (border-radius só em
-   cima, `margin-bottom:-1px` encostando no painel). */
+   cima, `margin-bottom:-1px` encostando no painel).
+
+   Sem barra visível: ela ocupava uma faixa entre as abas e o painel e
+   desfazia justamente essa colagem. A aba cortada na borda direita já diz que
+   dá pra rolar, e o foco por teclado rola sozinho até a aba. */
 @media (max-width: 480px) {
   .ing-ranking-tabs {
     flex-wrap: nowrap;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
   .ing-ranking-tabs button {
     flex-shrink: 0;

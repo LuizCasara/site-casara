@@ -1,6 +1,7 @@
 'use client'
 
 import {Fragment, useState} from 'react'
+import {AnimatePresence, motion} from 'framer-motion'
 import {computeRadarAxes, compareRadar, RADAR_DRAW_MAX} from '@/lib/ingress-radar.mjs'
 import {fmtStat} from '@/lib/ingress-format.mjs'
 import {useLang} from '@/context/LanguageContext'
@@ -152,14 +153,24 @@ export default function RadarOverlay({agentA, agentB}: {agentA: Agent; agentB?: 
         })}
 
         <polygon points={shape(aAxes)} className={`ing-radar__shape${bAxes ? ' ing-radar__shape--muted' : ''}`} />
-        {bAxes ? <polygon points={shape(bAxes)} className="ing-radar__shape ing-radar__shape--them" /> : null}
-
-        {bAxes
-          ? bAxes.map((a, i) => {
-              const [x, y] = point(i, n, radiusIn(a.onyxRatio, bAxes))
-              return <circle key={a.id} cx={x} cy={y} r={4.5} className="ing-radar__dot ing-radar__dot--them" />
-            })
-          : null}
+        {/* `initial={false}`: quando a página já abre com A e B (link compartilhado) não há o que "aparecer". */}
+        <AnimatePresence initial={false}>
+          {bAxes ? (
+            <motion.g
+              key="agent-b"
+              initial={{opacity: 0}}
+              animate={{opacity: 1}}
+              exit={{opacity: 0}}
+              transition={{duration: 0.25}}
+            >
+              <polygon points={shape(bAxes)} className="ing-radar__shape ing-radar__shape--them" />
+              {bAxes.map((a, i) => {
+                const [x, y] = point(i, n, radiusIn(a.onyxRatio, bAxes))
+                return <circle key={a.id} cx={x} cy={y} r={4.5} className="ing-radar__dot ing-radar__dot--them" />
+              })}
+            </motion.g>
+          ) : null}
+        </AnimatePresence>
 
         {aAxes.map((a, i) => {
           const [x, y] = point(i, n, radiusIn(a.onyxRatio, aAxes))
@@ -194,20 +205,29 @@ export default function RadarOverlay({agentA, agentB}: {agentA: Agent; agentB?: 
   return (
     <>
       <div className="ing-radar__topbar">
-        {agentB ? (
-          <p className="ing-radar__legend">
-            <span className="ing-radar__legend-item ing-radar__legend-me">
-              <span>● {labelA}</span>
-              {legendMeta(agentA)}
-            </span>
-            <span className="ing-radar__legend-item ing-radar__legend-them">
-              <span>● {labelB}</span>
-              {legendMeta(agentB)}
-            </span>
-          </p>
-        ) : (
-          <span />
-        )}
+        <AnimatePresence initial={false}>
+          {agentB ? (
+            <motion.p
+              key="legend"
+              className="ing-radar__legend"
+              initial={{opacity: 0, y: -4}}
+              animate={{opacity: 1, y: 0}}
+              exit={{opacity: 0, y: -4}}
+              transition={{duration: 0.2}}
+            >
+              <span className="ing-radar__legend-item ing-radar__legend-me">
+                <span>● {labelA}</span>
+                {legendMeta(agentA)}
+              </span>
+              <span className="ing-radar__legend-item ing-radar__legend-them">
+                <span>● {labelB}</span>
+                {legendMeta(agentB)}
+              </span>
+            </motion.p>
+          ) : null}
+        </AnimatePresence>
+        {/* Mantém o toggle de escala colado à direita (`justify-content: space-between`) quando não há legenda. */}
+        {agentB ? null : <span />}
         <div className="ing-radar__scale" role="group" aria-label={t.scaleAria}>
           {SCALES.map((s) => (
             <button key={String(s.v)} type="button" aria-pressed={scale === s.v} onClick={() => setScale(s.v)}>

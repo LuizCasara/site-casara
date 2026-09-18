@@ -4,6 +4,7 @@ import {Toaster} from 'sonner'
 import IngressTopBar from '@/components/ingress/stats/IngressTopBar'
 import IngressFooter from '@/components/ingress/IngressFooter'
 import InstallPwaRegister from '@/components/ingress/InstallPwaRegister'
+import MotionProvider from '@/components/MotionProvider'
 import './theme.css'
 
 // Display / números / codinome — geométrica moderna, o registro do Ingress Prime.
@@ -79,7 +80,7 @@ export default function IngressLayout({children}: {children: React.ReactNode}) {
     <div className={`${sora.variable} ${barlow.variable} ingress-prime`}>
       <InstallPwaRegister />
       <IngressTopBar />
-      {children}
+      <MotionProvider>{children}</MotionProvider>
       <IngressFooter />
       <Toaster />
     </div>
