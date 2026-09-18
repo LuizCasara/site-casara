@@ -132,13 +132,14 @@ T16 → T17
 - Skill: NONE
 
 **Done when**:
-- [ ] `saveMyAgent`/`loadMyAgent` nunca lançam (localStorage bloqueado/indisponível cai em no-op/`null`)
-- [ ] Chave usada é distinta de `ing-cmp-sent` (a chave de dedupe do Telegram já existente)
-- [ ] Gate check passes: `npx tsc --noEmit`
-- [ ] Sem teste automatizado — repo não tem harness de browser (jsdom) para `localStorage`; mesma lacuna já aceita para o uso existente de `localStorage` em `ProfileRadar.tsx`
+- [x] `saveMyAgent`/`loadMyAgent` nunca lançam (localStorage bloqueado/indisponível cai em no-op/`null`)
+- [x] Chave usada é distinta de `ing-cmp-sent` (a chave de dedupe do Telegram já existente)
+- [x] Gate check passes: `npx tsc --noEmit`
+- [x] Sem teste automatizado — repo não tem harness de browser (jsdom) para `localStorage`; mesma lacuna já aceita para o uso existente de `localStorage` em `ProfileRadar.tsx`
 
 **Tests**: none
 **Gate**: full
+**Status**: ✅ Complete
 
 ---
 
@@ -156,7 +157,7 @@ T16 → T17
 
 **Done when**:
 - [ ] `trackIngressComparisonViewed` existe e segue o padrão (`trackEvent('ingress_comparison_viewed', {...})`)
-- [ ] `grep -rn "trackIngressCompareVsMe\|trackIngressCompareTwoAgents"` não retorna nenhum chamador antes de remover as duas funções deste arquivo (rodar essa checagem só depois de T9/T10 estarem commitadas — se esta task rodar antes, adiar a remoção das duas funções para dentro de T10, deixando aqui só a adição da nova)
+- [ ] Remoção de `trackIngressCompareVsMe`/`trackIngressCompareTwoAgents` adiada para T10 (ainda têm chamador em `StatsRadarSection.tsx` até T9/T10 removerem os modos `vs-me`/`two`) — decisão já prevista nesta própria task
 - [ ] Gate check passes: `npx tsc --noEmit`
 - [ ] Sem teste automatizado — nenhuma outra função `trackIngressX` deste arquivo tem teste
 
