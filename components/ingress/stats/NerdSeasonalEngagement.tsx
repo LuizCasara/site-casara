@@ -3,6 +3,7 @@
 import {fmtStat} from '@/lib/ingress-format.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import {useLang} from '@/context/LanguageContext'
+import CountUp from '../CountUp'
 import NerdAgentTag from './NerdAgentTag'
 import type {HallOfFameRecord} from './NerdHallOfFame'
 
@@ -70,7 +71,7 @@ export default function NerdSeasonalEngagement({metrics}: {metrics: Record<strin
               <span className="ing-nerd-hof-label">{labels[key]}</span>
               <span className="ing-nerd-seasonal-figures">
                 <span className="ing-nerd-hof-value" title={t.total}>
-                  {fmtStat(metric.sum)}
+                  <CountUp value={metric.sum} />
                 </span>
                 <span className="ing-nerd-seasonal-reported" title={t.reportedBy}>
                   {fmtStat(metric.reportedCount)} {t.reportedBy.toLowerCase()}

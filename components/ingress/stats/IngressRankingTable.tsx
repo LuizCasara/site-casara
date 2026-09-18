@@ -1,9 +1,10 @@
 'use client'
 
 import {Fragment, useEffect, useRef, useState} from 'react'
-import {motion} from 'framer-motion'
+import {motion, useReducedMotion} from 'framer-motion'
 import {FaBalanceScale, FaShareAlt} from 'react-icons/fa'
 import {toast} from 'sonner'
+import {TextScramble} from '@/components/ui/text-scramble'
 import Panel from '../Panel'
 import AgentHistoryChart from './AgentHistoryChart'
 import {fmtStat} from '@/lib/ingress-format.mjs'
@@ -341,6 +342,8 @@ export default function IngressRankingTable({
 }) {
   const {lang} = useLang()
   const t = T[lang]
+  // O scramble é JS (timers), então nem o CSS nem o `MotionConfig` o alcançam.
+  const reduceMotion = useReducedMotion()
   const [rows, setRows] = useState(initialRows)
   const [total, setTotal] = useState<number | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -727,7 +730,22 @@ export default function IngressRankingTable({
                       ) : null}
                     </td>
                     <td data-col="codename">
-                      <span className="ing-ranking-table__codename">{row.codename}</span>
+                      {/*
+                        O nome se "decodifica" (mesmo efeito do nome na home) quando a linha
+                        monta: no 1º carregamento e ao entrar numa página/filtro novo. O SSR
+                        já manda o nome inteiro (o estado inicial do componente é o próprio
+                        texto), então sem JS e pra buscadores nada muda. As linhas têm `key`
+                        estável, então poll, ordenação e abrir o detalhe NÃO refazem o efeito.
+                      */}
+                      <TextScramble
+                        as="span"
+                        className="ing-ranking-table__codename"
+                        duration={0.6}
+                        speed={0.04}
+                        trigger={!reduceMotion}
+                      >
+                        {row.codename}
+                      </TextScramble>
                     </td>
                     <td data-col="dates" title={t.datesTooltip(fmtDate(row.updated_at, lang), fmtDate(row.created_at, lang))}>
                       {fmtDate(row.updated_at, lang)}

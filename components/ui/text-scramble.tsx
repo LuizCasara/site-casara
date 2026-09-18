@@ -1,5 +1,5 @@
 'use client';
-import {type JSX, useEffect, useState} from 'react';
+import {type JSX, useEffect, useMemo, useState} from 'react';
 import {motion, MotionProps} from 'framer-motion';
 
 type TextScrambleProps = {
@@ -27,8 +27,12 @@ export function TextScramble({
   onScrambleComplete,
   ...props
 }: TextScrambleProps) {
-  const MotionComponent = motion.create(
-    Component as keyof JSX.IntrinsicElements
+  // Memoizado: `motion.create` devolve um tipo de componente NOVO a cada chamada,
+  // e como cada quadro do scramble re-renderiza, sem o `useMemo` o React
+  // desmontava e remontava o elemento a ~25x por segundo.
+  const MotionComponent = useMemo(
+    () => motion.create(Component as keyof JSX.IntrinsicElements),
+    [Component]
   );
   const [displayText, setDisplayText] = useState(children);
   const [isAnimating, setIsAnimating] = useState(false);
