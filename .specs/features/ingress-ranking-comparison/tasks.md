@@ -408,15 +408,16 @@ T16 → T17
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Selecionar A e B (diferentes) renderiza radar sobreposto + painel lado a lado sem colar nenhum texto
-- [ ] Só A ou só B preenchido → mensagem de espera, nunca uma comparação parcial
-- [ ] A === B → bloqueado, mensagem inline, nenhuma chamada a `/compare`
-- [ ] `trackIngressComparisonViewed` dispara exatamente uma vez por par completo (não a cada re-render/seleção intermediária)
-- [ ] Falha do endpoint de comparação → erro inline, selects continuam preenchidos, dá pra tentar de novo
-- [ ] Gate check passes: `npx tsc --noEmit && npm run lint`
+- [x] Selecionar A e B (diferentes) renderiza radar sobreposto + painel lado a lado sem colar nenhum texto — `result.status==='ready' && result.a && result.b` monta `RadarOverlay`+`OverallScorePanel` a partir só de `CompareRow`
+- [x] Só A ou só B preenchido → mensagem de espera (`t.waitingHintOne`), nunca uma comparação parcial (o branch de render exige os dois lados presentes)
+- [x] A === B → `sameAgent` calculado sem esperar fetch nenhum; efeito principal retorna cedo (`status:'blocked'`) sem chamar `/compare`
+- [x] `trackIngressComparisonViewed` dispara exatamente uma vez por par completo — `trackedPairRef` dedupe por `"a|b"`, só reseta quando o par muda de verdade
+- [x] Falha do endpoint de comparação → `status:'error'`, botão "Tentar de novo" (`retryTick`), selects continuam com `value` preenchido
+- [x] Gate check passes: `npx tsc --noEmit && npm run lint` (0 erros; ainda não montado em nenhuma tela — T14 faz a religação)
 
 **Tests**: none (componente — ver matrix)
 **Gate**: full
+**Status**: ✅ Complete
 
 ---
 
