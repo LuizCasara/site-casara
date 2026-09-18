@@ -652,3 +652,12 @@ Nenhuma violação — todas as tasks que tocam a única camada com teste automa
 **Fix**: a lógica de "limpar chave inválida" foi movida pra dentro do `.then()` do próprio fetch (única cópia do efeito), onde `agentAKey`/`agentBKey` da closure são garantidamente os mesmos que geraram aquela resposta — sem essa correlação errada, o `useEffect` extra foi removido.
 **Onde**: `components/ingress/stats/IngressComparisonTab.tsx`
 **Verificado**: `npx tsc --noEmit` limpo, `npx eslint` limpo, `npm test` 436/436, `npm run build` limpo. Correção de timing client-side, sem superfície testável por `curl` — verificada por rastreamento de código (a raiz do bug e a correção foram confirmadas linha a linha).
+
+---
+
+## Fix 3 (pós-UAT do Luiz): atalho "Comparar" da tabela vira toggle
+
+**Pedido**: clicar "Comparar" numa linha já presente em A ou B deve LIBERAR aquele campo (toggle off) em vez de só empilhar; clicar num agente novo continua preenchendo A se vazio, senão substituindo B.
+**Fix**: `handleCompareRow` em `IngressRankingTabs.tsx` ganhou 2 ramos novos antes da regra existente: `agentAKey===codenameKey → limpa A`; `agentBKey===codenameKey → limpa B`. Simétrico entre A e B (o pedido citou só A explicitamente, mas o mesmo toggle em B é a generalização natural — sem isso, clicar 2x na linha de B não faria nada em vez de liberar o campo).
+**Onde**: `components/ingress/stats/IngressRankingTabs.tsx`
+**Verificado**: `npx tsc --noEmit` limpo, `npx eslint` limpo, `npm test` 436/436, `npm run build` limpo. Lógica pura de estado client-side, verificada por rastreamento de código.

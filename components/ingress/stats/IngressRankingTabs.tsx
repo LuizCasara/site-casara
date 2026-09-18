@@ -106,9 +106,17 @@ export default function IngressRankingTabs({
     setBFromUrl(false)
   }
 
-  /** Atalho "Comparar" de uma linha (P2, IRCMP-31/32): A vazio -> preenche A; senão -> substitui B. */
+  /**
+   * Atalho "Comparar" de uma linha (P2, IRCMP-31/32) — alternável (pedido do
+   * Luiz depois do UAT): clicar de novo no agente que já está em A ou B
+   * libera aquele campo (toggle off), em vez de só empilhar. Clicar num
+   * agente novo preenche A se estiver vazio; senão substitui B (o 3º clique
+   * "roda" o segundo campo, nunca o primeiro).
+   */
   const handleCompareRow = (codenameKey: string) => {
-    if (!agentAKey) handleChangeA(codenameKey)
+    if (agentAKey === codenameKey) handleChangeA(null)
+    else if (agentBKey === codenameKey) handleChangeB(null)
+    else if (!agentAKey) handleChangeA(codenameKey)
     else handleChangeB(codenameKey)
     setTab('compare')
   }
