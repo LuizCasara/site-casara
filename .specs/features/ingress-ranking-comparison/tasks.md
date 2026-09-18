@@ -642,3 +642,13 @@ Nenhuma violação — todas as tasks que tocam a única camada com teste automa
 **Fix**: trocada a ordem dos dois `<img>` em dois pontos (`AgentSelect.tsx` — badges do campo fechado e cada `<li>` de opção). Nenhuma mudança de CSS necessária (flex row, ordem visual segue a ordem no DOM).
 **Verificado**: `npx tsc --noEmit` limpo, `npx eslint components/ingress/AgentSelect.tsx` só os 4 warnings `<img>` já esperados, `npm test` 436/436, `npm run build` limpo.
 **Também corrigido**: T1's "Done when" tinha aritmética errada de contagem de testes ("420 → 436, 16 novos") — medição real (`git diff 2ddfe9d..28f5dc5 -- lib/ingress-rankings.test.mjs | grep -c '^+test('`) é 13 testes novos (423 → 436). Corrigido na task acima.
+
+---
+
+## Fix 2 (pós-UAT do Luiz): "B" pisca e é limpo sozinho na aba Comparação
+
+**Bug reportado**: ao preencher o segundo select (Agente B) na aba Comparação, o campo pisca e volta a ficar vazio sozinho.
+**Causa raiz**: `IngressComparisonTab.tsx` tinha um `useEffect` separado (observando `result`) que limpava em silêncio uma chave não encontrada — mas lia `result` de um ciclo de fetch ANTERIOR (não correlacionado com o `agentAKey`/`agentBKey` atuais), porque efeitos de um mesmo commit não veem a atualização de estado de um efeito irmão que rodou antes na mesma passada. Sequência exata: usuário escolhe A (fetch resolve `{a, b:null}`) → usuário escolhe B → o efeito de fetch dispara de novo (novo fetch com A+B), MAS o efeito de "limpar inválido" também dispara nessa mesma passada, lendo ainda o `result` antigo (`b:null`, de quando B nem existia) → concluía "B não existe" e chamava `onChangeB(null)`, limpando o campo que acabara de ser preenchido.
+**Fix**: a lógica de "limpar chave inválida" foi movida pra dentro do `.then()` do próprio fetch (única cópia do efeito), onde `agentAKey`/`agentBKey` da closure são garantidamente os mesmos que geraram aquela resposta — sem essa correlação errada, o `useEffect` extra foi removido.
+**Onde**: `components/ingress/stats/IngressComparisonTab.tsx`
+**Verificado**: `npx tsc --noEmit` limpo, `npx eslint` limpo, `npm test` 436/436, `npm run build` limpo. Correção de timing client-side, sem superfície testável por `curl` — verificada por rastreamento de código (a raiz do bug e a correção foram confirmadas linha a linha).

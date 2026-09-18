@@ -144,6 +144,18 @@ export default function IngressComparisonTab({
       .then((data: {a: CompareRow | null; b: CompareRow | null}) => {
         if (cancelled) return
         setResult({status: 'ready', a: data.a, b: data.b})
+        // Chave inválida vinda do localStorage/atalho de linha (não da URL)
+        // limpa em silêncio — a que veio da URL fica como aviso inline
+        // (IRCMP-27/35). Feito aqui dentro do `.then()`, não num efeito
+        // separado observando `result`: `agentAKey`/`agentBKey` nesta
+        // closure são garantidamente os MESMOS que geraram este fetch — um
+        // efeito à parte lendo `result` via `useEffect([result, ...])`
+        // rodava com um `result` de um fetch anterior (ainda não atualizado
+        // nesse ciclo de render) sempre que A/B mudava, e acabava limpando o
+        // campo recém-preenchido por engano (bug relatado: B "pisca e é
+        // limpo" ao ser escolhido).
+        if (agentAKey && !data.a && !aFromUrl) onChangeA(null)
+        if (agentBKey && !data.b && !bFromUrl) onChangeB(null)
       })
       .catch(() => {
         if (!cancelled) setResult({status: 'error'})
@@ -151,15 +163,7 @@ export default function IngressComparisonTab({
     return () => {
       cancelled = true
     }
-  }, [agentAKey, agentBKey, sameAgent, retryTick])
-
-  // Chave inválida vinda do localStorage/atalho de linha (não da URL) limpa
-  // em silêncio — a que veio da URL fica como aviso inline (IRCMP-27/35).
-  useEffect(() => {
-    if (result.status !== 'ready') return
-    if (agentAKey && !result.a && !aFromUrl) onChangeA(null)
-    if (agentBKey && !result.b && !bFromUrl) onChangeB(null)
-  }, [result, agentAKey, agentBKey, aFromUrl, bFromUrl, onChangeA, onChangeB])
+  }, [agentAKey, agentBKey, sameAgent, retryTick, aFromUrl, bFromUrl, onChangeA, onChangeB])
 
   useEffect(() => {
     if (result.status !== 'ready' || !result.a || !result.b) return
