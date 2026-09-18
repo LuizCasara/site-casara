@@ -222,12 +222,12 @@ Hoje, comparar dois agentes em `/ingress/ranking` exige colar dois exports de te
 | IRCMP-28 | P1: Fluxo simplificado | Tasks | Implementing |
 | IRCMP-29 | P1: Fluxo simplificado | Tasks | Implementing |
 | IRCMP-30 | P1: Fluxo simplificado | Tasks | Implementing |
-| IRCMP-31 | P2: Atalho na linha | - | Pending |
-| IRCMP-32 | P2: Atalho na linha | - | Pending |
-| IRCMP-33 | P2: Atalho na linha | - | Pending |
-| IRCMP-34 | P2: Link compartilhável | - | Pending |
-| IRCMP-35 | P2: Link compartilhável | - | Pending |
-| IRCMP-36 | P2: Link compartilhável | - | Pending |
+| IRCMP-31 | P2: Atalho na linha | Tasks | Implementing |
+| IRCMP-32 | P2: Atalho na linha | Tasks | Implementing |
+| IRCMP-33 | P2: Atalho na linha | Tasks | Implementing |
+| IRCMP-34 | P2: Link compartilhável | Tasks | Implementing |
+| IRCMP-35 | P2: Link compartilhável | Tasks | Implementing |
+| IRCMP-36 | P2: Link compartilhável | Tasks | Implementing |
 | IRCMP-37 | Edge case: falha do endpoint de comparação | - | Pending |
 | IRCMP-38 | Edge case: dado desatualizado | - | Pending |
 | IRCMP-39 | Edge case: localStorage limpo | - | Pending |
