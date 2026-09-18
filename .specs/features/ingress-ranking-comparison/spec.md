@@ -232,7 +232,7 @@ Hoje, comparar dois agentes em `/ingress/ranking` exige colar dois exports de te
 | IRCMP-38 | Edge case: dado desatualizado | - | Pending |
 | IRCMP-39 | Edge case: localStorage limpo | - | Pending |
 | IRCMP-40 | Edge case: paginação inconsistente | - | Pending |
-| IRCMP-41 | Edge case: responsividade mobile | - | Pending |
+| IRCMP-41 | Edge case: responsividade mobile | Tasks | Implementing |
 
 **ID format:** `IRCMP-[NUMBER]`
 

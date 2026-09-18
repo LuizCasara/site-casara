@@ -3839,6 +3839,74 @@
   outline-offset: 2px;
 }
 
+/* Card de instalar o PWA — só no hub `/ingress`, ver InstallPwaCard.tsx. */
+.ing-hub__install {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--ing-panel);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--ing-edge);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--ing-lift);
+}
+
+.ing-hub__install svg {
+  font-size: 1.6rem;
+  color: var(--ing-green);
+  flex-shrink: 0;
+}
+
+.ing-hub__install-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.ing-hub__install-text strong {
+  font-family: var(--ing-font-display);
+  font-size: 1.05rem;
+}
+
+.ing-hub__install-text span {
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-hub__install-btn {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--ing-accent);
+  color: var(--ing-bg);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease;
+}
+
+.ing-hub__install-btn:hover,
+.ing-hub__install-btn:focus-visible {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 34rem) {
+  .ing-hub__install {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ing-hub__install-btn {
+    align-self: stretch;
+    text-align: center;
+  }
+}
+
 .ing-hub__links {
   display: flex;
   flex-direction: column;
@@ -4249,4 +4317,291 @@
     justify-content: flex-end;
     max-width: none;
   }
+}
+
+/* ─── Comparação por seleção (ingress-ranking-comparison, T16) ───────────── */
+
+/* A aba "Comparação" é a 4ª — a régua de abas não tinha `flex-wrap`/scroll
+   próprio porque 3 rótulos curtos sempre coube; "Comparação"/"Comparison" é
+   o rótulo mais longo do grupo, então abaixo de ~480px a régua vira uma tira
+   com rolagem horizontal PRÓPRIA (não a página) em vez de quebrar linha —
+   quebrar destruiria o visual "aba colada no painel" (border-radius só em
+   cima, `margin-bottom:-1px` encostando no painel). */
+@media (max-width: 480px) {
+  .ing-ranking-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ing-ranking-tabs button {
+    flex-shrink: 0;
+  }
+}
+
+/* Botão "Comparar" por linha (P2, IRCMP-31/32) — pill compacta ao lado do
+   ícone de compartilhar, mesma altura/paleta. No celular a coluna inteira
+   (`details`) colapsa como já acontecia com o compartilhar; a duplicata
+   dentro do detalhe (`.ing-ranking-table__detail-share`, classe já
+   compartilhada com o botão de compartilhar) ganha alvo de toque de 44px —
+   só ali, porque é o único lugar onde esse controle é de fato tocado num
+   celular (na linha "de mesa" ele some via `col[data-col='details']`
+   colapsado, igual ao compartilhar). */
+.ing-ranking-table col[data-col='details'] {
+  width: 6.4rem;
+}
+.ing-ranking-table td[data-col='details'] {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+.ing-ranking-table__compare {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--ing-edge-soft);
+  background: transparent;
+  color: var(--ing-text-dim);
+  font-size: 0.72rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.ing-ranking-table__compare:hover,
+.ing-ranking-table__compare:focus-visible {
+  color: var(--ing-green-soft);
+  border-color: var(--ing-edge);
+}
+@media (max-width: 640px) {
+  .ing-ranking-table col[data-col='details'] {
+    visibility: collapse;
+    width: 0;
+  }
+  .ing-ranking-table__compare.ing-ranking-table__detail-share {
+    min-height: 2.75rem;
+    padding-inline: 0.9rem;
+  }
+}
+
+/* Paginação da tabela principal (IRCMP-16/17) — seletor de tamanho de
+   página + anterior/próxima, mesma paleta dos outros controles `ing-radar__
+   btn`-like da feature. `flex-wrap` garante que não force rolagem horizontal
+   em telas estreitas (IRCMP-41). */
+.ing-ranking-table__pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--ing-edge-soft);
+}
+.ing-ranking-table__page-size {
+  display: flex;
+  gap: 0.3rem;
+}
+.ing-ranking-table__page-size button {
+  min-width: 2.2rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--ing-edge-soft);
+  background: transparent;
+  color: var(--ing-text-dim);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.ing-ranking-table__page-size button.is-active {
+  color: var(--ing-text);
+  border-color: var(--ing-green-soft);
+}
+.ing-ranking-table__page-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+  white-space: nowrap;
+}
+
+/* ─── `AgentSelect` (combobox assíncrono do seletor de agentes) ───────────
+   Mesma estrutura visual de `.ing-country-picker` (combobox+listbox ARIA),
+   adaptada pra opções carregadas do servidor: cada item ganha facção+país+
+   nickname+AP, e o rodapé da lista pode ser um item "próxima página" ou um
+   estado de carregando/erro/vazio em vez de mais uma opção. */
+.ing-agent-select {
+  position: relative;
+  margin-top: 0.3rem;
+}
+.ing-agent-select.is-invalid .ing-agent-select__input {
+  border-color: #ff8f6b;
+}
+.ing-agent-select__input {
+  width: 100%;
+  font-family: var(--ing-font-body);
+  font-size: 0.85rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--ing-edge);
+  background: var(--ing-bg-2);
+  color: var(--ing-text);
+}
+.ing-agent-select__input:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 1px;
+}
+.ing-agent-select__selected-badges {
+  position: absolute;
+  left: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  pointer-events: none;
+}
+.ing-agent-select:has(.ing-agent-select__selected-badges) .ing-agent-select__input {
+  padding-left: 3.1rem;
+}
+.ing-agent-select__list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.2rem);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  border-radius: 8px;
+  border: 1px solid var(--ing-edge);
+  background: var(--ing-bg-2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.ing-agent-select__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  /* min-height ~44px (IRCMP AC10 do seletor: alvo de toque em mobile) —
+     a lista é a mesma em qualquer largura, não só abaixo de um breakpoint,
+     já que abrir o seletor por toque é o caminho principal em celular. */
+  min-height: 2.75rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+  cursor: pointer;
+}
+.ing-agent-select__option.is-active,
+.ing-agent-select__option:hover {
+  background: rgba(0, 230, 118, 0.12);
+  color: var(--ing-green-soft);
+}
+.ing-agent-select__option-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--ing-font-display);
+  color: var(--ing-text);
+}
+.ing-agent-select__option-ap {
+  font-variant-numeric: tabular-nums;
+  color: var(--ing-text-faint);
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+.ing-agent-select__flag-placeholder {
+  display: inline-block;
+  width: 18px;
+  flex-shrink: 0;
+}
+.ing-agent-select__load-more,
+.ing-agent-select__status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  color: var(--ing-text-faint);
+  text-align: center;
+  cursor: default;
+}
+.ing-agent-select__load-more {
+  cursor: pointer;
+  color: var(--ing-green-soft);
+}
+.ing-agent-select__load-more.is-active,
+.ing-agent-select__load-more:hover {
+  background: rgba(0, 230, 118, 0.12);
+}
+.ing-agent-select__status--error {
+  color: #ff8f6b;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.ing-agent-select__status--error button {
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid var(--ing-edge-soft);
+  background: transparent;
+  color: var(--ing-text);
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+/* ─── Aba "Comparação" (`IngressComparisonTab`) ───────────────────────────
+   Dois `AgentSelect` lado a lado no desktop, empilhados no celular
+   (IRCMP-41) — `minmax(0, 1fr)` em cada coluna evita que um nickname longo
+   estoure a grade (mesmo motivo de `min-width: 0` já usado noutros lugares
+   do tema pra filhos flex/grid com texto). */
+.ing-comparison-tab__selects {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.8rem;
+  margin-bottom: 0.9rem;
+}
+.ing-comparison-tab__select-col label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+}
+.ing-comparison-tab__error {
+  margin: 0.4rem 0 0;
+  font-size: 0.76rem;
+  color: #ff8f6b;
+}
+.ing-comparison-tab__hint {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ing-text-faint);
+  text-align: center;
+}
+@media (max-width: 640px) {
+  .ing-comparison-tab__selects {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── `OverallScorePanel` com AP/país/facção (T11) ────────────────────────
+   Emblemas antes do nome do agente, só quando a aba Comparação os passa
+   (`StatsRadarSection` não usa — sem mudança visual ali). */
+.ing-score-panel__agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.ing-score-panel__faction-icon,
+.ing-score-panel__flag {
+  border-radius: 2px;
+  flex-shrink: 0;
 }

@@ -386,12 +386,12 @@ T16 → T17
 - [x] Digitar substitui a lista pelos resultados da busca no servidor (debounce 300ms); limpar o campo volta pra navegação por página, reiniciando da 1ª (`handleChange` chama `loadPage({})` sem cursor quando o texto fica vazio)
 - [x] Busca sem resultado mostra `t.emptySearch`; ranking vazio mostra `t.emptyNoAgents` — mesmo branch (`options.length === 0`), texto decidido por `isSearching`
 - [x] Falha de rede (`fetchAgents` retorna `null`) → `state:'error'` com botão "Tentar de novo" que re-executa a última operação (busca ou página), sem afetar o resto da página
-- [ ] Alvo de toque ≥44×44px nos itens da lista — **deferido pro T16** (CSS ainda não existe; a marcação já usa `<li>` inteiro como área clicável, pronta pra receber o `min-height`/padding)
+- [x] Alvo de toque ≥44×44px nos itens da lista — resolvido em T16 (`.ing-agent-select__option { min-height: 2.75rem }`, `<li>` inteiro é a área clicável)
 - [x] Gate check passes: `npx tsc --noEmit && npm run lint` (só warnings pré-existentes de `<img>`)
 
 **Tests**: none (componente — ver matrix)
 **Gate**: full
-**Status**: ✅ Complete (item de alvo de toque explicitamente deferido pro T16, ver acima)
+**Status**: ✅ Complete
 
 ---
 
@@ -491,13 +491,15 @@ T16 → T17
 - Skill: `frontend-design` (só se precisar de decisão estética não-trivial; a maior parte é seguir o padrão visual já estabelecido no arquivo)
 
 **Done when**:
-- [ ] Em ~375-400px de largura: aba Comparação, seletor e tabela paginada funcionam sem rolagem horizontal
-- [ ] Dois `AgentSelect` empilham verticalmente em mobile
-- [ ] Radar sobreposto + painel de detalhes se adaptam à largura disponível
-- [ ] Controles de paginação/busca continuam alcançáveis sem rolagem horizontal
-- [ ] Gate check passes: `npm run build`
+- [x] Em ~375-400px de largura: aba Comparação (grid 1 coluna abaixo de 640px), seletor (lista já ocupa 100% da largura do campo) e tabela paginada (`ing-ranking-table__pagination` com `flex-wrap`) funcionam sem rolagem horizontal — a tabela em si já tinha `overflow-x:auto` isolado no próprio `.ing-ranking-table__wrap` (pré-existente), não na página
+- [x] Dois `AgentSelect` empilham verticalmente em mobile (`.ing-comparison-tab__selects { grid-template-columns: 1fr }` abaixo de 640px)
+- [x] Radar sobreposto + painel de detalhes se adaptam à largura disponível — herdado sem mudança: `.ing-radar__cmp-layout` já tinha `@media` responsivo pré-existente (linha 1899), e `RadarOverlay` (T8) reaproveita essa marcação verbatim
+- [x] Controles de paginação/busca alcançáveis sem rolagem horizontal (`flex-wrap` em `__pagination`/`__toolbar`, já existente pro toolbar)
+- [x] Botão "Comparar" por linha: alvo de toque ≥44px só na duplicata mobile (`.ing-ranking-table__compare.ing-ranking-table__detail-share`), consistente com o alvo do `AgentSelect` (`.ing-agent-select__option`, também 2.75rem/44px)
+- [x] Gate check passes: `npm run build` — limpo, nenhum erro de CSS/PostCSS
 
 **Tests**: none (CSS — ver matrix)
+**Status**: ✅ Complete
 **Gate**: build
 
 ---
