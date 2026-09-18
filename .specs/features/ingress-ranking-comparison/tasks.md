@@ -381,16 +381,17 @@ T16 → T17
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] Abrir sem digitar nada mostra a 1ª página (até 100), ordenada por nickname (case-insensitive)
-- [ ] "Próxima página" acrescenta a 2ª leva sem descartar a 1ª; some quando não há mais páginas
-- [ ] Digitar substitui a lista pelos resultados da busca no servidor; limpar o campo volta pra navegação por página, reiniciando da 1ª
-- [ ] Busca sem resultado mostra estado vazio explicativo; ranking vazio (nenhum agente cadastrado) também mostra estado vazio
-- [ ] Falha de rede mostra erro com "tentar de novo" sem quebrar o resto da página
-- [ ] Alvo de toque ≥ ~44×44px nos itens da lista (mobile)
-- [ ] Gate check passes: `npx tsc --noEmit && npm run lint`
+- [x] Abrir sem digitar nada mostra a 1ª página (até 100), ordenada por nickname (case-insensitive) — `handleFocus` dispara `loadPage({})` quando `state.status==='idle'`
+- [x] "Próxima página" acrescenta a 2ª leva sem descartar a 1ª (`loadPage({append:true})` concatena `[...prevOptions, ...result.rows]`); some quando `hasMore` vira `false`
+- [x] Digitar substitui a lista pelos resultados da busca no servidor (debounce 300ms); limpar o campo volta pra navegação por página, reiniciando da 1ª (`handleChange` chama `loadPage({})` sem cursor quando o texto fica vazio)
+- [x] Busca sem resultado mostra `t.emptySearch`; ranking vazio mostra `t.emptyNoAgents` — mesmo branch (`options.length === 0`), texto decidido por `isSearching`
+- [x] Falha de rede (`fetchAgents` retorna `null`) → `state:'error'` com botão "Tentar de novo" que re-executa a última operação (busca ou página), sem afetar o resto da página
+- [ ] Alvo de toque ≥44×44px nos itens da lista — **deferido pro T16** (CSS ainda não existe; a marcação já usa `<li>` inteiro como área clicável, pronta pra receber o `min-height`/padding)
+- [x] Gate check passes: `npx tsc --noEmit && npm run lint` (só warnings pré-existentes de `<img>`)
 
 **Tests**: none (componente — ver matrix)
 **Gate**: full
+**Status**: ✅ Complete (item de alvo de toque explicitamente deferido pro T16, ver acima)
 
 ---
 
