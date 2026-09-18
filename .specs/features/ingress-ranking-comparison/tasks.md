@@ -232,15 +232,16 @@ T16 → T17
 - Skill: NONE
 
 **Done when**:
-- [ ] `?a=<key>` sozinho resolve só `a`, `b` vem `null`
-- [ ] `?a=<key>&b=<key-diferente>` resolve ambos
-- [ ] `?a=<key>&b=<mesmo-key>` → 400
-- [ ] `codename_key` inexistente → aquele lado volta `null`, sem erro 404/500
-- [ ] Sem `a` nem `b` → `{a:null,b:null}` (200)
-- [ ] Gate check passes: `npm test && npx tsc --noEmit && npm run lint`
+- [x] `?a=<key>` sozinho resolve só `a`, `b` vem `null` (confirmado no smoke test)
+- [x] `?a=<key>&b=<key-diferente>` resolve ambos — por inspeção do código (`ANY(${keys})` + `Map` por chave)
+- [x] `?a=<key>&b=<mesmo-key>` → 400 (confirmado no smoke test: `{"error":"a e b não podem ser o mesmo agente"}`)
+- [x] `codename_key` inexistente → aquele lado volta `null`, sem erro 404/500 (`byKey.get` retorna `undefined` → `serialize(undefined)` → `null`)
+- [x] Sem `a` nem `b` → `{a:null,b:null}` (200) (confirmado no smoke test)
+- [x] Gate check passes: `npm test && npx tsc --noEmit && npm run lint`
 
 **Tests**: none (rota — ver matrix)
 **Gate**: full
+**Status**: ✅ Complete
 
 ---
 
