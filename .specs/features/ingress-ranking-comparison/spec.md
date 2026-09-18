@@ -192,11 +192,11 @@ Hoje, comparar dois agentes em `/ingress/ranking` exige colar dois exports de te
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| IRCMP-01 | P1: Comparar 2 agentes | - | Pending |
-| IRCMP-02 | P1: Comparar 2 agentes | - | Pending |
-| IRCMP-03 | P1: Comparar 2 agentes | - | Pending |
-| IRCMP-04 | P1: Comparar 2 agentes | - | Pending |
-| IRCMP-05 | P1: Comparar 2 agentes | - | Pending |
+| IRCMP-01 | P1: Comparar 2 agentes | Tasks | Implementing |
+| IRCMP-02 | P1: Comparar 2 agentes | Tasks | Implementing |
+| IRCMP-03 | P1: Comparar 2 agentes | Tasks | Implementing |
+| IRCMP-04 | P1: Comparar 2 agentes | Tasks | Implementing |
+| IRCMP-05 | P1: Comparar 2 agentes | Tasks | Implementing |
 | IRCMP-06 | P1: Seletor por nickname | Tasks | Implementing |
 | IRCMP-07 | P1: Seletor por nickname | Tasks | Implementing |
 | IRCMP-08 | P1: Seletor por nickname | Tasks | Implementing |
@@ -228,17 +228,17 @@ Hoje, comparar dois agentes em `/ingress/ranking` exige colar dois exports de te
 | IRCMP-34 | P2: Link compartilhável | Tasks | Implementing |
 | IRCMP-35 | P2: Link compartilhável | Tasks | Implementing |
 | IRCMP-36 | P2: Link compartilhável | Tasks | Implementing |
-| IRCMP-37 | Edge case: falha do endpoint de comparação | - | Pending |
-| IRCMP-38 | Edge case: dado desatualizado | - | Pending |
-| IRCMP-39 | Edge case: localStorage limpo | - | Pending |
-| IRCMP-40 | Edge case: paginação inconsistente | - | Pending |
+| IRCMP-37 | Edge case: falha do endpoint de comparação | Tasks | Implementing |
+| IRCMP-38 | Edge case: dado desatualizado | Tasks | Implementing |
+| IRCMP-39 | Edge case: localStorage limpo | Tasks | Implementing |
+| IRCMP-40 | Edge case: paginação inconsistente | Tasks | Implementing |
 | IRCMP-41 | Edge case: responsividade mobile | Tasks | Implementing |
 
 **ID format:** `IRCMP-[NUMBER]`
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 41 total, 0 mapped to tasks, 41 unmapped ⚠️ (mapeamento ocorre na fase Design/Tasks)
+**Coverage:** 41 total, 41 mapeados a tasks (T1–T16), 0 unmapeados. Todos em `Implementing` — a virada final para `Verified` é do Verifier independente (`validation.md`), não autoatribuída pelo autor da implementação.
 
 ---
 

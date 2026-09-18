@@ -11,7 +11,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/ingress-ranking-comparison/design.md`
-**Status**: Approved
+**Status**: Done (T1–T17 completas; falta a validação independente do Verifier)
 
 ---
 
@@ -517,13 +517,14 @@ T16 → T17
 - Skill: NONE
 
 **Done when**:
-- [ ] `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run build` passam limpos
-- [ ] Checagem manual dos fluxos-chave listados acima, sem quebra
-- [ ] `spec.md` — Requirement Traceability atualizada, `Coverage` no rodapé reflete o real (41 mapeados)
-- [ ] Gate check passes: `npm run build`
+- [x] `npm test` (436 passando, 0 falhas), `npx tsc --noEmit` (limpo), `npm run lint` nos arquivos da feature (0 erros, só os warnings `<img>`/`_userName` já pré-existentes), `npm run build` (limpo) — todos passaram
+- [x] Checagem manual via `curl`+log do dev server (sem verificação visual automática, por diretriz do projeto): `/ingress/ranking` 200; `?tab=compare&a=fencherlc&b=gal0daxj` 200 (link compartilhável com 2 agentes reais); `?tab=compare&a=fencherlc` 200 (mesmo formato da CTA "Comparar meu status"); `?tab=compare&a=agente-inexistente` 200 (não quebra); `/api/ingress-rankings/compare?a=fencherlc&b=gal0daxj` resolve os dois nomes corretamente; `?destaque=chicofera` 200; `faction=xyz` (inválido) cai no default sem filtrar; paginação/ordenação/busca/filtro reais contra os 30 agentes cadastrados (ver evidência em T15) — zero erros no log do dev server em toda a sessão. **UAT visual (clicar/tocar na tela) continua pendente do Luiz**, como já registrado em memória para este projeto
+- [x] `spec.md` — Requirement Traceability: 41/41 IDs mapeados, todos `Implementing`; `Coverage` no rodapé atualizado; linha duplicada antiga removida
+- [x] Gate check passes: `npm run build`
 
 **Tests**: none
 **Gate**: build
+**Status**: ✅ Complete
 
 ---
 
