@@ -431,3 +431,10 @@ export const trackIngressRankingShared = (metodo: 'share' | 'clipboard') =>
 // compartilham a posição de um agente específico vs. o ranking como um todo.
 export const trackIngressAgentShared = (metodo: 'share' | 'clipboard') =>
   trackEvent('ingress_agent_shared', { metodo });
+
+// Dispara só quando os dois agentes terminam de carregar e a comparação é de
+// fato renderizada na aba "Comparação" — não a cada tecla/seleção
+// intermediária no seletor (gesto deliberado, não travessia contínua, mesmo
+// critério que já vale para o resto dos eventos de `/ingress`).
+export const trackIngressComparisonViewed = (codenameKeyA: string, codenameKeyB: string) =>
+  trackEvent('ingress_comparison_viewed', { codenameKeyA, codenameKeyB });

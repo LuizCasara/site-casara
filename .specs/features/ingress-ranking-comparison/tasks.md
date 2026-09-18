@@ -156,13 +156,14 @@ T16 → T17
 - Skill: NONE
 
 **Done when**:
-- [ ] `trackIngressComparisonViewed` existe e segue o padrão (`trackEvent('ingress_comparison_viewed', {...})`)
-- [ ] Remoção de `trackIngressCompareVsMe`/`trackIngressCompareTwoAgents` adiada para T10 (ainda têm chamador em `StatsRadarSection.tsx` até T9/T10 removerem os modos `vs-me`/`two`) — decisão já prevista nesta própria task
-- [ ] Gate check passes: `npx tsc --noEmit`
-- [ ] Sem teste automatizado — nenhuma outra função `trackIngressX` deste arquivo tem teste
+- [x] `trackIngressComparisonViewed` existe e segue o padrão (`trackEvent('ingress_comparison_viewed', {...})`)
+- [x] Remoção de `trackIngressCompareVsMe`/`trackIngressCompareTwoAgents` adiada para T10 (ainda têm chamador em `StatsRadarSection.tsx` até T9/T10 removerem os modos `vs-me`/`two`) — decisão já prevista nesta própria task
+- [x] Gate check passes: `npx tsc --noEmit`
+- [x] Sem teste automatizado — nenhuma outra função `trackIngressX` deste arquivo tem teste
 
 **Tests**: none
 **Gate**: full
+**Status**: ✅ Complete
 
 ---
 
