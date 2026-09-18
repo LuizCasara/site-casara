@@ -358,12 +358,13 @@ T16 → T17
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] `StatsRadarSection` (que não passa os campos novos) renderiza pixel-idêntico a antes (checagem manual)
-- [ ] Quando `lifetimeAp`/`countryCode`/`faction` são passados, aparecem na linha do agente
-- [ ] Gate check passes: `npx tsc --noEmit && npm run lint`
+- [x] `StatsRadarSection` (que não passa os campos novos) renderiza pixel-idêntico a antes — os 3 blocos novos (`faction`/`countryCode`/`lifetimeAp`) são todos condicionais (`agent.faction ? ... : null`, etc.), e esse chamador nunca passa esses campos
+- [x] Quando `lifetimeAp`/`countryCode`/`faction` são passados, aparecem na linha do agente (bandeira + ícone de facção antes do nome, AP total como novo `ing-score-panel__stat`)
+- [x] Gate check passes: `npx tsc --noEmit && npm run lint` (só os 2 warnings pré-existentes de `<img>`, já aceitos no resto do `/ingress`)
 
 **Tests**: none (componente — ver matrix)
 **Gate**: full
+**Status**: ✅ Complete
 
 ---
 

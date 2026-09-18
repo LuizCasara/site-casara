@@ -3,7 +3,22 @@
 import Panel from '../Panel'
 import {TIER_COLOR, tierLabel} from '@/lib/ingress-tiers.mjs'
 import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
+import {flagSrc} from '@/lib/ingress-countries.mjs'
+import {fmtStat} from '@/lib/ingress-format.mjs'
 import {useLang} from '@/context/LanguageContext'
+
+/**
+ * Mesmo par de caminhos já usado em `IngressRankingTable.tsx` (`FACTION_ICON`)
+ * — logos oficiais de facção (hexágono), CC BY-NC-SA 3.0.
+ */
+const FACTION_ICON: Record<'enlightened' | 'resistance', string> = {
+  enlightened: '/ingress/factions/enlightened.svg',
+  resistance: '/ingress/factions/resistance.svg',
+}
+const FACTION_LABEL: Record<'enlightened' | 'resistance', string> = {
+  enlightened: 'Enlightened',
+  resistance: 'Resistance',
+}
 
 /** Mesma escada de `lib/ingress-tier-score.mjs`, reconstruída aqui só pra escolher a cor do selo a partir da nota geral (já na escala 0-100). */
 const RANK_TO_TIER_KEY = ['none', 'bronze', 'silver', 'gold', 'platinum', 'onyx'] as const
@@ -39,6 +54,10 @@ export type AgentScore = {
   overallScore: number
   axisScores: Record<string, number>
   tier: string
+  /** Opcionais — só a aba Comparação (T13) os passa; `StatsRadarSection` não usa, sem mudança visual ali. */
+  lifetimeAp?: number
+  countryCode?: string | null
+  faction?: 'enlightened' | 'resistance'
 }
 
 const T = {
@@ -47,12 +66,14 @@ const T = {
     panelHint: 'média dos 5 eixos × 20 — 100 = Onyx em tudo',
     overallRow: 'Nota geral',
     tierRow: 'Tier',
+    apRow: 'AP total',
   },
   en: {
     panelLabel: 'Overall score',
     panelHint: 'average of the 5 axes × 20 — 100 = Onyx across the board',
     overallRow: 'Overall score',
     tierRow: 'Tier',
+    apRow: 'Total AP',
   },
 } as const
 
@@ -72,11 +93,41 @@ export default function OverallScorePanel({agents}: {agents: AgentScore[]}) {
       <div className="ing-score-panel">
         {agents.map((agent) => (
           <div key={agent.label} className="ing-score-panel__row">
-            <span className="ing-score-panel__agent">{agent.label}</span>
+            <span className="ing-score-panel__agent">
+              {agent.faction ? (
+                <img
+                  src={FACTION_ICON[agent.faction]}
+                  alt={FACTION_LABEL[agent.faction]}
+                  title={FACTION_LABEL[agent.faction]}
+                  width={18}
+                  height={18}
+                  className="ing-score-panel__faction-icon"
+                />
+              ) : null}
+              {agent.countryCode ? (
+                <img
+                  src={flagSrc(agent.countryCode)}
+                  alt=""
+                  width={18}
+                  height={13}
+                  className="ing-score-panel__flag"
+                  onError={(e) => {
+                    e.currentTarget.style.visibility = 'hidden'
+                  }}
+                />
+              ) : null}
+              {agent.label}
+            </span>
             <span className="ing-score-panel__stat ing-score-panel__stat--overall">
               <span className="ing-score-panel__stat-label">{t.overallRow}</span>
               <span className="ing-score-panel__stat-value">{fmtScore(agent.overallScore)}</span>
             </span>
+            {agent.lifetimeAp !== undefined ? (
+              <span className="ing-score-panel__stat">
+                <span className="ing-score-panel__stat-label">{t.apRow}</span>
+                <span className="ing-score-panel__stat-value">{fmtStat(agent.lifetimeAp)}</span>
+              </span>
+            ) : null}
             <span
               className="ing-score-panel__stat ing-score-panel__stat--tier"
               style={{borderColor: tierColorFromScore(agent.overallScore)}}
