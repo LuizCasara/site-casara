@@ -215,13 +215,13 @@ Hoje, comparar dois agentes em `/ingress/ranking` exige colar dois exports de te
 | IRCMP-21 | P1: Paginar/buscar tabela principal | Tasks | Implementing |
 | IRCMP-22 | P1: Paginar/buscar tabela principal | Tasks | Implementing |
 | IRCMP-23 | P1: Paginar/buscar tabela principal | Tasks | Implementing |
-| IRCMP-24 | P1: Comparar meu status | - | Pending |
-| IRCMP-25 | P1: Comparar meu status | - | Pending |
-| IRCMP-26 | P1: Comparar meu status | - | Pending |
-| IRCMP-27 | P1: Comparar meu status | - | Pending |
+| IRCMP-24 | P1: Comparar meu status | Tasks | Implementing |
+| IRCMP-25 | P1: Comparar meu status | Tasks | Implementing |
+| IRCMP-26 | P1: Comparar meu status | Tasks | Implementing |
+| IRCMP-27 | P1: Comparar meu status | Tasks | Implementing |
 | IRCMP-28 | P1: Fluxo simplificado | Tasks | Implementing |
 | IRCMP-29 | P1: Fluxo simplificado | Tasks | Implementing |
-| IRCMP-30 | P1: Fluxo simplificado | - | Pending |
+| IRCMP-30 | P1: Fluxo simplificado | Tasks | Implementing |
 | IRCMP-31 | P2: Atalho na linha | - | Pending |
 | IRCMP-32 | P2: Atalho na linha | - | Pending |
 | IRCMP-33 | P2: Atalho na linha | - | Pending |

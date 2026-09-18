@@ -157,7 +157,8 @@ export default function ProfileRadar({
   agentName?: string
   capturedAt?: string
   variant?: 'default' | 'ranking'
-  onCompare?: (agents: {a: Agent; b?: Agent}, mode: 'vs-me' | 'two' | 'solo') => void
+  /** Só chamado em `variant="ranking"`, onde o único fluxo é "colar + enviar" (mode sempre 'solo', nunca há `b`). */
+  onCompare?: (agent: Agent) => void
 }) {
   const {lang} = useLang()
   const t = T[lang]
@@ -214,7 +215,7 @@ export default function ProfileRadar({
       setCmp(b ? {a, b} : {a})
       setError(null)
       if (variant === 'ranking') {
-        onCompare?.({a, b}, mode)
+        onCompare?.(a)
       } else if (b) {
         notifyTelegram(a, b, mode === 'vs-me', flagSent)
       }

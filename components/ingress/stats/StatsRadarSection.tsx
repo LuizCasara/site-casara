@@ -6,7 +6,8 @@ import ProfileRadar, {type Agent} from '../ProfileRadar'
 import OverallScorePanel, {type AgentScore} from './OverallScorePanel'
 import {normalizeCodenameKey} from '@/lib/ingress-rankings.mjs'
 import {RADAR_STAT_KEYS} from '@/lib/ingress-compare-message.mjs'
-import {trackIngressCompareVsMe, trackIngressCompareTwoAgents, trackIngressRankingJoin} from '@/utils/analytics'
+import {trackIngressRankingJoin} from '@/utils/analytics'
+import {saveMyAgent} from '@/lib/ingress-my-agent'
 import {useLang} from '@/context/LanguageContext'
 
 /** Textos bilíngues dos toasts (ISTATS-19 fix) — `pt` reproduz o texto anterior. */
@@ -14,10 +15,12 @@ const T = {
   pt: {
     rankToast: (rank: number) => `Você está em ${rank}º lugar no ranking!`,
     errorToast: 'Não foi possível atualizar seu registro agora.',
+    compareMyStatusBtn: 'Comparar meu status',
   },
   en: {
     rankToast: (rank: number) => `You're in ${rank}${rankSuffixEn(rank)} place in the ranking!`,
     errorToast: 'Could not update your record right now.',
+    compareMyStatusBtn: 'Compare my status',
   },
 } as const
 
@@ -107,18 +110,20 @@ async function postAgent(agent: Agent): Promise<RankingResponse | null> {
 }
 
 /**
- * Orquestra o `ProfileRadar` em modo `ranking`: decide quais agentes colados
- * de fato precisam ser gravados (nunca o FencherLC vindo de prop), dispara os
- * POSTs em paralelo, atualiza o painel de notas e mostra o toast de posição
- * (ou de falha suave). Único lugar que fala com `/api/ingress-rankings` no
- * caminho de escrita.
+ * Orquestra o `ProfileRadar` em modo `ranking`: posta o export colado (único
+ * fluxo possível nesta variant, desde que os modos `vs-me`/`two` saíram
+ * daqui — T9), atualiza o painel de notas, mostra o toast de posição (ou de
+ * falha suave), salva o `codename_key` como "meu agente" e libera a CTA
+ * "Comparar meu status" pra ir direto pra aba Comparação (T14 lê o
+ * `?tab=compare&a=` que essa navegação escreve). Único lugar que fala com
+ * `/api/ingress-rankings` no caminho de escrita.
  */
 export default function StatsRadarSection({
   fencherlc,
   onWritten,
 }: {
   fencherlc: FencherlcInfo
-  /** Chamado sempre que algum POST desta submissão gravou (`written:true`) — sinal pra quem mostra a tabela completa refazer o GET. */
+  /** Chamado sempre que o POST desta submissão gravou (`written:true`) — sinal pra quem mostra a tabela completa refazer o GET. */
   onWritten?: () => void
 }) {
   const {lang} = useLang()
@@ -126,56 +131,26 @@ export default function StatsRadarSection({
   // Começa vazio — a nota geral só aparece depois da 1ª submissão (não
   // pré-carrega o FencherLC aqui, mesmo motivo do radar nascer em branco).
   const [panelAgents, setPanelAgents] = useState<AgentScore[]>([])
+  const [myAgentKey, setMyAgentKey] = useState<string | null>(null)
 
-  const handleCompare = async ({a, b}: {a: Agent; b?: Agent}, mode: 'vs-me' | 'two' | 'solo') => {
-    // Em vs-me, `a` é sempre o `me` estático (vindo de prop, nunca postado);
-    // em two/solo, tudo que chega aqui foi colado de verdade pelo visitante —
-    // posta independente do codinome, inclusive quando alguém cola o export
-    // real do próprio FencherLC (é uma submissão dele, não a baseline
-    // estática). Antes isso era decidido comparando codinome com "FencherLC",
-    // o que também bloqueava o próprio FencherLC de se auto-atualizar.
-    const isStaticBaseline = (agent: Agent) => mode === 'vs-me' && agent === a
-    const toPost = [a, b].filter((agent): agent is Agent => !!agent && !isStaticBaseline(agent))
-    const settled = await Promise.allSettled(toPost.map((agent) => postAgent(agent)))
-    const responses = settled.map((s) => (s.status === 'fulfilled' ? s.value : null))
-
-    const responseByCodename = new Map<string, RankingResponse | null>()
-    toPost.forEach((agent, i) => responseByCodename.set(normalizeCodenameKey(agent.codename), responses[i]))
-
-    const agentScoreFor = (agent: Agent): AgentScore | null => {
-      if (isStaticBaseline(agent)) {
-        return {label: fencherlc.agentName, overallScore: fencherlc.overallScore, axisScores: fencherlc.axisScores, tier: fencherlc.tier}
-      }
-      const response = responseByCodename.get(normalizeCodenameKey(agent.codename))
-      return response
-        ? {label: agent.codename, overallScore: response.overallScore, axisScores: response.axisScores, tier: response.tier}
-        : null
-    }
-
-    const nextPanelAgents = [a, b]
-      .filter((agent): agent is Agent => !!agent)
-      .map(agentScoreFor)
-      .filter((score): score is AgentScore => !!score)
-    if (nextPanelAgents.length > 0) setPanelAgents(nextPanelAgents)
-
-    if (toPost.length > 0) {
-      const written = responses.some((r) => r?.written)
-      if (mode === 'solo') trackIngressRankingJoin(written)
-      else if (mode === 'vs-me') trackIngressCompareVsMe(written)
-      else trackIngressCompareTwoAgents(written)
-    }
-
-    // "primeiro colado" = o primeiro item de toPost em qualquer modo (o único
-    // pasted em vs-me/solo, o agente A em dois-agentes) — é ele quem recebe o toast.
-    const primaryResponse = toPost.length > 0 ? responses[0] : null
-    if (primaryResponse) {
-      toast.success(t.rankToast(primaryResponse.rank))
-    } else if (toPost.length > 0) {
+  const handleCompare = async (agent: Agent) => {
+    const response = await postAgent(agent)
+    if (response) {
+      setPanelAgents([
+        {label: agent.codename, overallScore: response.overallScore, axisScores: response.axisScores, tier: response.tier},
+      ])
+      // "Sucesso" = o POST respondeu (agente aceito) — independente do
+      // debounce de 5min (`written:false`) ter bloqueado a gravação desta
+      // vez. O agente já mandou dados válidos; a identidade é legítima.
+      const codenameKey = normalizeCodenameKey(agent.codename)
+      saveMyAgent(codenameKey)
+      setMyAgentKey(codenameKey)
+      trackIngressRankingJoin(response.written)
+      toast.success(t.rankToast(response.rank))
+      if (response.written) onWritten?.()
+    } else {
+      trackIngressRankingJoin(false)
       toast.error(t.errorToast)
-    }
-
-    if (responses.some((r) => r?.written)) {
-      onWritten?.()
     }
   }
 
@@ -189,6 +164,14 @@ export default function StatsRadarSection({
         onCompare={handleCompare}
       />
       {panelAgents.length > 0 ? <OverallScorePanel agents={panelAgents} /> : null}
+      {myAgentKey ? (
+        <a
+          className="ing-radar__btn ing-radar__btn--primary ing-stats-radar-section__compare-cta"
+          href={`/ingress/ranking?tab=compare&a=${encodeURIComponent(myAgentKey)}`}
+        >
+          {t.compareMyStatusBtn}
+        </a>
+      ) : null}
     </div>
   )
 }

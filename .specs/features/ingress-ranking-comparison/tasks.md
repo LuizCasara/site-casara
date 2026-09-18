@@ -333,13 +333,14 @@ T16 → T17
 - Skill: `nextjs-use-client`
 
 **Done when**:
-- [ ] `ProfileRadar`'s `onCompare` prop type simplifica para `(agent: Agent) => void` (sem `mode`/`b`) — atualizar a assinatura em `ProfileRadar.tsx` também, já que T9 já tornou `b` sempre `undefined` em `ranking`
-- [ ] Após um envio bem-sucedido (`written:true` OU `written:false` por debounce — ambos contam como "sucesso"), `localStorage` ganha a chave de `lib/ingress-my-agent.ts` com o `codename_key` certo
-- [ ] Botão "Comparar meu status" só aparece depois de uma submissão bem-sucedida nesta sessão
-- [ ] `trackIngressCompareVsMe`/`trackIngressCompareTwoAgents` removidas de `utils/analytics.ts` nesta task (completa o que T3 deixou pendente) — confirmar via `grep` que não sobra nenhum chamador
-- [ ] Gate check passes: `npm test && npx tsc --noEmit && npm run lint`
+- [x] `ProfileRadar`'s `onCompare` prop type simplifica para `(agent: Agent) => void` (sem `mode`/`b`), chamado como `onCompare?.(a)`
+- [x] Após um envio bem-sucedido (`response !== null` — `written:true` OU `written:false` por debounce, ambos contam), `localStorage` ganha a chave de `lib/ingress-my-agent.ts` com o `codename_key` certo
+- [x] Botão "Comparar meu status" (um `<a href="/ingress/ranking?tab=compare&a=...">`, navegação real de mesma origem — mesmo mecanismo do design.md, mais simples que `window.location.href` num handler) só aparece depois de uma submissão bem-sucedida nesta sessão (`myAgentKey !== null`)
+- [x] `trackIngressCompareVsMe`/`trackIngressCompareTwoAgents` removidas de `utils/analytics.ts` — `grep` confirma zero chamadores antes da remoção
+- [x] Gate check passes: `npm test` (436 passando) `&& npx tsc --noEmit && npm run lint` (0 erros novos) — `curl` confirma `/ingress/ranking` 200
 
 **Tests**: none (componente — ver matrix); T3 e a remoção aqui não adicionam lógica pura nova, só religação
+**Status**: ✅ Complete
 **Gate**: full
 
 ---
