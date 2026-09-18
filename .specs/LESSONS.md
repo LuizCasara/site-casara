@@ -56,6 +56,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: lib/ingress-countries.mjs:6-11 (next-bundling)
 - last seen: 2026-09-13T21:16:07Z
 
+### L-008 - When a spec quotes an exact element order (e.g. badge/icon sequence), diff the rendered JSX order against that literal quote, not just check that every element is present.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `components` · harmful: 0
+- features: ingress-ranking-comparison
+- evidence: components/ingress/AgentSelect.tsx:200 (components)
+- last seen: 2026-09-18T05:46:10Z
+
+### L-009 - A guard clause in an API route with no automated test (e.g. an a===b identity check) can be inverted by a one-character edit and still pass test+tsc+lint+build; flag such guards for manual re-check whenever the route is touched again.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
+- features: ingress-ranking-comparison
+- evidence: app/api/ingress-rankings/compare/route.ts:46 (routes)
+- last seen: 2026-09-18T05:46:15Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

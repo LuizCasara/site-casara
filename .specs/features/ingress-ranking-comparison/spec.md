@@ -192,53 +192,53 @@ Hoje, comparar dois agentes em `/ingress/ranking` exige colar dois exports de te
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| IRCMP-01 | P1: Comparar 2 agentes | Tasks | Implementing |
-| IRCMP-02 | P1: Comparar 2 agentes | Tasks | Implementing |
-| IRCMP-03 | P1: Comparar 2 agentes | Tasks | Implementing |
-| IRCMP-04 | P1: Comparar 2 agentes | Tasks | Implementing |
-| IRCMP-05 | P1: Comparar 2 agentes | Tasks | Implementing |
-| IRCMP-06 | P1: Seletor por nickname | Tasks | Implementing |
-| IRCMP-07 | P1: Seletor por nickname | Tasks | Implementing |
-| IRCMP-08 | P1: Seletor por nickname | Tasks | Implementing |
-| IRCMP-09 | P1: Seletor por nickname | Tasks | Implementing |
-| IRCMP-10 | P1: Seletor por nickname | Tasks | Implementing |
-| IRCMP-11 | P1: Seletor por nickname | Tasks | Implementing |
-| IRCMP-12 | P1: Seletor por nickname | Tasks | Implementing |
-| IRCMP-13 | P1: Seletor por nickname | Tasks | Implementing |
-| IRCMP-14 | P1: Seletor por nickname | Tasks | Implementing |
-| IRCMP-15 | P1: Seletor por nickname | Tasks | Implementing |
-| IRCMP-16 | P1: Paginar/buscar tabela principal | Tasks | Implementing |
-| IRCMP-17 | P1: Paginar/buscar tabela principal | Tasks | Implementing |
-| IRCMP-18 | P1: Paginar/buscar tabela principal | Tasks | Implementing |
-| IRCMP-19 | P1: Paginar/buscar tabela principal | Tasks | Implementing |
-| IRCMP-20 | P1: Paginar/buscar tabela principal | Tasks | Implementing |
-| IRCMP-21 | P1: Paginar/buscar tabela principal | Tasks | Implementing |
-| IRCMP-22 | P1: Paginar/buscar tabela principal | Tasks | Implementing |
-| IRCMP-23 | P1: Paginar/buscar tabela principal | Tasks | Implementing |
-| IRCMP-24 | P1: Comparar meu status | Tasks | Implementing |
-| IRCMP-25 | P1: Comparar meu status | Tasks | Implementing |
-| IRCMP-26 | P1: Comparar meu status | Tasks | Implementing |
-| IRCMP-27 | P1: Comparar meu status | Tasks | Implementing |
-| IRCMP-28 | P1: Fluxo simplificado | Tasks | Implementing |
-| IRCMP-29 | P1: Fluxo simplificado | Tasks | Implementing |
-| IRCMP-30 | P1: Fluxo simplificado | Tasks | Implementing |
-| IRCMP-31 | P2: Atalho na linha | Tasks | Implementing |
-| IRCMP-32 | P2: Atalho na linha | Tasks | Implementing |
-| IRCMP-33 | P2: Atalho na linha | Tasks | Implementing |
-| IRCMP-34 | P2: Link compartilhável | Tasks | Implementing |
-| IRCMP-35 | P2: Link compartilhável | Tasks | Implementing |
-| IRCMP-36 | P2: Link compartilhável | Tasks | Implementing |
-| IRCMP-37 | Edge case: falha do endpoint de comparação | Tasks | Implementing |
-| IRCMP-38 | Edge case: dado desatualizado | Tasks | Implementing |
-| IRCMP-39 | Edge case: localStorage limpo | Tasks | Implementing |
-| IRCMP-40 | Edge case: paginação inconsistente | Tasks | Implementing |
-| IRCMP-41 | Edge case: responsividade mobile | Tasks | Implementing |
+| IRCMP-01 | P1: Comparar 2 agentes | Tasks | Verified |
+| IRCMP-02 | P1: Comparar 2 agentes | Tasks | Verified |
+| IRCMP-03 | P1: Comparar 2 agentes | Tasks | Verified |
+| IRCMP-04 | P1: Comparar 2 agentes | Tasks | Verified |
+| IRCMP-05 | P1: Comparar 2 agentes | Tasks | Verified |
+| IRCMP-06 | P1: Seletor por nickname | Tasks | Verified |
+| IRCMP-07 | P1: Seletor por nickname | Tasks | Verified |
+| IRCMP-08 | P1: Seletor por nickname | Tasks | Verified |
+| IRCMP-09 | P1: Seletor por nickname | Tasks | Verified |
+| IRCMP-10 | P1: Seletor por nickname | Tasks | Verified |
+| IRCMP-11 | P1: Seletor por nickname | Tasks | Verified |
+| IRCMP-12 | P1: Seletor por nickname | Tasks | Verified |
+| IRCMP-13 | P1: Seletor por nickname | Tasks | Verified |
+| IRCMP-14 | P1: Seletor por nickname | Tasks | Verified |
+| IRCMP-15 | P1: Seletor por nickname | Tasks | Verified |
+| IRCMP-16 | P1: Paginar/buscar tabela principal | Tasks | Verified |
+| IRCMP-17 | P1: Paginar/buscar tabela principal | Tasks | Verified |
+| IRCMP-18 | P1: Paginar/buscar tabela principal | Tasks | Verified |
+| IRCMP-19 | P1: Paginar/buscar tabela principal | Tasks | Verified |
+| IRCMP-20 | P1: Paginar/buscar tabela principal | Tasks | Verified |
+| IRCMP-21 | P1: Paginar/buscar tabela principal | Tasks | Verified |
+| IRCMP-22 | P1: Paginar/buscar tabela principal | Tasks | Verified |
+| IRCMP-23 | P1: Paginar/buscar tabela principal | Tasks | Verified |
+| IRCMP-24 | P1: Comparar meu status | Tasks | Verified |
+| IRCMP-25 | P1: Comparar meu status | Tasks | Verified |
+| IRCMP-26 | P1: Comparar meu status | Tasks | Verified |
+| IRCMP-27 | P1: Comparar meu status | Tasks | Verified |
+| IRCMP-28 | P1: Fluxo simplificado | Tasks | Verified |
+| IRCMP-29 | P1: Fluxo simplificado | Tasks | Verified |
+| IRCMP-30 | P1: Fluxo simplificado | Tasks | Verified |
+| IRCMP-31 | P2: Atalho na linha | Tasks | Verified |
+| IRCMP-32 | P2: Atalho na linha | Tasks | Verified |
+| IRCMP-33 | P2: Atalho na linha | Tasks | Verified |
+| IRCMP-34 | P2: Link compartilhável | Tasks | Verified |
+| IRCMP-35 | P2: Link compartilhável | Tasks | Verified |
+| IRCMP-36 | P2: Link compartilhável | Tasks | Verified |
+| IRCMP-37 | Edge case: falha do endpoint de comparação | Tasks | Verified |
+| IRCMP-38 | Edge case: dado desatualizado | Tasks | Verified |
+| IRCMP-39 | Edge case: localStorage limpo | Tasks | Verified |
+| IRCMP-40 | Edge case: paginação inconsistente | Tasks | Verified |
+| IRCMP-41 | Edge case: responsividade mobile | Tasks | Verified |
 
 **ID format:** `IRCMP-[NUMBER]`
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 41 total, 41 mapeados a tasks (T1–T16), 0 unmapeados. Todos em `Implementing` — a virada final para `Verified` é do Verifier independente (`validation.md`), não autoatribuída pelo autor da implementação.
+**Coverage:** 41 total, 41 mapeados a tasks (T1–T16), 0 unmapeados. Todos `Verified` pelo Verifier independente (`validation.md`, re-verificado em `390bc89` após o fix de IRCMP-06) — não autoatribuído pelo autor da implementação.
 
 ---
 
