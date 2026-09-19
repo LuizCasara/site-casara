@@ -2120,6 +2120,16 @@ html:has(.ingress-prime) {
   color: var(--ing-green-soft);
 }
 
+/* O cabeçalho "País" não tem rótulo — a bandeira se explica sozinha e o texto
+   `nowrap` invadia o "Codinome" ao lado. O nome fica só no `title`/`aria-label`
+   do botão; ele ocupa a célula inteira pra continuar clicável (ordenar por
+   país) sem nada escrito, e a seta só aparece quando é a ordenação ativa. */
+.ing-ranking-table th[data-col='country'] .ing-ranking-table__sort-btn {
+  width: 100%;
+  min-height: 1.4rem;
+  justify-content: center;
+}
+
 .ing-ranking-table th[data-col='construcao'],
 .ing-ranking-table th[data-col='destruicao'],
 .ing-ranking-table th[data-col='exploracao'],
@@ -3123,34 +3133,50 @@ html:has(.ingress-prime) {
 }
 
 /*
- * >760px: tabela completa, igual à versão web (nada muda até aqui — é
- * exatamente o breakpoint que o Luiz pediu pra não mexer).
+ * Painel >=860px: tabela completa, igual à versão web.
  *
- * <=760px: somem as 5 colunas de eixo (C/D/E/H/LF) — são o dado mais denso
- * e o menos essencial pra reconhecer um agente batendo o olho na tabela; a
- * mesma informação (com nome completo, não a sigla) já está na sub-linha de
- * detalhe que abre ao clicar.
+ * Painel <860px: somem as 5 colunas de eixo (C/D/E/H/LF) e as datas — são o
+ * dado mais denso e o menos essencial pra reconhecer um agente batendo o olho
+ * na tabela; a mesma informação (com nome completo, não a sigla) já está na
+ * sub-linha de detalhe que abre ao clicar.
  *
- * Só `visibility: collapse` no `<col>` — NENHUM `display: none` no `th`/`td`
- * correspondente. Motivo (achado inspecionando o DOM renderizado, não só o
- * CSS): num `<table>` com `table-layout: fixed`, o Chromium casa célula com
- * coluna pela ORDEM das células que ainda estão no fluxo — uma célula com
- * `display: none` sai da contagem, mas o `<col>` dela continua ocupando uma
- * posição no `<colgroup>`. Resultado: cada célula visível DEPOIS da
- * escondida desliza uma posição pra trás e herda a largura do `<col>`
- * errado (foi assim que a coluna "AP total" ficou com largura 0 — ela
- * "roubava" a largura da coluna anterior escondida). `visibility: collapse`
- * sozinho não tem esse problema: a célula continua contando pra ordem, só
- * não é desenhada (o próprio spec de CSS Tables existe pra isso).
+ * É `@container` sobre `.ing-ranking-table__wrap`, NÃO `@media` sobre o
+ * viewport (era `max-width: 760px`). As colunas de largura fixa somam ~705px
+ * (ver os `col[data-col]` acima) e o codinome, a única sem largura, fica com o
+ * que sobra: num iPad Mini (768px de tela, ~700px de painel) ele ficava com
+ * ~0 e o nome era desenhado por cima da data. O painel só passa a comportar a
+ * tabela completa a partir de ~860px — o mesmo limiar do `@container` do
+ * detalhe, mais abaixo — o que corresponde a ~930px de tela.
+ *
+ * `display: none` no `<col>`, no `th` E no `td` — os três juntos. Antes era só
+ * `visibility: collapse` no `<col>`, e num navegador móvel a coluna ficava com
+ * largura 0 mas as células continuavam sendo desenhadas: os valores de C/D/E/
+ * H/LF (e a data, ver o bloco de 640px) se empilhavam por cima do "AP total".
+ * Esconder só o `td`/`th` sem o `<col>` é o erro oposto (cada célula visível
+ * depois da escondida desliza uma posição e herda a largura do `<col>` errado
+ * — foi assim que o "AP total" já ficou com largura 0). Tirar os três da
+ * grade de uma vez mantém células e `<col>` casando.
  */
-@media (max-width: 760px) {
+@container (max-width: 859.98px) {
   .ing-ranking-table col[data-col='construcao'],
   .ing-ranking-table col[data-col='destruicao'],
   .ing-ranking-table col[data-col='exploracao'],
   .ing-ranking-table col[data-col='hacking'],
-  .ing-ranking-table col[data-col='linksCampos'] {
-    visibility: collapse;
-    width: 0;
+  .ing-ranking-table col[data-col='linksCampos'],
+  .ing-ranking-table th[data-col='construcao'],
+  .ing-ranking-table th[data-col='destruicao'],
+  .ing-ranking-table th[data-col='exploracao'],
+  .ing-ranking-table th[data-col='hacking'],
+  .ing-ranking-table th[data-col='linksCampos'],
+  .ing-ranking-table td[data-col='construcao'],
+  .ing-ranking-table td[data-col='destruicao'],
+  .ing-ranking-table td[data-col='exploracao'],
+  .ing-ranking-table td[data-col='hacking'],
+  .ing-ranking-table td[data-col='linksCampos'],
+  .ing-ranking-table col[data-col='dates'],
+  .ing-ranking-table th[data-col='dates'],
+  .ing-ranking-table td[data-col='dates'] {
+    display: none;
   }
 }
 
@@ -3167,36 +3193,41 @@ html:has(.ingress-prime) {
   }
 
   /*
-   * "Datas" some também (junto dos eixos): coluna estreita + `white-space:
-   * nowrap` (ver `td[data-col='dates']` acima) é o que fazia a data invadir
-   * visualmente a coluna do codinome vizinha no celular — não dava só pra
-   * apertar, tinha que sair da tabela. Continua disponível no título (hover)
-   * de quem tem mouse, e a sub-linha de detalhe mostra "última atualização"
-   * por extenso. Só o `<col>` colapsa (ver comentário grande no breakpoint
-   * de 760px acima sobre por que NÃO existe `display: none` no `td`/`th`
-   * aqui — foi exatamente essa combinação que fazia a coluna "AP total"
-   * ficar com largura 0, ela "herdava" a largura de uma coluna escondida
-   * vizinha).
+   * "Datas" e os eixos somem da tabela em painel estreito (`@container` acima —
+   * a data continua no título (hover) de quem tem mouse, e a sub-linha de
+   * detalhe mostra "última atualização" por extenso).
+   *
+   * A coluna de ações fica no celular, mas só com "Comparar" — o botão de
+   * compartilhar da linha some (o mesmo botão continua dentro do detalhe, ver
+   * `.ing-ranking-table__detail-share`), pra sobrar espaço pro codinome. A
+   * largura da coluna é definida no bloco de 640px mais abaixo, junto do
+   * restante das ações.
    */
-  .ing-ranking-table col[data-col='dates'] {
-    visibility: collapse;
-    width: 0;
+  .ing-ranking-table__actions .ing-ranking-table__share {
+    display: none;
   }
-
-  /*
-   * Compartilhar some da linha da tabela — era a coluna mais dispensável
-   * (o mesmo botão reaparece dentro do detalhe, ver
-   * `.ing-ranking-table__detail-share` acima) e sobrava um respiro vazio
-   * depois dela em telas estreitas, sem servir pro nome do agente por estar
-   * centralizado numa coluna de largura fixa longe do fim do texto. Some
-   * junto o espaço que ela ocupava.
-   */
-  .ing-ranking-table col[data-col='details'] {
-    visibility: collapse;
-    width: 0;
+  .ing-ranking-table__actions .ing-ranking-table__compare {
+    width: 1.9rem;
+    height: 1.9rem;
   }
   .ing-ranking-table__detail-share {
     display: inline-grid;
+  }
+
+  /*
+   * A tabela sangra 0.6rem pra cada lado do padding do painel (1.15rem) —
+   * numa tela de ~400px o painel + a margem da página comiam ~37px por lado, e
+   * o codinome (a única coluna sem largura fixa) ficava com ~80px. A sangria
+   * devolve ~19px a ele sem encostar a tabela na borda do painel.
+   */
+  .ing-ranking-table__wrap {
+    margin-inline: -0.6rem;
+  }
+
+  /* Sem rótulo no cabeçalho "País" (ver a regra base): sem texto, o
+     padding lateral só estreita a área clicável. */
+  .ing-ranking-table thead th[data-col='country'] {
+    padding-inline: 0;
   }
 
   /*
@@ -3878,6 +3909,15 @@ html:has(.ingress-prime) {
 .ing-ranking-tabs button:focus-visible {
   outline: 2px solid var(--ing-cyan);
   outline-offset: 2px;
+}
+
+/* A 1ª aba e o painel começam na mesma borda esquerda: com o raio de 16px do
+   `.ing-panel` a borda do painel já está curvando pra dentro no ponto em que a
+   lateral reta da aba encosta nela, e sobrava um degrau/vão no canto. Canto
+   superior esquerdo reto só quando o painel vem colado nas abas — a aba "vira"
+   o próprio canto, como numa pasta; os outros três cantos seguem arredondados. */
+.ing-ranking-tabs + .ing-panel {
+  border-top-left-radius: 0;
 }
 
 /* --- radar de atividade (feed de eventos do ranking) --- */
@@ -4633,9 +4673,11 @@ html:has(.ingress-prime) {
   gap: 0.3rem;
 }
 @media (max-width: 640px) {
+  /* Só o "Comparar" fica na linha (o compartilhar é escondido no bloco de
+     640px acima) — largura de um botão de 1.9rem + o padding de 0.35rem de
+     cada lado das células. */
   .ing-ranking-table col[data-col='details'] {
-    visibility: collapse;
-    width: 0;
+    width: 2.7rem;
   }
   .ing-ranking-table__detail-share {
     width: 2.75rem;

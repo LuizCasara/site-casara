@@ -635,8 +635,14 @@ export default function IngressRankingTable({
               </th>
               <th scope="col" data-col="faction" aria-label={t.colFaction} />
               <th scope="col" data-col="country" aria-sort={ariaSort('country')}>
-                <button type="button" className="ing-ranking-table__sort-btn" onClick={() => handleSort('country')}>
-                  {t.colCountry}{sortArrow('country')}
+                <button
+                  type="button"
+                  className="ing-ranking-table__sort-btn"
+                  aria-label={t.colCountry}
+                  title={t.colCountry}
+                  onClick={() => handleSort('country')}
+                >
+                  {sortArrow('country')}
                 </button>
               </th>
               <th scope="col" data-col="codename">{t.colCodename}</th>
