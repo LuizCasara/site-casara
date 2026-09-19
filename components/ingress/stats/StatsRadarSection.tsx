@@ -95,6 +95,9 @@ async function postAgent(agent: Agent): Promise<RankingResponse | null> {
         stats: radarStats(agent.stats),
         countryCode: agent.countryCode ?? '',
         recursions: agent.recursions,
+        // Top-level, como `recursions`: é onde a rota lê (`body.monthsSubscribed`) pra preencher a coluna
+        // `months_subscribed`. Dentro de `extra` ele só vira JSON solto e a coluna ficava sempre NULL.
+        monthsSubscribed: agent.monthsSubscribed,
         extra: {
           level: agent.level,
           monthsSubscribed: agent.monthsSubscribed,

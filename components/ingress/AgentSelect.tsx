@@ -105,13 +105,21 @@ export default function AgentSelect({
   const [appendLoading, setAppendLoading] = useState(false)
   const debounceRef = useRef<number | null>(null)
   const requestIdRef = useRef(0)
+  // Texto de busca da lista que está carregada agora ('' = navegação por página). Sem isso, reabrir o campo depois
+  // de escolher um resultado de busca mostrava só aqueles resultados, com o resto do elenco inalcançável.
+  const loadedSearchRef = useRef('')
 
   const inputText = open ? query : (selected?.codename ?? '')
 
   const loadPage = async (opts: {cursor?: string | null; search?: string; append?: boolean}) => {
     const requestId = ++requestIdRef.current
     if (opts.append) setAppendLoading(true)
-    else setState({status: 'loading'})
+    else {
+      // Uma busca/reload novo invalida um "próxima página" ainda pendente — sem zerar aqui, a resposta obsoleta
+      // é descartada abaixo e o item "próxima página" ficava preso em "Carregando…".
+      setAppendLoading(false)
+      setState({status: 'loading'})
+    }
     const result = await fetchAgents({cursor: opts.cursor, search: opts.search})
     if (requestId !== requestIdRef.current) return // resposta obsoleta (busca/reload mais recente já chegou)
     if (opts.append) setAppendLoading(false)
@@ -119,6 +127,7 @@ export default function AgentSelect({
       setState({status: 'error'})
       return
     }
+    loadedSearchRef.current = opts.append ? loadedSearchRef.current : (opts.search ?? '')
     setState((prev) => {
       const prevOptions = opts.append && prev.status === 'ready' ? prev.options : []
       return {status: 'ready', options: [...prevOptions, ...result.rows], hasMore: result.hasMore, nextCursor: result.nextCursor}
@@ -128,7 +137,11 @@ export default function AgentSelect({
   const handleFocus = () => {
     setQuery('')
     setOpen(true)
-    if (state.status === 'idle') void loadPage({})
+    // 1ª abertura, erro anterior, ou a lista carregada é resultado de uma busca antiga (query agora vazia):
+    // volta pra 1ª página da navegação.
+    if (state.status === 'idle' || state.status === 'error' || (state.status === 'ready' && loadedSearchRef.current !== '')) {
+      void loadPage({})
+    }
   }
 
   const handleBlur = () => {
@@ -176,6 +189,9 @@ export default function AgentSelect({
       e.preventDefault()
       if (open && activeIndex !== null && options[activeIndex]) {
         selectOption(options[activeIndex])
+      } else if (open && hasMore && activeIndex === options.length && state.status === 'ready') {
+        // O item "próxima página" também é alcançável por ↓ — Enter nele faz o mesmo que o clique.
+        void loadPage({cursor: state.nextCursor, append: true, search: loadedSearchRef.current || undefined})
       }
     } else if (e.key === 'Escape') {
       setOpen(false)
@@ -288,7 +304,9 @@ export default function AgentSelect({
                   className={`ing-agent-select__load-more${activeIndex === options.length ? ' is-active' : ''}`}
                   onMouseDown={(e) => {
                     e.preventDefault()
-                    if (state.status === 'ready') void loadPage({cursor: state.nextCursor, append: true})
+                    if (state.status === 'ready') {
+                      void loadPage({cursor: state.nextCursor, append: true, search: loadedSearchRef.current || undefined})
+                    }
                   }}
                   onMouseEnter={() => setActiveIndex(options.length)}
                 >

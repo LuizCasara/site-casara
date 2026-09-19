@@ -1,6 +1,6 @@
 'use client'
 
-import {useEffect, useRef, useState} from 'react'
+import {useCallback, useEffect, useRef, useState} from 'react'
 import IngressRankingTable, {type RankingRow} from './IngressRankingTable'
 import IngressActivityFeed, {type ActivityRow} from './IngressActivityFeed'
 import IngressNerdStats, {type NerdStats} from './IngressNerdStats'
@@ -101,14 +101,17 @@ export default function IngressRankingTabs({
     window.history.replaceState(null, '', newUrl)
   }, [tab, agentAKey, agentBKey])
 
-  const handleChangeA = (key: string | null) => {
+  // `useCallback` de propósito: `IngressComparisonTab` tem esses dois no array de dependências do efeito que busca
+  // `/compare`. Com identidade nova a cada render, qualquer re-render aqui (ex.: trocar PT/EN) refazia o fetch,
+  // desmontava o radar e perdia a escala escolhida. Só usam setters de estado, então `[]` é seguro.
+  const handleChangeA = useCallback((key: string | null) => {
     setAgentAKey(key)
     setAFromUrl(false)
-  }
-  const handleChangeB = (key: string | null) => {
+  }, [])
+  const handleChangeB = useCallback((key: string | null) => {
     setAgentBKey(key)
     setBFromUrl(false)
-  }
+  }, [])
 
   /**
    * Atalho "Comparar" de uma linha (P2, IRCMP-31/32) — em dois cliques (pedido

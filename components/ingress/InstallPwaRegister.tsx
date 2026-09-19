@@ -8,7 +8,7 @@ import {useEffect} from 'react'
 export default function InstallPwaRegister() {
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
-    navigator.serviceWorker.register('/ingress-sw.js', {scope: '/ingress/'}).catch(() => {})
+    navigator.serviceWorker.register('/ingress-sw.js', {scope: '/ingress'}).catch(() => {})
   }, [])
 
   return null

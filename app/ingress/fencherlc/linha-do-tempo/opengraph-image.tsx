@@ -64,7 +64,7 @@ export default function Image() {
             Timeline
           </span>
           <span style={{color: DIM, fontSize: 30, marginTop: 18}}>
-            {acquisitions.length} achievements ·{anos[0]}–{anos[1]}
+            {acquisitions.length} achievements · {anos[0]}–{anos[1]}
           </span>
         </div>
 

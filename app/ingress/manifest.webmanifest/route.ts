@@ -12,7 +12,9 @@ export function GET() {
       short_name: 'Ingress',
       description: 'Perfil de agente, ranking e estatísticas de Ingress.',
       start_url: '/ingress',
-      scope: '/ingress/',
+      // Sem barra final: o hub é `/ingress` (o Next redireciona `/ingress/` -> `/ingress`), então um escopo
+      // `/ingress/` deixava o próprio `start_url` fora do escopo.
+      scope: '/ingress',
       display: 'standalone',
       background_color: '#0b0f14',
       theme_color: '#0b0f14',

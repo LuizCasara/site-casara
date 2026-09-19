@@ -48,12 +48,17 @@ export default function InstallPwaCard() {
   const {lang} = useLang()
   const t = T[lang]
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  // Lido uma vez, na inicialização (mesmo padrão de components/livros/use-is-mobile.ts):
-  // se o app já roda em standalone ou o device é iOS não muda no meio da sessão.
-  const [installed, setInstalled] = useState(() => isStandalone())
-  const [ios] = useState(() => isIos())
+  // Começam `false` (= o que o servidor renderiza: card ausente) e são lidos no mount. Ler `window`/`navigator`
+  // num inicializador de `useState` fazia a 1ª renderização do cliente diferir do HTML do servidor no iOS/standalone
+  // (hydration mismatch). Se o app já roda em standalone ou o device é iOS não muda no meio da sessão.
+  const [installed, setInstalled] = useState(false)
+  const [ios, setIos] = useState(false)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setInstalled(isStandalone())
+    setIos(isIos())
+
     function handleBeforeInstallPrompt(event: Event) {
       event.preventDefault()
       setDeferredPrompt(event as BeforeInstallPromptEvent)
