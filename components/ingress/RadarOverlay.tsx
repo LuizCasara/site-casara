@@ -2,7 +2,7 @@
 
 import {Fragment, useState} from 'react'
 import {AnimatePresence, motion} from 'framer-motion'
-import {computeRadarAxes, compareRadar, RADAR_DRAW_MAX} from '@/lib/ingress-radar.mjs'
+import {computeRadarAxes, compareRadar, scoreAtOnyxMultiple} from '@/lib/ingress-radar.mjs'
 import {fmtStat} from '@/lib/ingress-format.mjs'
 import {useLang} from '@/context/LanguageContext'
 import type {Agent} from './ProfileRadar'
@@ -12,13 +12,24 @@ const C = SIZE / 2
 const R = 90
 const PAD_X = 48 // folga lateral no viewBox para os rótulos dos eixos não cortarem
 
+/**
+ * Escala do radar. `number` = a borda do radar é "Onyx ×N" (N = 1, 4, 16): como
+ * cada dobra além do Onyx soma 20 pontos (log₂, ADR-0005), a borda vale
+ * `scoreAtOnyxMultiple(N)` = 100, 140, 180. `'fit'` (Estilo) normaliza cada
+ * ficha pelo próprio eixo mais forte. Em todas o raio é LINEAR na nota do eixo —
+ * a curva logarítmica já está dentro da nota, não no desenho.
+ */
 type Scale = number | 'fit'
 const SCALES: {v: Scale; label: string}[] = [
-  {v: 0.5, label: '½×'},
   {v: 1, label: 'Onyx'},
-  {v: RADAR_DRAW_MAX, label: `${RADAR_DRAW_MAX}×`},
+  {v: 4, label: '×4'},
+  {v: 16, label: '×16'},
   {v: 'fit', label: 'Estilo'},
 ]
+const DEFAULT_SCALE: Scale = 'fit'
+
+/** Anéis desenhados em cada escala fixa: `multiple` = Onyx ×N (`null` = o anel de meia-nota, 50). */
+const RING_MULTIPLES: Record<number, (number | null)[]> = {1: [null, 1], 4: [1, 2, 4], 16: [1, 4, 16]}
 
 type Part = {
   key: string
@@ -27,10 +38,12 @@ type Part = {
   value: number
   ref: number
   ratio: number
+  position: number
+  score: number
   note: string | null
   noteEn: string | null
 }
-type Axis = {id: string; label: string; labelEn: string; onyxRatio: number; value: number; parts: Part[]}
+type Axis = {id: string; label: string; labelEn: string; position: number; score: number; parts: Part[]}
 
 const T = {
   pt: {
@@ -38,10 +51,13 @@ const T = {
     scaleAria: 'Escala do radar',
     scaleStyle: 'Estilo',
     fitNote: 'Cada ficha normalizada pelo próprio eixo mais forte — compara o estilo de jogo, não o tamanho.',
-    ofOnyxLevel: 'do nível Onyx',
-    breakdownFootMulti: (n: number) => `média das ${n} razões`,
-    breakdownFootSingle: 'razão contra o limiar de Onyx',
-    breakdownFootCapped: (pct: number) => ` · o que passa de ${pct}% entra travado`,
+    logNote:
+      'Escala logarítmica além do Onyx: cada dobra soma 20 pontos (×2 = 120, ×4 = 140, ×16 = 180). O anel “×N” é o eixo com todas as partes em N vezes o Onyx.',
+    pointsUnit: 'pontos (100 = Onyx)',
+    onyxOf: 'do Onyx',
+    breakdownFootMulti: (n: number) => `média das ${n} posições de tier × 20`,
+    breakdownFootSingle: 'posição de tier × 20',
+    breakdownFootBeyond: ' · além do Onyx a posição sobe +1 a cada dobra (log₂), sem teto',
     hoverHint: 'Passe o mouse ou toque num eixo para ver o cálculo.',
     overallScore: 'Nota geral',
     rankOf: (rank: number, total: number) => `${rank}º de ${total}`,
@@ -51,10 +67,13 @@ const T = {
     scaleAria: 'Radar scale',
     scaleStyle: 'Style',
     fitNote: 'Each card normalized by its own strongest axis — compares play style, not size.',
-    ofOnyxLevel: 'of Onyx level',
-    breakdownFootMulti: (n: number) => `average of ${n} ratios`,
-    breakdownFootSingle: 'ratio against the Onyx threshold',
-    breakdownFootCapped: (pct: number) => ` · anything past ${pct}% is capped`,
+    logNote:
+      'Logarithmic scale beyond Onyx: every doubling adds 20 points (×2 = 120, ×4 = 140, ×16 = 180). The “×N” ring is an axis with every part at N times Onyx.',
+    pointsUnit: 'points (100 = Onyx)',
+    onyxOf: 'of Onyx',
+    breakdownFootMulti: (n: number) => `average of the ${n} tier positions × 20`,
+    breakdownFootSingle: 'tier position × 20',
+    breakdownFootBeyond: ' · past Onyx the position climbs +1 per doubling (log₂), no cap',
     hoverHint: 'Hover or tap an axis to see the math.',
     overallScore: 'Overall score',
     rankOf: (rank: number, total: number) => `#${rank} of ${total}`,
@@ -67,11 +86,14 @@ function point(i: number, count: number, radius: number): [number, number] {
 }
 
 const pct = (r: number) => `${Math.round(r * 100)}%`
+/** Nota (100 = Onyx) sem casas decimais. */
+const pts = (score: number) => Math.round(score).toString()
 
-/** Anéis em múltiplos do Onyx que cabem dentro da escala escolhida. */
-function ringStops(drawMax: number) {
-  const cands = drawMax <= 0.5 ? [0.25, 0.5] : drawMax <= 1 ? [0.5, 1] : [0.5, 1, 2]
-  return cands.filter((o) => o <= drawMax + 1e-9)
+/** Anéis da escala fixa `multiple`: nota de cada anel + rótulo ("50", "Onyx", "×4"). */
+function ringStops(multiple: number) {
+  return (RING_MULTIPLES[multiple] ?? [1]).map((m) =>
+    m === null ? {score: 50, label: '50'} : {score: scoreAtOnyxMultiple(m), label: m === 1 ? 'Onyx' : `×${m}`},
+  )
 }
 
 /**
@@ -89,7 +111,7 @@ export default function RadarOverlay({agentA, agentB}: {agentA: Agent; agentB?: 
   const partNote = (p: Part) => (lang === 'en' ? p.noteEn : p.note)
 
   const [active, setActive] = useState<number | null>(null)
-  const [scale, setScale] = useState<Scale>(RADAR_DRAW_MAX)
+  const [scale, setScale] = useState<Scale>(DEFAULT_SCALE)
 
   const aAxes = computeRadarAxes(agentA.stats) as Axis[]
   const bAxes = agentB ? (computeRadarAxes(agentB.stats) as Axis[]) : null
@@ -115,11 +137,12 @@ export default function RadarOverlay({agentA, agentB}: {agentA: Agent; agentB?: 
     ) : null
 
   const fit = scale === 'fit'
-  const maxOf = (as: Axis[]) => (fit ? Math.max(...as.map((a) => a.onyxRatio), 0.01) : (scale as number))
-  const radiusIn = (onyxRatio: number, as: Axis[]) => R * Math.max(Math.min(onyxRatio / maxOf(as), 1), 0.02)
-  const shape = (as: Axis[]) => as.map((a, i) => point(i, n, radiusIn(a.onyxRatio, as)).join(',')).join(' ')
+  // Borda do radar, em nota do eixo: a da escala fixa (Onyx ×N), ou — no Estilo — o eixo mais forte da própria ficha.
+  const maxOf = (as: Axis[]) => (fit ? Math.max(...as.map((a) => a.score), 1) : scoreAtOnyxMultiple(scale as number))
+  const radiusIn = (score: number, as: Axis[]) => R * Math.max(Math.min(score / maxOf(as), 1), 0.02)
+  const shape = (as: Axis[]) => as.map((a, i) => point(i, n, radiusIn(a.score, as)).join(',')).join(' ')
   const stops = fit ? [] : ringStops(scale as number)
-  const edge = stops[stops.length - 1]
+  const edgeScore = stops.length ? stops[stops.length - 1].score : 0
 
   const svg = (
     <div className="ing-radar">
@@ -132,17 +155,17 @@ export default function RadarOverlay({agentA, agentB}: {agentA: Agent; agentB?: 
                 className={`ing-radar__ring${f === 1 ? ' ing-radar__ring--edge' : ''}`}
               />
             ))
-          : stops.map((o) => {
-              const rr = R * Math.min(o / (scale as number), 1)
-              const isOnyx = Math.abs(o - 1) < 1e-9
+          : stops.map((ring) => {
+              const rr = R * Math.min(ring.score / maxOf(aAxes), 1)
+              const isOnyx = ring.label === 'Onyx'
               return (
-                <g key={o}>
+                <g key={ring.label}>
                   <polygon
                     points={aAxes.map((_, i) => point(i, n, rr).join(',')).join(' ')}
-                    className={`ing-radar__ring${isOnyx ? ' ing-radar__ring--onyx' : ''}${o === edge ? ' ing-radar__ring--edge' : ''}`}
+                    className={`ing-radar__ring${isOnyx ? ' ing-radar__ring--onyx' : ''}${ring.score === edgeScore ? ' ing-radar__ring--edge' : ''}`}
                   />
                   <text x={C + 3} y={C - rr - 3} className="ing-radar__ring-label">
-                    {isOnyx ? 'Onyx' : o === 0.5 ? '½×' : `${o}×`}
+                    {ring.label}
                   </text>
                 </g>
               )
@@ -165,7 +188,7 @@ export default function RadarOverlay({agentA, agentB}: {agentA: Agent; agentB?: 
             >
               <polygon points={shape(bAxes)} className="ing-radar__shape ing-radar__shape--them" />
               {bAxes.map((a, i) => {
-                const [x, y] = point(i, n, radiusIn(a.onyxRatio, bAxes))
+                const [x, y] = point(i, n, radiusIn(a.score, bAxes))
                 return <circle key={a.id} cx={x} cy={y} r={4.5} className="ing-radar__dot ing-radar__dot--them" />
               })}
             </motion.g>
@@ -173,7 +196,7 @@ export default function RadarOverlay({agentA, agentB}: {agentA: Agent; agentB?: 
         </AnimatePresence>
 
         {aAxes.map((a, i) => {
-          const [x, y] = point(i, n, radiusIn(a.onyxRatio, aAxes))
+          const [x, y] = point(i, n, radiusIn(a.score, aAxes))
           const [lx, ly] = point(i, n, R + 14)
           const anchor = lx < C - 8 ? 'end' : lx > C + 8 ? 'start' : 'middle'
           return (
@@ -185,14 +208,14 @@ export default function RadarOverlay({agentA, agentB}: {agentA: Agent; agentB?: 
               onClick={() => setActive((cur) => (cur === i ? null : i))}
             >
               <circle cx={x} cy={y} r={active === i ? 6 : 4} className={`ing-radar__dot${active === i ? ' is-active' : ''}`}>
-                <title>{`${axisLabel(a)}: ${pct(a.onyxRatio)} ${t.ofOnyxLevel}`}</title>
+                <title>{`${axisLabel(a)}: ${pts(a.score)} ${t.pointsUnit}`}</title>
               </circle>
               <text x={lx} y={ly - 5} textAnchor={anchor} className="ing-radar__label">
                 {axisLabel(a)}
               </text>
               <text x={lx} y={ly + 6} textAnchor={anchor} className="ing-radar__pct">
-                {pct(a.onyxRatio)}
-                {bAxes ? <tspan className="ing-radar__pct-them"> · {pct(bAxes[i].onyxRatio)}</tspan> : null}
+                {pts(a.score)}
+                {bAxes ? <tspan className="ing-radar__pct-them"> · {pts(bAxes[i].score)}</tspan> : null}
               </text>
               <circle cx={x} cy={y} r={18} fill="transparent" />
             </g>
@@ -237,7 +260,7 @@ export default function RadarOverlay({agentA, agentB}: {agentA: Agent; agentB?: 
         </div>
       </div>
 
-      {fit ? <p className="ing-radar__scale-note">{t.fitNote}</p> : null}
+      <p className="ing-radar__scale-note">{fit ? t.fitNote : t.logNote}</p>
 
       <div className={agentB ? 'ing-radar__cmp-layout' : undefined}>
         {svg}
@@ -256,9 +279,9 @@ export default function RadarOverlay({agentA, agentB}: {agentA: Agent; agentB?: 
                   <Fragment key={a.id}>
                     <tr className="is-axis">
                       <th>{axisLabel(a)}</th>
-                      <td className={rows[i].leader === 'mine' ? 'is-lead' : undefined}>{pct(a.onyxRatio)}</td>
+                      <td className={rows[i].leader === 'mine' ? 'is-lead' : undefined}>{pts(a.score)}</td>
                       <td className={rows[i].leader === 'theirs' ? 'is-lead-them' : undefined}>
-                        {pct(bAxes[i].onyxRatio)}
+                        {pts(bAxes[i].score)}
                       </td>
                     </tr>
                     {a.parts.map((p, pi) => (
@@ -266,11 +289,11 @@ export default function RadarOverlay({agentA, agentB}: {agentA: Agent; agentB?: 
                         <td>{partLabel(p)}</td>
                         <td>
                           <span className="ing-radar__cmp-value">{fmtStat(p.value)}</span>{' '}
-                          <small>{pct(p.ratio)}</small>
+                          <small title={`${pct(p.ratio)} ${t.onyxOf}`}>{pts(p.score)}</small>
                         </td>
                         <td>
                           <span className="ing-radar__cmp-value">{fmtStat(bAxes[i].parts[pi].value)}</span>{' '}
-                          <small>{pct(bAxes[i].parts[pi].ratio)}</small>
+                          <small title={`${pct(bAxes[i].parts[pi].ratio)} ${t.onyxOf}`}>{pts(bAxes[i].parts[pi].score)}</small>
                         </td>
                       </tr>
                     ))}
@@ -285,34 +308,34 @@ export default function RadarOverlay({agentA, agentB}: {agentA: Agent; agentB?: 
       {sel ? (
         <div className="ing-radar__breakdown">
           <p className="ing-radar__bd-head">
-            <b>{axisLabel(sel)}</b> — {pct(sel.onyxRatio)} {t.ofOnyxLevel}
+            <b>{axisLabel(sel)}</b> — {pts(sel.score)} {t.pointsUnit}
             {selB ? (
               <span className="ing-radar__bd-vs">
                 {' '}
-                · {agentB?.codename}: {pct(selB.onyxRatio)}
+                · {agentB?.codename}: {pts(selB.score)}
               </span>
             ) : null}
           </p>
           <ul>
             {sel.parts.map((p, pi) => (
-              <li key={p.key} className={p.ratio > RADAR_DRAW_MAX ? 'is-capped' : undefined}>
+              <li key={p.key} className={p.ratio > 1 ? 'is-beyond' : undefined}>
                 <span className="ing-radar__bd-label">
                   {partLabel(p)}
                   {partNote(p) ? <em className="ing-radar__bd-note"> · {partNote(p)}</em> : null}
                 </span>
                 <span className="ing-radar__bd-calc">
-                  {fmtStat(p.value)} / {fmtStat(p.ref)}
+                  {fmtStat(p.value)} / {fmtStat(p.ref)} · {pct(p.ratio)}
                 </span>
                 <span className="ing-radar__bd-ratio">
-                  {pct(p.ratio)}
-                  {selB ? <span className="ing-radar__bd-ratio-them"> · {pct(selB.parts[pi].ratio)}</span> : null}
+                  {pts(p.score)}
+                  {selB ? <span className="ing-radar__bd-ratio-them"> · {pts(selB.parts[pi].score)}</span> : null}
                 </span>
               </li>
             ))}
           </ul>
           <p className="ing-radar__bd-foot">
             {sel.parts.length > 1 ? t.breakdownFootMulti(sel.parts.length) : t.breakdownFootSingle}
-            {sel.parts.some((p) => p.ratio > RADAR_DRAW_MAX) ? t.breakdownFootCapped(RADAR_DRAW_MAX * 100) : ''}
+            {sel.parts.some((p) => p.ratio > 1) ? t.breakdownFootBeyond : ''}
           </p>
         </div>
       ) : !agentB ? (

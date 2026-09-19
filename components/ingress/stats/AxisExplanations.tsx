@@ -3,69 +3,157 @@
 import {Fragment} from 'react'
 import Panel from '../Panel'
 import {useLang} from '@/context/LanguageContext'
-import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
+import {RADAR_AXES, computeRadarAxes} from '@/lib/ingress-radar.mjs'
+import {ONYX_POSITION, POINTS_PER_POSITION} from '@/lib/ingress-tier-position.mjs'
+import {TIERS, tierLabel} from '@/lib/ingress-tiers.mjs'
+import {fmtStat} from '@/lib/ingress-format.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 
 type AxisId = 'construcao' | 'destruicao' | 'exploracao' | 'hacking' | 'linksCampos'
+type Lang = 'pt' | 'en'
 
 /**
- * Posições de tier fictícias (uma por stat do radar) só pra ilustrar a fórmula
- * com números em vez de letras — não vem de nenhum agente real. `exploracao`
- * usa de propósito uma parte > 5 (`uniquePortalsVisited: 6.0`) pra mostrar o
- * caso "estourou Onyx" descrito no parágrafo acima, na mesma seção.
+ * Agente FICTÍCIO do exemplo — valores brutos (não posições), pra que cada
+ * número da explicação saia da mesma função que calcula o ranking
+ * (`computeRadarAxes`, espelho client-safe de `computeAxisScores`). Nada aqui é
+ * digitado à mão: se a fórmula ou um limiar mudar, o exemplo muda junto.
+ * Propositalmente tem um stat abaixo do Onyx (`linksCreated`) e um MUITO além
+ * dele (`mindUnitsCaptured`, 150× Onyx) — o caso que motivou o log₂.
  */
-const EXAMPLE_PART_POSITIONS: Record<string, number> = {
-  resonatorsDeployed: 4.6,
-  modsDeployed: 3.8,
-  resonatorsDestroyed: 3.4,
-  portalsNeutralized: 2.6,
-  uniquePortalsVisited: 6.0,
-  distanceWalkedKm: 5.1,
-  uniqueMissionsCompleted: 5.1,
-  hacks: 3.2,
-  glyphHackPoints: 2.6,
-  linksCreated: 4.8,
-  controlFieldsCreated: 4.5,
-  mindUnitsCaptured: 4.2,
+const EXAMPLE_STATS: Record<string, number> = {
+  resonatorsDeployed: 240000,
+  modsDeployed: 30000,
+  resonatorsDestroyed: 120000,
+  portalsNeutralized: 9000,
+  uniquePortalsVisited: 45000,
+  distanceWalkedKm: 1800,
+  uniqueMissionsCompleted: 620,
+  hacks: 260000,
+  glyphHackPoints: 21000,
+  linksCreated: 23500,
+  controlFieldsCreated: 24275,
+  mindUnitsCaptured: 600000000,
 }
+const EXAMPLE_BELOW_KEY = 'linksCreated' // ilustra o trecho linear (abaixo do Onyx)
+const EXAMPLE_BEYOND_KEY = 'mindUnitsCaptured' // ilustra o trecho log₂ (além do Onyx)
 
-/** pt-BR usa vírgula decimal; en mantém o ponto. */
-const fmt1 = (n: number, lang: 'pt' | 'en') => (lang === 'pt' ? n.toFixed(1).replace('.', ',') : n.toFixed(1))
+/** Múltiplos do Onyx da tabelinha "cada dobra = +1". */
+const DOUBLINGS = [1, 2, 4, 8, 16, 64, 256]
 
-/** Monta o exemplo (eixo a eixo + resultado final) a partir de `EXAMPLE_PART_POSITIONS`, já com os textos de tooltip prontos no idioma corrente. */
-function buildExample(lang: 'pt' | 'en') {
-  const axes = RADAR_AXES.map((axis) => {
-    const parts = axis.parts.map((p) => ({
-      label: lang === 'en' ? p.labelEn : p.label,
-      position: EXAMPLE_PART_POSITIONS[p.key],
-    }))
-    const score = parts.reduce((sum, p) => sum + p.position, 0) / parts.length
-    const breakdown = parts.map((p) => `${p.label}: ${fmt1(p.position, lang)}`).join(' + ')
-    const tooltip = `${breakdown} ${lang === 'en' ? '→ average' : '→ média'} ${fmt1(score, lang)}`
+/** Número com casas fixas no idioma corrente (pt-BR usa vírgula decimal). */
+const num = (n: number, lang: Lang, digits = 2) =>
+  n.toLocaleString(lang === 'pt' ? 'pt-BR' : 'en-US', {minimumFractionDigits: digits, maximumFractionDigits: digits})
+/** Inteiro com separador de milhar (o `fmtStat` do projeto é pt-BR; em `en` usa vírgula). */
+const int = (n: number, lang: Lang) => (lang === 'pt' ? fmtStat(n) : n.toLocaleString('en-US'))
+
+type ExampleAxis = {id: string; label: string; position: number; tooltip: string}
+
+/**
+ * Monta o exemplo inteiro a partir de `EXAMPLE_STATS`: os 5 eixos (posição +
+ * tooltip com a soma), o resultado final, e os dois "passo a passo" de um stat
+ * abaixo e de um stat além do Onyx, com a aritmética escrita por extenso.
+ */
+function buildExample(lang: Lang) {
+  const computed = computeRadarAxes(EXAMPLE_STATS)
+  const partOf = (key: string) => {
+    for (const axis of computed) {
+      const part = axis.parts.find((p) => p.key === key)
+      if (part) return part
+    }
+    throw new Error(`AxisExplanations: stat "${key}" fora do radar`)
+  }
+  const defOf = (key: string) => {
+    for (const axis of RADAR_AXES) {
+      const part = axis.parts.find((p) => p.key === key)
+      if (part) return part
+    }
+    throw new Error(`AxisExplanations: stat "${key}" fora do radar`)
+  }
+
+  const axes: ExampleAxis[] = computed.map((axis) => {
+    const breakdown = axis.parts.map((p) => num(p.position, lang)).join(' + ')
     return {
       id: axis.id,
       label: lang === 'en' ? axis.labelEn : axis.label,
-      score,
-      tooltip,
+      position: axis.position,
+      tooltip: `(${breakdown}) ÷ ${axis.parts.length} = ${num(axis.position, lang)}`,
     }
   })
-  const avg = axes.reduce((sum, a) => sum + a.score, 0) / axes.length
-  const result = Math.round(avg * 20)
-  const resultTooltip = `(${axes.map((a) => fmt1(a.score, lang)).join(' + ')}) ÷ 5 × 20 = ${result}`
-  return {axes, result, resultTooltip}
+  const avg = axes.reduce((sum, a) => sum + a.position, 0) / axes.length
+  const result = Math.round(avg * POINTS_PER_POSITION)
+  const resultTooltip = `(${axes.map((a) => num(a.position, lang)).join(' + ')}) ÷ ${axes.length} × ${POINTS_PER_POSITION} = ${result}`
+
+  // --- passo a passo: um stat abaixo do Onyx (linear) ---
+  const below = partOf(EXAMPLE_BELOW_KEY)
+  const belowTiers = defOf(EXAMPLE_BELOW_KEY).tiers as number[]
+  let reached = 0
+  belowTiers.forEach((limit, i) => {
+    if (below.value >= limit) reached = i + 1
+  })
+  const prev = reached === 0 ? 0 : belowTiers[reached - 1]
+  const next = belowTiers[reached]
+  const prevName = reached === 0 ? '0' : tierLabel(TIERS[reached - 1], lang)
+  const nextName = tierLabel(TIERS[reached], lang)
+  const belowLabel = lang === 'en' ? below.labelEn : below.label
+  const belowStep = {
+    intro:
+      lang === 'pt'
+        ? `${belowLabel}: ${int(below.value, lang)} fica entre ${prevName} (${int(prev, lang)}) e ${nextName} (${int(next, lang)}) — trecho linear:`
+        : `${belowLabel}: ${int(below.value, lang)} sits between ${prevName} (${int(prev, lang)}) and ${nextName} (${int(next, lang)}) — the linear stretch:`,
+    formula: `${lang === 'pt' ? 'posição' : 'position'} = ${reached} + (${int(below.value, lang)} − ${int(prev, lang)}) ÷ (${int(next, lang)} − ${int(prev, lang)}) = ${num(below.position, lang)}`,
+  }
+
+  // --- passo a passo: um stat além do Onyx (log₂) ---
+  const beyond = partOf(EXAMPLE_BEYOND_KEY)
+  const beyondLabel = lang === 'en' ? beyond.labelEn : beyond.label
+  const log2 = Math.log2(beyond.ratio)
+  const linearOld = ONYX_POSITION - 1 + beyond.ratio // a escala linear antiga: ×N = 5 + (N − 1)
+  const beyondStep = {
+    intro:
+      lang === 'pt'
+        ? `${beyondLabel}: ${int(beyond.value, lang)} ÷ ${int(beyond.ref, lang)} (Onyx) = ${num(beyond.ratio, lang, 0)}× o Onyx — trecho logarítmico:`
+        : `${beyondLabel}: ${int(beyond.value, lang)} ÷ ${int(beyond.ref, lang)} (Onyx) = ${num(beyond.ratio, lang, 0)}× Onyx — the logarithmic stretch:`,
+    formula: `${lang === 'pt' ? 'posição' : 'position'} = ${ONYX_POSITION} + log₂(${num(beyond.ratio, lang, 0)}) = ${ONYX_POSITION} + ${num(log2, lang)} = ${num(beyond.position, lang)}`,
+    old:
+      lang === 'pt'
+        ? `Na escala linear antiga esse mesmo stat valeria ${num(linearOld, lang, 0)} posições — mais que todo o resto do jogo somado.`
+        : `On the old linear scale this same stat would be worth ${num(linearOld, lang, 0)} positions — more than the rest of the game combined.`,
+  }
+
+  // --- o eixo que contém os dois, com as contas ---
+  const axisOfBeyond = computed.find((a) => a.parts.some((p) => p.key === EXAMPLE_BEYOND_KEY))!
+  const axisStep = {
+    label: lang === 'en' ? axisOfBeyond.labelEn : axisOfBeyond.label,
+    formula: `(${axisOfBeyond.parts.map((p) => num(p.position, lang)).join(' + ')}) ÷ ${axisOfBeyond.parts.length} = ${num(axisOfBeyond.position, lang)}  →  × ${POINTS_PER_POSITION} = ${num(axisOfBeyond.score, lang, 1)}`,
+  }
+
+  return {axes, result, resultTooltip, belowStep, beyondStep, axisStep}
 }
 
 const translations = {
   pt: {
     panelLabel: 'O que cada eixo mede',
     formulaTitle: 'Como a nota geral é calculada',
-    formulaBody: [
-      'Cada eixo soma 2 ou 3 stats (os mesmos que dão badge, mais "portais neutralizados", que usa 1/8 dos limiares do Purifier por não ter badge própria). Para cada stat, o valor bruto vira uma "posição de tier" contínua: 0 é o piso, 1 é o limiar de Bronze, 2 de Silver, 3 de Gold, 4 de Platinum e 5 de Onyx, interpolando linearmente entre um limiar e o próximo — por isso a posição quase nunca é um número inteiro. Passar de Onyx não trava em 5: cada vez que o valor dobra o limiar de Onyx, a posição sobe mais 1 (Onyx×2 = posição 6, ×3 = posição 7, e assim por diante).',
-      'A nota do eixo é a média simples das posições dos seus stats — por isso também pode passar de 5 se o agente estourar Onyx em alguma parte.',
-      'A nota geral é a média das 5 notas de eixo, multiplicada por 20. Com todos os eixos exatamente em Onyx (posição 5), a média dá 5 e a nota fecha em 100; qualquer stat além do Onyx empurra o número acima de 100.',
+    formulaIntro:
+      'Cada eixo reúne 2 ou 3 stats (os mesmos que dão medalha, mais "portais neutralizados", que usa 1/8 dos limiares do Purifier por não ter medalha própria). Cada stat vira uma "posição de tier" contínua: 0 é o piso, 1 é Bronze, 2 Silver, 3 Gold, 4 Platinum e 5 Onyx.',
+    ruleBelow: 'Até o Onyx: linear entre um limiar e o próximo — na metade do caminho entre Gold e Platinum a posição é 3,5.',
+    ruleBeyond: 'A partir do Onyx: posição = 5 + log₂(valor ÷ Onyx). Cada vez que o valor DOBRA em relação ao Onyx, a posição sobe exatamente 1.',
+    formulaAxis: 'A nota do eixo é a média simples das posições dos seus stats.',
+    formulaOverall:
+      'A nota geral é a média das 5 notas de eixo multiplicada por 20: com todos os eixos exatamente em Onyx (posição 5) a nota fecha em 100, e ela passa de 100 quando algum stat vai além.',
+    doublingsLabel: 'Onyx ×N → posição',
+    decisionTitle: 'Por que logarítmica depois do Onyx?',
+    decisionBody: [
+      'Antes, além do Onyx a posição crescia em linha reta: ×2 = 6, ×3 = 7, ×148 = 152. Um único stat com centenas de vezes o Onyx — na prática Mind Units, cujo Onyx é de apenas 4 milhões — valia mais que todo o resto do jogo somado e decidia sozinho o ranking: o agente com mais MU ficava na frente mesmo perdendo nos outros eixos.',
+      'Agora cada dobra vale o mesmo. Dobrar de 4 M para 8 M de MU rende o mesmo +1 que dobrar de 300 M para 600 M. O stat continua sempre somando (mais nunca é pior), só que nenhuma medalha isolada consegue mais definir a nota. Em ×1 e ×2 o resultado é idêntico ao da escala antiga; a diferença aparece de ×3 em diante.',
     ],
-    exampleTitle: 'Um exemplo, com números',
-    exampleIntro: 'Um agente fictício, só pra ver a fórmula com números em vez de letras:',
+    exampleTitle: 'Um exemplo, com a fórmula real',
+    exampleIntro:
+      'Um agente fictício. Cada número abaixo sai da mesma função que calcula o ranking — não é digitado à mão:',
+    stepBelowTitle: '1. Um stat abaixo do Onyx',
+    stepBeyondTitle: '2. Um stat muito além do Onyx',
+    stepAxisTitle: '3. A nota do eixo',
+    stepOverallTitle: '4. A nota geral',
     exampleHint: 'Passe o mouse nos números pra ver de onde cada um veio.',
     summary: 'Ver o que cada eixo mede e como a nota é calculada',
     axes: {
@@ -94,13 +182,26 @@ const translations = {
   en: {
     panelLabel: 'What each axis measures',
     formulaTitle: 'How the overall score is calculated',
-    formulaBody: [
-      "Each axis sums 2 or 3 stats (the same ones behind each badge, plus \"portals neutralized\", which uses 1/8 of the Purifier thresholds since it has no badge of its own). For each stat, the raw value becomes a continuous \"tier position\": 0 is the floor, 1 is the Bronze threshold, 2 is Silver, 3 is Gold, 4 is Platinum, and 5 is Onyx, interpolating linearly between one threshold and the next — which is why the position is almost never a whole number. Going past Onyx doesn't cap at 5: every time the value doubles the Onyx threshold, the position climbs another point (Onyx×2 = position 6, ×3 = position 7, and so on).",
-      'The axis score is the plain average of its stats\' positions — which is also why it can exceed 5 if the agent blows past Onyx on any part of it.',
-      "The overall score is the average of the 5 axis scores, multiplied by 20. With every axis sitting exactly at Onyx (position 5), the average is 5 and the score lands at 100; any stat beyond Onyx pushes the number past 100.",
+    formulaIntro:
+      'Each axis groups 2 or 3 stats (the same ones behind each badge, plus "portals neutralized", which uses 1/8 of the Purifier thresholds since it has no badge of its own). Each stat becomes a continuous "tier position": 0 is the floor, 1 is Bronze, 2 Silver, 3 Gold, 4 Platinum and 5 Onyx.',
+    ruleBelow: 'Up to Onyx: linear between one threshold and the next — halfway between Gold and Platinum the position is 3.5.',
+    ruleBeyond: 'From Onyx on: position = 5 + log₂(value ÷ Onyx). Every time the value DOUBLES relative to Onyx, the position climbs exactly 1.',
+    formulaAxis: "The axis score is the plain average of its stats' positions.",
+    formulaOverall:
+      'The overall score is the average of the 5 axis scores multiplied by 20: with every axis exactly at Onyx (position 5) it lands at 100, and it goes past 100 when any stat goes beyond.',
+    doublingsLabel: 'Onyx ×N → position',
+    decisionTitle: 'Why logarithmic past Onyx?',
+    decisionBody: [
+      'Before, past Onyx the position grew in a straight line: ×2 = 6, ×3 = 7, ×148 = 152. A single stat at hundreds of times Onyx — in practice Mind Units, whose Onyx is only 4 million — was worth more than the rest of the game combined and decided the ranking on its own: the agent with the most MU came out ahead even while losing on every other axis.',
+      'Now every doubling is worth the same. Going from 4 M to 8 M MU earns the same +1 as going from 300 M to 600 M. The stat still always counts (more is never worse), but no single badge can decide the score anymore. At ×1 and ×2 the result is identical to the old scale; the difference shows from ×3 onward.',
     ],
-    exampleTitle: 'A worked example, in numbers',
-    exampleIntro: "A fictional agent, just to see the formula with numbers instead of letters:",
+    exampleTitle: 'A worked example, with the real formula',
+    exampleIntro:
+      'A fictional agent. Every number below comes out of the same function that computes the ranking — none of it is typed by hand:',
+    stepBelowTitle: '1. A stat below Onyx',
+    stepBeyondTitle: '2. A stat far beyond Onyx',
+    stepAxisTitle: '3. The axis score',
+    stepOverallTitle: '4. The overall score',
     exampleHint: 'Hover the numbers to see where each one comes from.',
     summary: 'See what each axis measures and how the score is calculated',
     axes: {
@@ -179,34 +280,73 @@ export default function AxisExplanations() {
         </dl>
         <div className="ing-axis-explanations__formula">
           <p className="ing-axis-explanations__formula-title">{t.formulaTitle}</p>
-          {t.formulaBody.map((paragraph, i) => (
+          <p className="ing-axis-explanations__formula-text">{t.formulaIntro}</p>
+          <ul className="ing-axis-explanations__rules">
+            <li>{t.ruleBelow}</li>
+            <li>{t.ruleBeyond}</li>
+          </ul>
+          <div className="ing-axis-explanations__doublings" aria-label={t.doublingsLabel}>
+            <span className="ing-axis-explanations__doublings-label">{t.doublingsLabel}</span>
+            {DOUBLINGS.map((m) => (
+              <span key={m} className="ing-axis-explanations__doubling">
+                <b>×{m}</b> = {num(ONYX_POSITION + Math.log2(m), lang, 0)}
+              </span>
+            ))}
+          </div>
+          <p className="ing-axis-explanations__formula-text">{t.formulaAxis}</p>
+          <p className="ing-axis-explanations__formula-text">{t.formulaOverall}</p>
+
+          <p className="ing-axis-explanations__example-title">{t.decisionTitle}</p>
+          {t.decisionBody.map((paragraph, i) => (
             <p key={i} className="ing-axis-explanations__formula-text">
               {paragraph}
             </p>
           ))}
+
           <p className="ing-axis-explanations__example-title">{t.exampleTitle}</p>
           <p className="ing-axis-explanations__example-intro">{t.exampleIntro}</p>
-          <div className="ing-axis-explanations__example-row">
-            {example.axes.map((axis, i) => (
-              <Fragment key={axis.id}>
-                {i > 0 && (
-                  <span className="ing-axis-explanations__example-op" aria-hidden="true">
-                    +
-                  </span>
-                )}
-                <span className="ing-axis-explanations__example-axis" title={axis.tooltip}>
-                  <span className="ing-axis-explanations__example-axis-label">{axis.label}</span>
-                  <span className="ing-axis-explanations__example-axis-value">{fmt1(axis.score, lang)}</span>
+          <ol className="ing-axis-explanations__steps">
+            <li>
+              <span className="ing-axis-explanations__step-title">{t.stepBelowTitle}</span>
+              <span className="ing-axis-explanations__step-text">{example.belowStep.intro}</span>
+              <code className="ing-axis-explanations__step-formula">{example.belowStep.formula}</code>
+            </li>
+            <li>
+              <span className="ing-axis-explanations__step-title">{t.stepBeyondTitle}</span>
+              <span className="ing-axis-explanations__step-text">{example.beyondStep.intro}</span>
+              <code className="ing-axis-explanations__step-formula">{example.beyondStep.formula}</code>
+              <span className="ing-axis-explanations__step-note">{example.beyondStep.old}</span>
+            </li>
+            <li>
+              <span className="ing-axis-explanations__step-title">{t.stepAxisTitle}</span>
+              <span className="ing-axis-explanations__step-text">{example.axisStep.label}:</span>
+              <code className="ing-axis-explanations__step-formula">{example.axisStep.formula}</code>
+            </li>
+            <li>
+              <span className="ing-axis-explanations__step-title">{t.stepOverallTitle}</span>
+              <div className="ing-axis-explanations__example-row">
+                {example.axes.map((axis, i) => (
+                  <Fragment key={axis.id}>
+                    {i > 0 && (
+                      <span className="ing-axis-explanations__example-op" aria-hidden="true">
+                        +
+                      </span>
+                    )}
+                    <span className="ing-axis-explanations__example-axis" title={axis.tooltip}>
+                      <span className="ing-axis-explanations__example-axis-label">{axis.label}</span>
+                      <span className="ing-axis-explanations__example-axis-value">{num(axis.position, lang)}</span>
+                    </span>
+                  </Fragment>
+                ))}
+                <span className="ing-axis-explanations__example-op" aria-hidden="true">
+                  ÷ 5 × {POINTS_PER_POSITION} =
                 </span>
-              </Fragment>
-            ))}
-            <span className="ing-axis-explanations__example-op" aria-hidden="true">
-              ÷ 5 × 20 =
-            </span>
-            <span className="ing-axis-explanations__example-result" title={example.resultTooltip}>
-              {example.result}
-            </span>
-          </div>
+                <span className="ing-axis-explanations__example-result" title={example.resultTooltip}>
+                  {example.result}
+                </span>
+              </div>
+            </li>
+          </ol>
           <p className="ing-axis-explanations__example-hint">{t.exampleHint}</p>
         </div>
       </details>

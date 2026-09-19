@@ -35,7 +35,7 @@ const T = {
   pt: {
     panelLabel: 'Padrão de jogo',
     panelLabelRanking: 'Exporte seus status',
-    panelHint: 'cada eixo = média das stats vs. o Onyx da medalha',
+    panelHint: 'cada eixo = média das stats em pontos — 100 = Onyx, e além dele a escala é logarítmica',
     whatToCompareAria: 'O que comparar',
     modeVsMe: (name: string) => `Contra ${name}`,
     modeTwo: 'Dois agentes',
@@ -57,7 +57,7 @@ const T = {
   en: {
     panelLabel: 'Play pattern',
     panelLabelRanking: 'Export your stats',
-    panelHint: "each axis = average of stats vs. the badge's Onyx threshold",
+    panelHint: 'each axis = average of stats in points — 100 = Onyx, and past it the scale is logarithmic',
     whatToCompareAria: 'What to compare',
     modeVsMe: (name: string) => `Against ${name}`,
     modeTwo: 'Two agents',
@@ -368,7 +368,7 @@ export default function ProfileRadar({
   )
 
   return (
-    // O hint ("cada eixo = média das stats...") explica o gráfico — sem gráfico, sem hint.
+    // O hint ("cada eixo = média das stats em pontos...") explica o gráfico — sem gráfico, sem hint.
     <Panel label={panelLabel} hint={chartHidden ? undefined : t.panelHint}>
       {variant === 'ranking' ? (
         <>

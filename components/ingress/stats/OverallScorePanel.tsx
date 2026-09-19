@@ -63,14 +63,14 @@ export type AgentScore = {
 const T = {
   pt: {
     panelLabel: 'Nota geral',
-    panelHint: 'média dos 5 eixos × 20 — 100 = Onyx em tudo',
+    panelHint: 'média dos 5 eixos × 20 — 100 = Onyx em tudo; além do Onyx, cada dobra soma 20 (log₂)',
     overallRow: 'Nota geral',
     tierRow: 'Tier',
     apRow: 'AP total',
   },
   en: {
     panelLabel: 'Overall score',
-    panelHint: 'average of the 5 axes × 20 — 100 = Onyx across the board',
+    panelHint: 'average of the 5 axes × 20 — 100 = Onyx across the board; past Onyx, each doubling adds 20 (log₂)',
     overallRow: 'Overall score',
     tierRow: 'Tier',
     apRow: 'Total AP',

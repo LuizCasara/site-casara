@@ -43,3 +43,4 @@ ao ADR).
 | [0002](./0002-sanitizacao-de-notificacoes-telegram-e-email.md) | Sanitização de notificações (Telegram/e-mail) em vez de reescrita para HTML | Aceito |
 | [0003](./0003-upgrade-para-nextjs-16.md) | Upgrade para Next.js 16, com React travado em 19.2.x | Aceito |
 | [0004](./0004-remocao-do-bloco-env-do-next-config.md) | Remoção do bloco `env` do `next.config.ts` | Aceito |
+| [0005](./0005-escala-logaritmica-alem-do-onyx.md) | Escala logarítmica (log₂) para a nota do Ingress além do Onyx | Aceito |

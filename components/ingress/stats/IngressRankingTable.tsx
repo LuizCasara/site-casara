@@ -138,11 +138,11 @@ function MiniPlayStyleRadar({
   faction: RankingRow['faction']
   lang: Lang
 }) {
-  const axes = computeRadarAxes(stats) as {id: string; label: string; labelEn: string; onyxRatio: number}[]
+  const axes = computeRadarAxes(stats) as {id: string; label: string; labelEn: string; score: number}[]
   const n = axes.length
-  const maxRatio = Math.max(...axes.map((a) => a.onyxRatio), 0.01)
-  const radiusIn = (ratio: number) => PLAYSTYLE_R * Math.max(Math.min(ratio / maxRatio, 1), 0.02)
-  const shape = axes.map((a, i) => playStylePoint(i, n, radiusIn(a.onyxRatio)).join(',')).join(' ')
+  const maxScore = Math.max(...axes.map((a) => a.score), 1)
+  const radiusIn = (score: number) => PLAYSTYLE_R * Math.max(Math.min(score / maxScore, 1), 0.02)
+  const shape = axes.map((a, i) => playStylePoint(i, n, radiusIn(a.score)).join(',')).join(' ')
 
   return (
     <svg
@@ -420,14 +420,19 @@ export default function IngressRankingTable({
   // "top 100" fixo como antes de T15.
   useEffect(() => {
     mounted.current = true
+    // `cancelled` é por execução do efeito: `mounted.current` volta a `true` assim que o efeito re-executa (mudou
+    // ordenação/página/filtro), então sozinho ele deixava uma resposta do poll ANTIGO ainda em voo sobrescrever
+    // `rows` com a ordenação anterior.
+    let cancelled = false
     const id = window.setInterval(async () => {
       const fresh = await fetchPage({page, pageSize, sortKey, sortDir, search, faction: factionFilter})
-      if (fresh && mounted.current) {
+      if (fresh && mounted.current && !cancelled) {
         setRows(fresh.rows)
         setTotal(fresh.total)
       }
     }, POLL_MS)
     return () => {
+      cancelled = true
       mounted.current = false
       window.clearInterval(id)
     }

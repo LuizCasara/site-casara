@@ -18,6 +18,14 @@
 - **Date**: 2026-09-12
 - **Status**: active
 
+### AD-003
+- **Decision**: A nota do "Padrão de jogo" (Ingress) cresce em **log₂** além do Onyx — `posição = 5 + log₂(valor ÷ Onyx)`, cada dobra soma 1 — em vez de linear; e o radar usa a mesma função e a mesma escala (nota do eixo, 100 = Onyx), com botões de escala `Onyx / ×4 / ×16 / Estilo` (padrão: Estilo).
+- **Reason**: com a escala linear, uma única medalha (Mind Units, Onyx de só 4 M) chegava a 100–265× Onyx e decidia sozinha o ranking; radar (travado em 2×) e nota geral (sem trava) também se contradiziam na tela.
+- **Trade-off**: some a diferença bruta entre quem tem 4× e quem tem 400× (continua contando, mas comprimida); `casara.ingress_ranking_history` não guarda os stats, então snapshots antigos ficam na escala antiga. Por que não "tirar o MU" nem "travar em N×": ver o ADR.
+- **Scope**: nota geral, notas por eixo, radar, mensagem de comparação do Telegram. Detalhes, números antes/depois e operação do recálculo em `docs/adr/0005-escala-logaritmica-alem-do-onyx.md`.
+- **Date**: 2026-09-18
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: ingress-ranking-comparison (`.specs/features/ingress-ranking-comparison/`) — **FECHADA. Execute completo (T1-T17 + 1 fix pós-Verifier) + Verifier PASS na 2ª rodada** (`validate_state.py` confirma; a 1ª rodada achou 1 gap cosmético — ordem dos emblemas país/facção trocada em `AgentSelect` —, corrigido em `390bc89` e reverificado).
