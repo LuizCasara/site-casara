@@ -1,7 +1,7 @@
 'use client'
 
-import {fmtStat} from '@/lib/ingress-format.mjs'
 import {useLang} from '@/context/LanguageContext'
+import CountUp from '../CountUp'
 
 export type TierCounts = {bronze: number; silver: number; gold: number; platinum: number; onyx: number}
 
@@ -54,25 +54,25 @@ export default function NerdStatTiles({
   return (
     <div className="ing-grid">
       <div className="ing-stat">
-        <div className="ing-stat__value">{fmtStat(totalAgents)}</div>
+        <div className="ing-stat__value"><CountUp value={totalAgents} /></div>
         <div className="ing-stat__label">{t.agents}</div>
       </div>
       <div className="ing-stat">
-        <div className="ing-stat__value">{fmtStat(totalLifetimeAp)}</div>
+        <div className="ing-stat__value"><CountUp value={totalLifetimeAp} /></div>
         <div className="ing-stat__label">{t.ap}</div>
       </div>
       <div className="ing-stat">
-        <div className="ing-stat__value">{fmtStat(totalSubmissions)}</div>
+        <div className="ing-stat__value"><CountUp value={totalSubmissions} /></div>
         <div className="ing-stat__label">{t.submissions}</div>
       </div>
       {TIER_ORDER.map((tier) => (
         <div className="ing-stat" key={tier}>
-          <div className="ing-stat__value">{fmtStat(badgeTiersGranted[tier])}</div>
+          <div className="ing-stat__value"><CountUp value={badgeTiersGranted[tier]} /></div>
           <div className="ing-stat__label">{t.tiers(t.tierLabel[tier])}</div>
         </div>
       ))}
       <div className="ing-stat">
-        <div className="ing-stat__value">{fmtStat(onyxClubCount)}</div>
+        <div className="ing-stat__value"><CountUp value={onyxClubCount} /></div>
         <div className="ing-stat__label">{t.onyxClub}</div>
       </div>
     </div>

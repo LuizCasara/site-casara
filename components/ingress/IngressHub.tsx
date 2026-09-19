@@ -4,6 +4,7 @@ import Link from 'next/link'
 import {FaUserAstronaut, FaTrophy} from 'react-icons/fa'
 import {INGRESS_LINK_GROUPS} from '@/lib/ingress-links'
 import {useLang} from '@/context/LanguageContext'
+import InstallPwaCard from '@/components/ingress/InstallPwaCard'
 
 const T = {
   pt: {
@@ -58,6 +59,8 @@ export default function IngressHub() {
           <span>{t.rankingBody}</span>
         </Link>
       </div>
+
+      <InstallPwaCard />
 
       <section className="ing-hub__links" aria-label={t.linksHeading}>
         {INGRESS_LINK_GROUPS.map((group, i) => (

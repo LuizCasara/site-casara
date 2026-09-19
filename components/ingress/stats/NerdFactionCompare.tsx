@@ -2,6 +2,7 @@
 
 import {fmtStat, fmtStatCompact} from '@/lib/ingress-format.mjs'
 import {useLang} from '@/context/LanguageContext'
+import CountUp from '../CountUp'
 
 export type FactionStats = {agentCount: number; totalAp: number; avgOverallScore: number; onyxBadges: number}
 
@@ -42,12 +43,14 @@ function DivergentRow({
   right,
   fmt,
   full,
+  decimals,
 }: {
   label: string
   left: number
   right: number
   fmt: (n: number) => string
   full?: (n: number) => string
+  decimals?: number
 }) {
   const max = Math.max(left, right, 1)
   const leftPct = (left / max) * 100
@@ -55,7 +58,7 @@ function DivergentRow({
   return (
     <div className="ing-nerd-divergent-row">
       <span className="ing-nerd-divergent-value ing-nerd-divergent-value--left" title={full?.(left)}>
-        {fmt(left)}
+        <CountUp value={left} format={fmt} decimals={decimals} />
       </span>
       <div className="ing-nerd-divergent-bars">
         <div className="ing-nerd-divergent-bar ing-nerd-divergent-bar--enlightened" style={{width: `${leftPct}%`}} />
@@ -63,7 +66,7 @@ function DivergentRow({
         <div className="ing-nerd-divergent-bar ing-nerd-divergent-bar--resistance" style={{width: `${rightPct}%`}} />
       </div>
       <span className="ing-nerd-divergent-value ing-nerd-divergent-value--right" title={full?.(right)}>
-        {fmt(right)}
+        <CountUp value={right} format={fmt} decimals={decimals} />
       </span>
     </div>
   )
@@ -97,7 +100,7 @@ export default function NerdFactionCompare({
       </div>
       <DivergentRow label={t.agents} left={enlightened.agentCount} right={resistance.agentCount} fmt={fmtStat} />
       <DivergentRow label={t.ap} left={enlightened.totalAp} right={resistance.totalAp} fmt={fmtStatCompact} full={fmtStat} />
-      <DivergentRow label={t.score} left={enlightened.avgOverallScore} right={resistance.avgOverallScore} fmt={fmtScore} />
+      <DivergentRow label={t.score} left={enlightened.avgOverallScore} right={resistance.avgOverallScore} fmt={fmtScore} decimals={1} />
       <DivergentRow label={t.onyx} left={enlightened.onyxBadges} right={resistance.onyxBadges} fmt={fmtStat} />
     </div>
   )

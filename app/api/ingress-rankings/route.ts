@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import sql from "@/lib/db";
-import { normalizeCodenameKey } from "@/lib/ingress-rankings.mjs";
+import {
+  normalizeCodenameKey,
+  buildRankingPageQuery,
+  isValidPageSize,
+  isValidSortKey,
+  isValidSortDir,
+  isValidFactionFilter,
+} from "@/lib/ingress-rankings.mjs";
 import { normalizeCountryCode, isValidCountryCode } from "@/lib/ingress-countries.mjs";
 import { computeAxisScores, computeOverallScore, overallTierLabel, computeStatTiers } from "@/lib/ingress-tier-score.mjs";
 import { RADAR_STAT_KEYS } from "@/lib/ingress-compare-message.mjs";
@@ -8,8 +15,6 @@ import { rateLimitOrNull } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-const DEFAULT_LIMIT = 100;
-const MAX_LIMIT = 100;
 const FACTIONS = new Set(["enlightened", "resistance"]);
 // Mesmo teto de nome que o Quiz ao Vivo (QUIZ_LIMITS.NAME_MAX_LEN) — sem
 // isso, `codename` é texto livre sem limite, e esta é a rota pensada pra
@@ -272,17 +277,38 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * Tabela principal do ranking, agora paginada/ordenável/buscável no servidor
+ * (feature ingress-ranking-comparison — IRCMP-16 a 23): parâmetros fora da
+ * allow-list caem no padrão em vez de 500/SQL malformado. `rank` por linha é
+ * sempre o canônico (nota geral desc -> AP desc -> criado asc), calculado
+ * ANTES de busca/filtro/ordenação de exibição — nunca mente a colocação real.
+ */
 export async function GET(request: NextRequest) {
   try {
-    const requested = Number(request.nextUrl.searchParams.get("limit"));
-    const limit = Math.min(MAX_LIMIT, Math.max(1, Number.isFinite(requested) && requested > 0 ? requested : DEFAULT_LIMIT));
+    const params = request.nextUrl.searchParams;
 
-    const rows = await sql`
-      SELECT codename_key, codename, faction, lifetime_ap, overall_score, axis_scores, stat_values, country_code, recursions, created_at, updated_at
-      FROM casara.ingress_rankings
-      ORDER BY overall_score DESC, lifetime_ap DESC, created_at ASC
-      LIMIT ${limit}
-    `;
+    const requestedPage = Number(params.get("page"));
+    const page = Number.isFinite(requestedPage) && requestedPage >= 1 ? Math.floor(requestedPage) : 1;
+
+    const requestedPageSize = Number(params.get("pageSize"));
+    const pageSize = isValidPageSize(requestedPageSize) ? requestedPageSize : 20;
+
+    const requestedSort = params.get("sort") ?? "";
+    const sortKey = isValidSortKey(requestedSort) ? requestedSort : "score";
+
+    const requestedDir = params.get("dir") ?? "";
+    const sortDir = isValidSortDir(requestedDir) ? requestedDir : undefined;
+
+    const search = params.get("search") ?? "";
+
+    const requestedFaction = params.get("faction") ?? "all";
+    const faction = isValidFactionFilter(requestedFaction) ? requestedFaction : "all";
+
+    const { text, values } = buildRankingPageQuery({ page, pageSize, sortKey, sortDir, search, faction });
+    const rows = await sql.query(text, values);
+
+    const total = rows.length > 0 ? Number((rows[0] as Record<string, unknown>).total_count) : 0;
 
     const serialized = rows.map((row) => ({
       codename_key: row.codename_key,
@@ -297,10 +323,11 @@ export async function GET(request: NextRequest) {
       recursions: row.recursions === null || row.recursions === undefined ? null : Number(row.recursions),
       created_at: row.created_at,
       updated_at: row.updated_at,
+      rank: Number(row.rank),
     }));
 
     return NextResponse.json(
-      { rows: serialized },
+      { rows: serialized, total, page, pageSize },
       { headers: { "Cache-Control": "s-maxage=20, stale-while-revalidate=40" } }
     );
   } catch (err) {

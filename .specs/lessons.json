@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 8,
+  "next_id": 10,
   "lessons": [
     {
       "id": "L-001",
@@ -130,6 +130,42 @@
       ],
       "created": "2026-09-13T21:16:07Z",
       "last_seen": "2026-09-13T21:16:07Z"
+    },
+    {
+      "id": "L-008",
+      "key": "ac_gap::when a spec quotes an exact element order e g badge icon sequence diff the rendered jsx order against that literal quote not just check that every element is present",
+      "text": "When a spec quotes an exact element order (e.g. badge/icon sequence), diff the rendered JSX order against that literal quote, not just check that every element is present.",
+      "signal": "ac_gap",
+      "scope": "components",
+      "status": "candidate",
+      "features": [
+        "ingress-ranking-comparison"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "components/ingress/AgentSelect.tsx:200 (components)"
+      ],
+      "created": "2026-09-18T05:46:10Z",
+      "last_seen": "2026-09-18T05:46:10Z"
+    },
+    {
+      "id": "L-009",
+      "key": "surviving_mutant::a guard clause in an api route with no automated test e g an a b identity check can be inverted by a one character edit and still pass test tsc lint build flag such guards for manual re check whenever the route is touched again",
+      "text": "A guard clause in an API route with no automated test (e.g. an a===b identity check) can be inverted by a one-character edit and still pass test+tsc+lint+build; flag such guards for manual re-check whenever the route is touched again.",
+      "signal": "surviving_mutant",
+      "scope": "routes",
+      "status": "candidate",
+      "features": [
+        "ingress-ranking-comparison"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "app/api/ingress-rankings/compare/route.ts:46 (routes)"
+      ],
+      "created": "2026-09-18T05:46:15Z",
+      "last_seen": "2026-09-18T05:46:15Z"
     }
   ]
 }

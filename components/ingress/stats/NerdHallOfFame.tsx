@@ -1,10 +1,10 @@
 'use client'
 
-import {fmtStat} from '@/lib/ingress-format.mjs'
 import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import {STAT_COLUMNS} from '@/lib/ingress-stats.mjs'
 import {useLang} from '@/context/LanguageContext'
+import CountUp from '../CountUp'
 import NerdAgentTag from './NerdAgentTag'
 
 /**
@@ -80,7 +80,7 @@ function RecordRow({
       <span className="ing-nerd-hof-label">{label}</span>
       {record ? (
         <>
-          <span className="ing-nerd-hof-value">{fmtStat(record.value)}</span>
+          <span className="ing-nerd-hof-value"><CountUp value={record.value} /></span>
           <NerdAgentTag codename={record.codename} faction={record.faction} countryCode={record.countryCode} />
         </>
       ) : (

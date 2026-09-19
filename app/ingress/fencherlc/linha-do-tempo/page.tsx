@@ -26,9 +26,10 @@ function buildMedalStats(stats: Record<string, number>) {
 }
 
 export const metadata: Metadata = {
-  title: 'Linha do tempo — FencherLC',
+  // EN de propósito — ver o comentário em `app/ingress/layout.tsx`.
+  title: 'Timeline — FencherLC',
   description:
-    'Todas as conquistas do agente FencherLC no tempo: medalhas de estatística, anomalias e eventos, com filtros, zoom e navegação.',
+    "Every achievement of agent FencherLC over time: stat medals, anomalies and events, with filters, zoom and navigation.",
 }
 
 export default function TimelinePage() {

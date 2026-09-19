@@ -1,8 +1,8 @@
 'use client'
 
-import {fmtStat} from '@/lib/ingress-format.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import {useLang} from '@/context/LanguageContext'
+import CountUp from '../CountUp'
 import CommunityRadarChart from './CommunityRadarChart'
 import NerdAgentTag from './NerdAgentTag'
 import type {HallOfFameRecord} from './NerdHallOfFame'
@@ -57,7 +57,7 @@ export default function NerdAverages({
   return (
     <div className="ing-nerd-averages">
       <div className="ing-stat">
-        <div className="ing-stat__value">{fmtStat(Math.round(avgApPerAgent))}</div>
+        <div className="ing-stat__value"><CountUp value={Math.round(avgApPerAgent)} /></div>
         <div className="ing-stat__label">{t.avgAp}</div>
       </div>
 
@@ -69,7 +69,7 @@ export default function NerdAverages({
             <div className="ing-nerd-histogram-track">
               <div className="ing-nerd-histogram-bar" style={{width: `${(band.count / maxCount) * 100}%`}} />
             </div>
-            <span className="ing-nerd-histogram-count">{fmtStat(band.count)}</span>
+            <span className="ing-nerd-histogram-count"><CountUp value={band.count} /></span>
           </div>
         ))}
       </div>
@@ -90,7 +90,7 @@ export default function NerdAverages({
         ) : (
           <div className="ing-grid">
             <div className="ing-stat">
-              <div className="ing-stat__value">{fmtStat(Math.round(recursions.avg ?? 0))}</div>
+              <div className="ing-stat__value"><CountUp value={Math.round(recursions.avg ?? 0)} /></div>
               <div className="ing-stat__label">{t.recursionsAvg}</div>
             </div>
             <div className="ing-stat ing-stat--corner">
@@ -101,11 +101,11 @@ export default function NerdAverages({
                   countryCode={recursionsHolder.countryCode}
                 />
               ) : null}
-              <div className="ing-stat__value">{fmtStat(recursions.max ?? 0)}</div>
+              <div className="ing-stat__value"><CountUp value={recursions.max ?? 0} /></div>
               <div className="ing-stat__label">{t.recursionsMax}</div>
             </div>
             <div className="ing-stat">
-              <div className="ing-stat__value">{fmtStat(recursions.reportedCount)}</div>
+              <div className="ing-stat__value"><CountUp value={recursions.reportedCount} /></div>
               <div className="ing-stat__label">{t.recursionsReported}</div>
             </div>
           </div>

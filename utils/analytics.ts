@@ -397,18 +397,13 @@ export const trackBookShared = (slug: string, metodo: 'share' | 'clipboard') =>
 // ─── Ingress ──────────────────────────────────────────────────────────────
 
 /**
- * As 3 formas de entrada de `/ingress/ranking` viram 3 eventos próprios (não
- * um evento com campo `mode`) — cada um responde a uma pergunta diferente
- * ("quantos comparam comigo" vs. "quantos comparam com outro agente" vs.
- * "quantos só entram no ranking"). `written` sempre separa uma escrita real
- * do "já enviou nos últimos 5 minutos" (debounce de `POST /api/ingress-rankings`).
+ * `written` separa uma escrita real do "já enviou nos últimos 5 minutos"
+ * (debounce de `POST /api/ingress-rankings`). Os eventos irmãos
+ * `ingress_compare_vs_me`/`ingress_compare_two_agents` (modos que existiam
+ * antes de `/ingress/ranking` perder "Comparar com {FencherLC}"/"Comparar
+ * com outro agente") saíram daqui — a nova comparação por seleção é só
+ * leitura (`ingress_comparison_viewed`, mais abaixo), sem POST.
  */
-export const trackIngressCompareVsMe = (written: boolean) =>
-  trackEvent('ingress_compare_vs_me', { written });
-
-export const trackIngressCompareTwoAgents = (written: boolean) =>
-  trackEvent('ingress_compare_two_agents', { written });
-
 export const trackIngressRankingJoin = (written: boolean) =>
   trackEvent('ingress_ranking_join', { written });
 
@@ -431,3 +426,10 @@ export const trackIngressRankingShared = (metodo: 'share' | 'clipboard') =>
 // compartilham a posição de um agente específico vs. o ranking como um todo.
 export const trackIngressAgentShared = (metodo: 'share' | 'clipboard') =>
   trackEvent('ingress_agent_shared', { metodo });
+
+// Dispara só quando os dois agentes terminam de carregar e a comparação é de
+// fato renderizada na aba "Comparação" — não a cada tecla/seleção
+// intermediária no seletor (gesto deliberado, não travessia contínua, mesmo
+// critério que já vale para o resto dos eventos de `/ingress`).
+export const trackIngressComparisonViewed = (codenameKeyA: string, codenameKeyB: string) =>
+  trackEvent('ingress_comparison_viewed', { codenameKeyA, codenameKeyB });

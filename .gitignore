@@ -46,3 +46,6 @@ scratchpad/
 
 # artefatos de sessão do Playwright MCP (screenshots/logs de verificação manual)
 .playwright-mcp/
+
+# dumps locais de backup do recálculo de nota (scripts/ingress-rescore.mjs) — dado de produção, não vai pro git
+scripts/backups/
