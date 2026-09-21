@@ -1,6 +1,6 @@
 'use client'
 
-import {Fragment, useEffect, useRef, useState} from 'react'
+import {Fragment, useEffect, useLayoutEffect, useRef, useState} from 'react'
 import {motion, useReducedMotion} from 'framer-motion'
 import {FaBalanceScale, FaShareAlt} from 'react-icons/fa'
 import {toast} from 'sonner'
@@ -81,6 +81,52 @@ function axisLabel(id: AxisId, lang: Lang): string {
 
 // rank, score, faction, country, codename, dates, ap, details (8) + os 5 eixos.
 const TOTAL_COLUMNS = 8 + AXIS_COLUMNS.length
+
+/** Quantas colunas a tabela está mostrando agora — as `<col>` que o CSS não tirou com `display: none`. */
+function visibleColumnCount(table: HTMLTableElement): number {
+  const cols = table.querySelectorAll('colgroup > col')
+  let visible = 0
+  cols.forEach((col) => {
+    if (getComputedStyle(col).display !== 'none') visible += 1
+  })
+  return visible || TOTAL_COLUMNS
+}
+
+/**
+ * Célula da sub-linha de detalhe, com `colSpan` = colunas VISÍVEIS, não o total.
+ *
+ * Em painel estreito o `@container` de theme.css tira 6 colunas da grade com
+ * `display: none`. Um `colSpan` fixo em 13 sobre 7 colunas faz o navegador
+ * inventar 6 colunas fantasmas (é assim que funciona colspan além da grade), e
+ * numa tabela `table-layout: fixed` elas dividem com o `codename` — a única
+ * coluna sem largura — o que sobra: ao expandir uma linha ele caía de ~131px
+ * para ~19px e o nome saía em pé, letra por letra.
+ *
+ * O número vem do DOM (o CSS é quem decide o que aparece), e não de um segundo
+ * breakpoint duplicado aqui. `useLayoutEffect` mede antes da pintura, então a
+ * primeira frame já sai com o valor certo; o `ResizeObserver` cobre girar o
+ * aparelho ou redimensionar a janela com a linha aberta.
+ */
+function DetailCell({children}: {children: React.ReactNode}) {
+  const ref = useRef<HTMLTableCellElement>(null)
+  const [span, setSpan] = useState(TOTAL_COLUMNS)
+
+  useLayoutEffect(() => {
+    const table = ref.current?.closest('table')
+    if (!table) return
+    const measure = () => setSpan(visibleColumnCount(table))
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(table)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <td ref={ref} className="ing-ranking-table__detail-cell" colSpan={span}>
+      {children}
+    </td>
+  )
+}
 
 type SortableKey = 'score' | 'ap' | 'country' | AxisId
 type SortDir = 'asc' | 'desc'
@@ -797,7 +843,7 @@ export default function IngressRankingTable({
                   </motion.tr>
                   {isOpen ? (
                     <tr className="ing-ranking-table__detail-row">
-                      <td className="ing-ranking-table__detail-cell" colSpan={TOTAL_COLUMNS}>
+                      <DetailCell>
                         <div className="ing-ranking-table__detail-inner">
                           <div
                             className={`ing-ranking-table__detail${row.faction === 'resistance' ? ' is-resistance' : ''}`}
@@ -911,7 +957,7 @@ export default function IngressRankingTable({
                           </div>
                           <AgentHistoryChart codenameKey={row.codename_key} agentName={row.codename} faction={row.faction} />
                         </div>
-                      </td>
+                      </DetailCell>
                     </tr>
                   ) : null}
                 </Fragment>
