@@ -244,6 +244,31 @@ html:has(.ingress-prime) {
   overflow-wrap: anywhere;
 }
 
+/* Tile do "AP total (lifetime)": o número por extenso tem 14 caracteres e, em
+   tile estreito, quebrava no último dígito. O tile vira o próprio container
+   (`inline-size` é seguro aqui: a largura vem da trilha do grid, nunca do
+   conteúdo) e, abaixo da largura em que o número cabe, troca pela forma
+   compacta. Consulta o TILE, não o viewport: em 2 colunas (celular) e em 3
+   colunas (a partir de 34rem) ele tem larguras parecidas com viewports bem
+   diferentes. `content-box`: descontados o padding e a borda do tile. */
+.ing-stat--ap {
+  container-type: inline-size;
+}
+
+.ing-stat__ap-compact {
+  display: none;
+  white-space: nowrap;
+}
+
+@container (max-width: 11rem) {
+  .ing-stat__ap-full {
+    display: none;
+  }
+  .ing-stat__ap-compact {
+    display: inline;
+  }
+}
+
 .ing-stat__label {
   font-size: 0.72rem;
   color: var(--ing-text-dim);
