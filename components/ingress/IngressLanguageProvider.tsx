@@ -2,7 +2,8 @@
 
 import {useEffect} from 'react'
 import {LanguageProvider, useLang} from '@/context/LanguageContext'
-import {INGRESS_LANG_STORAGE_KEY, resolveIngressLang} from '@/lib/ingress-lang.mjs'
+import {resolveIngressLang} from '@/lib/ingress-lang.mjs'
+import {getSitePrefs} from '@/lib/use-site-preferences'
 
 /**
  * Filho de render nulo que roda UMA vez após a hidratação e troca o idioma se a
@@ -19,12 +20,8 @@ function IngressLangDetector() {
   const {setLang} = useLang()
 
   useEffect(() => {
-    let stored: string | null = null
-    try {
-      stored = localStorage.getItem(INGRESS_LANG_STORAGE_KEY)
-    } catch {
-      // localStorage bloqueado — segue só com o idioma do navegador
-    }
+    // `null` = o visitante nunca escolheu (ou o storage está bloqueado): vale o idioma do navegador.
+    const stored = getSitePrefs().ingress.lang as string | null
     const resolved = resolveIngressLang(stored, navigator.languages?.length ? navigator.languages : [navigator.language])
     if (resolved !== 'en') setLang(resolved)
   }, [setLang])

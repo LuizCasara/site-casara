@@ -7,6 +7,7 @@ import {parseAppExport} from '@/lib/ingress-stats.mjs'
 import {compareHash, RADAR_STAT_KEYS} from '@/lib/ingress-compare-message.mjs'
 import type {Profile} from '@/lib/ingress'
 import {useLang} from '@/context/LanguageContext'
+import {getSitePrefs, setSitePref} from '@/lib/use-site-preferences'
 import Panel from './Panel'
 import CountryPicker from './CountryPicker'
 import RadarOverlay from './RadarOverlay'
@@ -93,7 +94,6 @@ function toAgent(text: string, noAgentMsg: string): Agent {
 }
 
 const DEDUPE_MS = 10 * 60 * 1000
-const SENT_KEY = 'ing-cmp-sent'
 
 /** Só as stats que o radar usa — é isso que vai pro servidor/Telegram. */
 function radarStats(stats: Record<string, number>) {
@@ -111,23 +111,15 @@ function notifyTelegram(a: Agent, b: Agent, vsOwner: boolean, onSent: () => void
     b: {codename: b.codename, stats: radarStats(b.stats), capturedAt: b.capturedAt},
     vsOwner,
   }
-  let sent: Record<string, number> = {}
-  try {
-    sent = JSON.parse(localStorage.getItem(SENT_KEY) || '{}')
-  } catch {
-    sent = {}
-  }
+  // Mora em `casara.site` (`ingress.compareAlertSent`); storage bloqueado só significa "sem dedupe".
+  const sent = getSitePrefs().ingress.compareAlertSent as Record<string, number>
   const hash = compareHash(payload)
   const now = Date.now()
   if (sent[hash] && now - sent[hash] < DEDUPE_MS) return
-  try {
-    const pruned: Record<string, number> = {}
-    for (const [k, t] of Object.entries(sent)) if (now - t < DEDUPE_MS) pruned[k] = t
-    pruned[hash] = now
-    localStorage.setItem(SENT_KEY, JSON.stringify(pruned))
-  } catch {
-    // localStorage bloqueado — segue sem dedupe
-  }
+  const pruned: Record<string, number> = {}
+  for (const [k, t] of Object.entries(sent)) if (now - t < DEDUPE_MS) pruned[k] = t
+  pruned[hash] = now
+  setSitePref('ingress', 'compareAlertSent', pruned)
   fetch('/api/telegram', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
