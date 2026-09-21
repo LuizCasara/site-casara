@@ -1,10 +1,10 @@
-import {NextResponse} from 'next/server';
-import {getLoveLanguageDisplayName} from '@/apps/desenvolvimento-pessoal/love-language-info';
-import {compareMessages} from '@/lib/ingress-compare-message.mjs';
-import {radarPng} from './ingress-radar.jsx';
-import {rateLimitOrNull} from '@/lib/rate-limit';
-import {escapeTelegramMarkdown as esc} from '@/lib/telegram-markdown.mjs';
-import {countryFlagEmoji} from '@/lib/ingress-format.mjs';
+import { NextResponse } from 'next/server';
+import { getLoveLanguageDisplayName } from '@/apps/desenvolvimento-pessoal/love-language-info';
+import { compareMessages } from '@/lib/ingress-compare-message.mjs';
+import { radarPng } from './ingress-radar.jsx';
+import { rateLimitOrNull } from '@/lib/rate-limit';
+import { escapeTelegramMarkdown as esc } from '@/lib/telegram-markdown.mjs';
+import { countryFlagEmoji } from '@/lib/ingress-format.mjs';
 
 /**
  * Envia a comparação de fichas do radar do /ingress para o tópico do Ingress:
@@ -13,7 +13,7 @@ import {countryFlagEmoji} from '@/lib/ingress-format.mjs';
  * @param {{a:{codename,stats}, b:{codename,stats}, vsOwner?:boolean}} data
  */
 async function sendIngressCompare(data) {
-    const {a, b, vsOwner} = data;
+    const { a, b, vsOwner } = data;
     if (!a?.codename || !b?.codename || !a?.stats || !b?.stats) {
         throw new Error('ingress-compare: faltam a/b com codename e stats');
     }
@@ -25,16 +25,16 @@ async function sendIngressCompare(data) {
         throw new Error('Telegram bot token or chat ID not configured');
     }
 
-    const {caption, table} = compareMessages({a, b, vsOwner});
+    const { caption, table } = compareMessages({ a, b, vsOwner });
     const base = `https://api.telegram.org/bot${botToken}`;
-    const common = {chat_id: chatId, parse_mode: 'Markdown'};
+    const common = { chat_id: chatId, parse_mode: 'Markdown' };
     if (threadId) common.message_thread_id = threadId;
 
     const sendJson = async (method, body) => {
         const r = await fetch(`${base}/${method}`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({...common, ...body}),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...common, ...body }),
         });
         if (!r.ok) throw new Error(`Telegram ${method}: ${JSON.stringify(await r.json())}`);
         return r.json();
@@ -42,7 +42,7 @@ async function sendIngressCompare(data) {
 
     let png = null;
     try {
-        png = await radarPng({a, b});
+        png = await radarPng({ a, b });
     } catch (e) {
         console.error('ingress-compare: radar PNG falhou, mando só texto', e);
     }
@@ -51,14 +51,14 @@ async function sendIngressCompare(data) {
         const form = new FormData();
         for (const [k, v] of Object.entries(common)) form.append(k, String(v));
         form.append('caption', caption);
-        form.append('photo', new Blob([png], {type: 'image/png'}), 'radar.png');
-        const r = await fetch(`${base}/sendPhoto`, {method: 'POST', body: form});
+        form.append('photo', new Blob([png], { type: 'image/png' }), 'radar.png');
+        const r = await fetch(`${base}/sendPhoto`, { method: 'POST', body: form });
         if (!r.ok) throw new Error(`Telegram sendPhoto: ${JSON.stringify(await r.json())}`);
     } else {
-        await sendJson('sendMessage', {text: caption});
+        await sendJson('sendMessage', { text: caption });
     }
 
-    return sendJson('sendMessage', {text: table});
+    return sendJson('sendMessage', { text: table });
 }
 
 /**
@@ -79,7 +79,7 @@ async function sendIngressCompare(data) {
  *   rankingUrl:string}} data
  */
 async function sendIngressRankingEntry(data) {
-    const {codename, rank, totalAgents, isNewAgent, window: rankWindow, rankingUrl} = data;
+    const { codename, rank, totalAgents, isNewAgent, window: rankWindow, rankingUrl } = data;
     if (!codename || !rank || !Array.isArray(rankWindow) || !rankingUrl) {
         throw new Error('ingress-ranking-entry: faltam codename/rank/window/rankingUrl');
     }
@@ -100,15 +100,16 @@ async function sendIngressRankingEntry(data) {
         .join('\n');
 
     const headline = isNewAgent
-        ? `🆕 *Novo agente no ranking do Ingress!*\n\n*${esc(codename)}* entrou na *${rank}ª posição* (de ${totalAgents}).`
-        : `📈 *Atualização no ranking do Ingress!*\n\n*${esc(codename)}* atualizou os stats e está na *${rank}ª posição* (de ${totalAgents}).`;
+        ? `🆕 *Novo agente no ranking!*\n\n*${esc(codename)}* entrou na *${rank}ª posição* (de ${totalAgents}).`
+        : `📈 *Atualização no ranking!*\n\n*${esc(codename)}* atualizou os stats e está na *${rank}ª posição* (de ${totalAgents}).`;
 
-    const text = `${headline}\n\n*Ranking ao redor:*\n${windowLines}\n\n[Ver ranking completo »](${rankingUrl})`;
+    // const text = `${headline}\n\n*Ranking ao redor:*\n${windowLines}\n\n[Ver ranking completo »](${rankingUrl})`;
+    const text = `${headline}\n\n*Ranking:*\n${windowLines}`;
 
     const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({chat_id: chatId, message_thread_id: threadId, text, parse_mode: 'Markdown'}),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, message_thread_id: threadId, text, parse_mode: 'Markdown' }),
     });
     if (!response.ok) throw new Error(`Telegram sendMessage: ${JSON.stringify(await response.json())}`);
     return response.json();
@@ -120,7 +121,7 @@ async function sendIngressRankingEntry(data) {
  * @returns {Promise<Object>} - Response from Telegram API
  */
 async function sendTemperamentTestMessage(data) {
-    const {name, age, date, results, executionCount} = data;
+    const { name, age, date, results, executionCount } = data;
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -210,7 +211,7 @@ async function sendTemperamentTestMessage(data) {
  * @returns {Promise<Object>} - Response from Telegram API
  */
 async function sendLoveLanguageTestMessage(data) {
-    const {name, age, date, results, executionCount} = data;
+    const { name, age, date, results, executionCount } = data;
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -299,7 +300,7 @@ export async function POST(request) {
 
     try {
         const data = await request.json();
-        const {type} = data;
+        const { type } = data;
 
         let result;
 
@@ -318,15 +319,15 @@ export async function POST(request) {
                 result = await sendIngressRankingEntry(data);
                 break;
             default:
-                return NextResponse.json({error: `tipo de notificação desconhecido: ${type}`}, {status: 400});
+                return NextResponse.json({ error: `tipo de notificação desconhecido: ${type}` }, { status: 400 });
         }
 
-        return NextResponse.json({success: true, result}, {status: 200});
+        return NextResponse.json({ success: true, result }, { status: 200 });
     } catch (error) {
         console.error('Error sending Telegram notification:', error);
         return NextResponse.json(
-            {error: error.message},
-            {status: 500}
+            { error: error.message },
+            { status: 500 }
         );
     }
 }
