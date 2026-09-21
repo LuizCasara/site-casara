@@ -2311,6 +2311,12 @@ html:has(.ingress-prime) {
   font-variant-numeric: tabular-nums;
 }
 
+/* AP em forma compacta só no celular (ver o bloco de 640px): fora dele, o
+   número por extenso cabe e é o que se quer ver. */
+.ing-ranking-table .ing-ranking-table__ap-compact {
+  display: none;
+}
+
 .ing-ranking-table td[data-col='score'] {
   font-family: var(--ing-font-display);
   font-weight: 700;
@@ -3241,14 +3247,20 @@ html:has(.ingress-prime) {
   .ing-ranking-table col[data-col='score'] { width: 3.4rem; }
   .ing-ranking-table col[data-col='faction'] { width: 1.7rem; }
   .ing-ranking-table col[data-col='country'] { width: 1.7rem; }
-  .ing-ranking-table col[data-col='ap'] { width: 5rem; }
-  /* AP total pode chegar a 9 dígitos + separador de milhar ("816.680.453")
-     — mais largo do que qualquer badge, então é o único valor numérico da
-     linha com risco real de não caber nem em 5rem. Quebra pra 2 linhas em
-     vez de vazar pro lado (`overflow-wrap: anywhere` sozinho não quebra
-     dígito a dígito sem espaço/hífen; `word-break: break-all` força). */
+  .ing-ranking-table col[data-col='ap'] { width: 3.6rem; }
+  /* AP total chega a 10 dígitos com separador ("1.390.379.639") — nem em 5rem
+     cabia, e quebrava em duas linhas. No celular mostra a forma compacta
+     ("1,4 bi", ver `fmtStatCompact`), que nunca passa de ~6 caracteres, e a
+     coluna encolhe: o que sobra vai pro codinome. O valor por extenso segue
+     no `title` do compacto e na tabela larga. */
+  .ing-ranking-table .ing-ranking-table__ap-full {
+    display: none;
+  }
+  .ing-ranking-table .ing-ranking-table__ap-compact {
+    display: inline;
+  }
   .ing-ranking-table td[data-col='ap'] {
-    word-break: break-all;
+    white-space: nowrap;
   }
 
   .ing-ranking-table__faction-badge {

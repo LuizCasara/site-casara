@@ -7,7 +7,7 @@ import {toast} from 'sonner'
 import {TextScramble} from '@/components/ui/text-scramble'
 import Panel from '../Panel'
 import AgentHistoryChart from './AgentHistoryChart'
-import {fmtStat} from '@/lib/ingress-format.mjs'
+import {fmtStat, fmtStatCompact} from '@/lib/ingress-format.mjs'
 import {RADAR_AXES, computeRadarAxes} from '@/lib/ingress-radar.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import {TIER_COLOR} from '@/lib/ingress-tiers.mjs'
@@ -807,7 +807,14 @@ export default function IngressRankingTable({
                     <td data-col="dates" title={t.datesTooltip(fmtDate(row.updated_at, lang), fmtDate(row.created_at, lang))}>
                       {fmtDate(row.updated_at, lang)}
                     </td>
-                    <td data-col="ap">{fmtStat(row.lifetime_ap)}</td>
+                    <td data-col="ap">
+                      {/* Só um dos dois aparece por vez (`display: none` some da árvore de acessibilidade
+                          também): o compacto ("1,4 bi") no celular, onde o número por extenso não cabe na coluna. */}
+                      <span className="ing-ranking-table__ap-full">{fmtStat(row.lifetime_ap)}</span>
+                      <span className="ing-ranking-table__ap-compact" title={fmtStat(row.lifetime_ap)}>
+                        {fmtStatCompact(row.lifetime_ap)}
+                      </span>
+                    </td>
                     {AXIS_COLUMNS.map((col) => (
                       <td key={col.id} data-col={col.id}>{fmtScore(row.axis_scores?.[col.id] ?? 0)}</td>
                     ))}
