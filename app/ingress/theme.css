@@ -3916,6 +3916,294 @@ html:has(.ingress-prime) {
   filter: drop-shadow(0 0 5px rgba(38, 182, 255, 0.6));
 }
 
+/* --- acordeão "Ver evolução" (AgentEvolutionAccordion) --- */
+
+.ing-acc {
+  margin-top: 1.3rem;
+  border-top: 1px solid var(--ing-edge-soft);
+}
+
+.ing-acc__btn {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 0.1rem;
+  cursor: pointer;
+}
+
+.ing-acc__btn:focus-visible {
+  outline: 2px solid var(--ing-green-soft);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+.ing-acc__chev {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: 0 0 auto;
+  color: var(--ing-text-faint);
+  transition: transform 0.18s ease;
+}
+
+.ing-acc__btn[aria-expanded='true'] .ing-acc__chev {
+  transform: rotate(90deg);
+  color: var(--ing-green);
+}
+
+.ing-acc__title {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--ing-text);
+}
+
+.ing-acc__hint {
+  margin-left: auto;
+  font-size: 0.74rem;
+  color: var(--ing-text-faint);
+  text-align: right;
+}
+
+.ing-acc__panel {
+  padding-bottom: 0.4rem;
+}
+
+.ing-acc__panel .ing-evo {
+  margin-top: 0;
+}
+
+@media (max-width: 560px) {
+  .ing-acc__hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ing-acc__chev {
+    transition: none;
+  }
+}
+
+/* --- "o que mudou" de um ponto do gráfico (AgentHistoryChanges) --- */
+
+.ing-evo__hit {
+  cursor: pointer;
+  outline: none;
+}
+
+.ing-evo__hit:focus-visible {
+  stroke: var(--ing-green-soft);
+  stroke-width: 2;
+}
+
+.ing-evo__ring {
+  fill: none;
+  stroke: var(--ing-green-soft);
+  stroke-width: 1.5;
+  opacity: 0.55;
+}
+
+.ing-evo--resistance .ing-evo__ring,
+.ing-evo--resistance .ing-evo__hit:focus-visible {
+  stroke: var(--ing-cyan-soft);
+}
+
+.ing-evo__hint {
+  margin: 0.55rem 0 0;
+  font-size: 0.72rem;
+  color: var(--ing-text-faint);
+}
+
+.ing-evo__changes {
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--ing-edge-soft);
+}
+
+.ing-evo__changes-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+  margin-bottom: 0.4rem;
+}
+
+.ing-evo__changes-head strong {
+  font-family: var(--ing-font-display);
+  font-size: 0.84rem;
+  color: var(--ing-text);
+}
+
+.ing-evo__changes-score {
+  font-size: 0.76rem;
+  color: var(--ing-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-evo__changes-ap {
+  margin-left: auto;
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.78rem;
+  color: var(--ing-green-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-evo--resistance .ing-evo__changes-ap {
+  color: var(--ing-cyan-soft);
+}
+
+.ing-evo__chg-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ing-evo__chg {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.6rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--ing-edge-soft);
+}
+
+.ing-evo__chg:last-child {
+  border-bottom: none;
+}
+
+.ing-evo__chg-icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ing-evo__chg-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ing-evo__chg-label {
+  flex: 1 1 8rem;
+  min-width: 0;
+  font-size: 0.82rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-evo__chg-tag {
+  flex: 0 0 auto;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ing-text);
+  border: 1px solid var(--ing-edge);
+  border-radius: 999px;
+  padding: 0.08rem 0.5rem;
+}
+
+/* Primeira medalha do stat: o destaque maior da lista — dourado, com o
+   fundo da linha levemente aceso, pra não se perder entre dezenas de linhas. */
+.ing-evo__chg.is-new-medal {
+  margin-inline: -0.4rem;
+  padding-inline: 0.4rem;
+  border-radius: 8px;
+  background: rgba(255, 210, 74, 0.09);
+}
+
+.ing-evo__chg-tag.is-new {
+  color: #1a1400;
+  background: #ffd24a;
+  border-color: #ffd24a;
+}
+
+.ing-evo__chg.is-tier-up .ing-evo__chg-tag {
+  color: #ffd24a;
+  border-color: rgba(255, 210, 74, 0.4);
+}
+
+.ing-evo__chg-vals {
+  flex: 0 0 auto;
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.76rem;
+  color: var(--ing-text-faint);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-evo__chg-vals b {
+  font-weight: 400;
+  color: var(--ing-text);
+}
+
+.ing-evo__chg-delta {
+  flex: 0 0 auto;
+  min-width: 4.2rem;
+  text-align: right;
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--ing-green-soft);
+  background: rgba(0, 230, 118, 0.1);
+  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-evo--resistance .ing-evo__chg-delta {
+  color: var(--ing-cyan-soft);
+  background: rgba(38, 182, 255, 0.1);
+}
+
+.ing-evo__chg-delta.is-down {
+  color: var(--ing-text-dim);
+  background: var(--ing-edge-soft);
+}
+
+.ing-evo__chg-foot {
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
+  color: var(--ing-text-faint);
+}
+
+/* Números longos: por extenso no desktop, resumidos ("48 mi") no celular. As
+   duas versões vão no HTML e o CSS escolhe — sem JS medindo a tela. */
+.ing-num__compact {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .ing-num__full {
+    display: none;
+  }
+
+  .ing-num__compact {
+    display: inline;
+  }
+
+  /* Antes → depois desce pra uma linha só dele, alinhado com o rótulo. */
+  .ing-evo__chg-vals {
+    order: 3;
+    flex-basis: 100%;
+    padding-left: 2.3rem;
+  }
+
+  .ing-evo__chg-delta {
+    margin-left: auto;
+  }
+
+  .ing-evo__changes-ap {
+    margin-left: 0;
+  }
+}
+
 /* --- alterna Ranking / Radar de atividade (topo de /ingress/ranking) --- */
 
 .ing-ranking-tabs {

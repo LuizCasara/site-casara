@@ -2,7 +2,7 @@
 
 import {useEffect, useMemo, useRef, useState, type CSSProperties} from 'react'
 import Panel from '../Panel'
-import {fmtStat} from '@/lib/ingress-format.mjs'
+import {fmtScoreDecimal, fmtStat} from '@/lib/ingress-format.mjs'
 import {COUNTRIES, flagSrc} from '@/lib/ingress-countries.mjs'
 import {useLang, type Lang} from '@/context/LanguageContext'
 
@@ -46,8 +46,6 @@ function countryName(code: string, lang: Lang): string | null {
 // Espelha o `s-maxage=20` de `GET /api/ingress-rankings/activity` — mesmo
 // espírito de `IngressRankingTable` (poll + botão "Atualizar" manual).
 const POLL_MS = 20_000
-
-const fmtScore = (n: number) => Math.round(n).toString()
 
 const T = {
   pt: {
@@ -290,7 +288,7 @@ export default function IngressActivityFeed({initialEvents}: {initialEvents: Act
                   <p className="ing-activity__desc">
                     {ev.kind === 'novo_agente' ? (
                       <>
-                        {t.enteredPrefix} <span className="ing-activity__num is-score">{fmtScore(ev.overall_score)}</span> ·{' '}
+                        {t.enteredPrefix} <span className="ing-activity__num is-score">{fmtScoreDecimal(ev.overall_score)}</span> ·{' '}
                         <span className="ing-activity__num is-up">
                           {fmtStat(ev.lifetime_ap)} {t.apSuffix}
                         </span>
@@ -304,7 +302,7 @@ export default function IngressActivityFeed({initialEvents}: {initialEvents: Act
                         </span>{' '}
                         · {t.scoreWord}{' '}
                         <span className="ing-activity__num is-score">
-                          {fmtScore(ev.overall_score - (ev.score_delta ?? 0))} &rarr; {fmtScore(ev.overall_score)}
+                          {fmtScoreDecimal(ev.overall_score - (ev.score_delta ?? 0))} &rarr; {fmtScoreDecimal(ev.overall_score)}
                         </span>
                       </>
                     )}

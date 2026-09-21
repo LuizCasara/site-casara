@@ -11,6 +11,7 @@ import {
 import { normalizeCountryCode, isValidCountryCode } from "@/lib/ingress-countries.mjs";
 import { computeAxisScores, computeOverallScore, overallTierLabel, computeStatTiers } from "@/lib/ingress-tier-score.mjs";
 import { RADAR_STAT_KEYS } from "@/lib/ingress-compare-message.mjs";
+import { pickHistoryStats } from "@/lib/ingress-history-diff.mjs";
 import { rateLimitOrNull } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -254,12 +255,17 @@ export async function POST(request: NextRequest) {
 
     if (written) {
       // Um snapshot append-only por escrita real (nunca sob debounce) —
-      // alimenta o gráfico de evolução. Erro aqui não pode derrubar a
+      // alimenta o gráfico de evolução e o "o que mudou" de cada ponto (por isso
+      // leva os stats do envio, não só AP/nota) — filtrados por `pickHistoryStats`:
+      // a tabela é append-only e `extra` chega sem validação, então só entra o que
+      // o painel sabe exibir. Erro aqui não pode derrubar a
       // resposta principal: o ranking já foi gravado com sucesso.
+      const historyStats = pickHistoryStats(stats);
+      const historyExtra = pickHistoryStats(extra);
       try {
         await sql`
-          INSERT INTO casara.ingress_ranking_history (codename_key, lifetime_ap, overall_score, axis_scores)
-          VALUES (${codenameKey}, ${lifetimeAp}, ${overallScore}, ${JSON.stringify(axisScoreMap)})
+          INSERT INTO casara.ingress_ranking_history (codename_key, lifetime_ap, overall_score, axis_scores, stat_values, extra_stats)
+          VALUES (${codenameKey}, ${lifetimeAp}, ${overallScore}, ${JSON.stringify(axisScoreMap)}, ${historyStats ? JSON.stringify(historyStats) : null}, ${historyExtra ? JSON.stringify(historyExtra) : null})
         `;
       } catch (err) {
         console.error("[api/ingress-rankings] falha ao gravar snapshot de histórico:", err);

@@ -37,6 +37,9 @@ const nextConfig: NextConfig = {
     outputFileTracingIncludes: {
         '/api/caderno': ['./content/caderno/**/*'],
         '/ingress/**': ['./data/ingress/**/*'],
+        // `history/changes` calcula tier e medalha por stat (`lib/ingress-history-diff.mjs`
+        // -> `ingress-badges.mjs` -> catálogo lido do disco), mesma razão de `/ingress/**`.
+        '/api/ingress-rankings/**': ['./data/ingress/**/*'],
     },
     // Sem bloco `env`: as três variáveis do Telegram só são lidas dentro de
     // app/api/telegram/route.js (server-only), que já enxerga process.env.*

@@ -204,6 +204,11 @@ CREATE TABLE IF NOT EXISTS casara.ingress_ranking_history (
   lifetime_ap    BIGINT NOT NULL,
   overall_score  NUMERIC(7,2) NOT NULL,
   axis_scores    JSONB NOT NULL,
+  -- Valores de cada stat no momento do envio (radar + resto do export), pro
+  -- painel de evolução dizer o que mudou entre dois envios. Nullable: snapshots
+  -- anteriores à migration 010 nunca guardaram isso.
+  stat_values    JSONB,
+  extra_stats    JSONB,
   recorded_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

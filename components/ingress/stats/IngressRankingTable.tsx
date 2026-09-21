@@ -7,7 +7,8 @@ import {toast} from 'sonner'
 import {TextScramble} from '@/components/ui/text-scramble'
 import Panel from '../Panel'
 import AgentHistoryChart from './AgentHistoryChart'
-import {fmtStat, fmtStatCompact} from '@/lib/ingress-format.mjs'
+import AgentEvolutionAccordion from './AgentEvolutionAccordion'
+import {fmtScoreDecimal, fmtStat, fmtStatCompact} from '@/lib/ingress-format.mjs'
 import {RADAR_AXES, computeRadarAxes} from '@/lib/ingress-radar.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
 import {TIER_COLOR} from '@/lib/ingress-tiers.mjs'
@@ -753,6 +754,7 @@ export default function IngressRankingTable({
                     <td
                       data-col="score"
                       className={row.faction === 'resistance' ? 'ing-ranking-table__score--resistance' : undefined}
+                      title={fmtScoreDecimal(row.overall_score)}
                     >
                       {fmtScore(row.overall_score)}
                     </td>
@@ -962,7 +964,9 @@ export default function IngressRankingTable({
                               </div>
                             ))}
                           </div>
-                          <AgentHistoryChart codenameKey={row.codename_key} agentName={row.codename} faction={row.faction} />
+                          <AgentEvolutionAccordion>
+                            <AgentHistoryChart codenameKey={row.codename_key} agentName={row.codename} faction={row.faction} />
+                          </AgentEvolutionAccordion>
                         </div>
                       </DetailCell>
                     </tr>
