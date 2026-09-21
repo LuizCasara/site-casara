@@ -1,29 +1,8 @@
-'use client'
-
 import {artPath} from '@/lib/ingress-art.mjs'
-import {useLang} from '@/context/LanguageContext'
-import CountUp from '../CountUp'
-import NerdAgentTag from './NerdAgentTag'
+import {buildSubscriptionSections} from '@/lib/ingress-nerd-records.mjs'
+import NerdRecords from './NerdRecords'
+import type {RecordSection} from './NerdRecordParts'
 import type {HallOfFameRecord} from './NerdHallOfFame'
-
-const T = {
-  pt: {
-    percent: '% da comunidade com assinatura',
-    avgMonths: 'Média de meses (entre assinantes)',
-    reported: 'Agentes com esse dado',
-    topMonths: 'Mais meses de assinatura',
-    months: (n: number) => `${n} ${n === 1 ? 'mês' : 'meses'}`,
-    empty: 'Sem dados suficientes',
-  },
-  en: {
-    percent: '% of the community with a subscription',
-    avgMonths: 'Average months (among subscribers)',
-    reported: 'Agents with this data',
-    topMonths: 'Most months subscribed',
-    months: (n: number) => `${n} ${n === 1 ? 'month' : 'months'}`,
-    empty: 'Not enough data',
-  },
-} as const
 
 /** As 5 medalhas de assinatura C.O.R.E. (ingress.plus, categoria "C.O.R.E. Medals"), da primeira assinatura a 5 anos. Só ilustram a seção — não dependem de nenhum dado. */
 const CORE_MEDALS = [
@@ -34,10 +13,12 @@ const CORE_MEDALS = [
   {slug: 'pentacore', name: 'Pentacore'},
 ]
 
-const fmtPercent = (n: number) => `${n}%`
-const fmtOneDecimal = (n: number) => n.toFixed(1)
-
-/** P6 — assinatura paga: % e média entre quem informou `monthsSubscribed`, quantos informaram e quem tem mais meses (NERD-30..32). */
+/**
+ * P6 — assinatura paga: % e média entre quem informou `monthsSubscribed`, quantos
+ * informaram e quem tem mais meses (NERD-30..32). Os números entram no mesmo
+ * layout escolhido para o hall da fama (e, sem dado, o aviso de vazio é de
+ * `NerdRecords`); a fileira de medalhas C.O.R.E. fica acima em qualquer estado.
+ */
 export default function NerdSubscription({
   hasData,
   reportedCount,
@@ -51,59 +32,23 @@ export default function NerdSubscription({
   avgMonthsAmongSubscribed: number | null
   top: HallOfFameRecord
 }) {
-  const {lang} = useLang()
-  const t = T[lang]
-
-  const medals = (
-    <div className="ing-nerd-core-medals">
-      {CORE_MEDALS.map((m) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img key={m.slug} src={artPath(m.slug, null)} alt={m.name} title={m.name} />
-      ))}
-    </div>
-  )
-
-  if (!hasData) {
-    return (
-      <>
-        {medals}
-        <p className="ing-nerd-empty-note">{t.empty}</p>
-      </>
-    )
-  }
+  const sections = buildSubscriptionSections({
+    hasData,
+    reportedCount,
+    percentSubscribed,
+    avgMonthsAmongSubscribed,
+    top,
+  }) as RecordSection[]
 
   return (
     <>
-      {medals}
-      <div className="ing-grid">
-        <div className="ing-stat">
-          <div className="ing-stat__value"><CountUp value={reportedCount} /></div>
-          <div className="ing-stat__label">{t.reported}</div>
-        </div>
-        <div className="ing-stat">
-          <div className="ing-stat__value"><CountUp value={Math.round(percentSubscribed ?? 0)} format={fmtPercent} /></div>
-          <div className="ing-stat__label">{t.percent}</div>
-        </div>
-        <div className="ing-stat">
-          <div className="ing-stat__value">
-            {avgMonthsAmongSubscribed === null ? (
-              '—'
-            ) : (
-              <CountUp value={avgMonthsAmongSubscribed} format={fmtOneDecimal} decimals={1} />
-            )}
-          </div>
-          <div className="ing-stat__label">{t.avgMonths}</div>
-        </div>
+      <div className="ing-nerd-core-medals">
+        {CORE_MEDALS.map((m) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={m.slug} src={artPath(m.slug, null)} alt={m.name} title={m.name} />
+        ))}
       </div>
-      {top ? (
-        <div className="ing-nerd-hof">
-          <div className="ing-nerd-hof-row">
-            <span className="ing-nerd-hof-label">{t.topMonths}</span>
-            <span className="ing-nerd-hof-value"><CountUp value={top.value} format={(n) => t.months(Math.round(n))} /></span>
-            <NerdAgentTag codename={top.codename} faction={top.faction} countryCode={top.countryCode} />
-          </div>
-        </div>
-      ) : null}
+      <NerdRecords sections={sections} />
     </>
   )
 }

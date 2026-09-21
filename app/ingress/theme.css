@@ -4915,13 +4915,18 @@ html:has(.ingress-prime) {
   color: var(--ing-text-faint);
 }
 
-.ing-nerd-hof {
+/* Cabeçalho de seção com controle à direita (o alternador de layout dos recordes). */
+.ing-nerd-section-head {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  margin-bottom: 1rem;
 }
 
-.ing-grid + .ing-nerd-hof {
-  margin-top: 0.75rem;
+.ing-nerd-section-head .ing-nerd-section-title {
+  margin: 0;
 }
 
 /* Fileira das medalhas C.O.R.E. que ilustra a seção "Assinatura paga". */
@@ -4946,61 +4951,456 @@ html:has(.ingress-prime) {
   }
 }
 
-.ing-nerd-hof-row {
+/* ─── Recordes (hall da fama, sazonais, assinatura) ────────────────────────
+   Três layouts da mesma lista, escolhidos por `NerdRecordsLayoutToggle`:
+   Resumo (`ing-nerd-rec-*`), Cards (`ing-nerd-card*`) e Agentes (`ing-nerd-ag*`).
+   Peças comuns: o "×N" de Onyx e o glifo que segura o lugar de quem não tem
+   medalha. Cor só onde significa algo: a facção do recordista (verde/ciano). */
+
+/* "×5": quantas vezes o recordista bateu o limiar de Onyx da medalha. */
+.ing-nerd-mult {
+  flex: 0 0 auto;
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.68rem;
+  line-height: 1;
+  color: var(--ing-text-dim);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 4px;
+  padding: 0.14rem 0.3rem;
+  white-space: nowrap;
+}
+
+.ing-nerd-rec-glyph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 12%;
+  color: var(--ing-text-faint);
+  opacity: 0.7;
+}
+
+/* Nas três visões o agente fica alinhado à esquerda do próprio bloco — o
+   `margin-left: auto` de `.ing-nerd-agent` (pensado pra linha do NerdAverages)
+   o empurraria pro fim de uma coluna flex. */
+.ing-nerd-rec-mid .ing-nerd-agent,
+.ing-nerd-card__foot .ing-nerd-agent,
+.ing-nerd-ag__who .ing-nerd-agent {
+  margin-left: 0;
+  max-width: 100%;
+  flex-basis: auto;
+  justify-content: flex-start;
+}
+
+/* Resumo — uma linha por recorde; duas colunas a partir de 48rem. */
+.ing-nerd-rec-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ing-nerd-rec-row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.6rem;
-  padding: 0.55rem 0;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.5rem 0;
   border-bottom: 1px solid var(--ing-edge-soft);
 }
 
-.ing-nerd-hof-row:last-child {
+.ing-nerd-rec-row:last-child {
   border-bottom: none;
 }
 
-.ing-nerd-hof-icon {
-  width: 1.4rem;
-  height: 1.4rem;
+@media (min-width: 48rem) {
+  .ing-nerd-rec-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.5rem;
+  }
+
+  /* Com número par de linhas, a penúltima é a outra metade da última fileira. */
+  .ing-nerd-rec-row:nth-last-child(2):nth-child(odd) {
+    border-bottom: none;
+  }
+}
+
+.ing-nerd-rec-icon {
+  width: 1.6rem;
+  height: 1.6rem;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.ing-nerd-hof-icon img {
+.ing-nerd-rec-icon img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-.ing-nerd-hof-label {
-  flex: 1 1 8rem;
-  min-width: 6rem;
-  font-size: 0.85rem;
+.ing-nerd-rec-mid {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+}
+
+/* O rótulo quebra linha em vez de virar reticências: numa metade de coluna, com
+   número e "N agentes contabilizados" ao lado, "Battle Beacon (combatente)" não
+   cabe numa linha — e cortá-lo esconderia justamente o que diz o que é o número. */
+.ing-nerd-rec-label {
+  max-width: 100%;
+  font-size: 0.8rem;
+  line-height: 1.25;
   color: var(--ing-text-dim);
 }
 
-.ing-nerd-hof-value {
+.ing-nerd-rec-mid .ing-nerd-agent {
+  font-size: 0.72rem;
+}
+
+.ing-nerd-rec-figure {
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
+
+.ing-nerd-rec-main {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ing-nerd-rec-value {
   font-family: var(--font-space-mono, monospace);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--ing-text);
-  text-align: right;
   white-space: nowrap;
 }
 
-.ing-nerd-hof-value--empty {
+.ing-nerd-rec-meta {
+  font-size: 0.66rem;
+  color: var(--ing-text-faint);
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  /* "1.058.981.917" ao lado de um rótulo longo não cabe: o ×N desce pra baixo do número. */
+  .ing-nerd-rec-main {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+  }
+}
+
+/* Cards — a medalha é a protagonista, com um halo na cor da facção do recordista.
+   O mesmo grid serve aos dois formatos: deitado (medalha à esquerda) até 34rem,
+   em pé (medalha em cima) a partir daí. */
+.ing-nerd-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.ing-nerd-cards__section > .ing-nerd-subhead {
+  margin: 0 0 0.55rem;
+}
+
+.ing-nerd-count {
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--ing-text-faint);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 999px;
+  padding: 0 0.4rem;
+}
+
+.ing-nerd-cards__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.55rem;
+}
+
+.ing-nerd-card {
+  --fc: 147, 167, 160;
+  position: relative;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr);
+  grid-template-areas:
+    'medal label'
+    'medal figure'
+    'medal meta'
+    'medal foot';
+  column-gap: 0.75rem;
+  row-gap: 0.1rem;
+  align-content: center;
+  padding: 0.65rem 0.8rem;
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 10px;
+}
+
+.ing-nerd-card--enlightened {
+  --fc: 0, 230, 118;
+}
+
+.ing-nerd-card--resistance {
+  --fc: 38, 182, 255;
+}
+
+.ing-nerd-card__medal {
+  grid-area: medal;
+  position: relative;
+  align-self: center;
+  width: 2.6rem;
+  height: 2.6rem;
+}
+
+.ing-nerd-card__medal::before {
+  content: '';
+  position: absolute;
+  inset: -0.45rem;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(var(--fc), 0.2), transparent 75%);
+}
+
+.ing-nerd-card--community .ing-nerd-card__medal::before {
+  display: none;
+}
+
+.ing-nerd-card__medal > * {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ing-nerd-card__label {
+  grid-area: label;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-card__figure {
+  grid-area: figure;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.45rem;
+}
+
+.ing-nerd-card__value {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 1.2rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--ing-text);
+  overflow-wrap: anywhere;
+}
+
+.ing-nerd-card__meta {
+  grid-area: meta;
+  font-size: 0.68rem;
   color: var(--ing-text-faint);
 }
 
-/* "×5": quantas vezes o recordista bateu o limiar de Onyx da medalha. */
-.ing-nerd-hof-multiple {
+.ing-nerd-card__foot {
+  grid-area: foot;
+  min-width: 0;
+  margin-top: 0.35rem;
+}
+
+@media (min-width: 34rem) {
+  .ing-nerd-cards__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ing-nerd-cards__grid--hero {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ing-nerd-card {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'medal'
+      'label'
+      'figure'
+      'meta'
+      'foot';
+    align-content: start;
+    padding: 0.7rem 0.8rem 0.65rem;
+  }
+
+  .ing-nerd-card__medal {
+    margin-bottom: 0.35rem;
+  }
+
+  /* Reserva duas linhas de rótulo pros números de uma fileira ficarem alinhados. */
+  .ing-nerd-card__label {
+    min-height: 2.5em;
+  }
+
+  .ing-nerd-card__foot {
+    margin-top: 0.4rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--ing-edge-soft);
+  }
+
+  /* AP e recursões: cartão largo, deitado, com a medalha maior. Vem depois do
+     bloco acima de propósito, pra desfazer o "em pé" só nesses dois. */
+  .ing-nerd-card--hero {
+    grid-template-columns: 3.4rem minmax(0, 1fr);
+    grid-template-areas:
+      'medal label'
+      'medal figure'
+      'medal meta'
+      'medal foot';
+    column-gap: 1rem;
+    align-content: center;
+    padding: 0.85rem 1rem;
+  }
+
+  .ing-nerd-card--hero .ing-nerd-card__medal {
+    width: 3.4rem;
+    height: 3.4rem;
+    margin-bottom: 0;
+  }
+
+  .ing-nerd-card--hero .ing-nerd-card__label {
+    min-height: 0;
+  }
+
+  .ing-nerd-card--hero .ing-nerd-card__value {
+    font-size: 1.55rem;
+  }
+}
+
+/* Agentes — os recordes agrupados por quem os segura. */
+.ing-nerd-ags {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.ing-nerd-ag {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.6rem;
+  padding: 0.75rem 0.85rem;
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 10px;
+}
+
+@media (min-width: 34rem) {
+  .ing-nerd-ag {
+    grid-template-columns: 11.5rem minmax(0, 1fr);
+    gap: 0.9rem;
+    align-items: start;
+  }
+}
+
+.ing-nerd-ag__id {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.ing-nerd-ag__rank {
   flex: 0 0 auto;
-  font-family: var(--font-space-mono, monospace);
+  width: 1.1rem;
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--ing-text-faint);
+}
+
+.ing-nerd-ag--lead .ing-nerd-ag__rank {
+  color: var(--ing-green-soft);
+}
+
+.ing-nerd-ag__who {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.ing-nerd-ag__count {
   font-size: 0.72rem;
   color: var(--ing-text-dim);
-  white-space: nowrap;
+}
+
+.ing-nerd-ag__count b {
+  font-family: var(--ing-font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ing-text);
+}
+
+.ing-nerd-ag__community {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ing-text-faint);
+}
+
+.ing-nerd-ag__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.ing-nerd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0.25rem 0.5rem 0.25rem 0.3rem;
+  font-size: 0.72rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 8px;
+}
+
+.ing-nerd-chip__icon {
+  width: 1.3rem;
+  height: 1.3rem;
+  flex: 0 0 auto;
+  display: flex;
+}
+
+.ing-nerd-chip__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ing-nerd-chip__label {
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-chip__value {
+  font-family: var(--font-space-mono, monospace);
+  font-weight: 400;
+  color: var(--ing-text);
+}
+
+.ing-nerd-chip .ing-nerd-mult {
+  padding: 0.1rem 0.25rem;
+  font-size: 0.62rem;
 }
 
 /* Identidade de agente (nick + facção + bandeira) — hall da fama, "top 1" de
@@ -5030,38 +5430,8 @@ html:has(.ingress-prime) {
   flex: 0 0 auto;
 }
 
-.ing-nerd-seasonal-row {
-  align-items: flex-start;
-}
-
-.ing-nerd-seasonal-figures {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.1rem;
-}
-
-.ing-nerd-seasonal-reported {
-  font-size: 0.68rem;
-  color: var(--ing-text-faint);
-  white-space: nowrap;
-}
-
 @media (max-width: 480px) {
-  /* Nick+facção+bandeira desce pra linha de baixo, alinhado com o rótulo —
-     tudo numa linha só não cabe com "1.058.981.917" + "gal0daxj" numa tela
-     de celular sem estourar a largura. */
-  .ing-nerd-hof-row {
-    padding-left: 2rem;
-    position: relative;
-  }
-
-  .ing-nerd-hof-icon {
-    position: absolute;
-    left: 0;
-    top: 0.55rem;
-  }
-
+  /* Em telas estreitas o nick ocupa a linha inteira em vez de disputar espaço. */
   .ing-nerd-agent {
     flex-basis: 100%;
     margin-left: 0;

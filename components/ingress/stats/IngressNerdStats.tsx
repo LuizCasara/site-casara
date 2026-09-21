@@ -6,6 +6,7 @@ import NerdStatTiles, {type TierCounts} from './NerdStatTiles'
 import NerdFactionCompare, {type FactionStats} from './NerdFactionCompare'
 import NerdAverages, {type OverallScoreBand, type RecursionsSummary} from './NerdAverages'
 import NerdHallOfFame, {type HallOfFameRecord, type HallOfFameStatRecord} from './NerdHallOfFame'
+import NerdRecordsLayoutToggle from './NerdRecordsLayoutToggle'
 import NerdSeasonalEngagement, {type SeasonalMetric} from './NerdSeasonalEngagement'
 import NerdSubscription from './NerdSubscription'
 import NerdCountryCharts, {type CountryBreakdown} from './NerdCountryCharts'
@@ -124,7 +125,10 @@ export default function IngressNerdStats({stats}: {stats: NerdStats | null}) {
       </section>
 
       <section className="ing-nerd-section">
-        <h3 className="ing-nerd-section-title">{t.hallOfFame}</h3>
+        <div className="ing-nerd-section-head">
+          <h3 className="ing-nerd-section-title">{t.hallOfFame}</h3>
+          <NerdRecordsLayoutToggle />
+        </div>
         <NerdHallOfFame
           perStat={stats.hallOfFame.perStat}
           lifetimeAp={stats.hallOfFame.lifetimeAp}
