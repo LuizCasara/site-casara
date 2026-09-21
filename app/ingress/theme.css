@@ -4501,6 +4501,90 @@ html:has(.ingress-prime) {
   text-align: right;
 }
 
+/* Seção "Países": dois gráficos de barras ranqueadas sob um filtro de facção.
+   Reaproveita a trilha/contagem do histograma; a barra aqui é empilhada
+   (verde Enlightened + ciano Resistance), então o fill vira um flex. */
+.ing-nerd-countries {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ing-nerd-countries-charts {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.ing-nerd-country-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ing-nerd-country-row {
+  display: grid;
+  grid-template-columns: 8rem 1fr 3.6rem;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.ing-nerd-country-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  font-size: 0.75rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-country-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ing-nerd-country-row--others .ing-nerd-country-name {
+  color: var(--ing-text-faint);
+  font-style: italic;
+}
+
+.ing-nerd-country-bar {
+  display: flex;
+  height: 100%;
+}
+
+.ing-nerd-country-seg {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.ing-nerd-country-seg--enlightened {
+  background: var(--ing-green);
+}
+
+.ing-nerd-country-seg--resistance {
+  background: var(--ing-cyan);
+}
+
+.ing-nerd-country-row--others .ing-nerd-country-seg {
+  opacity: 0.45;
+}
+
+/* Em ~320px o nome (8rem) + contagem (3.6rem) deixavam ~34px para a barra; com
+   as colunas menores sobram ~70px, e "Outros (3 países)" ainda cabe nos 6rem. */
+@media (max-width: 360px) {
+  .ing-nerd-country-row {
+    grid-template-columns: 6rem 1fr 3.2rem;
+  }
+}
+
+@media (min-width: 48rem) {
+  .ing-nerd-countries-charts {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 .ing-nerd-empty-note {
   font-size: 0.85rem;
   color: var(--ing-text-faint);
@@ -4509,6 +4593,32 @@ html:has(.ingress-prime) {
 .ing-nerd-hof {
   display: flex;
   flex-direction: column;
+}
+
+.ing-grid + .ing-nerd-hof {
+  margin-top: 0.75rem;
+}
+
+/* Fileira das medalhas C.O.R.E. que ilustra a seção "Assinatura paga". */
+.ing-nerd-core-medals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.ing-nerd-core-medals img {
+  width: 3.5rem;
+  height: 3.5rem;
+  object-fit: contain;
+}
+
+@media (max-width: 480px) {
+  .ing-nerd-core-medals img {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
 }
 
 .ing-nerd-hof-row {
@@ -4559,6 +4669,15 @@ html:has(.ingress-prime) {
   color: var(--ing-text-faint);
 }
 
+/* "×5": quantas vezes o recordista bateu o limiar de Onyx da medalha. */
+.ing-nerd-hof-multiple {
+  flex: 0 0 auto;
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.72rem;
+  color: var(--ing-text-dim);
+  white-space: nowrap;
+}
+
 /* Identidade de agente (nick + facção + bandeira) — hall da fama, "top 1" de
    evento sazonal, maior recursão. Sempre empurrado pro fim da linha
    (`margin-left: auto`), pra ficar alinhado à direita mesmo quando o valor
@@ -4601,10 +4720,6 @@ html:has(.ingress-prime) {
   font-size: 0.68rem;
   color: var(--ing-text-faint);
   white-space: nowrap;
-}
-
-.ing-nerd-seasonal .ing-nerd-empty-note {
-  margin: 0 0 0.9rem;
 }
 
 @media (max-width: 480px) {

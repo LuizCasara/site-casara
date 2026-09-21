@@ -38,17 +38,14 @@ const T = {
   pt: {
     total: 'Total somado',
     reportedBy: 'Agentes contabilizados',
-    partialNote:
-      'Números parciais — dependem do que cada agente colou no export, não é um censo completo da comunidade.',
   },
   en: {
     total: 'Total sum',
     reportedBy: 'Agents counted',
-    partialNote: "Partial numbers — depend on what each agent pasted in their export, not a full community census.",
   },
 } as const
 
-/** P5 — engajamento em eventos sazonais, com aviso de dado parcial sempre visível (NERD-24..27). */
+/** P5 — engajamento em eventos sazonais (NERD-24..27). */
 export default function NerdSeasonalEngagement({metrics}: {metrics: Record<string, SeasonalMetric>}) {
   const {lang} = useLang()
   const t = T[lang]
@@ -56,7 +53,6 @@ export default function NerdSeasonalEngagement({metrics}: {metrics: Record<strin
 
   return (
     <div className="ing-nerd-seasonal">
-      <p className="ing-nerd-empty-note">{t.partialNote}</p>
       <div className="ing-nerd-hof">
         {(Object.keys(labels) as SeasonalKey[]).map((key) => {
           const metric = metrics[key] ?? {sum: 0, reportedCount: 0, badgeSlug: null, top: null}

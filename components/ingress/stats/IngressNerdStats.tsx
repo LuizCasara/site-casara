@@ -8,6 +8,7 @@ import NerdAverages, {type OverallScoreBand, type RecursionsSummary} from './Ner
 import NerdHallOfFame, {type HallOfFameRecord, type HallOfFameStatRecord} from './NerdHallOfFame'
 import NerdSeasonalEngagement, {type SeasonalMetric} from './NerdSeasonalEngagement'
 import NerdSubscription from './NerdSubscription'
+import NerdCountryCharts, {type CountryBreakdown} from './NerdCountryCharts'
 
 export type NerdStats = {
   totals: {
@@ -31,7 +32,14 @@ export type NerdStats = {
     recursions: HallOfFameRecord
   }
   seasonalEngagement: Record<string, SeasonalMetric>
-  subscription: {hasData: boolean; percentSubscribed: number | null; avgMonthsAmongSubscribed: number | null}
+  subscription: {
+    hasData: boolean
+    reportedCount: number
+    percentSubscribed: number | null
+    avgMonthsAmongSubscribed: number | null
+    top: HallOfFameRecord
+  }
+  byCountry: CountryBreakdown
 }
 
 const T = {
@@ -40,6 +48,7 @@ const T = {
     empty: 'Ainda não há agentes cadastrados no ranking. Volte em breve.',
     totals: 'Totais da comunidade',
     faction: 'Enlightened x Resistance',
+    countries: 'Países',
     averages: 'Médias e distribuição',
     hallOfFame: 'Hall da fama',
     seasonal: 'Engajamento em eventos sazonais',
@@ -50,6 +59,7 @@ const T = {
     empty: 'No agents registered in the ranking yet. Check back soon.',
     totals: 'Community totals',
     faction: 'Enlightened vs Resistance',
+    countries: 'Countries',
     averages: 'Averages and distribution',
     hallOfFame: 'Hall of fame',
     seasonal: 'Seasonal event engagement',
@@ -63,8 +73,8 @@ const T = {
  * null` (erro de conexão) e `totals.totalAgents === 0` (ranking vazio) caem
  * no mesmo estado vazio (P1 AC7) — não são dois tratamentos diferentes.
  *
- * As 6 seções vivem dentro de UM único painel (`ing-nerd-shell`), separadas
- * por `<section>` com divisor interno — não são 6 cartões soltos, é uma aba
+ * As 7 seções vivem dentro de UM único painel (`ing-nerd-shell`), separadas
+ * por `<section>` com divisor interno — não são 7 cartões soltos, é uma aba
  * só (pedido explícito do Luiz depois de ver a primeira versão).
  */
 export default function IngressNerdStats({stats}: {stats: NerdStats | null}) {
@@ -98,6 +108,11 @@ export default function IngressNerdStats({stats}: {stats: NerdStats | null}) {
       </section>
 
       <section className="ing-nerd-section">
+        <h3 className="ing-nerd-section-title">{t.countries}</h3>
+        <NerdCountryCharts data={stats.byCountry} />
+      </section>
+
+      <section className="ing-nerd-section">
         <h3 className="ing-nerd-section-title">{t.averages}</h3>
         <NerdAverages
           avgApPerAgent={stats.averages.avgApPerAgent}
@@ -126,8 +141,10 @@ export default function IngressNerdStats({stats}: {stats: NerdStats | null}) {
         <h3 className="ing-nerd-section-title">{t.subscription}</h3>
         <NerdSubscription
           hasData={stats.subscription.hasData}
+          reportedCount={stats.subscription.reportedCount}
           percentSubscribed={stats.subscription.percentSubscribed}
           avgMonthsAmongSubscribed={stats.subscription.avgMonthsAmongSubscribed}
+          top={stats.subscription.top}
         />
       </section>
     </div>

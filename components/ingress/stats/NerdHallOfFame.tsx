@@ -40,19 +40,24 @@ export type HallOfFameRecord = {
 } | null
 
 export type HallOfFameStatRecord =
-  | (NonNullable<HallOfFameRecord> & {badgeSlug: string | null; tier: string | null})
+  | (NonNullable<HallOfFameRecord> & {badgeSlug: string | null; tier: string | null; onyxMultiple: number | null})
   | null
+
+/** "Simulacrum" — badge de evento único (sem tiers, sempre a mesma arte) ligada à primeira recursão do agente. */
+const SIMULACRUM_SLUG = 'simulacrum'
 
 const T = {
   pt: {
     ap: 'Maior AP (lifetime)',
     recursions: 'Mais recursões',
     empty: '—',
+    onyxMultiple: (m: number) => `${m}× o limiar de Onyx`,
   },
   en: {
     ap: 'Highest AP (lifetime)',
     recursions: 'Most recursions',
     empty: '—',
+    onyxMultiple: (m: number) => `${m}× the Onyx threshold`,
   },
 } as const
 
@@ -62,17 +67,21 @@ function RecordRow({
   empty,
   badgeSlug,
   tier,
+  onyxMultiple,
+  onyxMultipleTitle,
 }: {
   label: string
   record: HallOfFameRecord | HallOfFameStatRecord
   empty: string
   badgeSlug?: string | null
   tier?: string | null
+  onyxMultiple?: number | null
+  onyxMultipleTitle?: (m: number) => string
 }) {
   return (
     <div className="ing-nerd-hof-row">
       <span className="ing-nerd-hof-icon">
-        {badgeSlug && tier ? (
+        {badgeSlug ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={artPath(badgeSlug, tier)} alt="" />
         ) : null}
@@ -81,6 +90,9 @@ function RecordRow({
       {record ? (
         <>
           <span className="ing-nerd-hof-value"><CountUp value={record.value} /></span>
+          {onyxMultiple && onyxMultipleTitle ? (
+            <span className="ing-nerd-hof-multiple" title={onyxMultipleTitle(onyxMultiple)}>×{onyxMultiple}</span>
+          ) : null}
           <NerdAgentTag codename={record.codename} faction={record.faction} countryCode={record.countryCode} />
         </>
       ) : (
@@ -106,7 +118,7 @@ export default function NerdHallOfFame({
   return (
     <div className="ing-nerd-hof">
       <RecordRow label={t.ap} record={lifetimeAp} empty={t.empty} />
-      <RecordRow label={t.recursions} record={recursions} empty={t.empty} />
+      <RecordRow label={t.recursions} record={recursions} empty={t.empty} badgeSlug={SIMULACRUM_SLUG} />
       {RADAR_AXES.flatMap((axis) =>
         axis.parts.map((part) => {
           const stat = perStat[part.key] ?? null
@@ -118,6 +130,8 @@ export default function NerdHallOfFame({
               empty={t.empty}
               badgeSlug={stat?.badgeSlug}
               tier={stat?.tier}
+              onyxMultiple={stat?.onyxMultiple}
+              onyxMultipleTitle={t.onyxMultiple}
             />
           )
         })
@@ -133,6 +147,8 @@ export default function NerdHallOfFame({
             empty={t.empty}
             badgeSlug={stat?.badgeSlug}
             tier={stat?.tier}
+            onyxMultiple={stat?.onyxMultiple}
+            onyxMultipleTitle={t.onyxMultiple}
           />
         )
       })}
