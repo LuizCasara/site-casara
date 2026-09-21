@@ -110,17 +110,49 @@ export async function GET(request: Request) {
       WHERE created_at > NOW() - INTERVAL '1 day' * ${days}
     `;
 
+    // Comparações e troca de idioma vêm de eventos do cliente. Os exports NÃO: um
+    // evento só sabe "tentou enviar" (`ingress_ranking_join`, com `written` para o
+    // debounce de 5 min), não se o agente era novo — e ainda se perde quando a aba
+    // fecha antes do lote sair. Do banco:
+    //  - novo export = linha nova em `ingress_rankings` (`created_at` é gravado no
+    //    mesmo INSERT que cria o agente, então não depende de mais nada);
+    //  - update = snapshot de `ingress_ranking_history` que NÃO é o primeiro do
+    //    agente (cada escrita real, nunca a bloqueada pelo debounce, deixa um).
+    // Se a gravação do snapshot falhar (o erro é engolido de propósito em
+    // POST /api/ingress-rankings), aquele update deixa de ser contado — subconta,
+    // nunca inventa um export novo.
     const [ingress] = await sql`
       SELECT
-        COUNT(*) FILTER (WHERE event_name = 'ingress_compare_vs_me')                                                      AS total_compare_vs_me,
-        COUNT(*) FILTER (WHERE event_name = 'ingress_compare_vs_me' AND (payload->>'written')::boolean)                   AS written_compare_vs_me,
-        COUNT(*) FILTER (WHERE event_name = 'ingress_compare_two_agents')                                                 AS total_compare_two_agents,
-        COUNT(*) FILTER (WHERE event_name = 'ingress_compare_two_agents' AND (payload->>'written')::boolean)              AS written_compare_two_agents,
-        COUNT(*) FILTER (WHERE event_name = 'ingress_ranking_join')                                                       AS total_ranking_join,
-        COUNT(*) FILTER (WHERE event_name = 'ingress_ranking_join' AND (payload->>'written')::boolean)                    AS written_ranking_join,
-        COUNT(*) FILTER (WHERE event_name = 'ingress_language_toggled')                                                   AS total_language_toggled
+        COUNT(*) FILTER (WHERE event_name = 'ingress_comparison_viewed') AS comparisons_viewed,
+        COUNT(*) FILTER (WHERE event_name = 'ingress_language_toggled')  AS total_language_toggled
       FROM casara.events
       WHERE created_at > NOW() - INTERVAL '1 day' * ${days}
+    `;
+
+    const [ingressExports] = await sql`
+      WITH ranked AS (
+        SELECT recorded_at,
+               ROW_NUMBER() OVER (PARTITION BY codename_key ORDER BY recorded_at, id) AS n
+        FROM casara.ingress_ranking_history
+      )
+      SELECT
+        (SELECT COUNT(*) FROM casara.ingress_rankings
+          WHERE created_at > NOW() - INTERVAL '1 day' * ${days})                  AS new_exports,
+        (SELECT COUNT(*) FROM ranked
+          WHERE n > 1 AND recorded_at > NOW() - INTERVAL '1 day' * ${days})       AS export_updates
+    `;
+
+    // page_view por tela do /ingress. Só existe a partir de quando `lib/routes.ts`
+    // passou a listar essas rotas — antes disso o proxy as descartava.
+    const ingressViews = await sql`
+      SELECT route, COUNT(*) AS count
+      FROM casara.events
+      WHERE event_name = 'page_view'
+        AND ${IS_REAL_ROUTE}
+        AND (route = '/ingress' OR route LIKE '/ingress/%')
+        AND created_at > NOW() - INTERVAL '1 day' * ${days}
+      GROUP BY route
+      ORDER BY count DESC
     `;
 
     const [livros] = await sql`
@@ -167,13 +199,14 @@ export async function GET(request: Request) {
         })),
       },
       ingress: {
-        total_compare_vs_me:      Number(ingress.total_compare_vs_me),
-        written_compare_vs_me:    Number(ingress.written_compare_vs_me),
-        total_compare_two_agents:   Number(ingress.total_compare_two_agents),
-        written_compare_two_agents: Number(ingress.written_compare_two_agents),
-        total_ranking_join:      Number(ingress.total_ranking_join),
-        written_ranking_join:    Number(ingress.written_ranking_join),
-        total_language_toggled:  Number(ingress.total_language_toggled),
+        new_exports:            Number(ingressExports.new_exports),
+        export_updates:         Number(ingressExports.export_updates),
+        comparisons_viewed:     Number(ingress.comparisons_viewed),
+        total_language_toggled: Number(ingress.total_language_toggled),
+        page_views: {
+          total:    ingressViews.reduce((sum, r) => sum + Number(r.count), 0),
+          by_route: ingressViews.map(r => ({ route: r.route as string, count: Number(r.count) })),
+        },
       },
       livros: {
         total_room_object_click:    Number(livros.total_room_object_click),

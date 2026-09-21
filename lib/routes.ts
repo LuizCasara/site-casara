@@ -34,6 +34,10 @@ export const REAL_ROUTE_PATTERN =
   `|^/livros$` +
   `|^/livros/lista$` +
   `|^/livros/[a-z0-9-]+$` +
+  `|^/ingress$` +
+  `|^/ingress/(ranking|fencherlc)$` +
+  `|^/ingress/fencherlc/linha-do-tempo$` +
+  `|^/ingress/fencherlc/medalha/[a-z0-9-]+$` +
   `|^/app/(${APP_SLUGS.join("|")})$` +
   `|^/[wq]/${SESSION_ID}$` +
   `|^/[wq]/${SESSION_ID}/resultados/${RESULTS_TOKEN}$`;

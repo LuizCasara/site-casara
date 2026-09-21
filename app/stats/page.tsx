@@ -33,13 +33,14 @@ type StatsData = {
     by_primary: { language: string; count: number }[];
   };
   ingress: {
-    total_compare_vs_me:        number;
-    written_compare_vs_me:      number;
-    total_compare_two_agents:   number;
-    written_compare_two_agents: number;
-    total_ranking_join:         number;
-    written_ranking_join:       number;
-    total_language_toggled:     number;
+    new_exports:            number;
+    export_updates:         number;
+    comparisons_viewed:     number;
+    total_language_toggled: number;
+    page_views: {
+      total:    number;
+      by_route: { route: string; count: number }[];
+    };
   };
   livros: {
     total_room_object_click:    number;
@@ -117,6 +118,7 @@ const EVENT_LABELS: Record<string, string> = {
   ingress_language_toggled:     "ING_LANG_TOGGLE",
   ingress_ranking_shared:       "ING_SHARE",
   ingress_agent_shared:         "ING_AGENT_SHARE",
+  ingress_comparison_viewed:    "ING_CMP_VIEWED",
 };
 
 const EVENT_DESCRIPTIONS: Record<string, string> = {
@@ -432,6 +434,7 @@ export default function StatsPage() {
 
   const maxEvent   = data ? Math.max(...data.by_event.map(e => e.count),   1) : 1;
   const maxRoute   = data ? Math.max(...data.by_route.map(r => r.count),   1) : 1;
+  const maxIngressRoute = data ? Math.max(...data.ingress.page_views.by_route.map(r => r.count), 1) : 1;
   const maxBrowser = data ? Math.max(...data.by_browser.map(b => b.count), 1) : 1;
   const maxCountry = data ? Math.max(...data.by_country.map(c => c.count), 1) : 1;
 
@@ -671,21 +674,41 @@ export default function StatsPage() {
             <Panel title="INGRESS_ANALYSIS">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                 {[
-                  { label: "CMP_VS_ME",    total: data.ingress.total_compare_vs_me,      written: data.ingress.written_compare_vs_me },
-                  { label: "CMP_2_AGENTES", total: data.ingress.total_compare_two_agents, written: data.ingress.written_compare_two_agents },
-                  { label: "SÓ_RANKING",   total: data.ingress.total_ranking_join,       written: data.ingress.written_ranking_join },
-                ].map(({ label, total, written }) => (
+                  { label: "NOVOS_EXPORTS",  value: data.ingress.new_exports,        hint: "agentes novos" },
+                  { label: "UPDATES_EXPORT", value: data.ingress.export_updates,     hint: "reenvios" },
+                  { label: "COMPARAÇÕES",    value: data.ingress.comparisons_viewed, hint: "vistas" },
+                  { label: "ACESSOS_TELA",   value: data.ingress.page_views.total,   hint: "page views" },
+                ].map(({ label, value, hint }) => (
                   <div key={label} className="border border-green-900/50 rounded p-2">
                     <p className="text-green-800 text-xs">{label}</p>
-                    <p className="text-green-200 font-bold text-xl">{total}</p>
-                    <p className="text-green-900 text-xs">{written} gravaram</p>
+                    <p className="text-green-200 font-bold text-xl">{value}</p>
+                    <p className="text-green-900 text-xs">{hint}</p>
                   </div>
                 ))}
-                <div className="border border-green-900/50 rounded p-2">
-                  <p className="text-green-800 text-xs">TROCA_IDIOMA</p>
-                  <p className="text-green-200 font-bold text-xl">{data.ingress.total_language_toggled}</p>
-                </div>
               </div>
+
+              <div className="border-t border-green-900/50 pt-3 mt-3">
+                <p className="text-green-800 text-xs mb-2 tracking-wider">ACESSOS_POR_TELA</p>
+                {data.ingress.page_views.by_route.length === 0 ? (
+                  <p className="text-green-900 text-xs">AINDA_SEM_ACESSOS · a contagem começa a partir do deploy que liberou estas rotas</p>
+                ) : (
+                  <div className="space-y-3">
+                    {data.ingress.page_views.by_route.map(r => (
+                      <div key={r.route}>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-green-500 truncate max-w-[75%]">{r.route}</span>
+                          <span className="text-green-800">{r.count}</span>
+                        </div>
+                        <HBar value={r.count} max={maxIngressRoute} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <p className="text-green-900 text-xs mt-3">
+                TROCA_IDIOMA: <span className="text-green-500">{data.ingress.total_language_toggled}</span>
+              </p>
             </Panel>
 
             <Panel title="LIVROS_ANALYSIS">
