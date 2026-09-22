@@ -7,13 +7,13 @@ import {
   normalizeWord,
   type SessionMode,
   type SessionStatus,
-} from "@/lib/word-cloud";
+} from "@/lib/apps/word-cloud";
 import {
   trackWordSessionCreated,
   trackWordSessionDiscarded,
   trackWordSessionFixedWordAdded,
   trackWordSessionSaved,
-} from "@/utils/analytics";
+} from "@/lib/global/analytics";
 
 const STORAGE_KEY = "minhas-nuvens";
 

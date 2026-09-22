@@ -1,7 +1,7 @@
 'use client'
 
-import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
-import {useLang} from '@/context/LanguageContext'
+import {RADAR_AXES} from '@/lib/ingress/stats/ingress-radar.mjs'
+import {useLang} from '@/components/global/LanguageContext'
 
 const SIZE = 220
 const C = SIZE / 2
@@ -11,7 +11,7 @@ const PAD_X = 40
 /**
  * Posição de tier em que o polígono toca a borda externa (1 = limiar de
  * Bronze, 5 = limiar de Onyx) — mesma escala de `computeAxisScores`
- * (`lib/ingress-tier-score.mjs`), que é o que `axis_scores`/`communityAxisAverage`
+ * (`lib/ingress/stats/ingress-tier-score.mjs`), que é o que `axis_scores`/`communityAxisAverage`
  * já armazenam. Um agente médio recursado pode passar de 5; a borda
  * representa Onyx, não um teto absoluto.
  */

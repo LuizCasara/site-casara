@@ -1,4 +1,4 @@
-import {flagSrc} from '@/lib/ingress-countries.mjs'
+import {flagSrc} from '@/lib/ingress/catalog/ingress-countries.mjs'
 
 const FACTION_ICON = {
   enlightened: '/ingress/factions/enlightened.svg',

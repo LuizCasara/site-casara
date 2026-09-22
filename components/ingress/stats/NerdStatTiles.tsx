@@ -1,7 +1,8 @@
 'use client'
 
-import {useLang} from '@/context/LanguageContext'
-import CountUp from '../CountUp'
+import {fmtStat, fmtStatCompactPrecise} from '@/lib/ingress/ingress-format.mjs'
+import {useLang} from '@/components/global/LanguageContext'
+import CountUp from '../hero/CountUp'
 
 export type TierCounts = {bronze: number; silver: number; gold: number; platinum: number; onyx: number}
 
@@ -57,8 +58,15 @@ export default function NerdStatTiles({
         <div className="ing-stat__value"><CountUp value={totalAgents} /></div>
         <div className="ing-stat__label">{t.agents}</div>
       </div>
-      <div className="ing-stat">
-        <div className="ing-stat__value"><CountUp value={totalLifetimeAp} /></div>
+      <div className="ing-stat ing-stat--ap">
+        {/* "10.608.843.806" não cabe num tile estreito (quebrava no último dígito): abaixo de certa largura do
+            próprio tile o CSS troca pela forma compacta ("10,6 bi"). Só um dos dois fica visível por vez. */}
+        <div className="ing-stat__value">
+          <span className="ing-stat__ap-full"><CountUp value={totalLifetimeAp} /></span>
+          <span className="ing-stat__ap-compact" title={fmtStat(totalLifetimeAp)}>
+            <CountUp value={totalLifetimeAp} format={fmtStatCompactPrecise} />
+          </span>
+        </div>
         <div className="ing-stat__label">{t.ap}</div>
       </div>
       <div className="ing-stat">

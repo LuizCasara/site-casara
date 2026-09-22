@@ -2,7 +2,7 @@
 
 import Poltrona, {ALTURA_POLTRONA} from '@/components/livros/decor/Poltrona';
 import MesaDeCentro, {ALTURA_MESA_CENTRO} from '@/components/livros/decor/MesaDeCentro';
-import {bracoEmMetros} from '@/lib/poltrona-model.mjs';
+import {bracoEmMetros} from '@/lib/livros/sala/poltrona-model.mjs';
 
 /**
  * **CONGELADO** — aprovado pelo dono do acervo em 06/08/2026, e vale para as
@@ -63,7 +63,7 @@ export function pontoNoTampo(lx: number, lz: number): [number, number, number] {
     ];
 }
 
-/** O braço da poltrona, medido do `.glb` — ver `lib/poltrona-model.mjs`. */
+/** O braço da poltrona, medido do `.glb` — ver `lib/livros/sala/poltrona-model.mjs`. */
 const BRACO = bracoEmMetros(ALTURA_POLTRONA);
 
 /**

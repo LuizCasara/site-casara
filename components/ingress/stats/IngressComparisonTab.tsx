@@ -1,13 +1,13 @@
 'use client'
 
 import {useEffect, useRef, useState} from 'react'
-import Panel from '../Panel'
-import AgentSelect, {type AgentOption} from '../AgentSelect'
-import RadarOverlay from '../RadarOverlay'
+import Panel from '../shell/Panel'
+import AgentSelect, {type AgentOption} from '../profile/AgentSelect'
+import RadarOverlay from '../profile/RadarOverlay'
 import OverallScorePanel, {type AgentScore} from './OverallScorePanel'
-import type {Agent} from '../ProfileRadar'
-import {trackIngressComparisonViewed} from '@/utils/analytics'
-import {useLang} from '@/context/LanguageContext'
+import type {Agent} from '../profile/ProfileRadar'
+import {trackIngressComparisonViewed} from '@/lib/global/analytics'
+import {useLang} from '@/components/global/LanguageContext'
 
 type CompareRow = {
   codename_key: string

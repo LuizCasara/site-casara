@@ -9,10 +9,10 @@ import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
 import {useLuzSuave} from '@/components/livros/decor/use-luz-suave';
 import {useHoraDoDia} from '@/components/livros/decor/use-hora-do-dia';
 import {useTexturaDeCeu} from '@/components/livros/decor/use-textura-de-ceu';
-import {climaDaHora, profundidadeDaLuz} from '@/lib/luz-do-dia.mjs';
+import {climaDaHora, profundidadeDaLuz} from '@/lib/livros/sala/luz-do-dia.mjs';
 import {
     JANELA_NATIVA, PROFUNDIDADE, VIDRO_Z, CORTINAS, estadoDaCortina,
-} from '@/lib/janela-model.mjs';
+} from '@/lib/livros/sala/janela-model.mjs';
 
 /**
  * A janela da parede lateral direita, entre a quina do canto de trabalho e o
@@ -21,7 +21,7 @@ import {
  * **O lado de fora é a hora de verdade de quem está vendo.** Às sete da manhã o
  * vidro mostra o sol subindo e joga luz quente no chão; às onze da noite mostra
  * o céu escuro com estrelas e a luz que entra é fria. Quem manda nisso é
- * `lib/luz-do-dia.mjs`, e a hora vem do mesmo relógio que o display da
+ * `lib/livros/sala/luz-do-dia.mjs`, e a hora vem do mesmo relógio que o display da
  * prateleira aérea mostra (`use-hora-do-dia.ts`) — as duas coisas aparecem na
  * mesma tela e não podem discordar.
  *

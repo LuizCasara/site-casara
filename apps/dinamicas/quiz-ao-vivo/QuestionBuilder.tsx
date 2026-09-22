@@ -1,6 +1,6 @@
 "use client";
 
-import { QUIZ_LIMITS, type QuizQuestionDraft } from "@/lib/quiz";
+import { QUIZ_LIMITS, type QuizQuestionDraft } from "@/lib/apps/quiz";
 
 type Props = {
   question: QuizQuestionDraft;

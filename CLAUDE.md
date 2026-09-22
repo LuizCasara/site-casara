@@ -33,13 +33,13 @@ This is a **Next.js 16 (App Router)** personal portfolio site with Tailwind CSS.
 
 ### Mini-Apps System
 
-The core architectural pattern: `app/app/[app_name]/page.tsx` resolves a URL slug to a file path, then **dynamically imports** the corresponding component from `apps/<category>/<slug>.tsx`. App metadata (title, description, path) is defined inline in both `app/app/page.tsx` (for the listing) and `app/app/[app_name]/page.tsx` (for routing) — these two lists must stay in sync.
+The core architectural pattern: `app/(apps)/app/[app_name]/page.tsx` resolves a URL slug to a file path, then **dynamically imports** the corresponding component from `apps/<category>/<slug>.tsx`. App metadata (title, description, path) is defined inline in both `app/(apps)/app/(global)/page.tsx` (for the listing) and `app/(apps)/app/[app_name]/page.tsx` (for routing) — these two lists must stay in sync.
 
 Current apps live in:
 - `apps/math/` — rule-of-three, compound-interest, percentage
 - `apps/conversion/` — kitchen-units, currency, bitcoin, file-size, number-systems
 - `apps/personalization/` — qr-code, image-to-svg
-- `apps/desenvolvimento-pessoal/` — descubra-seu-temperamento (forced-choice binary questions per axis, not a Likert scale — see `docs/testes-de-personalidade.md` before building another personality/temperament-style test) and descubra-sua-linguagem-do-amor (same forced-choice mechanics, but a 5-way pairing instead of 2 orthogonal axes — see "Descubra sua Linguagem do Amor" below and `docs/linguagens-do-amor-pesquisa.md`)
+- `apps/desenvolvimento-pessoal/` — descubra-seu-temperamento (forced-choice binary questions per axis, not a Likert scale — see `docs/apps/testes-de-personalidade.md` before building another personality/temperament-style test) and descubra-sua-linguagem-do-amor (same forced-choice mechanics, but a 5-way pairing instead of 2 orthogonal axes — see "Descubra sua Linguagem do Amor" below and `docs/apps/linguagens-do-amor-pesquisa.md`)
 - `apps/dinamicas/` — nuvem-de-palavras and quiz-ao-vivo/ (host UI for live sessions; the public-facing side lives outside the mini-app shell, at `/w/[id]` and `/q/[id]` respectively — see "Nuvem de Palavras" and "Quiz ao Vivo" below), plus sorteio.tsx (single-screen, no session/backend — see "Sorteio" below). `quiz-ao-vivo` is a folder (`index.tsx` + `QuestionBuilder.tsx` + `ControlPanel.tsx`), not a single file — bigger feature, same dynamic-import mechanics (`@/apps/dinamicas/quiz-ao-vivo` resolves the folder's `index.tsx`)
 
 **To add a new app:** create the component in `apps/<category>/<slug>.tsx`, then add its entry to the `appCategories` array in both listing and routing files.
@@ -69,76 +69,78 @@ Current apps live in:
 
 **The connection's `search_path` is just `"$user", public` — it does NOT include `casara`.** So every single query must qualify the table explicitly: `casara.events`, `casara.word_sessions`, `casara.quiz_sessions`, … An unqualified `FROM events` does not fall back to `casara` — it fails, or worse, silently resolves somewhere else. `public` is now intentionally empty of base tables.
 
-- `lib/schema.sql` — DDL for a clean install (creates the schema + all 8 tables)
-- `lib/migrations/001-schema-casara.sql` + `scripts/migrate-casara.mjs` — the one-time migration that moved these tables out of `public`/`geav` into `casara` (`ALTER TABLE ... SET SCHEMA`, applied 2026-07-27). Historical record; do not re-run
+- `db/schema.sql` — DDL for a clean install (creates the schema + all 8 tables)
+- `db/migrations/001-schema-casara.sql` + `scripts/global/migrate-casara.mjs` — the one-time migration that moved these tables out of `public`/`geav` into `casara` (`ALTER TABLE ... SET SCHEMA`, applied 2026-07-27). Historical record; do not re-run
 
 ### Analytics & Data
 
-Two analytics systems run side by side, both driven from `utils/analytics.ts`'s `trackEvent`: Vercel Analytics (`track()`) and a self-hosted Neon Postgres store.
+Two analytics systems run side by side, both driven from `lib/global/analytics.ts`'s `trackEvent`: Vercel Analytics (`track()`) and a self-hosted Neon Postgres store.
 
-- `lib/db.ts` — lazy-initialized Neon client (`sql` tagged template) reading `DATABASE_URL`; avoids connecting at build time
+- `lib/global/db.ts` — lazy-initialized Neon client (`sql` tagged template) reading `DATABASE_URL`; avoids connecting at build time
 - `casara.events` — the single analytics table (event_name, route, payload JSONB, geo/browser columns)
 - `proxy.ts` (renamed from `middleware.ts`/`export function middleware` in the Next.js 16 upgrade — same file, same behavior, just the convention name) — fire-and-forget inserts a `page_view` event per request (geo from Vercel headers, bot UAs filtered, skips `_next`/`api`/`_vercel`/favicon)
-- **Só produção grava evento — `lib/analytics-env.ts`.** `.env.local` aponta para o banco de PRODUÇÃO (é o mesmo `DATABASE_URL` do `scripts/livros.mjs`), então sem gate cada `npm run dev` gravava dado real: numa auditoria de 07/08/2026, **93,4% dos eventos dos 7 dias anteriores vinham de localhost**. O gate é duplo e por mecanismos diferentes de propósito — servidor (middleware + `/api/events`) por `VERCEL_ENV === 'production'`, que é o único que distingue produção de *preview* e não existe fora da Vercel; cliente (`utils/analytics.ts`) por `NODE_ENV`, porque o Next só inlina `NEXT_PUBLIC_*` no bundle. O do cliente poupa a viagem de rede, o do servidor é o que de fato barra
+- **Só produção grava evento — `lib/global/analytics-env.ts`.** `.env.local` aponta para o banco de PRODUÇÃO (é o mesmo `DATABASE_URL` do `scripts/livros/livros.mjs`), então sem gate cada `npm run dev` gravava dado real: numa auditoria de 07/08/2026, **93,4% dos eventos dos 7 dias anteriores vinham de localhost**. O gate é duplo e por mecanismos diferentes de propósito — servidor (middleware + `/api/events`) por `VERCEL_ENV === 'production'`, que é o único que distingue produção de *preview* e não existe fora da Vercel; cliente (`lib/global/analytics.ts`) por `NODE_ENV`, porque o Next só inlina `NEXT_PUBLIC_*` no bundle. O do cliente poupa a viagem de rede, o do servidor é o que de fato barra
 - **Eventos do cliente vão em LOTE, não um POST por evento.** `trackEvent` enfileira em memória e esvazia após 2s de silêncio, ou na hora ao juntar 10. O flush de saída usa `navigator.sendBeacon` — o único transporte que sobrevive ao descarregamento da página, e a razão de fechar a aba não perder a fila; um `fetch` pendente seria cancelado. O listener é `visibilitychange → hidden` e **nunca `beforeunload`**, que não dispara no Safari do iOS nem no bfcache, ou seja, justamente no caso "fechei o site no celular". Do lado do servidor, `/api/events` aceita array (e ainda o objeto solto, para abas abertas antes do deploy) e grava o lote inteiro num `INSERT ... SELECT FROM UNNEST`: uma ida ao Neon por lote, não por evento
 - **Antes de criar um evento, pergunte se ele responde a algo que um `page_view` já não responde, e se é um gesto DELIBERADO.** Foi o que a mesma auditoria derrubou: `room_scene_changed` (74% vinha da roda do mouse — atravessar paradas não é escolher nenhuma), `room_loaded` (1:1 com o `page_view` de `/livros`, e o `time_to_interactive_ms` que o justificava era 0–14ms, ou seja cache hit) e `book_opened` (178 `page_view` de slug contra 162 aberturas — a mesma informação duas vezes). Medir travessia de navegação contínua é o antipadrão: um gesto de trackpad rendia dezenas de linhas. Cliques são baratos e ficam
 - **O histórico de `room_*`/`book_*` foi apagado em 08/08/2026** — 1.248 linhas, tudo anterior à trava por ambiente e portanto gerado em `npm run dev`. É por isso que os gráficos da sala de leitura começam do zero nessa data, e não porque ninguém visitou `/livros` antes. Os `page_view` de `/livros` NÃO foram tocados (967 linhas, com a mesma contaminação de localhost), nem `shelf_*`/`index_opened` (94)
-- Adding a new tracked event: add a `trackX` function in `utils/analytics.ts`, call it from the component, and (optionally) add its label to `EVENT_LABELS` in `app/stats/page.tsx` for the dashboard
+- **`page_view` só é gravado para rota que esteja em `lib/global/routes.ts` (`REAL_ROUTE_PATTERN`) — é um allowlist.** Tela nova que precisa de contagem de acesso tem que entrar lá, com teste em `lib/global/routes.test.mjs`; sem isso o proxy a descarta em silêncio. Foi o que aconteceu com o `/ingress`: as rotas ficaram de fora e nenhum `page_view` dele foi gravado até 21/09/2026, embora os eventos de clique existissem — a contagem de acessos dele começa nessa data, não em junho
+- **Painel `INGRESS_ANALYSIS` de `/stats`**: exports novos e updates vêm do BANCO, não de evento — novo export = linha nova em `casara.ingress_rankings` (`created_at`), update = snapshot de `casara.ingress_ranking_history` que não é o primeiro do agente (`ROW_NUMBER() OVER (PARTITION BY codename_key)`). Um evento só sabe "tentou enviar" e ainda se perde quando a aba fecha antes do lote sair. Se o snapshot falhar (erro engolido de propósito na rota), o update some da conta — subconta, nunca inventa export novo. Comparações são `ingress_comparison_viewed`; acessos são `page_view` de `/ingress` e `/ingress/*`
+- Adding a new tracked event: add a `trackX` function in `lib/global/analytics.ts`, call it from the component, and (optionally) add its label to `EVENT_LABELS` in `app/(global)/stats/page.tsx` for the dashboard
 
 ### Nuvem de Palavras (live word-cloud dynamics)
 
 A Mentimeter-style live activity: a host creates a session in `apps/dinamicas/nuvem-de-palavras.tsx`, shares the `/w/[id]` link/QR code, and participants submit words that render as an animated word cloud (bolhas/texto) or ranked bar chart (gráfico) on `/w/[id]/resultados/[token]`, polling every ~2.5s.
 
-- `lib/session-ids.ts` — generic helpers shared by every live-session feature: `generateSessionId()` (short collision-retry id), `generateToken()` (host/results secrets), `PARTICIPANT_ID_RE`. `lib/word-cloud.ts` re-exports the first two for backwards compatibility with existing call sites
-- `lib/word-cloud.ts` — word-cloud-specific types (`SessionMode`, `SessionStatus`), validation/normalization (`normalizeWord`, `dedupeWords`, `WORD_CLOUD_LIMITS`), the font-size curve (`computeFontSizes`), and the `HOT_ACCENT_RGB`/`rgbToCss` color shared by the "texto" and "gráfico" views
-- Data model: `word_sessions` (one row per session, holds `host_token` + `results_token`), `word_submissions` (one row per participant, `UNIQUE(session_id, participant_id)` enforces one submission per device at the DB level), `word_entries` (one row per submitted word) — see `lib/schema.sql`
+- `lib/apps/session-ids.ts` — generic helpers shared by every live-session feature: `generateSessionId()` (short collision-retry id), `generateToken()` (host/results secrets), `PARTICIPANT_ID_RE`. `lib/apps/word-cloud.ts` re-exports the first two for backwards compatibility with existing call sites
+- `lib/apps/word-cloud.ts` — word-cloud-specific types (`SessionMode`, `SessionStatus`), validation/normalization (`normalizeWord`, `dedupeWords`, `WORD_CLOUD_LIMITS`), the font-size curve (`computeFontSizes`), and the `HOT_ACCENT_RGB`/`rgbToCss` color shared by the "texto" and "gráfico" views
+- Data model: `word_sessions` (one row per session, holds `host_token` + `results_token`), `word_submissions` (one row per participant, `UNIQUE(session_id, participant_id)` enforces one submission per device at the DB level), `word_entries` (one row per submitted word) — see `db/schema.sql`
 - These tables live under the `casara` Postgres schema, like everything else this site owns — see "Database tenancy" above
 - Three tokens, three trust levels: `host_token` (full control, kept in the host's browser `localStorage` under the `minhas-nuvens` key), `results_token` (read-only, embedded in the `/resultados/[token]` URL so it can be opened on a separate screen/projector), `participant_id` (a `crypto.randomUUID()` a participant's browser generates once and reuses, enforcing the one-submission-per-device rule)
-- `components/WordCloud.tsx` — spiral word-packing + auto-fit-to-container scaling (canvas `measureText` for sizing, framer-motion for layout/pulse animation); `components/WordBarChart.tsx` — top-20 + "Outros" ranked bar chart. Both read from the same `GET .../results` payload
+- `components/apps/word-cloud/WordCloud.tsx` — spiral word-packing + auto-fit-to-container scaling (canvas `measureText` for sizing, framer-motion for layout/pulse animation); `components/apps/word-cloud/WordBarChart.tsx` — top-20 + "Outros" ranked bar chart. Both read from the same `GET .../results` payload
 - The results page plays a "pop" sound (see "Sound effects" below) whenever `total_participants` goes up between polls — edge-triggered off a ref, so it never fires on first load or when the poll returns an unchanged count
 
 ### Quiz ao Vivo (live multiple-choice quiz)
 
 A Kahoot-style live activity, sharing the same 3-token / 3-route architecture as Nuvem de Palavras but with its own data model: `apps/dinamicas/quiz-ao-vivo/` (host builds questions, then controls live progression), `/q/[id]` (participant: name → lobby → question → reveal → final score/rank), `/q/[id]/resultados/[token]` (big-screen: podium + full leaderboard + gabarito).
 
-- `lib/quiz.ts` — `QuizPhase`, `QUIZ_LIMITS` (2-6 options, question/answer length caps), `QUIZ_SCORING` constants, `isValidQuestionDraft`, and `clockOffsetMs`/`correctedNow` (client clock-drift correction for the countdown — see below)
-- Data model: `quiz_sessions` (adds a `phase` state machine on top of the usual `status`: `lobby → question → reveal → ... → finished`, plus `current_question_index`/`current_question_started_at`/`finished_at`), `quiz_questions` (fixed at creation, `options` JSONB + `correct_option_index`, optional `time_limit_seconds`), `quiz_participants` (named, unique name per session via `CREATE UNIQUE INDEX ... (session_id, lower(name))`), `quiz_answers` (FK's to `quiz_participants` so answering without joining is impossible at the DB level) — see `lib/schema.sql`
+- `lib/apps/quiz.ts` — `QuizPhase`, `QUIZ_LIMITS` (2-6 options, question/answer length caps), `QUIZ_SCORING` constants, `isValidQuestionDraft`, and `clockOffsetMs`/`correctedNow` (client clock-drift correction for the countdown — see below)
+- Data model: `quiz_sessions` (adds a `phase` state machine on top of the usual `status`: `lobby → question → reveal → ... → finished`, plus `current_question_index`/`current_question_started_at`/`finished_at`), `quiz_questions` (fixed at creation, `options` JSONB + `correct_option_index`, optional `time_limit_seconds`), `quiz_participants` (named, unique name per session via `CREATE UNIQUE INDEX ... (session_id, lower(name))`), `quiz_answers` (FK's to `quiz_participants` so answering without joining is impossible at the DB level) — see `db/schema.sql`
 - **Every host action (`start`/`reveal`/`next`/`restart`) is a single `UPDATE ... WHERE phase = <expected phase>`** — this is what makes double-clicks and race conditions no-ops (409) instead of corrupting state, with no explicit locking needed. `restart` is the one exception with a side effect beyond the UPDATE: in the same statement it also `DELETE`s that session's `quiz_participants` (guarded by the same phase/token check, so an unauthorized/mistimed call deletes nothing) — `quiz_answers` cascades away with it via `ON DELETE CASCADE`. This is deliberate: the unique-name index is per-session, not per-round, so keeping old participants around after a restart would permanently block anyone else from reusing their name in a later round. Scoring in `POST /api/quiz-sessions/[id]/answers` follows the general "one atomic guarded statement" principle too: one CTE-based `INSERT` that reads `current_question_started_at` and computes correctness + speed bonus using the **Postgres clock**, never the client's or the serverless function's — this is the one rule to preserve if this route is ever touched
-- The countdown (`components/QuizCountdown.tsx`) is a local `setInterval` (~150ms) computing `deadline - Date.now()`, corrected by `clockOffsetMs(server_time)` from the last poll — a participant's wrong device clock would otherwise show the timer expiring early/late. The countdown itself is purely visual, but for timed questions the server independently enforces the same deadline: `POST /api/quiz-sessions/[id]/answers` rejects an answer once `NOW() > current_question_started_at + time_limit_seconds` even while `phase` is still `'question'` (host hasn't clicked reveal yet) — so `phase` alone is no longer sufficient to reason about whether an answer will be accepted for a timed question, only in combination with elapsed time
-- `components/QuizLeaderboard.tsx` and `components/QuizPodium.tsx` are shared between the host's `ControlPanel.tsx` and the `/resultados/[token]` big screen — both poll the same `GET .../results` shape. `ControlPanel.tsx` (private, host-only) shows the plain leaderboard immediately on `finished`; the public results page and `/q/[id]` gate it behind the suspense reveal below
+- The countdown (`components/apps/quiz/QuizCountdown.tsx`) is a local `setInterval` (~150ms) computing `deadline - Date.now()`, corrected by `clockOffsetMs(server_time)` from the last poll — a participant's wrong device clock would otherwise show the timer expiring early/late. The countdown itself is purely visual, but for timed questions the server independently enforces the same deadline: `POST /api/quiz-sessions/[id]/answers` rejects an answer once `NOW() > current_question_started_at + time_limit_seconds` even while `phase` is still `'question'` (host hasn't clicked reveal yet) — so `phase` alone is no longer sufficient to reason about whether an answer will be accepted for a timed question, only in combination with elapsed time
+- `components/apps/quiz/QuizLeaderboard.tsx` and `components/apps/quiz/QuizPodium.tsx` are shared between the host's `ControlPanel.tsx` and the `/resultados/[token]` big screen — both poll the same `GET .../results` shape. `ControlPanel.tsx` (private, host-only) shows the plain leaderboard immediately on `finished`; the public results page and `/q/[id]` gate it behind the suspense reveal below
 - Sound (results/big-screen only — see "Sound effects" below): `QuizCountdown` takes an opt-in `playSound` prop (only `/q/[id]/resultados/[token]` passes it — the participant's own phone, `/q/[id]`, stays silent) that ticks once per displayed second and rings once at zero. The results page also plays a "everyone answered" chime (edge-triggered off `answered_count === leaderboard.length`, tracked per `current_question_index` so it fires once) and a reveal/fanfare sound for each podium place inside the same `setInterval` that already drives the podium suspense countdown
-- **Final podium reveal is a suspense sequence, not an instant reveal**: when the `next` action closes out the last question, the same atomic `UPDATE` stamps `finished_at = NOW()`. Both `/q/[id]/resultados/[token]` and `/q/[id]` independently compute `elapsedMs` from that shared server timestamp (clock-corrected the same way as the countdown) and derive the current stage from `PODIUM_REVEAL`/`podiumRevealedPlaces`/`podiumFullyRevealed` in `lib/quiz.ts` — no extra network round-trip or new phase is needed, it's pure client-side timing anchored to one server timestamp. The results page reveals 3rd → 2nd → 1st (each place animated in by `QuizPodium`'s `revealedPlaces` prop) then the full leaderboard once `podiumFullyRevealed`; the participant page shows a "Apurando o resultado..." suspense screen and only renders the participant's own rank/score at that same `podiumFullyRevealed` instant. This is cosmetic pacing like the countdown, not a security boundary: `GET .../results` already returns the full ordered leaderboard the moment `phase==='finished'`, unlike `correct_option_index`/`distribution` on that same route, which genuinely are withheld server-side until `phase==='reveal'` — someone reading the network response or React state directly during the suspense window could see the outcome early. A screen opened late (after the whole window has elapsed) just renders fully revealed immediately, same as the countdown never "rewinding"
+- **Final podium reveal is a suspense sequence, not an instant reveal**: when the `next` action closes out the last question, the same atomic `UPDATE` stamps `finished_at = NOW()`. Both `/q/[id]/resultados/[token]` and `/q/[id]` independently compute `elapsedMs` from that shared server timestamp (clock-corrected the same way as the countdown) and derive the current stage from `PODIUM_REVEAL`/`podiumRevealedPlaces`/`podiumFullyRevealed` in `lib/apps/quiz.ts` — no extra network round-trip or new phase is needed, it's pure client-side timing anchored to one server timestamp. The results page reveals 3rd → 2nd → 1st (each place animated in by `QuizPodium`'s `revealedPlaces` prop) then the full leaderboard once `podiumFullyRevealed`; the participant page shows a "Apurando o resultado..." suspense screen and only renders the participant's own rank/score at that same `podiumFullyRevealed` instant. This is cosmetic pacing like the countdown, not a security boundary: `GET .../results` already returns the full ordered leaderboard the moment `phase==='finished'`, unlike `correct_option_index`/`distribution` on that same route, which genuinely are withheld server-side until `phase==='reveal'` — someone reading the network response or React state directly during the suspense window could see the outcome early. A screen opened late (after the whole window has elapsed) just renders fully revealed immediately, same as the countdown never "rewinding"
 
 ### Sorteio (raffle/random draw)
 
 Unlike Nuvem de Palavras and Quiz ao Vivo, this one is **single-screen and client-only** — no `/api` route, no DB, no session/tokens. The host pastes a comma-separated list and draws directly in `apps/dinamicas/sorteio.tsx`; there's nothing for a second device to connect to.
 
-- `lib/sorteio.ts` — `parseEntries` (comma-split, trim, dedupe), `drawWinners` (Fisher-Yates, plain `Math.random()` — no cryptographic randomness needed, this isn't a paid raffle), `SORTEIO_LIMITS`
+- `lib/apps/sorteio.ts` — `parseEntries` (comma-split, trim, dedupe), `drawWinners` (Fisher-Yates, plain `Math.random()` — no cryptographic randomness needed, this isn't a paid raffle), `SORTEIO_LIMITS`
 - Draw history and the "exclude past winners" toggle both live in plain React state inside the component, not `localStorage` — intentionally ephemeral, resets on page reload
 - The animated reveal (slot-machine-style name cycling, one winner at a time) and the confetti burst are both hand-rolled with framer-motion (already a project dependency via the Quiz/Nuvem de Palavras animations) rather than pulling in a dedicated confetti library
 - The spin's tick interval is **not** a fixed `setInterval` — `spinFor()` uses a recursive `setTimeout` whose delay follows `easedTickDelay()` (a `Math.sin` curve: slow → fast → slow), so the roulette accelerates then decelerates into the landing name over a fixed `SPIN_DURATION_MS`, regardless of how many entries are in the pool. This is deliberate: with a naive fixed-speed loop, a short list "landed" almost instantly and killed the suspense — duration is now time-based, not cycle-count-based
 
 ### Acervo de Livros
 
-`/livros` (a sala de leitura 3D — o `<Canvas>` mora em `app/livros/layout.tsx`,
+`/livros` (a sala de leitura 3D — o `<Canvas>` mora em `app/(livros)/livros/layout.tsx`,
 nunca numa page, e clicar num livro é uma intercepting route `@livro/(.)[slug]`),
 `/livros/lista` (grade com filtros por categoria/tag/status, todos via query
 param para serem compartilháveis) e `/livros/[slug]` (página do livro,
 server-rendered para SEO). **As decisões da sala 3D — estante por ano, trilho de
 navegação, territórios congelados, contrato do `KenneyModel` — estão em
-`docs/livros-sala-3d.md`; leia antes de mexer em `components/livros/`.** O que
-ficou de fora do V1 está em `docs/livros-proximos-passos.md`.
+`docs/livros/livros-sala-3d.md`; leia antes de mexer em `components/livros/`.** O que
+ficou de fora do V1 está em `docs/livros/livros-proximos-passos.md`.
 
-- **Não existe rota de admin.** O cadastro acontece só por `scripts/livros.mjs`,
+- **Não existe rota de admin.** O cadastro acontece só por `scripts/livros/livros.mjs`,
   rodando localmente — foi requisito explícito de não criar superfície de ataque
   pública. O script lê `DATABASE_URL` de `.env.local` com o mesmo parsing manual
-  de `scripts/migrate-casara.mjs`, escreve em **produção**, e por isso sempre
+  de `scripts/global/migrate-casara.mjs`, escreve em **produção**, e por isso sempre
   mostra o que vai gravar e pede confirmação; tem `--dry-run`. Comandos:
   `list`, `add <isbn>`, `edit <slug>` (um livro por vez), `capa <slug> [url]`
   (troca a capa de um livro já cadastrado) e `seed [--limit N] [--apply]
   [--incluir-revisar]` (importação em lote a partir de
-  `scripts/seed/acervo.json`)
-- **`scripts/seed/acervo.json` é a fonte da verdade** para título, autor,
+  `scripts/livros/seed/acervo.json`)
+- **`scripts/livros/seed/acervo.json` é a fonte da verdade** para título, autor,
   nota, categoria, tags e status — a Open Library só entra para complementar
   **capa, páginas e ano**. Não é uma limitação temporária: a busca por
   título+autor devolve com frequência texto de marketing dentro de
@@ -157,21 +159,21 @@ ficou de fora do V1 está em `docs/livros-proximos-passos.md`.
   `git commit` + deploy** (`public/livros/capas/` é versionado). Entre rodar
   `--apply` e dar push, o site fica com `/livros` mostrando imagens quebradas
   para as capas novas. Rode e faça o push junto, no mesmo momento
-- **A lógica pura vive em `.mjs`, não `.ts`** (`lib/book-utils.mjs`,
-  `lib/book-categories.mjs`, `lib/book-sources/`, `lib/book-cover.mjs`): o CLI é
+- **A lógica pura vive em `.mjs`, não `.ts`** (`lib/livros/acervo/book-utils.mjs`,
+  `lib/livros/acervo/book-categories.mjs`, `lib/book-sources/`, `lib/livros/acervo/book-cover.mjs`): o CLI é
   Node puro e não consegue importar `.ts` sem build. Esses arquivos são
   importados tanto pelo CLI quanto pelo Next, e são os únicos cobertos por teste
   (`npm test`, via `node --test`) — porque um bug ali corrompe dado permanente
-- `lib/books.ts` é o lado Next: tipo `Book` e queries. Sempre `casara.books`
-- **Um livro tem UMA `category`** (taxonomia fechada em `lib/book-categories.mjs`,
+- `lib/livros/acervo/books.ts` é o lado Next: tipo `Book` e queries. Sempre `casara.books`
+- **Um livro tem UMA `category`** (taxonomia fechada em `lib/livros/acervo/book-categories.mjs`,
   define a cor) **e N `tags` livres** (eixo transversal de busca). Multi-categoria
   tornaria a posição na prateleira ambígua
-- **`status` tem quatro valores** (CHECK em `lib/schema.sql`), e cada um é um
+- **`status` tem quatro valores** (CHECK em `db/schema.sql`), e cada um é um
   lugar da sala: `lido` na estante, `lendo` na pilha da mesa de centro,
   `quero-ler` na torre no chão e `referencia` em lugar nenhum — este último tem
   página própria e é alcançado só por link direto ou pelo objeto 3D que o
   representa (a Bíblia aberta na mesa do PC), ficando fora de toda listagem,
-  filtro e contagem via `STATUS_OCULTOS` em `lib/books.ts`
+  filtro e contagem via `STATUS_OCULTOS` em `lib/livros/acervo/books.ts`
 - **Capas são baixadas, não linkadas** (`public/livros/capas/<slug>.jpg`): a API
   de covers da Open Library tem rate limit e linkar direto faria cada visitante
   bater no servidor deles. `spine_color` é a cor dominante, extraída uma vez no
@@ -181,7 +183,7 @@ ficou de fora do V1 está em `docs/livros-proximos-passos.md`.
   (pergunta no terminal, gera capa placeholder), não como erro
 - **A Amazon é a segunda fonte de CAPA — e só de capa.** Para livros, o ASIN
   dela é o ISBN-10, e `/images/P/<asin>.01._SCLZZZZZZZ_.jpg` serve a imagem sem
-  raspar página nem chave de API; `capaDaAmazon` em `lib/book-cover.mjs` monta
+  raspar página nem chave de API; `capaDaAmazon` em `lib/livros/acervo/book-cover.mjs` monta
   essa URL a partir do ISBN-13 gravado (`isbn13Para10` recalcula o dígito
   verificador — não é truncar o ISBN-13). É o que `livros.mjs capa <slug>` usa
   quando você não passa uma URL. Ela **não** entra no `add`/`seed` como fonte de
@@ -200,11 +202,11 @@ ficou de fora do V1 está em `docs/livros-proximos-passos.md`.
   escreve o placeholder por cima em caso de falha — sem isso, uma URL ruim
   destruiria uma capa boa
 - Skoob **não** é uma fonte: a API pública foi desligada em setembro de 2025 e
-  não há exportação nativa. `lib/book-sources/index.mjs` existe como gancho caso
+  não há exportação nativa. `lib/livros/acervo/book-sources/index.mjs` existe como gancho caso
   isso mude
 - **"Coisas que ninguém repara" é uma camada de descoberta, não uma fechadura.**
   A folha da bancada de estudo abre a lista dos 17 objetos clicáveis da sala
-  (`lib/coisas-da-sala.mjs` é a fonte única — dela saem o contador E as linhas);
+  (`lib/livros/segredos/coisas-da-sala.mjs` é a fonte única — dela saem o contador E as linhas);
   achar todos faz aparecer um caderno no braço da poltrona. **Nada fica trancado
   em momento nenhum**, e o conteúdo do caderno é servido por `GET /api/caderno`,
   que qualquer um pode chamar: é ritmo, não segurança — a mesma nota do pódio do
@@ -214,37 +216,37 @@ ficou de fora do V1 está em `docs/livros-proximos-passos.md`.
   `marcarCoisa(id)` é **função de módulo importada direto**, nunca prop nem
   contexto — metade dos objetos se marca de dentro do próprio componente, e
   `Room.tsx` é cenário burro que não pode saber que existe um jogo. Fechar a
-  lista toca `reveal.mp3` — a única exceção da sala a `lib/sound.ts`, ver "Sound
+  lista toca `reveal.mp3` — a única exceção da sala a `lib/global/sound.ts`, ver "Sound
   effects" abaixo. Um evento só (`caderno_desbloqueado`), nenhum por item.
   Detalhes e as recusas em
-  `docs/livros-sala-3d.md`; as páginas do caderno são `.md` em `content/caderno/`
+  `docs/livros/livros-sala-3d.md`; as páginas do caderno são `.md` em `content/caderno/`
   (**fora de `public/`**, e listadas em `outputFileTracingIncludes` no
   `next.config.ts`, senão a rota devolve zero páginas em produção)
-- **O som da sala não passa por `lib/sound.ts`** (ver "Sound effects" abaixo):
+- **O som da sala não passa por `lib/global/sound.ts`** (ver "Sound effects" abaixo):
   ele toca efeitos curtos por `<audio>`, e aqui é preciso um grafo de Web Audio
   — ganho, analisador de espectro, síntese de ruído. O monitor da direita
   cicla `desligada → lofi → chuva` e é o controle do que toca; a caixa de som
   da prateleira aérea é o volume (3 níveis no clique, sem mute — mutar já é
-  desligar a tela). `lib/radio.ts` é o ponto único de configuração da estação,
+  desligar a tela). `lib/livros/sala/radio.ts` é o ponto único de configuração da estação,
   e é o único arquivo a mexer para trocá-la. **A sala abre em silêncio com a
   tela apagada**, porque autoplay sem gesto seria bloqueado de qualquer forma —
   mostrar um player mudo seria pior que mostrar um monitor desligado. A chuva é
   ruído sintetizado e a música é stream ao vivo: **nenhum arquivo de áudio novo
   entrou no repositório**. Detalhes e as recusas (wallpaper de anime da
-  estação, botão flutuante) em `docs/livros-sala-3d.md`
+  estação, botão flutuante) em `docs/livros/livros-sala-3d.md`
 - `/livros` é **só em português**, como os mini-apps e as dinâmicas — o
   `LanguageProvider` cobre apenas home, about, projects e a listagem `/app`
 
 ### Descubra sua Linguagem do Amor
 
-A second forced-choice personality-style test, `apps/desenvolvimento-pessoal/descubra-sua-linguagem-do-amor.tsx`, following the same lessons as the temperament test (see `docs/testes-de-personalidade.md`) but researched separately in `docs/linguagens-do-amor-pesquisa.md` — read that doc before changing the question bank or scoring.
+A second forced-choice personality-style test, `apps/desenvolvimento-pessoal/descubra-sua-linguagem-do-amor.tsx`, following the same lessons as the temperament test (see `docs/apps/testes-de-personalidade.md`) but researched separately in `docs/apps/linguagens-do-amor-pesquisa.md` — read that doc before changing the question bank or scoring.
 
 - `apps/desenvolvimento-pessoal/linguagens-do-amor.json` — 30 questions, same `{id, opcoes: [{polo, frase}]}` schema as `temperamentos.json`. **Structural difference from the temperament test**: instead of 2 orthogonal axes (quente/frio, seco/úmido), this is a 5-way category (`afirmacao`/`qualidade`/`presentes`/`servico`/`toque`) — every question pits exactly 2 of the 5 categories against each other, covering all `C(5,2) = 10` pairs × 3 repetitions, so each language appears in exactly 12 of the 30 questions (balance validated by script, not just by construction)
 - `apps/desenvolvimento-pessoal/love-language-info.ts` — `LOVE_LANGUAGE_INFO` (display name, Tailwind/hex colors, `description`, `howYouFeelLoved`, `commonMisunderstandings`, `relationshipTips`), same shape/purpose as `temperament-info.ts`
 - **No tiebreaker phase, unlike the temperament test.** The source theory itself expects mixed profiles (people commonly value more than one love language), so a close #1/#2 result isn't something to break with extra questions — `calculateResults` just flags `combined: true` when the top two percentages are within `COMBINED_RESULT_THRESHOLD` (10 points) of each other, and the results UI/PDF/Telegram message all present both languages together instead of forcing a single winner
-- `utils/love-language-pdf-generator.tsx` — `LoveLanguagePdfContent` + `generateLoveLanguagePdf`, reusing the shared `renderElementToPdf` engine now exported from `utils/pdf-generator.tsx` (the html2canvas → jsPDF assembly is identical between tests; only the content component and filename differ). If a third test-with-PDF app is ever added, extend this shared engine rather than copying it again
+- `lib/apps/pdf/love-language-pdf-generator.tsx` — `LoveLanguagePdfContent` + `generateLoveLanguagePdf`, reusing the shared `renderElementToPdf` engine now exported from `lib/apps/pdf/pdf-generator.tsx` (the html2canvas → jsPDF assembly is identical between tests; only the content component and filename differ). If a third test-with-PDF app is ever added, extend this shared engine rather than copying it again
 - Email is intentionally **not** sent for this test (unlike temperament, which emails `fencher.aa@gmail.com`) — Telegram + in-app stats were the only notification channel requested when this app was built
-- Same `/stats` treatment as temperament: a `LINGUAGENS_DO_AMOR_ANALYSIS` panel next to `TEMPERAMENTO_ANALYSIS`, fed by the `love_languages` block in `GET /api/metrics/stats` (started/completed/conversion, per-language averages, `combined_rate`, avg duration) — see `app/stats/page.tsx`
+- Same `/stats` treatment as temperament: a `LINGUAGENS_DO_AMOR_ANALYSIS` panel next to `TEMPERAMENTO_ANALYSIS`, fed by the `love_languages` block in `GET /api/metrics/stats` (started/completed/conversion, per-language averages, `combined_rate`, avg duration) — see `app/(global)/stats/page.tsx`
 
 ### Sound effects
 
@@ -258,7 +260,7 @@ ninguém repara" — a half-second clip played once, which is precisely what
 `playSound` exists for. It is edge-triggered off a ref, so returning to the room
 with the list already complete is silent.
 
-Shared across all three live dynamics — `lib/sound.ts` exports `playSound(name)` (fire-and-forget, cached `HTMLAudioElement` per name) and `startLoop(name)` (returns a stop function, used only by Sorteio's spin). Every `.play()` is `.catch(() => {})`'d, same spirit as `toggleFullscreen`: a browser autoplay-policy rejection just means "no sound this time," never a thrown error. Effect files live in `public/sounds/*.mp3` — short (12-110KB) clips from [Mixkit's free SFX library](https://mixkit.co/free-sound-effects/) (no attribution required). Swapping a sound is a one-file replacement, no code change needed as long as the filename stays the same.
+Shared across all three live dynamics — `lib/global/sound.ts` exports `playSound(name)` (fire-and-forget, cached `HTMLAudioElement` per name) and `startLoop(name)` (returns a stop function, used only by Sorteio's spin). Every `.play()` is `.catch(() => {})`'d, same spirit as `toggleFullscreen`: a browser autoplay-policy rejection just means "no sound this time," never a thrown error. Effect files live in `public/sounds/*.mp3` — short (12-110KB) clips from [Mixkit's free SFX library](https://mixkit.co/free-sound-effects/) (no attribution required). Swapping a sound is a one-file replacement, no code change needed as long as the filename stays the same.
 
 ### Environment Variables
 
@@ -273,21 +275,29 @@ TELEGRAM_INGRESS_CHAT_ID=            # opcional; fallback = TELEGRAM_CHAT_ID
 EMAIL_USER=
 EMAIL_PASS=
 DATABASE_URL=
-UPSTASH_REDIS_REST_URL=              # rate limiting, ver lib/rate-limit.ts — sem isso, fail-open (desativado)
+UPSTASH_REDIS_REST_URL=              # rate limiting, ver lib/global/rate-limit.ts — sem isso, fail-open (desativado)
 UPSTASH_REDIS_REST_TOKEN=
 ```
 
+### Preferências do visitante (`localStorage`)
+
+Uma preferência nova de visitante (layout escolhido, filtro lembrado…) vai no objeto único **`casara.site`**, não numa chave solta: `{"v": 1, "ingress": {"nerdStatsLayout": "cards", "lang": "pt", ...}}`, dividido em seções por área do site. `lib/global/site-preferences.mjs` é a lógica pura e testada (chave, `SITE_PREF_SPEC` com o padrão e o validador de cada preferência, `parseSitePrefs`/`withSitePref`, `migrateLegacyIngress`) — valor que não passa no validador volta ao padrão, e **seções que o código não conhece são preservadas** ao ler/gravar, porque o objeto é do site inteiro. `lib/global/use-site-preferences.ts` é o lado do navegador: `useSitePrefs` (`useSyncExternalStore`: o servidor renderiza com o padrão e a hidratação troca sem divergência), `getSitePrefs`/`setSitePref` para código imperativo (handlers, efeitos), e nada lança se o `localStorage` estiver bloqueado. Declarar a preferência nova em `SITE_PREF_SPEC` é o primeiro passo.
+
+**Só o `/ingress` está unificado.** Sua seção `ingress` tem quatro preferências: `nerdStatsLayout` (`resumo` | `cards` | `agentes`, o alternador dos recordes em "Estatísticas para nerds" — ver `lib/ingress/stats/ingress-nerd-records.mjs`, que monta hall da fama, sazonais e assinatura num formato só para as três visões `NerdRecord{List,Cards,Agents}`), `lang` (a escolha do toggle PT/EN; `null` até o visitante escolher), `myAgent` (o `codename_key` do último envio, via `lib/ingress/ranking/ingress-my-agent.ts`) e `compareAlertSent` (dedupe de 10 min do alerta de comparação no Telegram). As três últimas eram chaves soltas (`ing-lang`, `ing-cmp-my-agent`, `ing-cmp-sent`): na primeira leitura depois da mudança `absorbLegacy` as copia para o objeto novo (o valor já existente no objeto vence) e apaga as antigas. Por isso `INGRESS_LANG_STORAGE_KEY`/`MY_AGENT_STORAGE_KEY` deixaram de existir — quem precisa do valor lê `getSitePrefs().ingress.*`.
+
+**As demais áreas continuam com as próprias chaves e NÃO foram migradas:** `minhas-nuvens` e `meus-quizzes` dos hosts, ids de participante e `wc_submitted_*` das dinâmicas, `temperamentTestExecutions`/`loveLanguageTestExecutions`, `coisas-que-ninguem-repara` e os ajustes de volume/monitor da sala de leitura. Várias guardam token de sessão ou têm chave dinâmica por sessão; migrar é decisão à parte.
+
 ### Rate limiting
 
-`lib/rate-limit.ts` — `rateLimitOrNull(request, name)` checa um limite por IP (Upstash Redis, sliding window) antes do corpo de um handler; retorna uma `NextResponse` 429 pronta pra devolver, ou `null` pra seguir. **Fail-open por design**: sem `UPSTASH_REDIS_REST_URL`/`_TOKEN` configuradas, ou se a chamada ao Redis falhar, a rota segue sem limite — nunca trava por causa de uma dependência opcional. Aplicado nas rotas públicas onde um script sem limite algum causaria dano real: `POST /api/send-email` e `POST /api/telegram` (disparam e-mail/Telegram do dono do site), `POST /api/ingress-rankings` (escreve em `casara.ingress_rankings` e, indiretamente, dispara o alerta do Telegram a cada linha nova), `POST /api/quiz-sessions` / `POST /api/word-sessions` (criação de sessão), `POST /api/events` (mais generoso — é tráfego legítimo normal de analytics). **Deliberadamente não aplicado** nas rotas de ação de um participante dentro de uma sessão já criada (`join`, `answers`, `responses`) — várias pessoas no mesmo Wi-Fi/evento presencial compartilham IP, e o dano de abuso ali fica contido a uma sessão que o host já controla.
+`lib/global/rate-limit.ts` — `rateLimitOrNull(request, name)` checa um limite por IP (Upstash Redis, sliding window) antes do corpo de um handler; retorna uma `NextResponse` 429 pronta pra devolver, ou `null` pra seguir. **Fail-open por design**: sem `UPSTASH_REDIS_REST_URL`/`_TOKEN` configuradas, ou se a chamada ao Redis falhar, a rota segue sem limite — nunca trava por causa de uma dependência opcional. Aplicado nas rotas públicas onde um script sem limite algum causaria dano real: `POST /api/send-email` e `POST /api/telegram` (disparam e-mail/Telegram do dono do site), `POST /api/ingress-rankings` (escreve em `casara.ingress_rankings` e, indiretamente, dispara o alerta do Telegram a cada linha nova), `POST /api/quiz-sessions` / `POST /api/word-sessions` (criação de sessão), `POST /api/events` (mais generoso — é tráfego legítimo normal de analytics). **Deliberadamente não aplicado** nas rotas de ação de um participante dentro de uma sessão já criada (`join`, `answers`, `responses`) — várias pessoas no mesmo Wi-Fi/evento presencial compartilham IP, e o dano de abuso ali fica contido a uma sessão que o host já controla.
 
 ### Analytics
 
-All user interactions are tracked via `@vercel/analytics`. Tracking functions live in `utils/analytics.ts` and are imported individually per page/component. Add new events there to maintain consistency.
+All user interactions are tracked via `@vercel/analytics`. Tracking functions live in `lib/global/analytics.ts` and are imported individually per page/component. Add new events there to maintain consistency.
 
 ### PDF Generation
 
-`utils/pdf-generator.tsx` exports `PdfContent` (a hidden React component rendered off-screen), `generatePdf` (temperament test), and the shared `renderElementToPdf` engine (html2canvas → jsPDF) that both tests build on. `utils/love-language-pdf-generator.tsx` reuses that engine for the love language test's own `LoveLanguagePdfContent`/`generateLoveLanguagePdf`.
+`lib/apps/pdf/pdf-generator.tsx` exports `PdfContent` (a hidden React component rendered off-screen), `generatePdf` (temperament test), and the shared `renderElementToPdf` engine (html2canvas → jsPDF) that both tests build on. `lib/apps/pdf/love-language-pdf-generator.tsx` reuses that engine for the love language test's own `LoveLanguagePdfContent`/`generateLoveLanguagePdf`.
 
 ### Fonts
 

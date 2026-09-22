@@ -4,7 +4,7 @@ import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
 import {useTexturaDeRelogio} from '@/components/livros/decor/use-textura-de-relogio';
 import {
     MATERIAL_DOS_DIGITOS, RELOGIO_NATIVO, RELOGIO_DISPLAY,
-} from '@/lib/relogio-model.mjs';
+} from '@/lib/livros/sala/relogio-model.mjs';
 
 /**
  * O relógio de cabeceira da prateleira aérea, marcando a hora de quem está

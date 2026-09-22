@@ -1,14 +1,14 @@
 'use client'
 
-import {useLang} from '@/context/LanguageContext'
-import {INGRESS_LANG_STORAGE_KEY} from '@/lib/ingress-lang.mjs'
-import {trackIngressLanguageToggle} from '@/utils/analytics'
+import {useLang} from '@/components/global/LanguageContext'
+import {setSitePref} from '@/lib/global/use-site-preferences'
+import {trackIngressLanguageToggle} from '@/lib/global/analytics'
 
 /**
  * Chave PT/EN visível dentro de `/ingress` — o `Header.tsx` genérico do site se
- * esconde nessas rotas (guarda de pathname em `components/Header.tsx`), então
+ * esconde nessas rotas (guarda de pathname em `components/global/Header.tsx`), então
  * esta é a única forma do visitante trocar o idioma aqui (ISTATS-18/19).
- * Estilizada com os tokens do tema Sora/Barlow de `app/ingress/theme.css` via
+ * Estilizada com os tokens do tema Sora/Barlow de `app/(ingress)/ingress/theme.css` via
  * inline style (as CSS custom properties já estão disponíveis em qualquer
  * descendente de `.ingress-prime`), não com as classes Tailwind do `Header`.
  * Não se posiciona sozinha (`position:fixed`) — quem faz isso é `IngressTopBar`,
@@ -27,11 +27,8 @@ export default function IngressLanguageToggle() {
         // Escolha explícita: passa a valer sobre o idioma do navegador (ver
         // `IngressLanguageProvider`). Sempre grava, inclusive de volta ao idioma
         // que o navegador já teria escolhido — não existe estado "automático".
-        try {
-          localStorage.setItem(INGRESS_LANG_STORAGE_KEY, next)
-        } catch {
-          // localStorage bloqueado — a troca vale só para esta visita
-        }
+        // Storage bloqueado: a troca vale só para esta visita.
+        setSitePref('ingress', 'lang', next)
       }}
       aria-label={lang === 'pt' ? 'Switch to English' : 'Mudar para português'}
       style={{

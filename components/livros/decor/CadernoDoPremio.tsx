@@ -8,7 +8,7 @@ import type * as THREE from 'three';
 
 /**
  * O caderno encadernado que aparece no braço da poltrona quando alguém acha as 17
- * coisas da sala (ver `lib/coisas-da-sala.mjs`).
+ * coisas da sala (ver `lib/livros/segredos/coisas-da-sala.mjs`).
  *
  * **PRIMITIVAS, e não um `.glb`.** Um caderno fechado é literalmente uma capa, um
  * bloco de páginas e um elástico — três caixas, à distância em que este objeto é

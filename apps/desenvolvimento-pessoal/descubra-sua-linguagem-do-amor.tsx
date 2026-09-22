@@ -4,9 +4,9 @@ import {useEffect, useRef, useState} from "react";
 import {FaSpinner, FaUser} from "react-icons/fa";
 import loveLanguagesJson from "./linguagens-do-amor.json";
 import {LOVE_LANGUAGE_INFO, getLoveLanguageDisplayName} from "./love-language-info";
-import {sendLoveLanguageTestMessage} from "@/app/api/telegram/utils";
-import {generateLoveLanguagePdf, LoveLanguagePdfContent} from "@/utils/love-language-pdf-generator";
-import {trackLoveLanguagePdfDownload, trackLoveLanguageQuestionDropout, trackLoveLanguageTestCompletion, trackLoveLanguageTestStart} from "@/utils/analytics";
+import {sendLoveLanguageTestMessage} from "@/app/(global)/api/telegram/utils";
+import {generateLoveLanguagePdf, LoveLanguagePdfContent} from "@/lib/apps/pdf/love-language-pdf-generator";
+import {trackLoveLanguagePdfDownload, trackLoveLanguageQuestionDropout, trackLoveLanguageTestCompletion, trackLoveLanguageTestStart} from "@/lib/global/analytics";
 
 type Metrics = {
     total_completed: number;

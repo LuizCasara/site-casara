@@ -1,11 +1,11 @@
 'use client'
 
-import Panel from '../Panel'
-import {tierLabel} from '@/lib/ingress-tiers.mjs'
-import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
-import {flagSrc} from '@/lib/ingress-countries.mjs'
-import {fmtStat} from '@/lib/ingress-format.mjs'
-import {useLang} from '@/context/LanguageContext'
+import Panel from '../shell/Panel'
+import {tierLabel} from '@/lib/ingress/catalog/ingress-tiers.mjs'
+import {RADAR_AXES} from '@/lib/ingress/stats/ingress-radar.mjs'
+import {flagSrc} from '@/lib/ingress/catalog/ingress-countries.mjs'
+import {fmtStat} from '@/lib/ingress/ingress-format.mjs'
+import {useLang} from '@/components/global/LanguageContext'
 
 /**
  * Mesmo par de caminhos já usado em `IngressRankingTable.tsx` (`FACTION_ICON`)
@@ -20,7 +20,7 @@ const FACTION_LABEL: Record<'enlightened' | 'resistance', string> = {
   resistance: 'Resistance',
 }
 
-/** Mesma escada de `lib/ingress-tier-score.mjs`, reconstruída aqui só pra escolher a cor do selo a partir da nota geral (já na escala 0-100). */
+/** Mesma escada de `lib/ingress/stats/ingress-tier-score.mjs`, reconstruída aqui só pra escolher a cor do selo a partir da nota geral (já na escala 0-100). */
 const RANK_TO_TIER_KEY = ['none', 'bronze', 'silver', 'gold', 'platinum', 'onyx'] as const
 
 /** Chave do tier → modificador CSS do selo (`.ing-score-panel__badge--<key>`), que define fundo/borda/texto de cada tier. */
@@ -31,9 +31,9 @@ function tierKeyFromScore(overallScore: number): (typeof RANK_TO_TIER_KEY)[numbe
 
 /**
  * Rótulo bilíngue do selo de tier (ISTATS-19 fix), a partir da nota 0-100+ —
- * mesma matemática de `overallTierLabel()` (`lib/ingress-tier-score.mjs`),
+ * mesma matemática de `overallTierLabel()` (`lib/ingress/stats/ingress-tier-score.mjs`),
  * reimplementada aqui em vez de importada: esse módulo arrasta `computeBadge`
- * (`lib/ingress-badges.mjs` -> `lib/ingress-catalog.mjs`, que lê
+ * (`lib/ingress/catalog/ingress-badges.mjs` -> `lib/ingress/catalog/ingress-catalog.mjs`, que lê
  * `badge-catalog.json` via `node:fs` no topo do arquivo) e quebraria o bundle
  * do navegador se importado por este componente client — mesmo motivo pelo
  * qual `tierKeyFromScore` acima já duplicava `RANK_TO_TIER` localmente em

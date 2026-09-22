@@ -6,7 +6,7 @@ import {useFrame} from '@react-three/fiber';
 import {MathUtils} from 'three';
 import type * as THREE from 'three';
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
-import {deslocamentoDaGaveta, gavetaEmMetros} from '@/lib/gaveta-model.mjs';
+import {deslocamentoDaGaveta, gavetaEmMetros} from '@/lib/livros/sala/gaveta-model.mjs';
 
 /**
  * A gaveta da mesa em L, e o que mora dentro dela: um bloco de notas, uma caneta
@@ -14,7 +14,7 @@ import {deslocamentoDaGaveta, gavetaEmMetros} from '@/lib/gaveta-model.mjs';
  *
  * **A sala já diz o que foi lido, o que está sendo lido e o que se quer ler.
  * Faltava o que SOBROU de ter lido tudo isso** — e é o que está anotado no bloco
- * (ver `lib/bilhete.ts`). Uma gaveta é o lugar certo para isso: fechada por
+ * (ver `lib/livros/segredos/bilhete.ts`). Uma gaveta é o lugar certo para isso: fechada por
  * padrão, embaixo da mesa de estudo, achável só por quem foi curioso o bastante
  * para abrir.
  *

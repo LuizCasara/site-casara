@@ -1,5 +1,5 @@
 import {ImageResponse} from 'next/og'
-import {loadProfile} from '@/lib/ingress'
+import {loadProfile} from '@/lib/ingress/profile/ingress'
 
 export const runtime = 'edge'
 export const size = {width: 1200, height: 630}

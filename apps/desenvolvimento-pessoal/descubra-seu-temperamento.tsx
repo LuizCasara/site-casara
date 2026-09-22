@@ -5,9 +5,9 @@ import {FaSpinner, FaUser} from "react-icons/fa";
 import temperamentosJson from "./temperamentos.json";
 import tiebreakerQuestionsJson from "./tiebreakerQuestions.json";
 import {TEMPERAMENT_INFO, getCharacteristicDisplayName, getTemperamentDisplayName} from "./temperament-info";
-import {sendTemperamentTestMessage} from "@/app/api/telegram/utils";
-import {generatePdf, PdfContent} from "@/utils/pdf-generator";
-import {trackPdfDownload, trackQuestionDropout, trackTemperamentDistribution, trackTestCompletion, trackTestStart} from "@/utils/analytics";
+import {sendTemperamentTestMessage} from "@/app/(global)/api/telegram/utils";
+import {generatePdf, PdfContent} from "@/lib/apps/pdf/pdf-generator";
+import {trackPdfDownload, trackQuestionDropout, trackTemperamentDistribution, trackTestCompletion, trackTestStart} from "@/lib/global/analytics";
 
 type Metrics = {
     total_completed: number;

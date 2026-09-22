@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import {
     RELOGIO_DISPLAY, RELOGIO_NATIVO, SEGMENTOS_POR_DIGITO,
     digitosDoHorario, pontosAcesos, msAteOProximoQuadro,
-} from '@/lib/relogio-model.mjs';
+} from '@/lib/livros/sala/relogio-model.mjs';
 
 /**
  * O display do relógio da prateleira, desenhado num `<canvas>` — a hora do

@@ -3,9 +3,9 @@ import {Analytics} from "@vercel/analytics/next"
 import {SpeedInsights} from "@vercel/speed-insights/next"
 import {Quicksand, Space_Mono} from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import {LanguageProvider} from "@/context/LanguageContext";
+import Header from "@/components/global/Header";
+import Footer from "@/components/global/Footer";
+import {LanguageProvider} from "@/components/global/LanguageContext";
 
 const quicksand = Quicksand({
     variable: "--font-quicksand",

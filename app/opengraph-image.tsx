@@ -6,7 +6,7 @@ export const contentType = "image/png";
 
 const TECHS = ["React", "TypeScript", "GraphQL", "Node.js", "Next.js"];
 
-// O mesmo mark "{C}" do favicon (ver scripts/gen-favicons.mjs), embutido como
+// O mesmo mark "{C}" do favicon (ver scripts/global/gen-favicons.mjs), embutido como
 // data URI porque o Satori do next/og não lê arquivo de public/ em runtime.
 const ICON_SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +

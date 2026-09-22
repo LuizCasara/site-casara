@@ -1,20 +1,21 @@
 'use client'
 
-import {Fragment, useEffect, useRef, useState} from 'react'
+import {Fragment, useEffect, useLayoutEffect, useRef, useState} from 'react'
 import {motion, useReducedMotion} from 'framer-motion'
 import {FaBalanceScale, FaShareAlt} from 'react-icons/fa'
 import {toast} from 'sonner'
-import {TextScramble} from '@/components/ui/text-scramble'
-import Panel from '../Panel'
+import {TextScramble} from '@/components/global/ui/text-scramble'
+import Panel from '../shell/Panel'
 import AgentHistoryChart from './AgentHistoryChart'
-import {fmtStat} from '@/lib/ingress-format.mjs'
-import {RADAR_AXES, computeRadarAxes} from '@/lib/ingress-radar.mjs'
-import {artPath} from '@/lib/ingress-art.mjs'
-import {TIER_COLOR} from '@/lib/ingress-tiers.mjs'
-import {COUNTRIES, flagSrc} from '@/lib/ingress-countries.mjs'
-import {RANKING_PAGE_SIZES, defaultSortDir} from '@/lib/ingress-rankings.mjs'
-import {useLang, type Lang} from '@/context/LanguageContext'
-import {trackIngressAgentShared} from '@/utils/analytics'
+import AgentEvolutionAccordion from './AgentEvolutionAccordion'
+import {fmtScoreDecimal, fmtStat, fmtStatCompact} from '@/lib/ingress/ingress-format.mjs'
+import {RADAR_AXES, computeRadarAxes} from '@/lib/ingress/stats/ingress-radar.mjs'
+import {artPath} from '@/lib/ingress/catalog/ingress-art.mjs'
+import {TIER_COLOR} from '@/lib/ingress/catalog/ingress-tiers.mjs'
+import {COUNTRIES, flagSrc} from '@/lib/ingress/catalog/ingress-countries.mjs'
+import {RANKING_PAGE_SIZES, defaultSortDir} from '@/lib/ingress/ranking/ingress-rankings.mjs'
+import {useLang, type Lang} from '@/components/global/LanguageContext'
+import {trackIngressAgentShared} from '@/lib/global/analytics'
 
 export type StatTier = {tier: string; badgeSlug: string | null}
 
@@ -81,6 +82,52 @@ function axisLabel(id: AxisId, lang: Lang): string {
 
 // rank, score, faction, country, codename, dates, ap, details (8) + os 5 eixos.
 const TOTAL_COLUMNS = 8 + AXIS_COLUMNS.length
+
+/** Quantas colunas a tabela está mostrando agora — as `<col>` que o CSS não tirou com `display: none`. */
+function visibleColumnCount(table: HTMLTableElement): number {
+  const cols = table.querySelectorAll('colgroup > col')
+  let visible = 0
+  cols.forEach((col) => {
+    if (getComputedStyle(col).display !== 'none') visible += 1
+  })
+  return visible || TOTAL_COLUMNS
+}
+
+/**
+ * Célula da sub-linha de detalhe, com `colSpan` = colunas VISÍVEIS, não o total.
+ *
+ * Em painel estreito o `@container` de theme.css tira 6 colunas da grade com
+ * `display: none`. Um `colSpan` fixo em 13 sobre 7 colunas faz o navegador
+ * inventar 6 colunas fantasmas (é assim que funciona colspan além da grade), e
+ * numa tabela `table-layout: fixed` elas dividem com o `codename` — a única
+ * coluna sem largura — o que sobra: ao expandir uma linha ele caía de ~131px
+ * para ~19px e o nome saía em pé, letra por letra.
+ *
+ * O número vem do DOM (o CSS é quem decide o que aparece), e não de um segundo
+ * breakpoint duplicado aqui. `useLayoutEffect` mede antes da pintura, então a
+ * primeira frame já sai com o valor certo; o `ResizeObserver` cobre girar o
+ * aparelho ou redimensionar a janela com a linha aberta.
+ */
+function DetailCell({children}: {children: React.ReactNode}) {
+  const ref = useRef<HTMLTableCellElement>(null)
+  const [span, setSpan] = useState(TOTAL_COLUMNS)
+
+  useLayoutEffect(() => {
+    const table = ref.current?.closest('table')
+    if (!table) return
+    const measure = () => setSpan(visibleColumnCount(table))
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(table)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <td ref={ref} className="ing-ranking-table__detail-cell" colSpan={span}>
+      {children}
+    </td>
+  )
+}
 
 type SortableKey = 'score' | 'ap' | 'country' | AxisId
 type SortDir = 'asc' | 'desc'
@@ -707,6 +754,7 @@ export default function IngressRankingTable({
                     <td
                       data-col="score"
                       className={row.faction === 'resistance' ? 'ing-ranking-table__score--resistance' : undefined}
+                      title={fmtScoreDecimal(row.overall_score)}
                     >
                       {fmtScore(row.overall_score)}
                     </td>
@@ -761,7 +809,14 @@ export default function IngressRankingTable({
                     <td data-col="dates" title={t.datesTooltip(fmtDate(row.updated_at, lang), fmtDate(row.created_at, lang))}>
                       {fmtDate(row.updated_at, lang)}
                     </td>
-                    <td data-col="ap">{fmtStat(row.lifetime_ap)}</td>
+                    <td data-col="ap">
+                      {/* Só um dos dois aparece por vez (`display: none` some da árvore de acessibilidade
+                          também): o compacto ("1,4 bi") no celular, onde o número por extenso não cabe na coluna. */}
+                      <span className="ing-ranking-table__ap-full">{fmtStat(row.lifetime_ap)}</span>
+                      <span className="ing-ranking-table__ap-compact" title={fmtStat(row.lifetime_ap)}>
+                        {fmtStatCompact(row.lifetime_ap)}
+                      </span>
+                    </td>
                     {AXIS_COLUMNS.map((col) => (
                       <td key={col.id} data-col={col.id}>{fmtScore(row.axis_scores?.[col.id] ?? 0)}</td>
                     ))}
@@ -797,7 +852,7 @@ export default function IngressRankingTable({
                   </motion.tr>
                   {isOpen ? (
                     <tr className="ing-ranking-table__detail-row">
-                      <td className="ing-ranking-table__detail-cell" colSpan={TOTAL_COLUMNS}>
+                      <DetailCell>
                         <div className="ing-ranking-table__detail-inner">
                           <div
                             className={`ing-ranking-table__detail${row.faction === 'resistance' ? ' is-resistance' : ''}`}
@@ -909,9 +964,11 @@ export default function IngressRankingTable({
                               </div>
                             ))}
                           </div>
-                          <AgentHistoryChart codenameKey={row.codename_key} agentName={row.codename} faction={row.faction} />
+                          <AgentEvolutionAccordion>
+                            <AgentHistoryChart codenameKey={row.codename_key} agentName={row.codename} faction={row.faction} />
+                          </AgentEvolutionAccordion>
                         </div>
-                      </td>
+                      </DetailCell>
                     </tr>
                   ) : null}
                 </Fragment>

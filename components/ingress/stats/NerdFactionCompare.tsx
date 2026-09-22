@@ -1,8 +1,8 @@
 'use client'
 
-import {fmtStat, fmtStatCompact} from '@/lib/ingress-format.mjs'
-import {useLang} from '@/context/LanguageContext'
-import CountUp from '../CountUp'
+import {fmtStat, fmtStatCompact} from '@/lib/ingress/ingress-format.mjs'
+import {useLang} from '@/components/global/LanguageContext'
+import CountUp from '../hero/CountUp'
 
 export type FactionStats = {agentCount: number; totalAp: number; avgOverallScore: number; onyxBadges: number}
 

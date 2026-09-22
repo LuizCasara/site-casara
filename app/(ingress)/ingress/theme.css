@@ -1,0 +1,5727 @@
+/*
+ * Direção "Prime" — o visual do Ingress Prime (o app moderno), não do scanner
+ * clássico de 2013. Base carvão com undertone azul, painéis arredondados com
+ * leve profundidade, bloom macio e generoso, acentos em gradiente verde → teal
+ * → ciano. Tokens escopados no wrapper `.ingress-prime`.
+ */
+
+.ingress-prime {
+  /* base */
+  --ing-bg: #0b0f14;
+  --ing-bg-2: #0e141b;
+  --ing-panel: rgba(22, 31, 41, 0.72);
+  --ing-panel-solid: #161f29;
+  --ing-edge: rgba(0, 230, 118, 0.16);
+  --ing-edge-soft: rgba(140, 170, 165, 0.12);
+
+  /* facção Enlightened + espectro XM */
+  --ing-green: #00e676;
+  --ing-green-soft: #4dffa6;
+  --ing-teal: #12d9c4;
+  --ing-cyan: #26b6ff;
+  /* facção Resistance — usado só onde a cor precisa refletir a facção do
+     agente exibido (ex.: gráfico de evolução, radar "Estilo de jogo" no
+     ranking), nunca na marca fixa do site (que é sempre o verde Enlightened). */
+  --ing-cyan-soft: #7dd3ff;
+  --ing-xm: #b06cff;
+  --ing-accent: linear-gradient(118deg, #00e676 0%, #12d9c4 52%, #26b6ff 100%);
+  --ing-green-ghost: rgba(0, 230, 118, 0.07);
+
+  /* texto */
+  --ing-text: #eaf5ef;
+  --ing-text-dim: #93a7a0;
+  --ing-text-faint: #5c706a;
+
+  /* bloom — Prime é macio e largo */
+  --ing-glow: 0 0 44px rgba(0, 230, 118, 0.2);
+  --ing-glow-tight: 0 0 18px rgba(0, 230, 118, 0.3);
+  --ing-lift: 0 12px 40px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  /* tipografia */
+  --ing-font-display: var(--font-ingress-display), 'Sora', ui-sans-serif, system-ui, sans-serif;
+  --ing-font-body: var(--font-ingress-body), 'Barlow', ui-sans-serif, system-ui, sans-serif;
+
+  background-color: var(--ing-bg);
+  color: var(--ing-text);
+  font-family: var(--ing-font-body);
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-image:
+    radial-gradient(90% 60% at 50% -8%, rgba(0, 230, 118, 0.12), transparent 62%),
+    radial-gradient(70% 50% at 92% 8%, rgba(38, 182, 255, 0.08), transparent 60%);
+}
+
+.ingress-prime h1,
+.ingress-prime h2,
+.ingress-prime h3 {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.ingress-prime ::selection {
+  background: var(--ing-green);
+  color: var(--ing-bg);
+}
+
+/*
+ * Barras de rolagem — a padrão do Windows (cinza-claro, com setas nas pontas)
+ * quebrava o tema escuro toda vez que a tabela, a tira de abas ou a própria
+ * página passavam a rolar em tela estreita. Só as propriedades padrão
+ * (`scrollbar-width`/`scrollbar-color`: Chrome 121+, Firefox, Safari 18.2+), sem
+ * `::-webkit-scrollbar`: onde as duas existem a padrão vence e a pseudo-elemento
+ * seria código morto. `scrollbar-color` herda e `scrollbar-width` não, daí o `*`.
+ *
+ * A página (o `html`) fica FORA do wrapper `.ingress-prime`, então não enxerga
+ * os tokens `--ing-*` e o `:has` a escopa só ao /ingress — sem ele a barra
+ * escura vazaria pro resto do site. Lá a trilha tem cor própria (#0b0f14, o
+ * `--ing-bg`), senão ela mostraria o fundo do `html`; dentro do wrapper a trilha
+ * é transparente pra não formar uma faixa diferente do painel em que está.
+ */
+html:has(.ingress-prime) {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(147, 167, 160, 0.4) #0b0f14;
+}
+
+.ingress-prime {
+  scrollbar-color: rgba(147, 167, 160, 0.4) transparent;
+}
+
+.ingress-prime * {
+  scrollbar-width: thin;
+}
+
+/* --- primitivas --- */
+
+.ing-shell {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/*
+ * Só `/ingress/ranking` — a tabela tem 13 colunas (rank, nota, facção, país,
+ * codinome, datas, AP, 5 eixos, compartilhar) e precisa de mais respiro que
+ * as outras páginas do /ingress (perfil, linha do tempo, medalha), cujo
+ * conteúdo é texto/radar e já cabia bem nos 60rem. Alargar o `.ing-shell`
+ * base empurraria essas outras páginas também; esta variante troca só o
+ * `max-width`, mantendo o resto (padding, gap) igual. Chegou a ir a 76rem
+ * como tentativa (falha) de evitar o scroll-x que a sub-linha de detalhe
+ * gerava ao abrir — a causa real era table-layout:auto sem `<colgroup>` (ver
+ * `.ing-ranking-table`), já corrigida, então 68rem já sobra de respiro sem
+ * inflar o container à toa. Não elimina o scroll horizontal interno da
+ * tabela em telas estreitas (`.ing-ranking-table__wrap` continua com
+ * `overflow-x: auto` — é o fallback certo pra celular/janela estreita).
+ */
+.ing-shell--wide {
+  max-width: 68rem;
+}
+
+.ing-panel {
+  position: relative;
+  background: var(--ing-panel);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--ing-edge);
+  border-radius: 16px;
+  padding: 1.15rem 1.15rem 1.25rem;
+  box-shadow: var(--ing-lift);
+}
+
+.ing-panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.ing-panel__label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ing-text);
+}
+
+.ing-panel__hint {
+  font-size: 0.75rem;
+  color: var(--ing-text-faint);
+  font-family: var(--ing-font-body);
+  text-align: right;
+}
+
+.ing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+@media (min-width: 34rem) {
+  .ing-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.ing-stat {
+  position: relative;
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 10px;
+  padding: 0.6rem 1.5rem 0.6rem 0.7rem;
+  min-width: 0;
+}
+
+.ing-stat__badge {
+  --tier: var(--ing-text-faint);
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.ing-stat__badge--bronze { --tier: #d08a4e; }
+.ing-stat__badge--silver { --tier: #cfdad4; }
+.ing-stat__badge--gold { --tier: #ffd24a; }
+.ing-stat__badge--platinum { --tier: #8d949d; }
+.ing-stat__badge--onyx { --tier: #626873; }
+
+.ing-stat__badge-art {
+  width: 1.25rem;
+  height: 1.25rem;
+  object-fit: contain;
+  opacity: 0.85;
+}
+
+.ing-stat__badge-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 2px;
+  background: var(--tier);
+  transform: rotate(45deg);
+  opacity: 0.7;
+}
+
+.ing-stat__badge-tip {
+  position: absolute;
+  bottom: calc(100% + 0.35rem);
+  right: 0;
+  white-space: nowrap;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.72rem;
+  color: var(--ing-text);
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--tier);
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+  z-index: 2;
+}
+
+.ing-stat:hover .ing-stat__badge-tip,
+.ing-stat__badge:focus-visible .ing-stat__badge-tip {
+  opacity: 1;
+}
+
+.ing-stat__badge:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.ing-stat__value {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 1.2rem;
+  line-height: 1.1;
+  color: var(--ing-text);
+  overflow-wrap: anywhere;
+}
+
+/* Tile do "AP total (lifetime)": o número por extenso tem 14 caracteres e, em
+   tile estreito, quebrava no último dígito. O tile vira o próprio container
+   (`inline-size` é seguro aqui: a largura vem da trilha do grid, nunca do
+   conteúdo) e, abaixo da largura em que o número cabe, troca pela forma
+   compacta. Consulta o TILE, não o viewport: em 2 colunas (celular) e em 3
+   colunas (a partir de 34rem) ele tem larguras parecidas com viewports bem
+   diferentes. `content-box`: descontados o padding e a borda do tile. */
+.ing-stat--ap {
+  container-type: inline-size;
+}
+
+.ing-stat__ap-compact {
+  display: none;
+  white-space: nowrap;
+}
+
+@container (max-width: 11rem) {
+  .ing-stat__ap-full {
+    display: none;
+  }
+  .ing-stat__ap-compact {
+    display: inline;
+  }
+}
+
+.ing-stat__label {
+  font-size: 0.72rem;
+  color: var(--ing-text-dim);
+  margin-top: 0.2rem;
+}
+
+.ing-pending {
+  color: var(--ing-text-dim);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  margin: 0;
+}
+
+.ing-pending__dot {
+  flex: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-top: 0.42rem;
+  border-radius: 2px;
+  background: var(--ing-accent);
+  opacity: 0.5;
+}
+
+/* --- hero --- */
+
+.ing-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--ing-edge);
+  border-radius: 20px;
+  padding: 2.6rem 1.25rem 1.75rem;
+  background:
+    radial-gradient(130% 120% at 15% 0%, rgba(0, 230, 118, 0.16), transparent 55%),
+    radial-gradient(100% 120% at 100% 100%, rgba(38, 182, 255, 0.12), transparent 55%),
+    var(--ing-panel-solid);
+  box-shadow: var(--ing-lift);
+}
+
+.ing-hero__mesh {
+  position: absolute;
+  inset: -12%;
+  width: 124%;
+  height: 124%;
+  opacity: 0.55;
+}
+
+.ing-hero__mesh polygon {
+  fill: transparent;
+  stroke: rgba(0, 230, 118, 0.28);
+  stroke-width: 0.0016;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+  animation: ing-mesh-in 0.55s ease forwards;
+}
+
+@keyframes ing-mesh-in {
+  to {
+    opacity: 1;
+  }
+}
+
+/* globo decorativo (client, HeroGlobe) — só desktop, sangra pela direita */
+.ing-hero__globe {
+  display: none;
+}
+
+.ing-hero__body {
+  position: relative;
+}
+
+@media (min-width: 60rem) {
+  .ing-hero__globe {
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: -70px;
+    width: 660px;
+    height: 720px;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .ing-hero__body {
+    max-width: 52%;
+  }
+}
+
+.ing-hero__eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ing-teal);
+  margin: 0 0 0.5rem;
+}
+
+.ing-hero__codename {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: clamp(2.3rem, 12vw, 3.8rem);
+  line-height: 1;
+  background: var(--ing-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 24px rgba(0, 230, 118, 0.35));
+  word-break: break-word;
+}
+
+.ing-hero__codename--ranking {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: clamp(1.9rem, 7vw, 2.9rem);
+}
+
+.ing-hero__ranking-icon {
+  flex-shrink: 0;
+  font-size: 0.75em;
+  color: var(--ing-green-soft);
+  filter: none;
+  -webkit-text-fill-color: initial;
+}
+
+.ing-hero__ranking-body {
+  margin: 0.9rem 0 0;
+  max-width: 34rem;
+  color: var(--ing-text-dim);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.ing-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 1rem;
+  margin-top: 1.1rem;
+  font-size: 0.88rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-hero__faction {
+  color: var(--ing-green-soft);
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+}
+
+.ing-hero__level {
+  display: inline-grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ing-bg);
+  background: var(--ing-accent);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  box-shadow: var(--ing-glow-tight);
+}
+
+.ing-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+  padding: 0.6rem 1.1rem;
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: var(--ing-bg);
+  background: var(--ing-accent);
+  border-radius: 999px;
+  box-shadow: var(--ing-glow), 0 0 0 0 rgba(0, 230, 118, 0.5);
+  animation: ing-hero-cta-pulse 2.6s ease-in-out infinite;
+  transition: transform 0.15s ease;
+}
+
+.ing-hero__cta:hover,
+.ing-hero__cta:focus-visible {
+  transform: translateY(-1px) scale(1.03);
+  animation-play-state: paused;
+}
+
+.ing-hero__cta:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-hero__cta svg {
+  font-size: 0.95em;
+}
+
+@keyframes ing-hero-cta-pulse {
+  0%,
+  100% {
+    box-shadow: var(--ing-glow), 0 0 0 0 rgba(0, 230, 118, 0.45);
+  }
+  50% {
+    box-shadow: var(--ing-glow), 0 0 0 8px rgba(0, 230, 118, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ing-hero__cta {
+    animation: none;
+  }
+}
+
+.ing-hero__links {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  margin-top: 1.15rem;
+}
+
+.ing-hero__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.34rem 0.62rem;
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+  text-decoration: none;
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 999px;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.ing-hero__link:hover,
+.ing-hero__link:focus-visible {
+  color: var(--ing-text);
+  border-color: var(--ing-edge);
+  background: rgba(0, 230, 118, 0.12);
+}
+
+.ing-hero__link:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-hero__link svg {
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  opacity: 0.85;
+}
+
+.ing-hero__hint {
+  display: inline-grid;
+  place-items: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  padding: 0;
+  color: var(--ing-teal);
+  background: transparent;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 999px;
+  cursor: help;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.ing-hero__hint:hover,
+.ing-hero__hint:focus-visible {
+  color: var(--ing-text);
+  border-color: var(--ing-edge);
+}
+
+.ing-hero__hint:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-hero__hint svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.ing-hero__tip {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  max-width: 30rem;
+  padding: 0.72rem 0.85rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ing-text-dim);
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--ing-edge);
+  border-radius: 10px;
+  box-shadow: var(--ing-lift);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.2rem);
+  transition: opacity 0.14s ease, transform 0.14s ease;
+  z-index: 3;
+}
+
+.ing-hero__tip strong {
+  color: var(--ing-green-soft);
+  font-weight: 600;
+}
+
+.ing-hero__hint:hover + .ing-hero__tip,
+.ing-hero__hint:focus + .ing-hero__tip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- medalhas --- */
+
+.ing-medals {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: 0.6rem;
+}
+
+.ing-medal {
+  --tier: var(--ing-text-faint);
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.65rem 0.7rem;
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 12px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.ing-medal:hover {
+  border-color: var(--tier);
+  background: rgba(0, 230, 118, 0.1);
+}
+
+.ing-medal:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-medal--locked {
+  opacity: 0.5;
+}
+
+.ing-medal--bronze {
+  --tier: #d08a4e;
+}
+.ing-medal--silver {
+  --tier: #cfdad4;
+}
+.ing-medal--gold {
+  --tier: #ffd24a;
+}
+.ing-medal--platinum {
+  --tier: #8d949d;
+}
+.ing-medal--onyx {
+  --tier: #626873;
+}
+
+.ing-medal__hex {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: grid;
+  place-items: center;
+  color: var(--ing-bg);
+  background: var(--tier);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+
+.ing-medal--onyx .ing-medal__hex {
+  background: #23262c;
+  color: var(--ing-text);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.ing-medal__initial {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.ing-medal__art {
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+}
+
+.ing-medal--onyx .ing-medal__art {
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.55));
+}
+
+.ing-medal__text {
+  min-width: 0;
+}
+
+.ing-medal__name {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  color: var(--ing-text);
+}
+
+.ing-medal__tier {
+  font-size: 0.8rem;
+  color: var(--tier);
+  font-weight: 600;
+}
+
+.ing-medal__next {
+  font-size: 0.72rem;
+  color: var(--ing-text-dim);
+  margin-top: 0.12rem;
+}
+
+.ing-medal__prog {
+  margin-top: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.ing-medal__prog-bar {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--ing-edge-soft);
+  overflow: hidden;
+}
+
+.ing-medal__prog-bar > span {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: 2px;
+  background: var(--tier);
+}
+
+.ing-medal__prog-txt {
+  font-size: 0.68rem;
+  color: var(--ing-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-next-medal {
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.85rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--ing-edge);
+  border-radius: 12px;
+  background: linear-gradient(110deg, rgba(0, 230, 118, 0.1), rgba(38, 182, 255, 0.06));
+  color: inherit;
+  text-decoration: none;
+}
+
+.ing-next-medal:hover {
+  border-color: var(--ing-green);
+}
+
+.ing-next-medal:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-next-medal__art {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: contain;
+}
+
+.ing-next-medal__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ing-next-medal__label {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ing-teal);
+}
+
+.ing-next-medal__name {
+  display: block;
+  font-family: var(--ing-font-display);
+  color: var(--ing-text);
+  margin: 0.15rem 0 0.4rem;
+}
+
+.ing-next-medal__bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--ing-edge-soft);
+}
+
+.ing-next-medal__fill {
+  height: 100%;
+  min-width: 3px;
+  border-radius: 3px;
+  background: var(--ing-accent);
+}
+
+.ing-next-medal__hint {
+  font-size: 0.72rem;
+  color: var(--ing-text-dim);
+}
+
+/* --- grade de medalhas (home) --- */
+
+.ing-mgrid__toggle {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.ing-mgrid__toggle button {
+  font-family: var(--ing-font-body);
+  font-size: 0.74rem;
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--ing-edge);
+  background: transparent;
+  color: var(--ing-text-dim);
+  cursor: pointer;
+}
+
+.ing-mgrid__toggle button[aria-pressed='true'] {
+  background: rgba(0, 230, 118, 0.12);
+  border-color: var(--ing-green);
+  color: var(--ing-green-soft);
+}
+
+.ing-mgrid__toggle button:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-mgrid__next {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 0.6rem;
+  row-gap: 0.2rem;
+  padding: 0.7rem 0.85rem;
+  margin-bottom: 0.9rem;
+  border: 1px solid var(--ing-edge);
+  border-radius: 12px;
+  background: linear-gradient(110deg, rgba(0, 230, 118, 0.1), rgba(38, 182, 255, 0.06));
+  color: inherit;
+  text-decoration: none;
+}
+
+.ing-mgrid__next:hover {
+  border-color: var(--ing-green);
+}
+
+.ing-mgrid__next:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-mgrid__next-label {
+  grid-column: 1 / -1;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ing-teal);
+}
+
+.ing-mgrid__next strong {
+  grid-column: 1 / -1;
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  color: var(--ing-text);
+}
+
+.ing-mgrid__next-bar {
+  grid-column: 1 / -1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--ing-edge-soft);
+  overflow: hidden;
+}
+
+.ing-mgrid__next-bar > span {
+  display: block;
+  height: 100%;
+  min-width: 3px;
+  border-radius: 3px;
+  background: var(--ing-accent);
+}
+
+.ing-mgrid__next-hint {
+  grid-column: 1 / -1;
+  font-size: 0.72rem;
+  color: var(--ing-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-mgrid__group + .ing-mgrid__group {
+  margin-top: 1.1rem;
+}
+
+.ing-mgrid__group-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ing-teal);
+  margin: 0 0 0.5rem;
+}
+
+.ing-mgrid__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(3rem, 1fr));
+  gap: 0.4rem;
+}
+
+.ing-mgrid__cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 0.2rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--ing-green-ghost);
+  cursor: pointer;
+}
+
+.ing-mgrid__cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ing-mgrid__cell.is-locked {
+  opacity: 0.32;
+}
+
+.ing-mgrid__cell:hover {
+  border-color: var(--ing-edge);
+}
+
+.ing-mgrid__cell.is-active {
+  border-color: var(--ing-green);
+  background: rgba(0, 230, 118, 0.12);
+}
+
+.ing-mgrid__cell:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-mgrid__soon {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ing-text-faint);
+}
+
+/* --- asinhas da recursão (Onyx ×N) --- */
+
+.ing-recursion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.68em;
+  line-height: 1;
+  color: #ff4242;
+}
+
+.ing-recursion__wings {
+  height: 0.7em;
+  width: auto;
+  overflow: visible;
+}
+
+.ing-recursion__wings path {
+  fill: none;
+  stroke: #ff4242;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ing-recursion__x {
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-mgrid__recursion {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  margin-left: 0;
+  gap: 0.1rem;
+  padding: 1px 3px 1px 2px;
+  border-radius: 5px;
+  background: rgba(11, 15, 20, 0.82);
+  font-size: 0.58rem;
+}
+
+.ing-mgrid__recursion .ing-recursion__wings {
+  height: 0.6rem;
+}
+
+/* --- escada de tiers (página de detalhe) --- */
+
+.ing-ladder {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ing-ladder__step {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 10px;
+  opacity: 0.45;
+}
+
+.ing-ladder__step.is-reached {
+  opacity: 1;
+}
+
+.ing-ladder__step.is-current {
+  border-color: var(--ing-green);
+  background: rgba(0, 230, 118, 0.08);
+}
+
+.ing-ladder__art {
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  object-fit: contain;
+}
+
+.ing-ladder__art--placeholder {
+  border: 1px dashed var(--ing-edge);
+  border-radius: 6px;
+}
+
+.ing-ladder__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ing-ladder__tier {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  color: var(--ing-text);
+}
+
+.ing-ladder__badge-atual {
+  color: var(--ing-green-soft);
+  font-weight: 400;
+  font-size: 0.8rem;
+}
+
+.ing-ladder__req {
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-ladder__gap {
+  flex: none;
+  font-size: 0.75rem;
+  color: var(--ing-teal);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-ladder__date {
+  flex: none;
+  font-size: 0.78rem;
+  color: var(--ing-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- página de detalhe da medalha --- */
+
+.ing-back {
+  align-self: flex-start;
+  color: var(--ing-text-dim);
+  text-decoration: none;
+  font-size: 0.85rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.ing-back:hover {
+  color: var(--ing-green-soft);
+}
+
+.ing-back:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-medal-hero {
+  display: flex;
+  gap: 1.1rem;
+  align-items: center;
+  padding: 1.25rem;
+  border: 1px solid var(--ing-edge);
+  border-radius: 16px;
+  background: radial-gradient(120% 120% at 12% 0%, rgba(0, 230, 118, 0.12), transparent 60%), var(--ing-panel-solid);
+}
+
+.ing-medal-hero__art {
+  flex: none;
+  width: 5rem;
+  height: 5rem;
+  object-fit: contain;
+}
+
+.ing-medal-hero__art--placeholder {
+  display: grid;
+  place-items: center;
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 2rem;
+  color: var(--ing-green);
+  border: 1px dashed var(--ing-edge);
+  border-radius: 10px;
+}
+
+.ing-medal-hero__name {
+  font-size: clamp(1.6rem, 7vw, 2.2rem);
+  color: var(--ing-green);
+}
+
+.ing-medal-hero__tier {
+  margin: 0.25rem 0 0;
+  color: var(--ing-green-soft);
+  font-family: var(--ing-font-display);
+}
+
+.ing-medal-hero__value {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-medal-req {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-left: 2px solid var(--ing-green-dim);
+  color: var(--ing-text-dim);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  background: var(--ing-green-ghost);
+  border-radius: 0 8px 8px 0;
+}
+
+.ing-projection {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ing-teal);
+}
+
+/* --- "plus" da medalha de estatística + mini gráfico --- */
+
+.ing-lore {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--ing-edge);
+  border-radius: 12px;
+  background: linear-gradient(150deg, rgba(0, 230, 118, 0.07), rgba(38, 182, 255, 0.04));
+}
+
+.ing-lore__blurb {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ing-text);
+}
+
+.ing-lore__facts {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.ing-lore__facts li {
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge-soft);
+  font-size: 0.82rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-lore__facts b {
+  font-family: var(--ing-font-display);
+  color: var(--ing-green-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-spark {
+  display: block;
+  width: 100%;
+  max-width: 16rem;
+  height: auto;
+  font-family: var(--ing-font-body);
+}
+
+.ing-spark__track {
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+}
+
+.ing-spark__line {
+  fill: none;
+  stroke: rgba(0, 230, 118, 0.4);
+  stroke-width: 1.5;
+}
+
+.ing-spark__dot {
+  stroke: var(--ing-bg);
+  stroke-width: 1;
+}
+
+.ing-spark__dot--onyx {
+  stroke: var(--ing-green);
+  stroke-width: 1.5;
+}
+
+.ing-spark__yr {
+  fill: var(--ing-text-faint);
+  font-size: 10px;
+}
+
+/* --- conquistas (badges de evento) --- */
+
+.ing-achv-group + .ing-achv-group {
+  margin-top: 1rem;
+}
+
+.ing-achv-group__label {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ing-teal);
+  margin: 0 0 0.5rem;
+}
+
+.ing-achv {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
+  gap: 0.5rem;
+}
+
+.ing-achv__item {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 10px;
+  min-width: 0;
+}
+
+.ing-achv__art {
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  object-fit: contain;
+}
+
+.ing-achv__art--placeholder {
+  display: grid;
+  place-items: center;
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-green);
+  border: 1px dashed var(--ing-edge);
+  border-radius: 6px;
+}
+
+.ing-achv__name {
+  font-size: 0.85rem;
+  color: var(--ing-text);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ing-achv__count {
+  color: var(--ing-green-soft);
+  font-family: var(--ing-font-display);
+}
+
+/* --- linha do tempo de conquistas (combo: overview + brush + swimlane) --- */
+
+.ing-tl-hero h1 {
+  font-size: clamp(1.7rem, 7vw, 2.4rem);
+  color: var(--ing-green);
+}
+
+.ing-tl-hero p {
+  margin: 0.5rem 0 0;
+  max-width: 44rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--ing-text-dim);
+}
+
+.ing-tl__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--ing-font-body);
+}
+
+.ing-tl__axis {
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+}
+
+.ing-tl__grid {
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+
+.ing-tl__year {
+  fill: var(--ing-text-faint);
+  font-size: 10px;
+}
+
+/* resumo (teaser no /ingress) */
+.ing-tl__teaser {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 10px;
+}
+
+.ing-tl__teaser:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 3px;
+}
+
+.ing-tl__teaser-cta {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ing-teal);
+}
+
+.ing-tl__teaser:hover .ing-tl__teaser-cta {
+  color: var(--ing-green-soft);
+}
+
+.ing-tl__recent {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.6rem;
+}
+
+.ing-tl__recent img {
+  width: 1.85rem;
+  height: 1.85rem;
+  object-fit: contain;
+}
+
+/* filtros */
+.ing-tl__filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.ing-tl__chipset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ing-tl__chip {
+  font-family: var(--ing-font-body);
+  font-size: 0.76rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--ing-edge);
+  background: transparent;
+  color: var(--ing-text-dim);
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+
+.ing-tl__chip[aria-pressed='true'] {
+  background: rgba(0, 230, 118, 0.12);
+  border-color: var(--ing-green);
+  color: var(--ing-green-soft);
+}
+
+.ing-tl__chip:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+/* overview + brush */
+.ing-tl__overview {
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.ing-tl__brush {
+  fill: rgba(38, 182, 255, 0.12);
+  stroke: var(--ing-cyan);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  cursor: grab;
+}
+
+.ing-tl__hint-line {
+  margin: 0.3rem 0 0.9rem;
+  font-size: 0.75rem;
+  color: var(--ing-text-faint);
+}
+
+.ing-tl__reset {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--ing-teal);
+  cursor: pointer;
+}
+
+.ing-tl__reset:hover {
+  color: var(--ing-green-soft);
+}
+
+/* swimlane — rótulos fixos + área do gráfico com scroll horizontal */
+.ing-tl__swim {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 10px;
+  background: var(--ing-bg-2);
+  overflow: hidden;
+}
+
+.ing-tl__swim-labels {
+  flex: none;
+  width: 8.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-right: 1px solid var(--ing-edge-soft);
+}
+
+.ing-tl__swim-labels li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.5rem;
+  font-size: 0.72rem;
+  color: var(--ing-text-dim);
+  overflow: hidden;
+}
+
+.ing-tl__swim-labels img {
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  object-fit: contain;
+}
+
+.ing-tl__swim-labels span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ing-tl__swim-plot {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.ing-tl__swim-plot svg {
+  display: block;
+  font-family: var(--ing-font-body);
+}
+
+.ing-tl__lane-track {
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+}
+
+.ing-tl__line {
+  fill: none;
+  stroke: rgba(0, 230, 118, 0.35);
+  stroke-width: 1.5;
+}
+
+.ing-tl__seg {
+  fill: var(--ing-green-soft);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-tl__dot {
+  stroke: var(--ing-bg-2);
+  stroke-width: 1;
+}
+
+.ing-tl__dot.is-onyx {
+  stroke: var(--ing-green);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 3px rgba(0, 230, 118, 0.6));
+}
+
+.ing-tl__hit {
+  cursor: pointer;
+}
+
+/* painel de detalhe (toque num ponto) */
+.ing-tl__detail {
+  position: relative;
+  margin: 0 0 0.9rem;
+  padding: 0.9rem;
+  border: 1px solid var(--ing-green);
+  border-radius: 12px;
+  background: linear-gradient(150deg, rgba(0, 230, 118, 0.08), rgba(38, 182, 255, 0.05));
+}
+
+.ing-tl__detail-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.55rem;
+  background: none;
+  border: none;
+  color: var(--ing-text-dim);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ing-tl__detail-close:hover {
+  color: var(--ing-green-soft);
+}
+
+.ing-tl__detail-close:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-tl__detail-head {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  padding-right: 1.5rem;
+}
+
+.ing-tl__detail-art {
+  flex: none;
+  width: 3.75rem;
+  height: 3.75rem;
+  object-fit: contain;
+}
+
+.ing-tl__detail-head > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.ing-tl__detail-head b {
+  font-family: var(--ing-font-display);
+  font-size: 1rem;
+  color: var(--ing-text);
+}
+
+.ing-tl__detail-sub {
+  font-size: 0.78rem;
+  color: var(--ing-teal);
+}
+
+.ing-tl__detail-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.1rem;
+  align-items: flex-start;
+  margin-top: 0.75rem;
+}
+
+.ing-tl__detail-grid > .ing-spark {
+  flex: none;
+  width: 13rem;
+  max-width: 100%;
+}
+
+.ing-tl__detail-ladder {
+  flex: 1;
+  min-width: 11rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+}
+
+.ing-tl__detail-ladder li {
+  display: grid;
+  align-items: center;
+  column-gap: 0.65rem;
+  font-size: 0.76rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-tl__detail-ladder--event li {
+  grid-template-columns: 0.5rem 1fr auto 3.2rem;
+}
+
+.ing-tl__detail-ladder--stat li {
+  grid-template-columns: 0.5rem 3.3rem auto 1fr 3.2rem;
+}
+
+.ing-tl__detail-ladder li.is-current {
+  color: var(--ing-text);
+  font-weight: 600;
+}
+
+.ing-tl__detail-dot {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+
+.ing-tl__detail-gap {
+  color: var(--ing-teal);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ing-tl__detail-ladder time {
+  font-variant-numeric: tabular-nums;
+  color: var(--ing-text-faint);
+  text-align: right;
+}
+
+.ing-tl__detail-link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ing-teal);
+  text-decoration: none;
+}
+
+.ing-tl__detail-link:hover {
+  color: var(--ing-green-soft);
+}
+
+.ing-tl__detail-stat {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.ing-tl__detail-total {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-tl__detail-total b {
+  color: var(--ing-text);
+  font-family: var(--ing-font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-tl__detail-thr {
+  font-variant-numeric: tabular-nums;
+  color: var(--ing-text-faint);
+  text-align: right;
+}
+
+.ing-tl__detail-ladder li.is-locked {
+  opacity: 0.5;
+}
+
+.ing-tl__detail-foot {
+  margin: 0.5rem 0 0;
+  font-size: 0.76rem;
+  color: var(--ing-teal);
+  font-variant-numeric: tabular-nums;
+}
+
+/* tooltip rápido (desktop) */
+.ing-tl__tip {
+  position: fixed;
+  z-index: 40;
+  pointer-events: none;
+  max-width: 15rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.78rem;
+  color: var(--ing-text);
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--ing-green);
+  border-radius: 8px;
+  box-shadow: var(--ing-lift);
+}
+
+/* --- radar --- */
+
+.ing-radar {
+  display: flex;
+  justify-content: center;
+}
+
+.ing-radar svg {
+  width: 100%;
+  max-width: 33rem;
+  height: auto;
+  overflow: visible;
+}
+
+.ing-radar__ring {
+  fill: none;
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+}
+
+.ing-radar__ring--onyx {
+  stroke: var(--ing-text-faint);
+  stroke-dasharray: 3 3;
+}
+
+.ing-radar__ring--edge {
+  stroke: var(--ing-green);
+  stroke-opacity: 0.55;
+  stroke-width: 1.5;
+}
+
+.ing-radar__ring-label {
+  fill: var(--ing-text-faint);
+  font-family: var(--ing-font-body);
+  font-size: 7px;
+  letter-spacing: 0.04em;
+}
+
+.ing-radar__axis {
+  cursor: pointer;
+}
+
+.ing-radar__dot.is-active {
+  fill: var(--ing-green);
+}
+
+.ing-radar__pct {
+  fill: var(--ing-green-soft);
+  font-family: var(--ing-font-display);
+  font-size: 8px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-radar__hint {
+  margin: 0.6rem 0 0;
+  font-size: 0.75rem;
+  color: var(--ing-text-faint);
+  text-align: center;
+}
+
+.ing-radar__breakdown {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--ing-edge);
+  border-radius: 10px;
+  background: var(--ing-green-ghost);
+}
+
+.ing-radar__bd-head {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-radar__bd-head b {
+  font-family: var(--ing-font-display);
+  color: var(--ing-green-soft);
+}
+
+.ing-radar__breakdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+.ing-radar__breakdown li {
+  display: grid;
+  grid-template-columns: 1fr auto 4.5rem;
+  align-items: baseline;
+  column-gap: 0.6rem;
+  font-size: 0.76rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-radar__breakdown li.is-beyond .ing-radar__bd-ratio {
+  color: var(--ing-teal);
+}
+
+.ing-radar__bd-note {
+  color: var(--ing-text-faint);
+  font-style: normal;
+  font-size: 0.68rem;
+}
+
+.ing-radar__bd-calc {
+  font-variant-numeric: tabular-nums;
+  color: var(--ing-text-faint);
+}
+
+.ing-radar__bd-ratio {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--ing-font-display);
+  color: var(--ing-text);
+}
+
+.ing-radar__bd-foot {
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
+  color: var(--ing-text-faint);
+}
+
+.ing-radar__bd-vs,
+.ing-radar__bd-ratio-them {
+  color: var(--ing-xm);
+}
+
+/* --- comparar fichas --- */
+
+/*
+ * Seletores duplos de propósito: `.ing-radar__shape` e `.ing-radar__dot` são
+ * redeclarados bem mais abaixo neste arquivo (radar do perfil/ranking) com a
+ * mesma especificidade de um único modificador, e por vir depois venciam —
+ * o polígono e os pontos do agente B saíam verdes em vez de roxos. A cor é
+ * `--ing-xm`, a mesma da legenda, do nome e dos números do agente B.
+ */
+.ing-radar__shape.ing-radar__shape--muted {
+  fill: rgba(0, 230, 118, 0.06);
+}
+
+.ing-radar__shape.ing-radar__shape--them {
+  fill: none;
+  stroke: var(--ing-xm);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-dasharray: 5 3;
+  filter: drop-shadow(0 0 3px rgba(176, 108, 255, 0.55));
+}
+
+.ing-radar__dot.ing-radar__dot--them {
+  fill: var(--ing-xm);
+  stroke: var(--ing-bg);
+  stroke-width: 1;
+}
+
+.ing-radar__pct-them {
+  fill: var(--ing-xm);
+  font-weight: 600;
+}
+
+.ing-radar__legend {
+  display: flex;
+  justify-content: center;
+  gap: 1.1rem;
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  font-family: var(--ing-font-display);
+}
+
+.ing-radar__legend-me {
+  color: var(--ing-green-soft);
+}
+
+.ing-radar__legend-them {
+  color: var(--ing-xm);
+}
+
+/* nick em cima, nota geral + posição embaixo */
+.ing-radar__legend-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.ing-radar__legend-meta {
+  font-family: var(--ing-font-body);
+  font-size: 0.68rem;
+  color: var(--ing-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-radar__legend-meta b {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  color: var(--ing-text);
+}
+
+/* topo: legenda + toggle de escala */
+.ing-radar__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.ing-radar__legend {
+  justify-content: flex-start;
+  margin: 0;
+}
+
+.ing-radar__scale,
+.ing-activity__period {
+  display: flex;
+  gap: 0.2rem;
+  flex: none;
+}
+
+.ing-radar__scale button,
+.ing-activity__period button {
+  font-family: var(--ing-font-body);
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--ing-edge);
+  background: transparent;
+  color: var(--ing-text-dim);
+  cursor: pointer;
+}
+
+.ing-radar__scale button[aria-pressed='true'],
+.ing-activity__period button[aria-pressed='true'] {
+  background: rgba(0, 230, 118, 0.12);
+  border-color: var(--ing-green);
+  color: var(--ing-green-soft);
+}
+
+.ing-radar__scale button:focus-visible,
+.ing-activity__period button:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-radar__scale-note {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  color: var(--ing-text-faint);
+  line-height: 1.4;
+}
+
+/* comparação: radar + tabela lado a lado */
+.ing-radar__cmp-layout {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (min-width: 40rem) {
+  .ing-radar__cmp-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  }
+}
+
+.ing-radar__cmp-table-wrap {
+  overflow-x: auto;
+}
+
+.ing-radar__cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.76rem;
+}
+
+.ing-radar__cmp-table thead th {
+  text-align: right;
+  padding: 0 0.4rem 0.35rem;
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  color: var(--ing-text-dim);
+  border-bottom: 1px solid var(--ing-edge-soft);
+}
+
+.ing-radar__cmp-table thead th.ing-radar__cmp-me {
+  color: var(--ing-green-soft);
+}
+
+.ing-radar__cmp-table thead th.ing-radar__cmp-them {
+  color: var(--ing-xm);
+}
+
+.ing-radar__cmp-table td,
+.ing-radar__cmp-table tbody th {
+  padding: 0.2rem 0.4rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-radar__cmp-table tr.is-axis th {
+  text-align: left;
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  color: var(--ing-text);
+  padding-top: 0.5rem;
+}
+
+.ing-radar__cmp-table tr.is-axis td {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  color: var(--ing-text-dim);
+  padding-top: 0.5rem;
+}
+
+.ing-radar__cmp-table tr.is-axis td.is-lead {
+  color: var(--ing-green-soft);
+}
+
+.ing-radar__cmp-table tr.is-axis td.is-lead-them {
+  color: var(--ing-xm);
+}
+
+.ing-radar__cmp-table tr.is-part td:first-child {
+  text-align: left;
+  color: var(--ing-text-faint);
+  font-weight: 400;
+  padding-left: 0.9rem;
+}
+
+.ing-radar__cmp-table tr.is-part td {
+  color: var(--ing-text-dim);
+}
+
+/* Largura fixa pro valor e pro percentual dentro da mesma célula — sem
+   isso, "266.795 133%" e "94.748 47%" ficam com o "%" em posições
+   diferentes entre as linhas, já que o número muda de largura mas o
+   texto inteiro da célula é um bloco só alinhado à direita. */
+.ing-radar__cmp-value {
+  display: inline-block;
+  min-width: 3.4em;
+  text-align: right;
+}
+
+.ing-radar__cmp-table tr.is-part small {
+  display: inline-block;
+  min-width: 2.5em;
+  text-align: right;
+  color: var(--ing-text-faint);
+}
+
+/* ─── Ranking table (iteração de UI: alinhamento, largura total, ícones) ─── */
+
+.ing-ranking-table__toolbar,
+.ing-activity__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.ing-ranking-table__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ing-ranking-table__search {
+  background: var(--ing-panel-soft, transparent);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  color: var(--ing-text);
+  font-size: 0.82rem;
+  min-width: 0;
+  width: 11rem;
+}
+
+.ing-ranking-table__faction-filter,
+.ing-activity__kind-filter {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.ing-ranking-table__faction-filter button,
+.ing-activity__kind-filter button {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  color: var(--ing-text-dim);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.ing-ranking-table__faction-filter button.is-active,
+.ing-activity__kind-filter button.is-active {
+  color: var(--ing-text);
+  border-color: var(--ing-green-soft);
+}
+
+.ing-ranking-table__no-results,
+.ing-activity__empty {
+  color: var(--ing-text-dim);
+  padding: 1rem 0;
+}
+
+.ing-ranking-table__sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.ing-ranking-table__sort-arrow {
+  font-size: 0.65em;
+  color: var(--ing-green-soft);
+}
+
+/* O cabeçalho "País" não tem rótulo — a bandeira se explica sozinha e o texto
+   `nowrap` invadia o "Codinome" ao lado. O nome fica só no `title`/`aria-label`
+   do botão; ele ocupa a célula inteira pra continuar clicável (ordenar por
+   país) sem nada escrito, e a seta só aparece quando é a ordenação ativa. */
+.ing-ranking-table th[data-col='country'] .ing-ranking-table__sort-btn {
+  width: 100%;
+  min-height: 1.4rem;
+  justify-content: center;
+}
+
+.ing-ranking-table th[data-col='construcao'],
+.ing-ranking-table th[data-col='destruicao'],
+.ing-ranking-table th[data-col='exploracao'],
+.ing-ranking-table th[data-col='hacking'],
+.ing-ranking-table th[data-col='linksCampos'],
+.ing-ranking-table td[data-col='construcao'],
+.ing-ranking-table td[data-col='destruicao'],
+.ing-ranking-table td[data-col='exploracao'],
+.ing-ranking-table td[data-col='hacking'],
+.ing-ranking-table td[data-col='linksCampos'] {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--ing-text-dim);
+}
+
+/* `container-type: inline-size` é o que permite o `@container` mais abaixo
+   decidir se a sub-linha de detalhe cabe 5 eixos lado a lado — mede a
+   largura real deste wrap (que não muda quando uma sub-linha abre, já que
+   `overflow-x: auto` isola o scroll do conteúdo sem inflar o próprio box),
+   não o viewport como um `@media` faria. */
+.ing-ranking-table__wrap {
+  overflow-x: auto;
+  container-type: inline-size;
+}
+
+/* `table-layout: fixed` (larguras por coluna vêm do `<colgroup>` no
+   componente) é o que garante que a sub-linha de detalhe nunca alarga a
+   tabela: numa tabela de layout automático, uma célula `colSpan` cobrindo
+   todas as colunas empurra a largura da tabela pro tamanho do seu conteúdo
+   mais largo — foi isso que gerava o scroll-x ao expandir uma linha. Com
+   layout fixo, a largura de cada coluna (e da tabela) é travada pelo
+   `<colgroup>`; conteúdo maior que a coluna quebra linha ou é cortado, nunca
+   estufa a tabela. */
+.ing-ranking-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+/*
+ * Largura de cada coluna (antes inline no `<col style>`, ver comentário no
+ * componente) — `codename` de propósito não tem regra: é a única coluna sem
+ * largura fixa, então em table-layout:fixed ela recebe todo o espaço que
+ * sobra, inclusive o que os breakpoints abaixo liberam ao esconder colunas.
+ */
+.ing-ranking-table col[data-col='rank'] { width: 2.6rem; }
+.ing-ranking-table col[data-col='score'] { width: 6.25rem; }
+.ing-ranking-table col[data-col='faction'] { width: 2.6rem; }
+.ing-ranking-table col[data-col='country'] { width: 3rem; }
+.ing-ranking-table col[data-col='dates'] { width: 6rem; }
+.ing-ranking-table col[data-col='ap'] { width: 6.4rem; }
+.ing-ranking-table col[data-col='construcao'],
+.ing-ranking-table col[data-col='destruicao'],
+.ing-ranking-table col[data-col='exploracao'],
+.ing-ranking-table col[data-col='hacking'] { width: 2.3rem; }
+.ing-ranking-table col[data-col='linksCampos'] { width: 2.5rem; }
+.ing-ranking-table col[data-col='details'] { width: 3.2rem; }
+
+.ing-ranking-table thead th {
+  text-align: center;
+  padding: 0.5rem 0.6rem;
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.76rem;
+  color: var(--ing-text-dim);
+  border-bottom: 1px solid var(--ing-edge-soft);
+  white-space: nowrap;
+}
+
+/* "Nota geral"/"Overall score" e "AP total"/"Total AP" são os rótulos mais
+   compridos do cabeçalho, mas as colunas são estreitas de propósito (a
+   coluna é pro dado numérico, não pro rótulo) — sem o `nowrap` deste par,
+   se algum idioma/fonte ficar mais largo que o previsto no `<colgroup>` o
+   rótulo quebra em duas linhas em vez de vazar por cima da coluna vizinha. */
+.ing-ranking-table th[data-col='score'],
+.ing-ranking-table th[data-col='ap'] {
+  white-space: normal;
+}
+
+.ing-ranking-table tbody td {
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--ing-edge-soft);
+  color: var(--ing-text);
+  vertical-align: middle;
+  text-align: center;
+}
+
+/* A linha inteira abre/fecha os detalhes (não só o ícone de olho — no
+   celular, o olho no fim da linha passava despercebido). */
+.ing-ranking-table tbody tr {
+  cursor: pointer;
+}
+
+.ing-ranking-table tbody tr:hover td {
+  background: var(--ing-green-ghost);
+}
+
+/*
+ * A sub-linha de detalhe (aberta por clique) reaproveita as regras de
+ * `tbody tr`/`tbody td` acima — precisa neutralizar cursor/hover (ela não é
+ * clicável) e o padding/alinhamento centralizado, que aqui é ocupado pelo
+ * grid de detalhe por completo. Quem trava a largura é `table-layout: fixed`
+ * + o `<colgroup>` da tabela (ver `.ing-ranking-table` acima); `overflow:
+ * hidden` aqui é só o cinto e suspensório — se algo mesmo assim vazar (ex.:
+ * uma imagem que não encolhe), fica escondido em vez de estufar a `<td>`.
+ */
+.ing-ranking-table tbody tr.ing-ranking-table__detail-row {
+  cursor: default;
+}
+.ing-ranking-table tbody tr.ing-ranking-table__detail-row:hover td {
+  background: none;
+}
+.ing-ranking-table__detail-cell {
+  padding: 0;
+  text-align: left;
+  overflow: hidden;
+}
+.ing-ranking-table__detail-inner {
+  max-width: 100%;
+}
+
+/* Destaque do top 3 — ouro/prata/bronze, tom sutil de fundo + número da
+   posição na cor da medalha (pedido do Luiz). */
+.ing-ranking-table tbody tr.is-top1 td {
+  background: rgba(255, 215, 0, 0.07);
+}
+.ing-ranking-table tbody tr.is-top2 td {
+  background: rgba(201, 214, 227, 0.06);
+}
+.ing-ranking-table tbody tr.is-top3 td {
+  background: rgba(205, 127, 50, 0.07);
+}
+.ing-ranking-table tbody tr.is-top1 td[data-col='rank'] {
+  color: #ffd700;
+  font-weight: 700;
+}
+.ing-ranking-table tbody tr.is-top2 td[data-col='rank'] {
+  color: #c9d6e3;
+  font-weight: 700;
+}
+.ing-ranking-table tbody tr.is-top3 td[data-col='rank'] {
+  color: #cd7f32;
+  font-weight: 700;
+}
+
+/*
+ * Linha de quem chegou via `?destaque=` no link do alerta do Telegram (ver
+ * `IngressRankingTable`) — pulsa algumas vezes pra chamar o olho assim que a
+ * página abre e some, mas o `box-shadow` na borda fica: quem rolou a tabela
+ * pra longe ainda encontra a linha ao voltar. `@media (prefers-reduced-
+ * motion)` global no fim deste arquivo já neutraliza a animação.
+ */
+@keyframes ing-highlight-pulse {
+  0%, 100% {
+    background: rgba(77, 255, 166, 0.28);
+  }
+  50% {
+    background: rgba(77, 255, 166, 0.08);
+  }
+}
+.ing-ranking-table tbody tr.is-highlighted td {
+  animation: ing-highlight-pulse 1.1s ease-in-out 3;
+  box-shadow: inset 3px 0 0 var(--ing-green-soft);
+}
+
+/* # / nota / facção / codinome / data ficam centralizadas (default acima);
+   AP total e o botão do olho ficam alinhados à direita. */
+.ing-ranking-table th[data-col='ap'],
+.ing-ranking-table th[data-col='details'],
+.ing-ranking-table td[data-col='ap'],
+.ing-ranking-table td[data-col='details'] {
+  text-align: right;
+}
+
+.ing-ranking-table td[data-col='rank'],
+.ing-ranking-table td[data-col='ap'],
+.ing-ranking-table td[data-col='score'] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* AP em forma compacta só no celular (ver o bloco de 640px): fora dele, o
+   número por extenso cabe e é o que se quer ver. */
+.ing-ranking-table .ing-ranking-table__ap-compact {
+  display: none;
+}
+
+.ing-ranking-table td[data-col='score'] {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-green-soft);
+}
+
+/* Nota geral na cor da facção do agente — Resistance em azul, Enlightened
+   mantém o verde padrão do site. */
+.ing-ranking-table td[data-col='score'].ing-ranking-table__score--resistance {
+  color: var(--ing-cyan-soft);
+}
+
+.ing-ranking-table td[data-col='dates'] {
+  color: var(--ing-text-dim);
+  white-space: nowrap;
+  cursor: help;
+}
+
+/*
+ * O SVG do logo (`enlightened.svg`/`resistance.svg`) tem um hexágono de fundo
+ * quase preto (#231F20) com o glifo colorido no centro — em telas pequenas
+ * (celular) o hexágono se funde no fundo escuro do painel e sobra só um
+ * traço colorido minúsculo, difícil de notar (era o "o time não aparece" do
+ * Luiz). O halo circular na cor da facção resolve o contraste sem tocar no
+ * arquivo do logo.
+ */
+.ing-ranking-table__faction-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: rgba(0, 230, 118, 0.14);
+}
+
+.ing-ranking-table__faction-badge.is-resistance {
+  background: rgba(38, 182, 255, 0.14);
+}
+
+.ing-ranking-table__faction-icon {
+  border-radius: 3px;
+}
+
+.ing-ranking-table__country-flag {
+  border-radius: 2px;
+  display: block;
+  margin-inline: auto;
+}
+
+.ing-ranking-table__codename {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+}
+
+/* Comparar e compartilhar são o mesmo botão circular só-ícone (o "Comparar"
+   em texto ocupava mais que os dois ícones juntos e empurrava o codinome). */
+.ing-ranking-table__share,
+.ing-ranking-table__compare {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--ing-edge-soft);
+  background: transparent;
+  color: var(--ing-text-dim);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.ing-ranking-table__share:hover,
+.ing-ranking-table__share:focus-visible,
+.ing-ranking-table__compare:hover,
+.ing-ranking-table__compare:focus-visible {
+  color: var(--ing-green-soft);
+  border-color: var(--ing-edge);
+}
+
+/* Agente marcado pelo 1º clique do atalho "Comparar", esperando o 2º — a linha
+   ganha o tom verde da marca (mesma barra lateral do `is-highlighted`, mas
+   parada, sem o pulso) e o ícone fica preenchido. Vem depois dos `is-top*` pra
+   vencer o fundo de pódio na mesma especificidade. */
+.ing-ranking-table tbody tr.is-compare-pick td {
+  background: rgba(77, 255, 166, 0.14);
+}
+.ing-ranking-table tbody tr.is-compare-pick td:first-child {
+  box-shadow: inset 3px 0 0 var(--ing-green-soft);
+}
+.ing-ranking-table__compare[aria-pressed='true'] {
+  color: var(--ing-bg);
+  background: var(--ing-green-soft);
+  border-color: var(--ing-green-soft);
+}
+
+/*
+ * O painel de detalhe é uma <tr colSpan> — uma sub-linha aberta bem abaixo
+ * da linha clicada, não um painel fixo depois da tabela inteira (que ficava
+ * "longe" conforme o ranking crescia). O risco de sempre usar colspan é real
+ * em table-layout:auto (o conteúdo mais largo da sub-linha dita a largura da
+ * tabela toda), mas aqui a tabela é table-layout:fixed com colunas travadas
+ * por `<colgroup>` (ver acima) — a sub-linha não tem como alargar a tabela,
+ * só quebrar linha ou ser cortada dentro do espaço que já tinha.
+ */
+.ing-ranking-table__detail {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem 0.9rem;
+  margin-top: 1rem;
+  /*
+   * Padding interno normal — o corte que isso "resolvia" nunca foi causado
+   * pelo padding, e sim por `1fr` puro no grid da faixa "Estilo de jogo"
+   * (ver `.ing-ranking-table__detail-playstyle` abaixo): sem `minmax(0, ...)`, o
+   * mínimo automático da coluna é o min-content do texto, e uma vez
+   * ultrapassado isso é a própria sub-linha (contida por `overflow: hidden`
+   * na célula) que corta o texto no meio da palavra. Zerar o padding só
+   * deixava o conteúdo colado na borda sem resolver a causa.
+   */
+  padding: 0.7rem 0.8rem;
+  border-top: 1px solid var(--ing-edge-soft);
+  background: var(--ing-green-ghost);
+  border-radius: 10px;
+}
+
+/* Tom azulado quando o agente é da Resistance — mesmo espírito da nota geral
+   e do radar "Estilo de jogo", que já ficam na cor da facção em vez do verde
+   fixo do site. */
+.ing-ranking-table__detail.is-resistance {
+  background: rgba(38, 182, 255, 0.07);
+}
+
+/*
+ * 5 eixos lado a lado só quando há espaço de verdade. `@container`, não
+ * `@media`: mede a largura real de `.ing-ranking-table__wrap` (que declara
+ * `container-type: inline-size` acima), não o viewport — essa sub-linha é
+ * mais estreita que o viewport na maioria das telas, então um `@media`
+ * abriria 5 colunas num espaço que só cabia 1.
+ */
+@container (min-width: 860px) {
+  .ing-ranking-table__detail {
+    /* `minmax(0, 1fr)`, não `1fr` puro — uma track `1fr` sozinha tem mínimo
+       automático = min-content do conteúdo (o rótulo mais longo do chip), e
+       ultrapassar esse mínimo é o que cortava o texto na sub-linha estreita.
+       Com `minmax(0, ...)` a track encolhe de verdade e o texto do chip
+       quebra em vez de estufar a grade. */
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.ing-ranking-table__detail-axis {
+  min-width: 0;
+}
+
+.ing-ranking-table__detail-axis strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: var(--ing-font-display);
+  color: var(--ing-text);
+  font-size: 0.82rem;
+}
+
+.ing-ranking-table__chips {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ing-ranking-table__chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid;
+  border-radius: 10px;
+  background: var(--ing-panel-solid);
+}
+
+.ing-ranking-table__chip.is-none {
+  opacity: 0.55;
+}
+
+.ing-ranking-table__chip-icon {
+  flex-shrink: 0;
+}
+
+/* "×N" — quantas vezes o valor já passou do limiar de Onyx daquela stat
+   (pedido do Luiz). Só existe quando já completou pelo menos 1 vez. */
+.ing-ranking-table__chip-times {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.4rem;
+  min-width: 1.4rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: 999px;
+  border: 1px solid var(--ing-edge);
+  background: var(--ing-panel-solid);
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.62rem;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--ing-green-soft);
+}
+
+.ing-ranking-table__chip.is-none .ing-ranking-table__chip-icon {
+  filter: grayscale(1);
+}
+
+.ing-ranking-table__chip-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  /* Item flex sem `flex-grow`/`min-width` tem mínimo automático = largura
+     do rótulo numa linha só — `min-width: 0` deixa o texto quebrar em vez
+     de forçar o chip (e a coluna do grid) a ficar mais largo que o espaço
+     disponível. */
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ing-ranking-table__chip-label {
+  font-size: 0.7rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-ranking-table__chip-value {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--ing-text);
+}
+
+/*
+ * "Estilo de jogo" agora abre a sub-linha (antes vinha depois das estatísticas) e
+ * ganhou dois lados — codinome + recursões à esquerda, última atualização à
+ * direita (pedido do Luiz, riscado à mão no print) — com o radar no centro.
+ * Grid de 3 faixas: as laterais dividem o espaço que sobra, o centro fica
+ * do tamanho do próprio radar.
+ */
+.ing-ranking-table__detail-playstyle {
+  grid-column: 1 / -1;
+  display: grid;
+  /* `minmax(0, 1fr)`, não `1fr` puro — é o mesmo bug do grid de eixos: uma
+     track `1fr` sozinha tem mínimo automático = min-content do conteúdo
+     ("atualização" como palavra inteira), e ultrapassar isso é o que
+     cortava o texto no meio em vez de quebrar linha. */
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--ing-edge-soft);
+}
+
+.ing-ranking-table__detail-playstyle svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.ing-ranking-table__detail-playstyle-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.ing-ranking-table__detail-playstyle-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.ing-ranking-table__detail-playstyle-side--left {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.ing-ranking-table__detail-playstyle-side--right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.ing-ranking-table__detail-playstyle-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ing-ranking-table__detail-playstyle-name {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ing-text);
+  overflow-wrap: anywhere;
+}
+
+/*
+ * Duplicata do botão de compartilhar de cada linha, só que morando dentro do
+ * detalhe — existe só pro celular (a regra base esconde, o `@media` de 640px
+ * mostra), que é justamente onde a coluna de compartilhar some da tabela (ver
+ * `td[data-col='details']` no mesmo breakpoint) pra sobrar espaço pro
+ * codinome. No desktop a coluna original continua sendo o único jeito de
+ * compartilhar — sem isso o botão apareceria duas vezes na mesma tela.
+ */
+.ing-ranking-table__detail-share {
+  display: none;
+}
+
+.ing-ranking-table__detail-playstyle-recursion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: var(--ing-green-soft);
+}
+
+/* Emblema "Simulacrum" (o do Ingress pra quem recursou) — já tem hexágono e
+   cor próprios na arte, então só flex-shrink:0 pra não espremer ao lado do
+   número. */
+.ing-ranking-table__detail-playstyle-recursion img {
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+
+.ing-ranking-table__detail.is-resistance .ing-ranking-table__detail-playstyle-recursion {
+  color: var(--ing-cyan-soft);
+}
+
+/* "?" pra quem nunca resubmeteu desde que a coluna passou a existir — sem a
+   cor de destaque, é um estado "não sabemos", não um valor real. */
+.ing-ranking-table__detail-playstyle-recursion.is-unknown,
+.ing-ranking-table__detail.is-resistance .ing-ranking-table__detail-playstyle-recursion.is-unknown {
+  color: var(--ing-text-dim);
+  cursor: help;
+}
+
+.ing-ranking-table__detail-playstyle-updated-label {
+  font-size: 0.66rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-ranking-table__detail-playstyle-updated-value {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--ing-text);
+}
+
+.ing-ranking-table__detail-playstyle-label {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-ranking-table__credit {
+  margin-top: 0.8rem;
+  font-size: 0.68rem;
+  color: var(--ing-text-faint);
+}
+
+.ing-tutorial__img {
+  display: block;
+  width: 100%;
+  max-width: 32rem;
+  height: auto;
+  margin: 0.9rem 0 0;
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 12px;
+}
+
+/* ─── "Nota geral" (iteração de UI: layout horizontal por agente) ─── */
+
+.ing-score-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.ing-score-panel__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  padding: 0.8rem 1rem;
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 12px;
+}
+
+.ing-score-panel__agent {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-text);
+  margin-right: 0.3rem;
+}
+
+.ing-score-panel__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+  min-width: 4.2rem;
+}
+
+.ing-score-panel__stat--overall .ing-score-panel__stat-value {
+  color: var(--ing-green-soft);
+  font-size: 1.3rem;
+}
+
+/* Selo do tier: borda grossa, padding mínimo e cores próprias por tier.
+   Não usa `TIER_COLOR` (lib/ingress/catalog/ingress-tiers.mjs) porque aquelas cores são as da
+   medalha do jogo — Onyx é #0c0f14 e Platinum um cinza opaco, ilegíveis sobre
+   o carvão do painel. Aqui cada tier tem fundo, borda e texto pensados pra
+   este fundo escuro. */
+.ing-score-panel__badge {
+  --badge-fg: var(--ing-text-dim);
+  --badge-border: var(--ing-edge-soft);
+  --badge-bg: transparent;
+  align-self: flex-start;
+  margin-top: 0.05rem;
+  padding: 0 0.45rem;
+  border: 2px solid var(--badge-border);
+  border-radius: 6px;
+  background: var(--badge-bg);
+  color: var(--badge-fg);
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.ing-score-panel__badge--bronze {
+  --badge-fg: #f0b27a;
+  --badge-border: #d08a4e;
+  --badge-bg: rgba(208, 138, 78, 0.16);
+}
+
+.ing-score-panel__badge--silver {
+  --badge-fg: #d5dde3;
+  --badge-border: #9aa4ac;
+  --badge-bg: rgba(154, 164, 172, 0.16);
+}
+
+.ing-score-panel__badge--gold {
+  --badge-fg: #ffe07a;
+  --badge-border: #ffd24a;
+  --badge-bg: rgba(255, 210, 74, 0.16);
+}
+
+.ing-score-panel__badge--platinum {
+  --badge-fg: #c4dcf5;
+  --badge-border: #8fb4dc;
+  --badge-bg: rgba(143, 180, 220, 0.18);
+}
+
+.ing-score-panel__badge--onyx {
+  --badge-fg: #f1f5f9;
+  --badge-border: #aab4c0;
+  --badge-bg: linear-gradient(180deg, #232a35, #090b0f);
+}
+
+.ing-score-panel__stat-label {
+  font-size: 0.68rem;
+  color: var(--ing-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ing-score-panel__stat-value {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--ing-text);
+}
+
+/* Acima de ~36rem há espaço pra alinhar as duas linhas (2 agentes) em
+   colunas retas — cada coluna some com o valor mais largo que ela recebe
+   dos DOIS agentes (não só do seu próprio), o que um flex por linha nunca
+   consegue: o nome do 2º agente ("BayBadMan" vs "tm404") empurrava tudo à
+   direita dele por uma largura diferente da 1ª linha. `display: contents`
+   na linha tira sua própria caixa (perde o cartão arredondado individual)
+   e deixa os `<span>` filhos participarem direto do grid do pai — a linha
+   divisória (`border-bottom`) substitui o cartão. Abaixo do breakpoint,
+   cada agente continua empilhado/quebrando como cartão independente (T11
+   original) — 2 agentes forçados nas mesmas 9 colunas não cabem num
+   celular sem rolagem horizontal ou fonte ilegível. */
+@media (min-width: 36rem) {
+  .ing-score-panel {
+    display: grid;
+    grid-template-columns: max-content repeat(8, max-content);
+    column-gap: 1.4rem;
+    row-gap: 0;
+  }
+
+  .ing-score-panel__row {
+    display: contents;
+  }
+
+  .ing-score-panel__row > * {
+    padding: 0.75rem 0;
+  }
+
+  /* Divisória como item próprio do grid (o `::before` de um `display:
+     contents` vira filho do grid), e não `border-bottom` nas células — a
+     borda do selo de tier é dele e não pode ser sobrescrita por ela. */
+  .ing-score-panel__row + .ing-score-panel__row::before {
+    content: '';
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--ing-edge-soft);
+  }
+
+  .ing-score-panel__stat {
+    min-width: 0;
+  }
+}
+
+/* Celular: cada agente é um cartão com o nome sozinho no topo e os demais
+   campos em 2 colunas fixas logo abaixo. Com o `flex-wrap` solto de antes, o
+   "Nota geral" ficava ao lado do nome quando ele era curto ("gal0daxj") e caía
+   pra baixo quando era comprido ("BayBadMan"), então os dois cartões da
+   comparação quebravam diferente e as colunas não alinhavam. Grade fixa = a
+   mesma quebra pra qualquer nome ou valor. */
+@media (max-width: 35.99rem) {
+  .ing-score-panel__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 0.7rem 1rem;
+  }
+
+  .ing-score-panel__agent {
+    grid-column: 1 / -1;
+    margin-right: 0;
+  }
+
+  .ing-score-panel__stat {
+    min-width: 0;
+  }
+
+  .ing-score-panel__stat-value {
+    overflow-wrap: anywhere;
+  }
+}
+
+/* ─── "O que cada eixo mede" (iteração de UI: cartões + ícones de medalha) ─── */
+
+/*
+ * Acordeon fechado por padrão (pedido do Luiz: texto de referência lido uma
+ * vez só, não vale ocupar espaço permanente no fim da página). `<details>`
+ * nativo, sem marcador default do navegador (`::-webkit-details-marker` +
+ * `list-style: none` no `summary`, que também precisa de `display: list-item`
+ * pra virar alvo de clique em todo o browser) — o "▸"/"▾" próprio já cobre o
+ * papel do marcador nativo, só que consistente com o resto do tema.
+ */
+.ing-axis-explanations__details summary {
+  list-style: none;
+}
+.ing-axis-explanations__details summary::-webkit-details-marker {
+  display: none;
+}
+
+.ing-axis-explanations__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--ing-text);
+  user-select: none;
+}
+
+.ing-axis-explanations__summary::before {
+  content: '▸';
+  display: inline-block;
+  color: var(--ing-green-soft);
+  transition: transform 0.15s ease;
+}
+
+.ing-axis-explanations__details[open] > .ing-axis-explanations__summary::before {
+  transform: rotate(90deg);
+}
+
+.ing-axis-explanations__summary:hover {
+  color: var(--ing-green-soft);
+}
+
+.ing-axis-explanations__summary:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.ing-axis-explanations__details[open] > .ing-axis-explanations__summary {
+  margin-bottom: 1rem;
+}
+
+.ing-axis-explanations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.ing-axis-explanations__item {
+  padding: 1rem;
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 12px;
+}
+
+.ing-axis-explanations__icons {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.ing-axis-explanations__icon {
+  border-radius: 8px;
+  background: var(--ing-green-ghost);
+}
+
+.ing-axis-explanations__item dt {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-green-soft);
+  margin-bottom: 0.4rem;
+}
+
+.ing-axis-explanations__item dd {
+  margin: 0;
+  color: var(--ing-text-dim);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.ing-axis-explanations__formula {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ing-edge-soft);
+}
+
+.ing-axis-explanations__formula-title {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-green-soft);
+  margin: 0 0 0.5rem;
+}
+
+.ing-axis-explanations__formula-text {
+  margin: 0 0 0.6rem;
+  color: var(--ing-text-dim);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.ing-axis-explanations__formula-text:last-child {
+  margin-bottom: 0;
+}
+
+.ing-axis-explanations__rules {
+  margin: 0 0 0.7rem;
+  padding-left: 1.2rem;
+  color: var(--ing-text-dim);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.ing-axis-explanations__doublings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.9rem;
+  margin: 0 0 0.8rem;
+  padding: 0.55rem 0.8rem;
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 10px;
+  font-size: 0.78rem;
+  color: var(--ing-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-axis-explanations__doublings-label {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-green-soft);
+}
+
+.ing-axis-explanations__doubling b {
+  color: var(--ing-text);
+}
+
+.ing-axis-explanations__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.ing-axis-explanations__steps > li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.ing-axis-explanations__step-title {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--ing-text);
+}
+
+.ing-axis-explanations__step-text {
+  color: var(--ing-text-dim);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.ing-axis-explanations__step-formula {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 8px;
+  font-family: var(--ing-font-mono, ui-monospace, monospace);
+  font-size: 0.78rem;
+  color: var(--ing-green-soft);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ing-axis-explanations__step-note {
+  color: var(--ing-text-faint);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.ing-axis-explanations__example-title {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-green-soft);
+  margin: 1.2rem 0 0.25rem;
+}
+
+.ing-axis-explanations__example-intro {
+  margin: 0 0 0.9rem;
+  color: var(--ing-text-dim);
+  font-size: 0.85rem;
+}
+
+.ing-axis-explanations__example-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.6rem;
+  padding: 1rem;
+  background: var(--ing-panel-solid);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 12px;
+}
+
+.ing-axis-explanations__example-axis {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  cursor: help;
+}
+
+.ing-axis-explanations__example-axis-label {
+  font-size: 0.68rem;
+  color: var(--ing-text-dim);
+  text-align: center;
+  max-width: 6.5rem;
+}
+
+.ing-axis-explanations__example-axis-value {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--ing-text);
+  border-bottom: 1px dotted var(--ing-text-dim);
+}
+
+.ing-axis-explanations__example-op {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  color: var(--ing-text-dim);
+  font-size: 0.95rem;
+}
+
+.ing-axis-explanations__example-result {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 1.8rem;
+  color: var(--ing-green-soft);
+  border-bottom: 1px dotted var(--ing-green-soft);
+  cursor: help;
+  line-height: 1;
+}
+
+.ing-axis-explanations__example-hint {
+  margin: 0.6rem 0 0;
+  color: var(--ing-text-dim);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+/*
+ * Painel >=860px: tabela completa, igual à versão web.
+ *
+ * Painel <860px: somem as 5 colunas de eixo (C/D/E/H/LF) e as datas — são o
+ * dado mais denso e o menos essencial pra reconhecer um agente batendo o olho
+ * na tabela; a mesma informação (com nome completo, não a sigla) já está na
+ * sub-linha de detalhe que abre ao clicar.
+ *
+ * É `@container` sobre `.ing-ranking-table__wrap`, NÃO `@media` sobre o
+ * viewport (era `max-width: 760px`). As colunas de largura fixa somam ~705px
+ * (ver os `col[data-col]` acima) e o codinome, a única sem largura, fica com o
+ * que sobra: num iPad Mini (768px de tela, ~700px de painel) ele ficava com
+ * ~0 e o nome era desenhado por cima da data. O painel só passa a comportar a
+ * tabela completa a partir de ~860px — o mesmo limiar do `@container` do
+ * detalhe, mais abaixo — o que corresponde a ~930px de tela.
+ *
+ * `display: none` no `<col>`, no `th` E no `td` — os três juntos. Antes era só
+ * `visibility: collapse` no `<col>`, e num navegador móvel a coluna ficava com
+ * largura 0 mas as células continuavam sendo desenhadas: os valores de C/D/E/
+ * H/LF (e a data, ver o bloco de 640px) se empilhavam por cima do "AP total".
+ * Esconder só o `td`/`th` sem o `<col>` é o erro oposto (cada célula visível
+ * depois da escondida desliza uma posição e herda a largura do `<col>` errado
+ * — foi assim que o "AP total" já ficou com largura 0). Tirar os três da
+ * grade de uma vez mantém células e `<col>` casando.
+ */
+@container (max-width: 859.98px) {
+  .ing-ranking-table col[data-col='construcao'],
+  .ing-ranking-table col[data-col='destruicao'],
+  .ing-ranking-table col[data-col='exploracao'],
+  .ing-ranking-table col[data-col='hacking'],
+  .ing-ranking-table col[data-col='linksCampos'],
+  .ing-ranking-table th[data-col='construcao'],
+  .ing-ranking-table th[data-col='destruicao'],
+  .ing-ranking-table th[data-col='exploracao'],
+  .ing-ranking-table th[data-col='hacking'],
+  .ing-ranking-table th[data-col='linksCampos'],
+  .ing-ranking-table td[data-col='construcao'],
+  .ing-ranking-table td[data-col='destruicao'],
+  .ing-ranking-table td[data-col='exploracao'],
+  .ing-ranking-table td[data-col='hacking'],
+  .ing-ranking-table td[data-col='linksCampos'],
+  .ing-ranking-table col[data-col='dates'],
+  .ing-ranking-table th[data-col='dates'],
+  .ing-ranking-table td[data-col='dates'] {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .ing-ranking-table {
+    font-size: 0.78rem;
+  }
+  .ing-ranking-table thead th,
+  .ing-ranking-table tbody td {
+    padding: 0.45rem 0.35rem;
+  }
+  .ing-ranking-table__chip {
+    padding: 0.3rem 0.5rem;
+  }
+
+  /*
+   * "Datas" e os eixos somem da tabela em painel estreito (`@container` acima —
+   * a data continua no título (hover) de quem tem mouse, e a sub-linha de
+   * detalhe mostra "última atualização" por extenso).
+   *
+   * A coluna de ações fica no celular, mas só com "Comparar" — o botão de
+   * compartilhar da linha some (o mesmo botão continua dentro do detalhe, ver
+   * `.ing-ranking-table__detail-share`), pra sobrar espaço pro codinome. A
+   * largura da coluna é definida no bloco de 640px mais abaixo, junto do
+   * restante das ações.
+   */
+  .ing-ranking-table__actions .ing-ranking-table__share {
+    display: none;
+  }
+  .ing-ranking-table__actions .ing-ranking-table__compare {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+  .ing-ranking-table__detail-share {
+    display: inline-grid;
+  }
+
+  /*
+   * A tabela sangra 0.6rem pra cada lado do padding do painel (1.15rem) —
+   * numa tela de ~400px o painel + a margem da página comiam ~37px por lado, e
+   * o codinome (a única coluna sem largura fixa) ficava com ~80px. A sangria
+   * devolve ~19px a ele sem encostar a tabela na borda do painel.
+   */
+  .ing-ranking-table__wrap {
+    margin-inline: -0.6rem;
+  }
+
+  /* Sem rótulo no cabeçalho "País" (ver a regra base): sem texto, o
+     padding lateral só estreita a área clicável. */
+  .ing-ranking-table thead th[data-col='country'] {
+    padding-inline: 0;
+  }
+
+  /*
+   * Rank/nota/país/facção mais estreitas (sem alterar o que cada um mostra);
+   * AP total ganha mais respiro que antes — sobrava espaço depois de tirar
+   * eixos, datas e compartilhar da linha, e o valor (às vezes 6-7 dígitos
+   * com separador de milhar) precisava dele. O resto do espaço liberado vai
+   * pro codinome, a única coluna sem largura fixa.
+   */
+  .ing-ranking-table col[data-col='rank'] { width: 1.5rem; }
+  .ing-ranking-table col[data-col='score'] { width: 3.4rem; }
+  .ing-ranking-table col[data-col='faction'] { width: 1.7rem; }
+  .ing-ranking-table col[data-col='country'] { width: 1.7rem; }
+  .ing-ranking-table col[data-col='ap'] { width: 3.6rem; }
+  /* AP total chega a 10 dígitos com separador ("1.390.379.639") — nem em 5rem
+     cabia, e quebrava em duas linhas. No celular mostra a forma compacta
+     ("1,4 bi", ver `fmtStatCompact`), que nunca passa de ~6 caracteres, e a
+     coluna encolhe: o que sobra vai pro codinome. O valor por extenso segue
+     no `title` do compacto e na tabela larga. */
+  .ing-ranking-table .ing-ranking-table__ap-full {
+    display: none;
+  }
+  .ing-ranking-table .ing-ranking-table__ap-compact {
+    display: inline;
+  }
+  .ing-ranking-table td[data-col='ap'] {
+    white-space: nowrap;
+  }
+
+  .ing-ranking-table__faction-badge {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+  .ing-ranking-table__faction-icon {
+    width: 15px;
+    height: 15px;
+  }
+  .ing-ranking-table__country-flag {
+    width: 15px;
+    height: 11px;
+  }
+  .ing-ranking-table__share,
+  .ing-ranking-table__compare {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+
+  /*
+   * Codinome alinhado à esquerda só no celular (no desktop continua
+   * centralizado, igual sempre foi — a régua de largura livre sobra bem
+   * mais nessa coluna aqui, e centralizar um nome curto numa coluna larga
+   * é o que lia como "espaço recuado/desperdiçado" no meio da linha; à
+   * esquerda, o nome fica colado no país/facção como o resto da linha, e a
+   * sobra de espaço vai pro fim, antes do AP, onde é normal e esperado.
+   */
+  .ing-ranking-table td[data-col='codename'] {
+    text-align: left;
+  }
+  .ing-ranking-table__codename {
+    overflow-wrap: anywhere;
+  }
+
+  /*
+   * "Estilo de jogo" em 2 linhas (informações em cima, radar embaixo) em vez
+   * de 3 colunas lado a lado — a coluna central era `auto`, dimensionada
+   * pelo tamanho intrínseco do SVG (~234px): um track `auto` mede pelo
+   * conteúdo e ignora o `max-width: 100%` do próprio SVG nessa fase do
+   * cálculo (percentual não resolve em sizing intrínseco). Era esse o
+   * motivo do painel de detalhe cortando texto na borda (a célula tem
+   * `overflow: hidden`) em vez de simplesmente encolher. Com `1fr` (não
+   * `auto`) o track já nasce do espaço realmente disponível, então o
+   * `max-width: 100%` do SVG passa a valer.
+   */
+  .ing-ranking-table__detail-playstyle {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: 'left right' 'center center';
+    row-gap: 0.6rem;
+  }
+  .ing-ranking-table__detail-playstyle-side--left {
+    grid-area: left;
+  }
+  .ing-ranking-table__detail-playstyle-side--right {
+    grid-area: right;
+  }
+  .ing-ranking-table__detail-playstyle-center {
+    grid-area: center;
+  }
+}
+
+.ing-radar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  font-family: var(--ing-font-body);
+  font-size: 0.8rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--ing-edge);
+  background: transparent;
+  color: var(--ing-text-dim);
+  cursor: pointer;
+}
+
+.ing-radar__btn:hover {
+  border-color: var(--ing-green);
+  color: var(--ing-green-soft);
+}
+
+.ing-radar__btn:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-radar__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ing-radar__btn--primary {
+  border-color: var(--ing-green);
+  color: var(--ing-bg);
+  background: var(--ing-accent);
+  font-weight: 600;
+}
+
+.ing-radar__compare-open {
+  display: block;
+  width: 100%;
+  margin-top: 0.9rem;
+}
+
+.ing-radar__compare-box {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ing-radar__cmp-mode {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.ing-radar__cmp-mode button {
+  font-family: var(--ing-font-body);
+  font-size: 0.75rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--ing-edge);
+  background: transparent;
+  color: var(--ing-text-dim);
+  cursor: pointer;
+}
+
+.ing-radar__cmp-mode button[aria-pressed='true'] {
+  background: rgba(0, 230, 118, 0.12);
+  border-color: var(--ing-green);
+  color: var(--ing-green-soft);
+}
+
+.ing-radar__cmp-mode button:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-radar__compare-label {
+  font-size: 0.78rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-radar__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.ing-radar__btn--paste {
+  flex-shrink: 0;
+  min-height: 2.2rem;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.75rem;
+}
+
+.ing-radar__textarea {
+  width: 100%;
+  resize: vertical;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--ing-edge);
+  background: var(--ing-bg-2);
+  color: var(--ing-text);
+}
+
+.ing-radar__textarea:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 1px;
+}
+
+.ing-radar__compare-error {
+  margin: 0;
+  font-size: 0.76rem;
+  color: #ff8f6b;
+}
+
+.ing-country-picker {
+  position: relative;
+  margin-top: 0.4rem;
+}
+
+.ing-country-picker__input {
+  width: 100%;
+  font-family: var(--ing-font-body);
+  font-size: 0.8rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--ing-edge);
+  background: var(--ing-bg-2);
+  color: var(--ing-text);
+}
+
+.ing-country-picker__input:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 1px;
+}
+
+.ing-country-picker.is-invalid .ing-country-picker__input {
+  border-color: #ff8f6b;
+}
+
+.ing-country-picker__flag {
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.ing-country-picker > .ing-country-picker__flag {
+  position: absolute;
+  left: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.ing-country-picker:has(> .ing-country-picker__flag) .ing-country-picker__input {
+  padding-left: 2.2rem;
+}
+
+.ing-country-picker__list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.2rem);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  border-radius: 8px;
+  border: 1px solid var(--ing-edge);
+  background: var(--ing-bg-2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.ing-country-picker__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+  cursor: pointer;
+}
+
+.ing-country-picker__option.is-active,
+.ing-country-picker__option:hover {
+  background: rgba(0, 230, 118, 0.12);
+  color: var(--ing-green-soft);
+}
+
+.ing-radar__compare-sent {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--ing-green-soft);
+}
+
+.ing-radar__compare-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ing-radar__spoke {
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+}
+
+.ing-radar__shape {
+  fill: rgba(0, 230, 118, 0.14);
+  stroke: var(--ing-green);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.ing-radar__dot {
+  fill: var(--ing-green-soft);
+}
+
+/* Radar "Estilo de jogo" (ranking) na cor da facção do agente exibido, não fixo verde. */
+.ing-mini-radar--resistance .ing-radar__ring--edge {
+  stroke: var(--ing-cyan);
+}
+
+.ing-mini-radar--resistance .ing-radar__shape {
+  fill: rgba(38, 182, 255, 0.14);
+  stroke: var(--ing-cyan);
+}
+
+.ing-mini-radar__label {
+  fill: var(--ing-text-dim);
+  font-family: var(--ing-font-body);
+  font-size: 8px;
+}
+
+.ing-radar__label {
+  fill: var(--ing-text-dim);
+  font-family: var(--ing-font-body);
+  font-size: 9px;
+}
+
+/* --- barras --- */
+
+.ing-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.ing-bar__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.ing-bar__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-bar__icon {
+  border-radius: 4px;
+}
+
+.ing-bar__value {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  color: var(--ing-text);
+}
+
+.ing-bar__track {
+  height: 8px;
+  background: var(--ing-edge-soft);
+  border-radius: 4px;
+}
+
+.ing-bar__fill {
+  height: 100%;
+  min-width: 4px;
+  border-radius: 4px;
+  background: var(--ing-accent);
+}
+
+/* --- explorador S2 --- */
+
+.ing-s2 {
+  position: relative;
+}
+
+.ing-s2__grid {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  background: var(--ing-bg-2);
+  border: 1px solid var(--ing-edge-soft);
+  display: block;
+}
+
+.ing-s2__grid polygon {
+  fill: transparent;
+  stroke: rgba(0, 230, 118, 0.32);
+  stroke-width: 0.25;
+}
+
+.ing-s2__center {
+  fill: var(--ing-cyan);
+}
+
+.ing-s2__caption {
+  color: var(--ing-text-dim);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0.8rem 0 0;
+}
+
+.ing-s2__cta {
+  margin-top: 0.9rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ing-bg);
+  background: var(--ing-accent);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: var(--ing-glow-tight);
+}
+
+.ing-s2__cta:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-s2__mount {
+  margin-top: 0.9rem;
+  border: 1px solid var(--ing-edge);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ing-s2__soon {
+  margin: 0;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: var(--ing-text-dim);
+  font-size: 0.88rem;
+}
+
+.ing-s2__slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+  background: var(--ing-bg-2);
+}
+
+.ing-s2__slider strong {
+  font-family: var(--ing-font-display);
+  color: var(--ing-green-soft);
+}
+
+.ing-s2__slider input[type='range'] {
+  width: 100%;
+  accent-color: var(--ing-green);
+}
+
+.ing-s2__map {
+  width: 100%;
+  height: 20rem;
+  background: var(--ing-bg-2);
+}
+
+/* Leaflet controla o tema claro por padrão — encaixa no escuro da rota. */
+.ing-s2__map .leaflet-tile {
+  filter: brightness(0.72) saturate(0.85) hue-rotate(6deg);
+}
+
+.ing-s2__map .leaflet-control-attribution {
+  background: rgba(11, 15, 20, 0.8);
+  color: var(--ing-text-faint);
+}
+
+.ing-s2__map .leaflet-control-attribution a {
+  color: var(--ing-text-dim);
+}
+
+/* --- linha do tempo --- */
+
+.ing-timeline {
+  width: 100%;
+  height: auto;
+}
+
+.ing-timeline__line {
+  fill: none;
+  stroke: var(--ing-green);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.ing-timeline__dot {
+  fill: var(--ing-green-soft);
+}
+
+.ing-timeline__label {
+  fill: var(--ing-text-faint);
+  font-family: var(--ing-font-body);
+  font-size: 10px;
+}
+
+/* --- evolução do agente (AgentHistoryChart, painel expandido do ranking) --- */
+
+.ing-evo {
+  margin-top: 1.3rem;
+}
+
+.ing-evo__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.ing-evo__title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+
+.ing-evo__title strong {
+  font-family: var(--ing-font-display);
+  font-size: 0.88rem;
+  color: var(--ing-text);
+}
+
+.ing-evo__title span {
+  font-size: 0.72rem;
+  color: var(--ing-text-faint);
+}
+
+/* Mesmo tratamento visual do card de "detalhes" acima (`.ing-ranking-table__detail`)
+   — fundo + padding — mas só a partir daqui: o título "Evolução — AP total"
+   fica de fora, como cabeçalho solto acima da caixa. */
+.ing-evo__body {
+  padding: 0.7rem 0.8rem;
+  background: var(--ing-green-ghost);
+  border-radius: 10px;
+}
+
+.ing-evo--resistance .ing-evo__body {
+  background: rgba(38, 182, 255, 0.07);
+}
+
+.ing-evo__stats {
+  display: flex;
+  gap: 1.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+
+.ing-evo__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.ing-evo__stat-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ing-text-faint);
+}
+
+.ing-evo__stat-value {
+  font-family: var(--ing-font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--ing-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-evo__stat-value.is-up {
+  color: var(--ing-green-soft);
+}
+
+.ing-evo__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--ing-font-body);
+  overflow: visible;
+}
+
+.ing-evo__grid {
+  stroke: var(--ing-edge-soft);
+  stroke-width: 1;
+}
+
+.ing-evo__axis-label {
+  fill: var(--ing-text-faint);
+  font-size: 9px;
+}
+
+.ing-evo__line {
+  fill: none;
+  stroke: var(--ing-green);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.ing-evo__dot {
+  fill: var(--ing-bg-2);
+  stroke: var(--ing-green-soft);
+  stroke-width: 1.5;
+}
+
+.ing-evo__dot.is-last {
+  fill: var(--ing-green);
+  stroke: var(--ing-green-soft);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 5px rgba(0, 230, 118, 0.6));
+}
+
+.ing-evo__empty {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--ing-text-dim);
+}
+
+/* Facção Resistance: gráfico em azul, não na cor-marca (verde) do site. */
+.ing-evo--resistance .ing-evo__stat-value.is-up {
+  color: var(--ing-cyan-soft);
+}
+
+.ing-evo--resistance .ing-evo__line {
+  stroke: var(--ing-cyan);
+}
+
+.ing-evo--resistance .ing-evo__dot {
+  stroke: var(--ing-cyan-soft);
+}
+
+.ing-evo--resistance .ing-evo__dot.is-last {
+  fill: var(--ing-cyan);
+  stroke: var(--ing-cyan-soft);
+  filter: drop-shadow(0 0 5px rgba(38, 182, 255, 0.6));
+}
+
+/* --- acordeão "Ver evolução" (AgentEvolutionAccordion) --- */
+
+.ing-acc {
+  margin-top: 1.3rem;
+  border-top: 1px solid var(--ing-edge-soft);
+}
+
+.ing-acc__btn {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 0.1rem;
+  cursor: pointer;
+}
+
+.ing-acc__btn:focus-visible {
+  outline: 2px solid var(--ing-green-soft);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+.ing-acc__chev {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: 0 0 auto;
+  color: var(--ing-text-faint);
+  transition: transform 0.18s ease;
+}
+
+.ing-acc__btn[aria-expanded='true'] .ing-acc__chev {
+  transform: rotate(90deg);
+  color: var(--ing-green);
+}
+
+.ing-acc__title {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--ing-text);
+}
+
+.ing-acc__hint {
+  margin-left: auto;
+  font-size: 0.74rem;
+  color: var(--ing-text-faint);
+  text-align: right;
+}
+
+.ing-acc__panel {
+  padding-bottom: 0.4rem;
+}
+
+.ing-acc__panel .ing-evo {
+  margin-top: 0;
+}
+
+@media (max-width: 560px) {
+  .ing-acc__hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ing-acc__chev {
+    transition: none;
+  }
+}
+
+/* --- "o que mudou" de um ponto do gráfico (AgentHistoryChanges) --- */
+
+.ing-evo__hit {
+  cursor: pointer;
+  outline: none;
+}
+
+.ing-evo__hit:focus-visible {
+  stroke: var(--ing-green-soft);
+  stroke-width: 2;
+}
+
+.ing-evo__ring {
+  fill: none;
+  stroke: var(--ing-green-soft);
+  stroke-width: 1.5;
+  opacity: 0.55;
+}
+
+.ing-evo--resistance .ing-evo__ring,
+.ing-evo--resistance .ing-evo__hit:focus-visible {
+  stroke: var(--ing-cyan-soft);
+}
+
+.ing-evo__hint {
+  margin: 0.55rem 0 0;
+  font-size: 0.72rem;
+  color: var(--ing-text-faint);
+}
+
+.ing-evo__changes {
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--ing-edge-soft);
+}
+
+.ing-evo__changes-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+  margin-bottom: 0.4rem;
+}
+
+.ing-evo__changes-head strong {
+  font-family: var(--ing-font-display);
+  font-size: 0.84rem;
+  color: var(--ing-text);
+}
+
+.ing-evo__changes-score {
+  font-size: 0.76rem;
+  color: var(--ing-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-evo__changes-ap {
+  margin-left: auto;
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.78rem;
+  color: var(--ing-green-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-evo--resistance .ing-evo__changes-ap {
+  color: var(--ing-cyan-soft);
+}
+
+.ing-evo__chg-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ing-evo__chg {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.6rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--ing-edge-soft);
+}
+
+.ing-evo__chg:last-child {
+  border-bottom: none;
+}
+
+.ing-evo__chg-icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ing-evo__chg-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ing-evo__chg-label {
+  flex: 1 1 8rem;
+  min-width: 0;
+  font-size: 0.82rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-evo__chg-tag {
+  flex: 0 0 auto;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ing-text);
+  border: 1px solid var(--ing-edge);
+  border-radius: 999px;
+  padding: 0.08rem 0.5rem;
+}
+
+/* Primeira medalha do stat: o destaque maior da lista — dourado, com o
+   fundo da linha levemente aceso, pra não se perder entre dezenas de linhas. */
+.ing-evo__chg.is-new-medal {
+  margin-inline: -0.4rem;
+  padding-inline: 0.4rem;
+  border-radius: 8px;
+  background: rgba(255, 210, 74, 0.09);
+}
+
+.ing-evo__chg-tag.is-new {
+  color: #1a1400;
+  background: #ffd24a;
+  border-color: #ffd24a;
+}
+
+.ing-evo__chg.is-tier-up .ing-evo__chg-tag {
+  color: #ffd24a;
+  border-color: rgba(255, 210, 74, 0.4);
+}
+
+.ing-evo__chg-vals {
+  flex: 0 0 auto;
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.76rem;
+  color: var(--ing-text-faint);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-evo__chg-vals b {
+  font-weight: 400;
+  color: var(--ing-text);
+}
+
+.ing-evo__chg-delta {
+  flex: 0 0 auto;
+  min-width: 4.2rem;
+  text-align: right;
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--ing-green-soft);
+  background: rgba(0, 230, 118, 0.1);
+  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-evo--resistance .ing-evo__chg-delta {
+  color: var(--ing-cyan-soft);
+  background: rgba(38, 182, 255, 0.1);
+}
+
+.ing-evo__chg-delta.is-down {
+  color: var(--ing-text-dim);
+  background: var(--ing-edge-soft);
+}
+
+.ing-evo__chg-foot {
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
+  color: var(--ing-text-faint);
+}
+
+/* Números longos: por extenso no desktop, resumidos ("48 mi") no celular. As
+   duas versões vão no HTML e o CSS escolhe — sem JS medindo a tela. */
+.ing-num__compact {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .ing-num__full {
+    display: none;
+  }
+
+  .ing-num__compact {
+    display: inline;
+  }
+
+  /* Antes → depois desce pra uma linha só dele, alinhado com o rótulo. */
+  .ing-evo__chg-vals {
+    order: 3;
+    flex-basis: 100%;
+    padding-left: 2.3rem;
+  }
+
+  .ing-evo__chg-delta {
+    margin-left: auto;
+  }
+
+  .ing-evo__changes-ap {
+    margin-left: 0;
+  }
+}
+
+/* --- alterna Ranking / Radar de atividade (topo de /ingress/ranking) --- */
+
+.ing-ranking-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: -1px;
+}
+
+.ing-ranking-tabs button {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--ing-edge-soft);
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  background: transparent;
+  color: var(--ing-text-faint);
+  cursor: pointer;
+}
+
+.ing-ranking-tabs button[aria-selected='true'] {
+  color: var(--ing-text);
+  background: var(--ing-panel);
+  border-color: var(--ing-edge);
+}
+
+.ing-ranking-tabs button:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+/* A 1ª aba e o painel começam na mesma borda esquerda: com o raio de 16px do
+   `.ing-panel` a borda do painel já está curvando pra dentro no ponto em que a
+   lateral reta da aba encosta nela, e sobrava um degrau/vão no canto. Canto
+   superior esquerdo reto só quando o painel vem colado nas abas — a aba "vira"
+   o próprio canto, como numa pasta; os outros três cantos seguem arredondados. */
+.ing-ranking-tabs + .ing-panel {
+  border-top-left-radius: 0;
+}
+
+/* --- radar de atividade (feed de eventos do ranking) --- */
+
+.ing-activity__toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ing-activity__feed {
+  position: relative;
+}
+
+.ing-activity__feed::before {
+  content: '';
+  position: absolute;
+  top: 0.2rem;
+  bottom: 0.2rem;
+  left: 1.2rem;
+  width: 2px;
+  background: linear-gradient(to bottom, rgba(0, 230, 118, 0.3), rgba(255, 255, 255, 0.03) 90%);
+}
+
+.ing-activity__entry {
+  --kind-color: var(--ing-teal);
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  column-gap: 0.8rem;
+  align-items: start;
+  padding: 0.8rem 0;
+}
+
+.ing-activity__entry + .ing-activity__entry {
+  border-top: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+.ing-activity__node {
+  position: relative;
+  z-index: 1;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ing-bg-2);
+  border: 2px solid var(--kind-color);
+  box-shadow: 0 0 0 5px var(--ing-bg), 0 0 14px -2px var(--kind-color);
+  font-size: 0.9rem;
+  color: var(--kind-color);
+}
+
+.ing-activity__body { min-width: 0; padding-top: 0.1rem; }
+
+.ing-activity__line1 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.ing-activity__flag {
+  width: 18px;
+  height: 13px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.ing-activity__fac-icon {
+  flex: none;
+  border-radius: 3px;
+}
+
+.ing-activity__codename {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--ing-green-soft);
+}
+
+.ing-activity__codename.is-resistance {
+  color: var(--ing-cyan-soft);
+}
+
+.ing-activity__tag {
+  font-family: var(--ing-font-display);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--kind-color);
+  color: var(--kind-color);
+}
+
+.ing-activity__desc {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+  line-height: 1.5;
+}
+
+.ing-activity__num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.ing-activity__num.is-up { color: var(--ing-green-soft); }
+.ing-activity__num.is-score { color: var(--ing-cyan-soft); }
+
+.ing-activity__time {
+  font-size: 0.75rem;
+  color: var(--ing-text-faint);
+  white-space: nowrap;
+  padding-top: 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ing-activity__entry.is-new {
+  animation: ing-activity-flash 2.4s ease-out;
+}
+
+@keyframes ing-activity-flash {
+  0% { background: rgba(0, 230, 118, 0.1); }
+  100% { background: transparent; }
+}
+
+.ing-activity__entry.enter {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.ing-activity__entry.enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+@media (max-width: 30rem) {
+  .ing-activity__entry { grid-template-columns: 2.1rem 1fr; }
+  .ing-activity__time { grid-column: 2; padding-top: 0; }
+  .ing-activity__node { width: 2.1rem; height: 2.1rem; font-size: 0.8rem; }
+  .ing-activity__feed::before { left: 1.05rem; }
+}
+
+/*
+ * Hub `/ingress` — placeholder simples enquanto o design final (mini-cards de
+ * ferramentas/links/Telegram) não é feito; ver `components/ingress/hero/IngressHub.tsx`.
+ */
+.ing-hub__intro {
+  text-align: center;
+  padding: 1.5rem 0 0.5rem;
+}
+
+.ing-hub__eyebrow {
+  font-family: var(--ing-font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ing-teal);
+}
+
+.ing-hub__heading {
+  font-size: 2rem;
+  margin-top: 0.5rem;
+}
+
+.ing-hub__body {
+  max-width: 34rem;
+  margin: 0.6rem auto 0;
+  color: var(--ing-text-dim);
+}
+
+.ing-hub__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 34rem) {
+  .ing-hub__cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ing-hub__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--ing-panel);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--ing-edge);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--ing-lift);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.ing-hub__card svg {
+  font-size: 1.6rem;
+  color: var(--ing-green);
+}
+
+.ing-hub__card strong {
+  font-family: var(--ing-font-display);
+  font-size: 1.15rem;
+}
+
+.ing-hub__card span {
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-hub__card:hover,
+.ing-hub__card:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--ing-green);
+}
+
+.ing-hub__card:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+/* Card de instalar o PWA — só no hub `/ingress`, ver InstallPwaCard.tsx. */
+.ing-hub__install {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--ing-panel);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--ing-edge);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--ing-lift);
+}
+
+.ing-hub__install svg {
+  font-size: 1.6rem;
+  color: var(--ing-green);
+  flex-shrink: 0;
+}
+
+.ing-hub__install-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.ing-hub__install-text strong {
+  font-family: var(--ing-font-display);
+  font-size: 1.05rem;
+}
+
+.ing-hub__install-text span {
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-hub__install-btn {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--ing-accent);
+  color: var(--ing-bg);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease;
+}
+
+.ing-hub__install-btn:hover,
+.ing-hub__install-btn:focus-visible {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 34rem) {
+  .ing-hub__install {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ing-hub__install-btn {
+    align-self: stretch;
+    text-align: center;
+  }
+}
+
+.ing-hub__links {
+  display: flex;
+  flex-direction: column;
+}
+
+.ing-hub__divider {
+  border: none;
+  border-top: 1px solid var(--ing-edge-soft);
+  margin: 1.35rem 0;
+}
+
+.ing-hub__linkgroup-label {
+  font-family: var(--ing-font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ing-teal);
+  margin-bottom: 0.65rem;
+}
+
+.ing-hub__linkgrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.ing-hub__linkcard {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 999px;
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.ing-hub__linkcard svg {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.85;
+}
+
+.ing-hub__linkcard:hover,
+.ing-hub__linkcard:focus-visible {
+  color: var(--ing-text);
+  border-color: var(--ing-edge);
+  background: rgba(0, 230, 118, 0.12);
+  transform: translateY(-1px);
+}
+
+.ing-hub__linkcard:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 2px;
+}
+
+.ing-footer {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2.5rem;
+  text-align: center;
+  border-top: 1px solid var(--ing-edge-soft);
+}
+
+.ing-footer p {
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--ing-text-faint);
+}
+
+.ing-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--ing-teal);
+  text-decoration: none;
+}
+
+.ing-footer a:hover,
+.ing-footer a:focus-visible {
+  color: var(--ing-green-soft);
+}
+
+.ing-footer a svg {
+  width: 0.85em;
+  height: 0.85em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ingress-prime * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ── Aba "Estatísticas para Nerds" (/ingress/ranking) ──────────────────── */
+
+.ing-nerd-divergent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--ing-edge);
+  border-radius: 10px;
+  background: var(--ing-green-ghost);
+}
+
+.ing-nerd-divergent-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin: 0 0 0.2rem;
+}
+
+.ing-nerd-divergent-head-side {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-divergent-head-side img {
+  width: 1rem;
+  height: 1rem;
+}
+
+.ing-nerd-divergent-head-side--right {
+  justify-content: flex-end;
+}
+
+.ing-nerd-divergent-row {
+  display: grid;
+  /* colunas de valor crescem com o conteúdo (auto), nunca cortam/sobrepõem
+     um AP na casa dos bilhões — só o miolo (as barras) encolhe. */
+  grid-template-columns: minmax(3.5rem, auto) 1fr minmax(3.5rem, auto);
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ing-nerd-divergent-value {
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.85rem;
+  color: var(--ing-text-dim);
+  white-space: nowrap;
+}
+
+.ing-nerd-divergent-value--left {
+  text-align: right;
+}
+
+.ing-nerd-divergent-bars {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ing-nerd-divergent-bar {
+  height: 0.5rem;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.ing-nerd-divergent-bar--enlightened {
+  justify-self: end;
+  background: var(--ing-green);
+}
+
+.ing-nerd-divergent-bar--resistance {
+  justify-self: start;
+  background: var(--ing-cyan);
+}
+
+.ing-nerd-divergent-label {
+  font-size: 0.75rem;
+  color: var(--ing-text-dim);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Um painel só pra aba inteira (o `.ing-panel` cuida de fundo/borda/sombra);
+   cada seção é uma divisão interna, não um cartão à parte. */
+.ing-nerd-shell {
+  display: flex;
+  flex-direction: column;
+}
+
+.ing-nerd-section {
+  padding-block: 1.4rem;
+}
+
+.ing-nerd-section:first-child {
+  padding-top: 0;
+}
+
+.ing-nerd-section:last-child {
+  padding-bottom: 0;
+}
+
+.ing-nerd-section + .ing-nerd-section {
+  border-top: 1px solid var(--ing-edge);
+}
+
+.ing-nerd-section-title {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ing-text);
+}
+
+.ing-nerd-subhead {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ing-text-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ing-nerd-subhead-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.ing-nerd-averages {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ing-stat--corner {
+  position: relative;
+}
+
+.ing-stat--corner .ing-nerd-agent {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.6rem;
+  font-size: 0.68rem;
+}
+
+.ing-nerd-histogram-row {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr 2.5rem;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.ing-nerd-histogram-label {
+  font-size: 0.75rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-histogram-track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--ing-edge-soft);
+  overflow: hidden;
+}
+
+.ing-nerd-histogram-bar {
+  height: 100%;
+  background: var(--ing-accent);
+  transition: width 0.3s ease;
+}
+
+.ing-nerd-histogram-count {
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+  text-align: right;
+}
+
+/* Seção "Países": dois gráficos de barras ranqueadas sob um filtro de facção.
+   Reaproveita a trilha/contagem do histograma; a barra aqui é empilhada
+   (verde Enlightened + ciano Resistance), então o fill vira um flex. */
+.ing-nerd-countries {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ing-nerd-countries-charts {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.ing-nerd-country-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ing-nerd-country-row {
+  display: grid;
+  grid-template-columns: 8rem 1fr 3.6rem;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.ing-nerd-country-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  font-size: 0.75rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-country-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ing-nerd-country-row--others .ing-nerd-country-name {
+  color: var(--ing-text-faint);
+  font-style: italic;
+}
+
+.ing-nerd-country-bar {
+  display: flex;
+  height: 100%;
+}
+
+.ing-nerd-country-seg {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.ing-nerd-country-seg--enlightened {
+  background: var(--ing-green);
+}
+
+.ing-nerd-country-seg--resistance {
+  background: var(--ing-cyan);
+}
+
+.ing-nerd-country-row--others .ing-nerd-country-seg {
+  opacity: 0.45;
+}
+
+/* Em ~320px o nome (8rem) + contagem (3.6rem) deixavam ~34px para a barra; com
+   as colunas menores sobram ~70px, e "Outros (3 países)" ainda cabe nos 6rem. */
+@media (max-width: 360px) {
+  .ing-nerd-country-row {
+    grid-template-columns: 6rem 1fr 3.2rem;
+  }
+}
+
+@media (min-width: 48rem) {
+  .ing-nerd-countries-charts {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.ing-nerd-empty-note {
+  font-size: 0.85rem;
+  color: var(--ing-text-faint);
+}
+
+/* Cabeçalho de seção com controle à direita (o alternador de layout dos recordes). */
+.ing-nerd-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.ing-nerd-section-head .ing-nerd-section-title {
+  margin: 0;
+}
+
+/* Fileira das medalhas C.O.R.E. que ilustra a seção "Assinatura paga". */
+.ing-nerd-core-medals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.ing-nerd-core-medals img {
+  width: 3.5rem;
+  height: 3.5rem;
+  object-fit: contain;
+}
+
+@media (max-width: 480px) {
+  .ing-nerd-core-medals img {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
+
+/* ─── Recordes (hall da fama, sazonais, assinatura) ────────────────────────
+   Três layouts da mesma lista, escolhidos por `NerdRecordsLayoutToggle`:
+   Resumo (`ing-nerd-rec-*`), Cards (`ing-nerd-card*`) e Agentes (`ing-nerd-ag*`).
+   Peças comuns: o "×N" de Onyx e o glifo que segura o lugar de quem não tem
+   medalha. Cor só onde significa algo: a facção do recordista (verde/ciano). */
+
+/* "×5": quantas vezes o recordista bateu o limiar de Onyx da medalha. */
+.ing-nerd-mult {
+  flex: 0 0 auto;
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.68rem;
+  line-height: 1;
+  color: var(--ing-text-dim);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 4px;
+  padding: 0.14rem 0.3rem;
+  white-space: nowrap;
+}
+
+.ing-nerd-rec-glyph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 12%;
+  color: var(--ing-text-faint);
+  opacity: 0.7;
+}
+
+/* Nas três visões o agente fica alinhado à esquerda do próprio bloco — o
+   `margin-left: auto` de `.ing-nerd-agent` (pensado pra linha do NerdAverages)
+   o empurraria pro fim de uma coluna flex. */
+.ing-nerd-rec-mid .ing-nerd-agent,
+.ing-nerd-card__foot .ing-nerd-agent,
+.ing-nerd-ag__who .ing-nerd-agent {
+  margin-left: 0;
+  max-width: 100%;
+  flex-basis: auto;
+  justify-content: flex-start;
+}
+
+/* Resumo — uma linha por recorde; duas colunas a partir de 48rem. */
+.ing-nerd-rec-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ing-nerd-rec-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--ing-edge-soft);
+}
+
+.ing-nerd-rec-row:last-child {
+  border-bottom: none;
+}
+
+@media (min-width: 48rem) {
+  .ing-nerd-rec-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.5rem;
+  }
+
+  /* Com número par de linhas, a penúltima é a outra metade da última fileira. */
+  .ing-nerd-rec-row:nth-last-child(2):nth-child(odd) {
+    border-bottom: none;
+  }
+}
+
+.ing-nerd-rec-icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ing-nerd-rec-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ing-nerd-rec-mid {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+}
+
+/* O rótulo quebra linha em vez de virar reticências: numa metade de coluna, com
+   número e "N agentes contabilizados" ao lado, "Battle Beacon (combatente)" não
+   cabe numa linha — e cortá-lo esconderia justamente o que diz o que é o número. */
+.ing-nerd-rec-label {
+  max-width: 100%;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-rec-mid .ing-nerd-agent {
+  font-size: 0.72rem;
+}
+
+.ing-nerd-rec-figure {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
+
+.ing-nerd-rec-main {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ing-nerd-rec-value {
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.82rem;
+  color: var(--ing-text);
+  white-space: nowrap;
+}
+
+.ing-nerd-rec-meta {
+  font-size: 0.66rem;
+  color: var(--ing-text-faint);
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  /* "1.058.981.917" ao lado de um rótulo longo não cabe: o ×N desce pra baixo do número. */
+  .ing-nerd-rec-main {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+  }
+}
+
+/* Cards — a medalha é a protagonista, com um halo na cor da facção do recordista.
+   O mesmo grid serve aos dois formatos: deitado (medalha à esquerda) até 34rem,
+   em pé (medalha em cima) a partir daí. */
+.ing-nerd-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.ing-nerd-cards__section > .ing-nerd-subhead {
+  margin: 0 0 0.55rem;
+}
+
+.ing-nerd-count {
+  font-family: var(--font-space-mono, monospace);
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--ing-text-faint);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 999px;
+  padding: 0 0.4rem;
+}
+
+.ing-nerd-cards__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.55rem;
+}
+
+.ing-nerd-card {
+  --fc: 147, 167, 160;
+  position: relative;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr);
+  grid-template-areas:
+    'medal label'
+    'medal figure'
+    'medal meta'
+    'medal foot';
+  column-gap: 0.75rem;
+  row-gap: 0.1rem;
+  align-content: center;
+  padding: 0.65rem 0.8rem;
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 10px;
+}
+
+.ing-nerd-card--enlightened {
+  --fc: 0, 230, 118;
+}
+
+.ing-nerd-card--resistance {
+  --fc: 38, 182, 255;
+}
+
+.ing-nerd-card__medal {
+  grid-area: medal;
+  position: relative;
+  align-self: center;
+  width: 2.6rem;
+  height: 2.6rem;
+}
+
+.ing-nerd-card__medal::before {
+  content: '';
+  position: absolute;
+  inset: -0.45rem;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(var(--fc), 0.2), transparent 75%);
+}
+
+.ing-nerd-card--community .ing-nerd-card__medal::before {
+  display: none;
+}
+
+.ing-nerd-card__medal > * {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ing-nerd-card__label {
+  grid-area: label;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-card__figure {
+  grid-area: figure;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.45rem;
+}
+
+.ing-nerd-card__value {
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 1.2rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--ing-text);
+  overflow-wrap: anywhere;
+}
+
+.ing-nerd-card__meta {
+  grid-area: meta;
+  font-size: 0.68rem;
+  color: var(--ing-text-faint);
+}
+
+.ing-nerd-card__foot {
+  grid-area: foot;
+  min-width: 0;
+  margin-top: 0.35rem;
+}
+
+@media (min-width: 34rem) {
+  .ing-nerd-cards__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ing-nerd-cards__grid--hero {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ing-nerd-card {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'medal'
+      'label'
+      'figure'
+      'meta'
+      'foot';
+    align-content: start;
+    padding: 0.7rem 0.8rem 0.65rem;
+  }
+
+  .ing-nerd-card__medal {
+    margin-bottom: 0.35rem;
+  }
+
+  /* Reserva duas linhas de rótulo pros números de uma fileira ficarem alinhados. */
+  .ing-nerd-card__label {
+    min-height: 2.5em;
+  }
+
+  .ing-nerd-card__foot {
+    margin-top: 0.4rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--ing-edge-soft);
+  }
+
+  /* AP e recursões: cartão largo, deitado, com a medalha maior. Vem depois do
+     bloco acima de propósito, pra desfazer o "em pé" só nesses dois. */
+  .ing-nerd-card--hero {
+    grid-template-columns: 3.4rem minmax(0, 1fr);
+    grid-template-areas:
+      'medal label'
+      'medal figure'
+      'medal meta'
+      'medal foot';
+    column-gap: 1rem;
+    align-content: center;
+    padding: 0.85rem 1rem;
+  }
+
+  .ing-nerd-card--hero .ing-nerd-card__medal {
+    width: 3.4rem;
+    height: 3.4rem;
+    margin-bottom: 0;
+  }
+
+  .ing-nerd-card--hero .ing-nerd-card__label {
+    min-height: 0;
+  }
+
+  .ing-nerd-card--hero .ing-nerd-card__value {
+    font-size: 1.55rem;
+  }
+}
+
+/* Agentes — os recordes agrupados por quem os segura. */
+.ing-nerd-ags {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.ing-nerd-ag {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.6rem;
+  padding: 0.75rem 0.85rem;
+  background: var(--ing-green-ghost);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 10px;
+}
+
+@media (min-width: 34rem) {
+  .ing-nerd-ag {
+    grid-template-columns: 11.5rem minmax(0, 1fr);
+    gap: 0.9rem;
+    align-items: start;
+  }
+}
+
+.ing-nerd-ag__id {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.ing-nerd-ag__rank {
+  flex: 0 0 auto;
+  width: 1.1rem;
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--ing-text-faint);
+}
+
+.ing-nerd-ag--lead .ing-nerd-ag__rank {
+  color: var(--ing-green-soft);
+}
+
+.ing-nerd-ag__who {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.ing-nerd-ag__count {
+  font-size: 0.72rem;
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-ag__count b {
+  font-family: var(--ing-font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ing-text);
+}
+
+.ing-nerd-ag__community {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ing-text-faint);
+}
+
+.ing-nerd-ag__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.ing-nerd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0.25rem 0.5rem 0.25rem 0.3rem;
+  font-size: 0.72rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--ing-edge-soft);
+  border-radius: 8px;
+}
+
+.ing-nerd-chip__icon {
+  width: 1.3rem;
+  height: 1.3rem;
+  flex: 0 0 auto;
+  display: flex;
+}
+
+.ing-nerd-chip__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ing-nerd-chip__label {
+  color: var(--ing-text-dim);
+}
+
+.ing-nerd-chip__value {
+  font-family: var(--font-space-mono, monospace);
+  font-weight: 400;
+  color: var(--ing-text);
+}
+
+.ing-nerd-chip .ing-nerd-mult {
+  padding: 0.1rem 0.25rem;
+  font-size: 0.62rem;
+}
+
+/* Identidade de agente (nick + facção + bandeira) — hall da fama, "top 1" de
+   evento sazonal, maior recursão. Sempre empurrado pro fim da linha
+   (`margin-left: auto`), pra ficar alinhado à direita mesmo quando o valor
+   ao lado varia de largura entre linhas. */
+.ing-nerd-agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+  max-width: 12rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.ing-nerd-agent-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ing-nerd-agent-flag,
+.ing-nerd-agent-faction {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 480px) {
+  /* Em telas estreitas o nick ocupa a linha inteira em vez de disputar espaço. */
+  .ing-nerd-agent {
+    flex-basis: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+    max-width: none;
+  }
+}
+
+/* ─── Comparação por seleção (ingress-ranking-comparison, T16) ───────────── */
+
+/* A aba "Comparação" é a 4ª — a régua de abas não tinha `flex-wrap`/scroll
+   próprio porque 3 rótulos curtos sempre coube; "Comparação"/"Comparison" é
+   o rótulo mais longo do grupo, então abaixo de ~480px a régua vira uma tira
+   com rolagem horizontal PRÓPRIA (não a página) em vez de quebrar linha —
+   quebrar destruiria o visual "aba colada no painel" (border-radius só em
+   cima, `margin-bottom:-1px` encostando no painel).
+
+   Sem barra visível: ela ocupava uma faixa entre as abas e o painel e
+   desfazia justamente essa colagem. A aba cortada na borda direita já diz que
+   dá pra rolar, e o foco por teclado rola sozinho até a aba. */
+@media (max-width: 480px) {
+  .ing-ranking-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .ing-ranking-tabs button {
+    flex-shrink: 0;
+  }
+}
+
+/* Ícone "Comparar" por linha (P2, IRCMP-31/32) — ao lado do de compartilhar,
+   mesmo tamanho/paleta (estilo base junto de `.ing-ranking-table__share`).
+   No celular a coluna inteira (`details`) colapsa; as duplicatas dentro do
+   detalhe (`.ing-ranking-table__detail-share`, classe compartilhada pelos dois
+   ícones) ganham alvo de toque de 44px — só ali, porque é o único lugar onde
+   esses controles são de fato tocados num celular. */
+.ing-ranking-table col[data-col='details'] {
+  width: 5.5rem;
+}
+/* O flex vai num `div` interno, não no `td`: `display: flex` no próprio `td` o
+   tira do layout de tabela, e a borda dele passava a cair 1px fora da das
+   outras células (o "degrau" na divisória, em linhas de altura fracionada). */
+.ing-ranking-table__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+}
+@media (max-width: 640px) {
+  /* Só o "Comparar" fica na linha (o compartilhar é escondido no bloco de
+     640px acima) — largura de um botão de 1.9rem + o padding de 0.35rem de
+     cada lado das células. */
+  .ing-ranking-table col[data-col='details'] {
+    width: 2.7rem;
+  }
+  .ing-ranking-table__detail-share {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+  }
+  /* A coluna esquerda do "Estilo de jogo" tem ~140px no celular: nome numa
+     linha só dele (senão quebra no meio, "gal0d/axj") e os dois ícones de 44px
+     logo abaixo, sem o flex achatá-los em oval. */
+  .ing-ranking-table__detail-playstyle-name-row {
+    flex-wrap: wrap;
+  }
+  .ing-ranking-table__detail-playstyle-name {
+    flex-basis: 100%;
+  }
+}
+
+/* Paginação da tabela principal (IRCMP-16/17) — seletor de tamanho de
+   página + anterior/próxima, mesma paleta dos outros controles `ing-radar__
+   btn`-like da feature. `flex-wrap` garante que não force rolagem horizontal
+   em telas estreitas (IRCMP-41). */
+.ing-ranking-table__pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--ing-edge-soft);
+}
+.ing-ranking-table__page-size {
+  display: flex;
+  gap: 0.3rem;
+}
+.ing-ranking-table__page-size button {
+  min-width: 2.2rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--ing-edge-soft);
+  background: transparent;
+  color: var(--ing-text-dim);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.ing-ranking-table__page-size button.is-active {
+  color: var(--ing-text);
+  border-color: var(--ing-green-soft);
+}
+.ing-ranking-table__page-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+  white-space: nowrap;
+}
+
+/* ─── `AgentSelect` (combobox assíncrono do seletor de agentes) ───────────
+   Mesma estrutura visual de `.ing-country-picker` (combobox+listbox ARIA),
+   adaptada pra opções carregadas do servidor: cada item ganha facção+país+
+   nickname+AP, e o rodapé da lista pode ser um item "próxima página" ou um
+   estado de carregando/erro/vazio em vez de mais uma opção. */
+.ing-agent-select {
+  position: relative;
+  margin-top: 0.3rem;
+}
+.ing-agent-select.is-invalid .ing-agent-select__input {
+  border-color: #ff8f6b;
+}
+.ing-agent-select__input {
+  width: 100%;
+  font-family: var(--ing-font-body);
+  font-size: 0.85rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--ing-edge);
+  background: var(--ing-bg-2);
+  color: var(--ing-text);
+}
+.ing-agent-select__input:focus-visible {
+  outline: 2px solid var(--ing-cyan);
+  outline-offset: 1px;
+}
+.ing-agent-select__selected-badges {
+  position: absolute;
+  left: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  pointer-events: none;
+}
+.ing-agent-select:has(.ing-agent-select__selected-badges) .ing-agent-select__input {
+  padding-left: 3.1rem;
+}
+.ing-agent-select__list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.2rem);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  border-radius: 8px;
+  border: 1px solid var(--ing-edge);
+  background: var(--ing-bg-2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.ing-agent-select__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  /* min-height ~44px (IRCMP AC10 do seletor: alvo de toque em mobile) —
+     a lista é a mesma em qualquer largura, não só abaixo de um breakpoint,
+     já que abrir o seletor por toque é o caminho principal em celular. */
+  min-height: 2.75rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+  cursor: pointer;
+}
+.ing-agent-select__option.is-active,
+.ing-agent-select__option:hover {
+  background: rgba(0, 230, 118, 0.12);
+  color: var(--ing-green-soft);
+}
+.ing-agent-select__option-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--ing-font-display);
+  color: var(--ing-text);
+}
+.ing-agent-select__option-ap {
+  font-variant-numeric: tabular-nums;
+  color: var(--ing-text-faint);
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+.ing-agent-select__flag-placeholder {
+  display: inline-block;
+  width: 18px;
+  flex-shrink: 0;
+}
+.ing-agent-select__load-more,
+.ing-agent-select__status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  color: var(--ing-text-faint);
+  text-align: center;
+  cursor: default;
+}
+.ing-agent-select__load-more {
+  cursor: pointer;
+  color: var(--ing-green-soft);
+}
+.ing-agent-select__load-more.is-active,
+.ing-agent-select__load-more:hover {
+  background: rgba(0, 230, 118, 0.12);
+}
+.ing-agent-select__status--error {
+  color: #ff8f6b;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.ing-agent-select__status--error button {
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid var(--ing-edge-soft);
+  background: transparent;
+  color: var(--ing-text);
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+/* ─── Aba "Comparação" (`IngressComparisonTab`) ───────────────────────────
+   Dois `AgentSelect` lado a lado no desktop, empilhados no celular
+   (IRCMP-41) — `minmax(0, 1fr)` em cada coluna evita que um nickname longo
+   estoure a grade (mesmo motivo de `min-width: 0` já usado noutros lugares
+   do tema pra filhos flex/grid com texto). */
+.ing-comparison-tab__selects {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.8rem;
+  margin-bottom: 0.9rem;
+}
+.ing-comparison-tab__select-col label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-family: var(--ing-font-display);
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--ing-text-dim);
+}
+.ing-comparison-tab__error {
+  margin: 0.4rem 0 0;
+  font-size: 0.76rem;
+  color: #ff8f6b;
+}
+.ing-comparison-tab__hint {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ing-text-faint);
+  text-align: center;
+}
+@media (max-width: 640px) {
+  .ing-comparison-tab__selects {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── `OverallScorePanel` com AP/país/facção (T11) ────────────────────────
+   Emblemas antes do nome do agente, só quando a aba Comparação os passa
+   (`StatsRadarSection` não usa — sem mudança visual ali). */
+.ing-score-panel__agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.ing-score-panel__faction-icon,
+.ing-score-panel__flag {
+  border-radius: 2px;
+  flex-shrink: 0;
+}

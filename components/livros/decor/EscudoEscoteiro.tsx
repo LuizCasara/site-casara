@@ -2,8 +2,8 @@
 
 import {useState} from 'react';
 import {Html, useTexture} from '@react-three/drei';
-import {marcarCoisa} from '@/lib/progresso-da-sala';
-import {trackOutboundClick} from '@/utils/analytics';
+import {marcarCoisa} from '@/lib/livros/segredos/progresso-da-sala';
+import {trackOutboundClick} from '@/lib/global/analytics';
 
 /**
  * Escudo redondo de madeira com o emblema do escotismo mundial, pendurado na

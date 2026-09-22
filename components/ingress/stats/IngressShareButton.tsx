@@ -2,8 +2,8 @@
 
 import {FaShareAlt} from 'react-icons/fa'
 import {toast} from 'sonner'
-import {useLang} from '@/context/LanguageContext'
-import {trackIngressRankingShared} from '@/utils/analytics'
+import {useLang} from '@/components/global/LanguageContext'
+import {trackIngressRankingShared} from '@/lib/global/analytics'
 
 const T = {
   pt: {
@@ -22,7 +22,7 @@ const T = {
 
 /**
  * Ícone de compartilhar ao lado do toggle PT/EN, só em `/ingress/ranking`
- * (ver `IngressTopBar`). Mesmo padrão de `components/livros/BotaoCompartilhar.tsx`:
+ * (ver `IngressTopBar`). Mesmo padrão de `components/livros/acervo/BotaoCompartilhar.tsx`:
  * Web Share API quando existe (abre a folha nativa do celular), cai para
  * copiar o link no desktop. Usa `sonner` pro toast de confirmação, já que o
  * layout do Ingress monta um `<Toaster/>` (ISTATS-19: mesmo mecanismo do

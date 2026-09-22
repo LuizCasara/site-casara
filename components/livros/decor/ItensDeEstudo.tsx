@@ -4,8 +4,8 @@ import {useState} from 'react';
 import {Html} from '@react-three/drei';
 import {useRouter} from 'next/navigation';
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
-import {marcarCoisa} from '@/lib/progresso-da-sala';
-import {trackRoomObjectClick} from '@/utils/analytics';
+import {marcarCoisa} from '@/lib/livros/segredos/progresso-da-sala';
+import {trackRoomObjectClick} from '@/lib/global/analytics';
 
 /**
  * O canto de estudo sobre o braço direito da mesa em L: uma bíblia aberta, uma
@@ -68,7 +68,7 @@ export default function ItensDeEstudo({origem, onAbrirFolha, isMobile = false}: 
      * Chega como prop (e não decidido aqui dentro, como a Bíblia) porque quem
      * abre um painel é o `RoomCanvas`: a folha é conteúdo em foco sobre a sala, e
      * a camada de cima é dele. `marcarCoisa`, esse sim, é chamado aqui — ver
-     * `lib/progresso-da-sala.ts`.
+     * `lib/livros/segredos/progresso-da-sala.ts`.
      */
     onAbrirFolha?: () => void;
     isMobile?: boolean;
@@ -144,7 +144,7 @@ export default function ItensDeEstudo({origem, onAbrirFolha, isMobile = false}: 
               barato que uma textura.
 
               **Ela deixou de ser decoração**: é a lista das coisas clicáveis
-              desta sala (ver `lib/coisas-da-sala.mjs`), e o item 1 da própria
+              desta sala (ver `lib/livros/segredos/coisas-da-sala.mjs`), e o item 1 da própria
               lista — marca-se sozinha na primeira abertura, para a folha nunca
               aparecer zerada e para a primeira linha ensinar a mecânica pelo
               exemplo.

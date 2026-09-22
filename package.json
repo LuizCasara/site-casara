@@ -11,7 +11,14 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "node --test --test-concurrency=1 \"lib/**/*.test.mjs\"",
-    "gen:favicons": "node scripts/gen-favicons.mjs"
+    "gen:favicons": "node scripts/global/gen-favicons.mjs",
+    "livros": "node scripts/livros/livros.mjs",
+    "livros:leitura": "node scripts/livros/aplicar-leitura.mjs",
+    "ingress": "node scripts/ingress/ingress.mjs",
+    "ingress:rescore": "node scripts/ingress/ingress-rescore.mjs",
+    "ingress:catalog": "node scripts/ingress/ingress-catalog-gen.mjs",
+    "ingress:countries": "node scripts/ingress/gen-ingress-countries.mjs",
+    "ingress:icons": "node scripts/ingress/generate-ingress-pwa-icons.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

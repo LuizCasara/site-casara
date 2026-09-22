@@ -6,7 +6,7 @@ import type * as THREE from 'three';
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
 import DeitadoNoTampo from '@/components/livros/decor/DeitadoNoTampo';
 import {useLuzSuave} from '@/components/livros/decor/use-luz-suave';
-import {ALVO_DO_FEIXE, FEIXE, paraLocal, giroParaMirar} from '@/lib/lanterna.mjs';
+import {ALVO_DO_FEIXE, FEIXE, paraLocal, giroParaMirar} from '@/lib/livros/sala/lanterna.mjs';
 
 /**
  * Amarelo deliberadamente abafado, não o saturado de tinta que aparece na foto:
@@ -98,7 +98,7 @@ export default function YellowShelf({position, rotationY = 0, lanternaAcesa = fa
 
     /**
      * A mira sai de ONDE O FACHO DEVE CAIR, não de um ângulo escolhido a olho —
-     * ver o cabeçalho de lib/lanterna.mjs. O alvo é um ponto da parede do fundo,
+     * ver o cabeçalho de lib/livros/sala/lanterna.mjs. O alvo é um ponto da parede do fundo,
      * em coordenadas do mundo; aqui ele é trazido para o espaço da estante,
      * porque é dentro dele que a lanterna e a luz vivem.
      *
