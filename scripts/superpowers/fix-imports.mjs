@@ -45,14 +45,19 @@ function rewriteFile(text, replacer) {
   return { changed, newText };
 }
 
+// Alias @/ resolve sempre a partir da raiz do repo — isso não depende de quem importa nem de
+// quem se move. Se o ALVO do alias se moveu nesta fase, o texto precisa mudar, tanto num
+// arquivo consumidor quanto num arquivo que também é mover desta fase.
+function rewriteAlias(spec, phaseMap) {
+  const hit = matchInMap(spec.slice(2), phaseMap);
+  if (!hit) return null;
+  const targetBase = hit.specHadExtension ? hit.target : hit.target.replace(/\.(ts|tsx|js|jsx|mjs|json)$/, '');
+  return `@/${targetBase}`;
+}
+
 function rewriteConsumer(text, fileDirPosix, phaseMap) {
   return rewriteFile(text, (spec) => {
-    if (spec.startsWith('@/')) {
-      const hit = matchInMap(spec.slice(2), phaseMap);
-      if (!hit) return null;
-      const targetBase = hit.specHadExtension ? hit.target : hit.target.replace(/\.(ts|tsx|js|jsx|mjs|json)$/, '');
-      return `@/${targetBase}`;
-    }
+    if (spec.startsWith('@/')) return rewriteAlias(spec, phaseMap);
     if (!spec.startsWith('.')) return null;
     const absPosix = path.posix.normalize(path.posix.join(fileDirPosix, spec));
     const hit = matchInMap(absPosix, phaseMap);
@@ -63,7 +68,8 @@ function rewriteConsumer(text, fileDirPosix, phaseMap) {
 
 function rewriteMover(text, oldDirPosix, newDirPosix, phaseMap) {
   return rewriteFile(text, (spec) => {
-    if (!spec.startsWith('.')) return null; // alias @/ não é afetado pela pasta do importador
+    if (spec.startsWith('@/')) return rewriteAlias(spec, phaseMap);
+    if (!spec.startsWith('.')) return null;
     const absAsWritten = path.posix.normalize(path.posix.join(oldDirPosix, spec));
     const hit = matchInMap(absAsWritten, phaseMap);
     const finalAbs = hit ? hit.target : absAsWritten;

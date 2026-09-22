@@ -82,6 +82,25 @@ test('import por alias @/ não muda quando só o importador se move (base é a r
   assert.match(text, /from ['"]@\/lib\/db['"]/);
 });
 
+test('mover o importador E o alvo por alias @/ na mesma fase: o alias também é reescrito (não é só a pasta do importador que muda)', () => {
+  const rows = [
+    { antigo: 'context/LanguageContext.tsx', novo: 'components/global/LanguageContext.tsx', dominio: 'global' },
+    { antigo: 'components/Header.tsx', novo: 'components/global/Header.tsx', dominio: 'global' },
+  ];
+  const { dir, tsvPath } = gitFixtureWithMapa(
+    {
+      'context/LanguageContext.tsx': 'export const LanguageContext = 1;\n',
+      'components/Header.tsx': "import { LanguageContext } from '@/context/LanguageContext';\n",
+    },
+    rows
+  );
+  moveRows(rows, { rootDir: dir });
+  rewriteImportsForPhase(1, dir, tsvPath);
+  const text = fs.readFileSync(path.join(dir, 'components', 'global', 'Header.tsx'), 'utf8');
+  assert.match(text, /from ['"]@\/components\/global\/LanguageContext['"]/);
+  assert.deepEqual(findBrokenImports(dir), []);
+});
+
 test('import JSON explícito (with type: json) é reescrito preservando a extensão', () => {
   const rows = [
     { antigo: 'lib/ingress-countries.mjs', novo: 'lib/ingress/catalog/ingress-countries.mjs', dominio: 'ingress' },
