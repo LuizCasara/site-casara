@@ -5,7 +5,7 @@ import Link from 'next/link';
 import type {Book} from '@/lib/books';
 import {getCategory} from '@/lib/book-categories.mjs';
 import {corDeTextoSobre} from '@/lib/contraste.mjs';
-import {trackBookCardClick} from '@/utils/analytics';
+import {trackBookCardClick} from '@/lib/global/analytics';
 import StarRating from './StarRating';
 
 /**

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import sql from "@/lib/db";
+import sql from "@/lib/global/db";
 import type { SessionStatus } from "@/lib/word-cloud";
 
 export const dynamic = "force-dynamic";

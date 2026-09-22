@@ -1,7 +1,7 @@
 'use client'
 
 import type {TimePoint} from '@/lib/ingress'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import Panel from './Panel'
 import {fmtStat} from '@/lib/ingress-format.mjs'
 

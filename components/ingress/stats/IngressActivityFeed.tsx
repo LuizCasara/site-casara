@@ -4,7 +4,7 @@ import {useEffect, useMemo, useRef, useState, type CSSProperties} from 'react'
 import Panel from '../Panel'
 import {fmtScoreDecimal, fmtStat} from '@/lib/ingress-format.mjs'
 import {COUNTRIES, flagSrc} from '@/lib/ingress-countries.mjs'
-import {useLang, type Lang} from '@/context/LanguageContext'
+import {useLang, type Lang} from '@/components/global/LanguageContext'
 
 export type ActivityKind = 'novo_agente' | 'atualizacao'
 

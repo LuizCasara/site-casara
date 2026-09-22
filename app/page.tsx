@@ -3,10 +3,10 @@
 import Link from "next/link";
 import {useEffect, useState} from "react";
 import {FaBookOpen, FaCloud, FaDice, FaLaugh, FaLightbulb, FaQuestionCircle} from "react-icons/fa";
-import {trackBookCardClick, trackGenerateQuote, trackHomePageVisit, trackQuickAccessLink, trackReceiveTip} from "@/utils/analytics";
-import {useLang} from "@/context/LanguageContext";
-import {TextScramble} from "@/components/ui/text-scramble";
-import {RainingLetters} from "@/components/ui/raining-letters";
+import {trackBookCardClick, trackGenerateQuote, trackHomePageVisit, trackQuickAccessLink, trackReceiveTip} from "@/lib/global/analytics";
+import {useLang} from "@/components/global/LanguageContext";
+import {TextScramble} from "@/components/global/ui/text-scramble";
+import {RainingLetters} from "@/components/global/ui/raining-letters";
 
 const translations = {
   pt: {

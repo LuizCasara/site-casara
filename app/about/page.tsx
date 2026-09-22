@@ -3,9 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import {FaGithub, FaGlobe, FaInstagram, FaLinkedin, FaWhatsapp} from "react-icons/fa";
-import {trackSocialMediaClick, trackCvDownload, trackInternalProjectClick} from "@/utils/analytics";
-import {useLang} from "@/context/LanguageContext";
-import {Typewriter} from "@/components/ui/typewriter";
+import {trackSocialMediaClick, trackCvDownload, trackInternalProjectClick} from "@/lib/global/analytics";
+import {useLang} from "@/components/global/LanguageContext";
+import {Typewriter} from "@/components/global/ui/typewriter";
 
 const skills: Record<string, string[]> = {
   "Liderança & Processo": ["Tech Leadership", "Spec-Driven Development", "Squad Management", "Architecture Review"],

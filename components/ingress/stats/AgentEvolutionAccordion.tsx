@@ -1,7 +1,7 @@
 'use client'
 
 import {useId, useState, type ReactNode} from 'react'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 const T = {
   pt: {label: 'Ver evolução', hint: 'AP total e o que mudou em cada ponto'},

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import {FaUserAstronaut, FaTrophy} from 'react-icons/fa'
 import {INGRESS_LINK_GROUPS} from '@/lib/ingress-links'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import InstallPwaCard from '@/components/ingress/InstallPwaCard'
 
 const T = {

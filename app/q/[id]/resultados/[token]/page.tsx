@@ -12,7 +12,7 @@ import {
   podiumFullyRevealed,
   PODIUM_REVEAL_TOTAL_MS,
 } from "@/lib/quiz";
-import { playSound } from "@/lib/sound";
+import { playSound } from "@/lib/global/sound";
 
 const RESULTS_POLL_MS = 2500;
 

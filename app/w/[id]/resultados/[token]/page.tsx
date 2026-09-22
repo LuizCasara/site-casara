@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import WordCloud from "@/components/WordCloud";
 import WordBarChart from "@/components/WordBarChart";
 import type { WordCount } from "@/lib/word-cloud";
-import { playSound } from "@/lib/sound";
+import { playSound } from "@/lib/global/sound";
 
 const RESULTS_POLL_MS = 2500;
 

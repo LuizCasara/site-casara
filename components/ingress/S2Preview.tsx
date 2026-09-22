@@ -2,7 +2,7 @@
 
 import {coverViewport} from '@/lib/ingress-s2.mjs'
 import type {Profile} from '@/lib/ingress'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import Panel from './Panel'
 import S2ExplorerLoader from './S2ExplorerLoader'
 

@@ -1,7 +1,7 @@
 'use client'
 
 import {useMemo, useState} from 'react'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import MedalDetail, {type DetailMedal} from './MedalDetail'
 import RecursionMark from './RecursionMark'
 

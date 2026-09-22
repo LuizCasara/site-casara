@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import sql from '@/lib/db';
-import { REAL_ROUTE_PATTERN } from '@/lib/routes';
+import sql from '@/lib/global/db';
+import { REAL_ROUTE_PATTERN } from '@/lib/global/routes';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

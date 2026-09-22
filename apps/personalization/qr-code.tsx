@@ -1,7 +1,7 @@
 "use client";
 
 import {useState, useRef} from "react";
-import {trackAppAction, trackAppOutput} from '@/utils/analytics';
+import {trackAppAction, trackAppOutput} from '@/lib/global/analytics';
 
 const QRCodeGenerator = () => {
     // QR Code content types

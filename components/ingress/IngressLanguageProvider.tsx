@@ -1,9 +1,9 @@
 'use client'
 
 import {useEffect} from 'react'
-import {LanguageProvider, useLang} from '@/context/LanguageContext'
+import {LanguageProvider, useLang} from '@/components/global/LanguageContext'
 import {resolveIngressLang} from '@/lib/ingress-lang.mjs'
-import {getSitePrefs} from '@/lib/use-site-preferences'
+import {getSitePrefs} from '@/lib/global/use-site-preferences'
 
 /**
  * Filho de render nulo que roda UMA vez após a hidratação e troca o idioma se a

@@ -1,5 +1,5 @@
 import {cache} from 'react';
-import sql from '@/lib/db';
+import sql from '@/lib/global/db';
 
 /**
  * Onde o livro aparece na sala 3D — e, no caso de 'referencia', onde ele NÃO

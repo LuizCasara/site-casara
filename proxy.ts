@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
-import { REAL_ROUTE_RE } from '@/lib/routes';
-import { parseBrowser } from '@/lib/request-meta';
-import { shouldRecordEvents } from '@/lib/analytics-env';
+import { REAL_ROUTE_RE } from '@/lib/global/routes';
+import { parseBrowser } from '@/lib/global/request-meta';
+import { shouldRecordEvents } from '@/lib/global/analytics-env';
 
 const SKIP_PREFIXES = ['/_next', '/api', '/favicon', '/_vercel'];
 

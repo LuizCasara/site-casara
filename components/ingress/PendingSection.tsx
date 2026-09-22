@@ -1,7 +1,7 @@
 'use client'
 
 import type {PendingSection as PendingKind} from '@/lib/ingress'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import Panel from './Panel'
 
 const COPY: Record<'pt' | 'en', Record<PendingKind, {label: string; text: string}>> = {

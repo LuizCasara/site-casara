@@ -4,7 +4,7 @@ import {Fragment, useState} from 'react'
 import {AnimatePresence, motion} from 'framer-motion'
 import {computeRadarAxes, compareRadar, scoreAtOnyxMultiple} from '@/lib/ingress-radar.mjs'
 import {fmtStat} from '@/lib/ingress-format.mjs'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import type {Agent} from './ProfileRadar'
 
 const SIZE = 260

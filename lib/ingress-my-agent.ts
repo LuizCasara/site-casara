@@ -1,4 +1,4 @@
-import {getSitePrefs, setSitePref} from '@/lib/use-site-preferences'
+import {getSitePrefs, setSitePref} from '@/lib/global/use-site-preferences'
 
 /**
  * "Meu agente": o `codename_key` do último envio bem-sucedido em

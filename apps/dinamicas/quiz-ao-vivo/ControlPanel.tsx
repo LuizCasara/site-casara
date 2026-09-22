@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import QuizLeaderboard from "@/components/QuizLeaderboard";
-import { trackQuizSessionDiscarded, trackQuizSessionSaved } from "@/utils/analytics";
+import { trackQuizSessionDiscarded, trackQuizSessionSaved } from "@/lib/global/analytics";
 
 type StoredSession = {
   id: string;

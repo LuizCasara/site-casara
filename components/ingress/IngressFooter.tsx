@@ -1,7 +1,7 @@
 'use client'
 
 import {FaTelegramPlane} from 'react-icons/fa'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 const YEAR = new Date().getFullYear()
 

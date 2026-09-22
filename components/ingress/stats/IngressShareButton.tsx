@@ -2,8 +2,8 @@
 
 import {FaShareAlt} from 'react-icons/fa'
 import {toast} from 'sonner'
-import {useLang} from '@/context/LanguageContext'
-import {trackIngressRankingShared} from '@/utils/analytics'
+import {useLang} from '@/components/global/LanguageContext'
+import {trackIngressRankingShared} from '@/lib/global/analytics'
 
 const T = {
   pt: {

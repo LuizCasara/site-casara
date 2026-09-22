@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import { getLoveLanguageDisplayName } from '@/apps/desenvolvimento-pessoal/love-language-info';
 import { compareMessages } from '@/lib/ingress-compare-message.mjs';
 import { radarPng } from './ingress-radar.jsx';
-import { rateLimitOrNull } from '@/lib/rate-limit';
-import { escapeTelegramMarkdown as esc } from '@/lib/telegram-markdown.mjs';
+import { rateLimitOrNull } from '@/lib/global/rate-limit';
+import { escapeTelegramMarkdown as esc } from '@/lib/global/telegram-markdown.mjs';
 import { countryFlagEmoji } from '@/lib/ingress-format.mjs';
 
 /**

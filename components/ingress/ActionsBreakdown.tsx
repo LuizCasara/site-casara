@@ -3,7 +3,7 @@
 import type {Profile} from '@/lib/ingress'
 import {fmtStat} from '@/lib/ingress-format.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import Panel from './Panel'
 
 // Uma família coesa: o que o agente construiu vs. o que derrubou. `badge` é a

@@ -5,7 +5,7 @@ import type {Book} from '@/lib/books';
 import {filtrarPorBusca} from '@/lib/busca-livros.mjs';
 import {CATEGORIES} from '@/lib/book-categories.mjs';
 import {useDebounce} from '@/components/livros/use-debounce';
-import {trackBookFilter} from '@/utils/analytics';
+import {trackBookFilter} from '@/lib/global/analytics';
 import BookCard from '@/components/livros/BookCard';
 import BookFilters from '@/components/livros/BookFilters';
 

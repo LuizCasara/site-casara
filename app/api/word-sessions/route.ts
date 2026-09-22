@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import sql from "@/lib/db";
+import sql from "@/lib/global/db";
 import {
   WORD_CLOUD_LIMITS,
   dedupeWords,
@@ -7,7 +7,7 @@ import {
   generateToken,
   maxWordsCeiling,
 } from "@/lib/word-cloud";
-import { rateLimitOrNull } from "@/lib/rate-limit";
+import { rateLimitOrNull } from "@/lib/global/rate-limit";
 
 export const dynamic = "force-dynamic";
 

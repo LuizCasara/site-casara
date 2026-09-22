@@ -15,7 +15,7 @@ import StandDeEspadas from '@/components/livros/decor/StandDeEspadas';
 import {useRadio, NIVEIS_DE_VOLUME} from '@/components/livros/decor/use-radio';
 import {useTexturaDePlayer} from '@/components/livros/decor/use-textura-de-player';
 import {marcarCoisa} from '@/lib/progresso-da-sala';
-import {trackRoomObjectClick} from '@/utils/analytics';
+import {trackRoomObjectClick} from '@/lib/global/analytics';
 
 /**
  * O canto de trabalho, à direita da estante: mesa em L encaixada na quina das

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { QUIZ_LIMITS, isValidQuestionDraft, type QuizQuestionDraft } from "@/lib/quiz";
-import { trackQuizSessionCreated } from "@/utils/analytics";
+import { trackQuizSessionCreated } from "@/lib/global/analytics";
 import QuestionBuilder from "./QuestionBuilder";
 import ControlPanel from "./ControlPanel";
 

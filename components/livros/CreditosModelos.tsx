@@ -1,7 +1,7 @@
 'use client';
 
 import {ESTACAO} from '@/lib/radio';
-import {trackOutboundClick} from '@/utils/analytics';
+import {trackOutboundClick} from '@/lib/global/analytics';
 
 /**
  * Créditos dos modelos 3D da sala, no rodapé de `/livros`.

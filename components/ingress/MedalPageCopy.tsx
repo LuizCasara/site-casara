@@ -1,6 +1,6 @@
 'use client'
 
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import {tierLabel} from '@/lib/ingress-tiers.mjs'
 import {fmtStat} from '@/lib/ingress-format.mjs'
 

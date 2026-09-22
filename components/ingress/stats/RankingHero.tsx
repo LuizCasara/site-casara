@@ -2,7 +2,7 @@
 
 import {FaTrophy, FaKeyboard, FaTelegramPlane} from 'react-icons/fa'
 import {heroMeshPolygons} from '@/lib/ingress-s2.mjs'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import HeroMesh from '../HeroMesh'
 import HeroGlobe from '../HeroGlobe'
 

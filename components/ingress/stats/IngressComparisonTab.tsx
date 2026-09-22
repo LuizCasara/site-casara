@@ -6,8 +6,8 @@ import AgentSelect, {type AgentOption} from '../AgentSelect'
 import RadarOverlay from '../RadarOverlay'
 import OverallScorePanel, {type AgentScore} from './OverallScorePanel'
 import type {Agent} from '../ProfileRadar'
-import {trackIngressComparisonViewed} from '@/utils/analytics'
-import {useLang} from '@/context/LanguageContext'
+import {trackIngressComparisonViewed} from '@/lib/global/analytics'
+import {useLang} from '@/components/global/LanguageContext'
 
 type CompareRow = {
   codename_key: string

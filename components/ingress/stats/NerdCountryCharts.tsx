@@ -4,7 +4,7 @@ import {useState} from 'react'
 import {COUNTRIES, flagSrc} from '@/lib/ingress-countries.mjs'
 import {fmtStat, fmtStatCompact} from '@/lib/ingress-format.mjs'
 import {rankCountries} from '@/lib/ingress-country-chart.mjs'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 type FactionTotals = {agentCount: number; totalAp: number}
 export type CountryBreakdownRow = {code: string; enlightened: FactionTotals; resistance: FactionTotals}

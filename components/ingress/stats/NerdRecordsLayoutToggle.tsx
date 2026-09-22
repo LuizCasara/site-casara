@@ -1,7 +1,7 @@
 'use client'
 
-import {useLang} from '@/context/LanguageContext'
-import {useNerdStatsLayout, type NerdStatsLayout} from '@/lib/use-site-preferences'
+import {useLang} from '@/components/global/LanguageContext'
+import {useNerdStatsLayout, type NerdStatsLayout} from '@/lib/global/use-site-preferences'
 
 const LAYOUTS: NerdStatsLayout[] = ['resumo', 'cards', 'agentes']
 

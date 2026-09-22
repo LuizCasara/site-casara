@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import sql from "@/lib/db";
+import sql from "@/lib/global/db";
 import { normalizeCodenameKey } from "@/lib/ingress-rankings.mjs";
 
 export const dynamic = "force-dynamic";

@@ -2,7 +2,7 @@
 
 import {useRouter} from 'next/navigation'
 import type {ReactNode} from 'react'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 const T = {
   pt: {label: '← Ingress Hub'},

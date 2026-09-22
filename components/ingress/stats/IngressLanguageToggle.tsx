@@ -1,8 +1,8 @@
 'use client'
 
-import {useLang} from '@/context/LanguageContext'
-import {setSitePref} from '@/lib/use-site-preferences'
-import {trackIngressLanguageToggle} from '@/utils/analytics'
+import {useLang} from '@/components/global/LanguageContext'
+import {setSitePref} from '@/lib/global/use-site-preferences'
+import {trackIngressLanguageToggle} from '@/lib/global/analytics'
 
 /**
  * Chave PT/EN visível dentro de `/ingress` — o `Header.tsx` genérico do site se

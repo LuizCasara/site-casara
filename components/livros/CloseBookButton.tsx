@@ -2,7 +2,7 @@
 
 import {usePathname} from 'next/navigation';
 import {useFecharLivro} from '@/components/livros/use-fechar-livro';
-import {trackBookClosed} from '@/utils/analytics';
+import {trackBookClosed} from '@/lib/global/analytics';
 
 /**
  * Botão "✕ fechar" do overlay. A regra de como voltar pra sala vive em

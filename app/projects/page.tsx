@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import {FaBookOpen, FaGlobeAmericas, FaThLarge} from "react-icons/fa";
-import {useLang} from "@/context/LanguageContext";
-import {ProjectAccordion} from "@/components/ui/interactive-image-accordion";
-import {trackInternalProjectClick} from "@/utils/analytics";
+import {useLang} from "@/components/global/LanguageContext";
+import {ProjectAccordion} from "@/components/global/ui/interactive-image-accordion";
+import {trackInternalProjectClick} from "@/lib/global/analytics";
 
 const experimentos = [
   {

@@ -1,6 +1,6 @@
 import type {Metadata} from 'next'
 import {loadProfile} from '@/lib/ingress'
-import sql from '@/lib/db'
+import sql from '@/lib/global/db'
 import {buildRankingPageQuery} from '@/lib/ingress-rankings.mjs'
 import {computeAxisScores, computeOverallScore, overallTierLabel, computeStatTiers} from '@/lib/ingress-tier-score.mjs'
 import Panel from '@/components/ingress/Panel'

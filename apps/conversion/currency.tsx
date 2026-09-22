@@ -1,7 +1,7 @@
 "use client";
 
 import {useState, useEffect} from "react";
-import {trackAppAction} from '@/utils/analytics';
+import {trackAppAction} from '@/lib/global/analytics';
 
 const CurrencyConverter = () => {
     // Common currencies

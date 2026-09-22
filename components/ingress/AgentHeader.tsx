@@ -5,7 +5,7 @@ import {FaQuestion, FaTrophy} from 'react-icons/fa'
 import {heroMeshPolygons} from '@/lib/ingress-s2.mjs'
 import type {Profile} from '@/lib/ingress'
 import {INGRESS_LINKS} from '@/lib/ingress-links'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import HeroMesh from './HeroMesh'
 import HeroGlobe from './HeroGlobe'
 

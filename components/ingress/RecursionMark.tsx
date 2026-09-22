@@ -1,6 +1,6 @@
 'use client'
 
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 /**
  * As "asinhas" vermelhas: quando o total de uma medalha de estatística passou de

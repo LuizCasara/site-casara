@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import sql from "@/lib/db";
+import sql from "@/lib/global/db";
 import { WORD_CLOUD_LIMITS, dedupeWords, normalizeWord } from "@/lib/word-cloud";
 
 export const dynamic = "force-dynamic";

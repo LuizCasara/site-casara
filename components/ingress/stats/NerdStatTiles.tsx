@@ -1,7 +1,7 @@
 'use client'
 
 import {fmtStat, fmtStatCompactPrecise} from '@/lib/ingress-format.mjs'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import CountUp from '../CountUp'
 
 export type TierCounts = {bronze: number; silver: number; gold: number; platinum: number; onyx: number}

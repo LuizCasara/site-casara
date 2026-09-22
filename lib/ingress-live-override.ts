@@ -1,4 +1,4 @@
-import sql from "@/lib/db";
+import sql from "@/lib/global/db";
 import { normalizeCodenameKey } from "@/lib/ingress-rankings.mjs";
 
 /**

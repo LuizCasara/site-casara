@@ -1,7 +1,7 @@
 'use client'
 
-import {useLang} from '@/context/LanguageContext'
-import {useNerdStatsLayout} from '@/lib/use-site-preferences'
+import {useLang} from '@/components/global/LanguageContext'
+import {useNerdStatsLayout} from '@/lib/global/use-site-preferences'
 import NerdRecordAgents from './NerdRecordAgents'
 import NerdRecordCards from './NerdRecordCards'
 import NerdRecordList from './NerdRecordList'

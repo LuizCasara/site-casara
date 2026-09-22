@@ -1,7 +1,7 @@
 'use client';
 
 import {useState} from 'react';
-import {trackBookShared} from '@/utils/analytics';
+import {trackBookShared} from '@/lib/global/analytics';
 
 /**
  * Compartilhar o link do livro.

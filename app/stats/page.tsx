@@ -1,7 +1,7 @@
 "use client";
 
 import {useEffect, useState} from "react";
-import {trackStatsPeriodChanged} from "@/utils/analytics";
+import {trackStatsPeriodChanged} from "@/lib/global/analytics";
 
 type StatsData = {
   overview: { total_events: number; total_page_views: number; unique_routes: number };

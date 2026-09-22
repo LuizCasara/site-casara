@@ -7,7 +7,7 @@
  */
 
 import {TIER_COLOR} from '@/lib/ingress-tiers.mjs'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 const W = 220
 const H = 54

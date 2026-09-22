@@ -9,7 +9,7 @@ import {
   parseSitePrefs,
   serializeSitePrefs,
   withSitePref,
-} from '@/lib/site-preferences.mjs'
+} from '@/lib/global/site-preferences.mjs'
 
 /**
  * O lado do NAVEGADOR de `site-preferences.mjs`: lê e grava o objeto único do

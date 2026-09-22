@@ -5,7 +5,7 @@ import {Html} from '@react-three/drei';
 import {useRouter} from 'next/navigation';
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
 import {marcarCoisa} from '@/lib/progresso-da-sala';
-import {trackRoomObjectClick} from '@/utils/analytics';
+import {trackRoomObjectClick} from '@/lib/global/analytics';
 
 /**
  * O canto de estudo sobre o braço direito da mesa em L: uma bíblia aberta, uma

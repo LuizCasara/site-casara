@@ -5,7 +5,7 @@ import {tierLabel} from '@/lib/ingress-tiers.mjs'
 import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
 import {flagSrc} from '@/lib/ingress-countries.mjs'
 import {fmtStat} from '@/lib/ingress-format.mjs'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 /**
  * Mesmo par de caminhos já usado em `IngressRankingTable.tsx` (`FACTION_ICON`)

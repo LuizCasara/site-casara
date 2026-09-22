@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { trackWordSessionSubmitted } from "@/utils/analytics";
+import { trackWordSessionSubmitted } from "@/lib/global/analytics";
 import { normalizeWord, type SessionMode, type SessionStatus } from "@/lib/word-cloud";
 
 type SessionPublic = {

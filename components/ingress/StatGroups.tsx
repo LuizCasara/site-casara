@@ -2,7 +2,7 @@
 
 import {STAT_COLUMNS, STAT_GROUPS} from '@/lib/ingress-stats.mjs'
 import type {Profile} from '@/lib/ingress'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import Panel from './Panel'
 import StatValue from './StatValue'
 

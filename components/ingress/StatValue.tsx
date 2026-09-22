@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import CountUp from './CountUp'
 
 type StatBadge = {

@@ -13,7 +13,7 @@ import {
   trackWordSessionDiscarded,
   trackWordSessionFixedWordAdded,
   trackWordSessionSaved,
-} from "@/utils/analytics";
+} from "@/lib/global/analytics";
 
 const STORAGE_KEY = "minhas-nuvens";
 

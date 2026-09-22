@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import * as potrace from "potrace";
 import Image from "next/image";
-import {trackAppAction, trackAppOutput} from '@/utils/analytics';
+import {trackAppAction, trackAppOutput} from '@/lib/global/analytics';
 
 const ImageToSvgConverter = () => {
   // State for file and conversion

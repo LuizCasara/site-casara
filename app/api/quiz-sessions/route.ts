@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import sql from "@/lib/db";
+import sql from "@/lib/global/db";
 import { generateSessionId, generateToken } from "@/lib/session-ids";
 import { QUIZ_LIMITS, isValidQuestionDraft, type QuizQuestionDraft } from "@/lib/quiz";
-import { rateLimitOrNull } from "@/lib/rate-limit";
+import { rateLimitOrNull } from "@/lib/global/rate-limit";
 
 export const dynamic = "force-dynamic";
 

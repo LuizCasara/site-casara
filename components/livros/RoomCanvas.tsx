@@ -36,14 +36,14 @@ import CadernoOverlay from '@/components/livros/CadernoOverlay';
 import CadernoDoPremio from '@/components/livros/decor/CadernoDoPremio';
 import {fichaDoAcervo} from '@/lib/ficha-do-acervo.mjs';
 import {achadosValidos, podeReceberPremio, temPremio} from '@/lib/coisas-da-sala.mjs';
-import {playSound} from '@/lib/sound';
+import {playSound} from '@/lib/global/sound';
 import {marcarCoisa, registrarPremio, useProgressoDaSala} from '@/lib/progresso-da-sala';
 import {buildSpineAtlas, type SpineAtlas} from '@/lib/spine-canvas';
 import {
     trackListFallback, trackShelfSorted, trackIndexOpened, trackBookFilter,
     trackShelfYearFocused, trackBookPaged, trackBookClosed, trackRoomObjectClick,
     trackCadernoDesbloqueado,
-} from '@/utils/analytics';
+} from '@/lib/global/analytics';
 
 export type ShelvedBookInput = {
     slug: string;

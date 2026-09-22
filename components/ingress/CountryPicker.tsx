@@ -3,7 +3,7 @@
 import {useMemo, useState} from 'react'
 import {COUNTRIES, flagSrc} from '@/lib/ingress-countries.mjs'
 import {foldText} from '@/lib/ingress-format.mjs'
-import {useLang, type Lang} from '@/context/LanguageContext'
+import {useLang, type Lang} from '@/components/global/LanguageContext'
 
 type CountryOption = {code: string; namePt: string; nameEn: string}
 

@@ -2,7 +2,7 @@
 
 import {useEffect, useRef, useState} from 'react'
 import {flagSrc} from '@/lib/ingress-countries.mjs'
-import {useLang, type Lang} from '@/context/LanguageContext'
+import {useLang, type Lang} from '@/components/global/LanguageContext'
 
 export type AgentOption = {
   codename_key: string

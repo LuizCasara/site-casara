@@ -2,7 +2,7 @@
 
 import {Fragment} from 'react'
 import Panel from '../Panel'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import {RADAR_AXES, computeRadarAxes} from '@/lib/ingress-radar.mjs'
 import {ONYX_POSITION, POINTS_PER_POSITION} from '@/lib/ingress-tier-position.mjs'
 import {TIERS, tierLabel} from '@/lib/ingress-tiers.mjs'

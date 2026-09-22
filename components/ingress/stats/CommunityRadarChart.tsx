@@ -1,7 +1,7 @@
 'use client'
 
 import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 const SIZE = 220
 const C = SIZE / 2

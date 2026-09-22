@@ -1,5 +1,5 @@
 import {ImageResponse} from 'next/og'
-import sql from '@/lib/db'
+import sql from '@/lib/global/db'
 
 export const runtime = 'nodejs'
 export const size = {width: 1200, height: 630}

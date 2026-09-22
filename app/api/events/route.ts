@@ -1,8 +1,8 @@
 import {NextRequest, NextResponse} from 'next/server';
-import sql from '@/lib/db';
-import { parseBrowser } from '@/lib/request-meta';
-import { shouldRecordEvents } from '@/lib/analytics-env';
-import { rateLimitOrNull } from '@/lib/rate-limit';
+import sql from '@/lib/global/db';
+import { parseBrowser } from '@/lib/global/request-meta';
+import { shouldRecordEvents } from '@/lib/global/analytics-env';
+import { rateLimitOrNull } from '@/lib/global/rate-limit';
 
 export const dynamic = 'force-dynamic';
 

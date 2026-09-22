@@ -4,7 +4,7 @@ import {useEffect, useState} from 'react'
 import {MapContainer, TileLayer, Polygon, CircleMarker, useMap, useMapEvents} from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import {coverViewport, LEVEL_RANGE} from '@/lib/ingress-s2.mjs'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 type Cell = {token: string; ring: [number, number][]}
 

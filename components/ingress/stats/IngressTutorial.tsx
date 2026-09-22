@@ -2,7 +2,7 @@
 
 import {useState} from 'react'
 import Panel from '../Panel'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 const translations = {
   pt: {

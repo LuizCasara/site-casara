@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import sql from "@/lib/db";
+import sql from "@/lib/global/db";
 import {
   normalizeCodenameKey,
   buildRankingPageQuery,
@@ -12,7 +12,7 @@ import { normalizeCountryCode, isValidCountryCode } from "@/lib/ingress-countrie
 import { computeAxisScores, computeOverallScore, overallTierLabel, computeStatTiers } from "@/lib/ingress-tier-score.mjs";
 import { RADAR_STAT_KEYS } from "@/lib/ingress-compare-message.mjs";
 import { pickHistoryStats } from "@/lib/ingress-history-diff.mjs";
-import { rateLimitOrNull } from "@/lib/rate-limit";
+import { rateLimitOrNull } from "@/lib/global/rate-limit";
 
 export const dynamic = "force-dynamic";
 

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SORTEIO_LIMITS, parseEntries, drawWinners } from "@/lib/sorteio";
-import { playSound, startLoop } from "@/lib/sound";
-import { trackSorteioRealizado } from "@/utils/analytics";
+import { playSound, startLoop } from "@/lib/global/sound";
+import { trackSorteioRealizado } from "@/lib/global/analytics";
 
 type DrawRecord = { winners: string[]; timestamp: number };
 

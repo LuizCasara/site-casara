@@ -1,7 +1,7 @@
 import {artPath} from '@/lib/ingress-art.mjs'
 import {fmtScoreDecimal, fmtStat, fmtStatCompact, fmtStatCompactPair} from '@/lib/ingress-format.mjs'
 import {TIER_LABELS, TIER_LABELS_EN} from '@/lib/ingress-tiers.mjs'
-import type {Lang} from '@/context/LanguageContext'
+import type {Lang} from '@/components/global/LanguageContext'
 
 export type HistoryChange = {
   key: string

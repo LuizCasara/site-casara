@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import sql from "@/lib/db";
+import sql from "@/lib/global/db";
 import { PARTICIPANT_ID_RE } from "@/lib/session-ids";
 import { QUIZ_LIMITS, normalizeName } from "@/lib/quiz";
 

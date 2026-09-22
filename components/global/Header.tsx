@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import {useEffect, useRef, useState} from 'react';
 import {usePathname} from 'next/navigation';
-import {useLang} from '@/context/LanguageContext';
-import {trackNavClick, trackMobileMenuOpened, trackLanguageToggled} from '@/utils/analytics';
+import {useLang} from '@/components/global/LanguageContext';
+import {trackNavClick, trackMobileMenuOpened, trackLanguageToggled} from '@/lib/global/analytics';
 
 type NavSection = 'experiment' | 'shortcut';
 type NavChild = {href: string; label: string; section: NavSection; icon?: string};

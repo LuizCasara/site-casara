@@ -5,7 +5,7 @@ import {TIERS, TIER_COLOR, tierLabel} from '@/lib/ingress-tiers.mjs'
 import {formatGap} from '@/lib/ingress-timeline.mjs'
 import {fmtMedalDate, fmtStat} from '@/lib/ingress-format.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
-import {useLang, type Lang} from '@/context/LanguageContext'
+import {useLang, type Lang} from '@/components/global/LanguageContext'
 import MedalSpark from './MedalSpark'
 import RecursionMark from './RecursionMark'
 

@@ -3,7 +3,7 @@
 import {useEffect} from 'react';
 import {useSalaMontada} from '@/components/livros/ContextoDaSala';
 import {useFecharLivro} from '@/components/livros/use-fechar-livro';
-import {trackBookClosed} from '@/utils/analytics';
+import {trackBookClosed} from '@/lib/global/analytics';
 
 /**
  * A moldura do livro aberto — a mesma rota interceptada servindo dois cenários.

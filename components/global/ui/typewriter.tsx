@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from "react"
 import {motion, Variants} from "framer-motion"
-import {cn} from "@/lib/utils"
+import {cn} from "@/lib/global/utils"
 
 interface TypewriterProps {
   text: string | string[]

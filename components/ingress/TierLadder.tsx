@@ -3,7 +3,7 @@
 import {TIERS, TIER_RANK, tierLabel} from '@/lib/ingress-tiers.mjs'
 import {formatGap} from '@/lib/ingress-timeline.mjs'
 import {fmtMedalDate, fmtStat} from '@/lib/ingress-format.mjs'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 const CURRENT_SUFFIX = {pt: ' · atual', en: ' · current'}
 

@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useLang } from "@/context/LanguageContext";
-import { trackProjectClick } from "@/utils/analytics";
+import { useLang } from "@/components/global/LanguageContext";
+import { trackProjectClick } from "@/lib/global/analytics";
 
 type Project = {
   id: number;

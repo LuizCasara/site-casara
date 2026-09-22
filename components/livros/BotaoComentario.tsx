@@ -1,7 +1,7 @@
 'use client';
 
 import {linkDeComentario} from '@/lib/whatsapp-livros.mjs';
-import {trackBookComment} from '@/utils/analytics';
+import {trackBookComment} from '@/lib/global/analytics';
 
 /**
  * "Comentar sobre este livro" — abre o WhatsApp com o título já na mensagem.

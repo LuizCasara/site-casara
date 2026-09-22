@@ -5,7 +5,7 @@ import { AnimatePresence, motion, useInView } from "framer-motion";
 import {
   trackCasamentoMapsClick,
   trackCasamentoRsvpWhatsapp,
-} from "@/utils/analytics";
+} from "@/lib/global/analytics";
 
 // ─── Configurações ──────────────────────────────────────────────────────────
 const WEDDING_DATE = new Date("2026-10-17T00:00:00");

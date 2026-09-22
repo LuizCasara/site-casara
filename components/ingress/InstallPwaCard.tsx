@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from 'react'
 import {FaMobileScreenButton} from 'react-icons/fa6'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 // Evento não padronizado no lib.dom.d.ts do TS (só Chromium o dispara).
 interface BeforeInstallPromptEvent extends Event {

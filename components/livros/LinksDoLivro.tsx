@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import LinkParaLista from '@/components/livros/LinkParaLista';
-import {trackBookTagClick, trackBookBackToList, trackBookBackToRoom} from '@/utils/analytics';
+import {trackBookTagClick, trackBookBackToList, trackBookBackToRoom} from '@/lib/global/analytics';
 
 /**
  * Os links da página do livro que precisam registrar evento.

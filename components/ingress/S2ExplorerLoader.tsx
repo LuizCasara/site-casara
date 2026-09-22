@@ -2,7 +2,7 @@
 
 import {Component, useState, type ReactNode} from 'react'
 import dynamic from 'next/dynamic'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 const T = {
   pt: {

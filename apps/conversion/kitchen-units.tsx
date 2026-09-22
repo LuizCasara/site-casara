@@ -1,7 +1,7 @@
 "use client";
 
 import {useState} from "react";
-import {trackAppAction} from '@/utils/analytics';
+import {trackAppAction} from '@/lib/global/analytics';
 
 const KitchenUnitsConverter = () => {
     // Define ingredient types and their conversion factors

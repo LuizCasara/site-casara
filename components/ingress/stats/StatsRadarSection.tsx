@@ -6,9 +6,9 @@ import ProfileRadar, {type Agent} from '../ProfileRadar'
 import OverallScorePanel, {type AgentScore} from './OverallScorePanel'
 import {normalizeCodenameKey} from '@/lib/ingress-rankings.mjs'
 import {RADAR_STAT_KEYS} from '@/lib/ingress-compare-message.mjs'
-import {trackIngressRankingJoin} from '@/utils/analytics'
+import {trackIngressRankingJoin} from '@/lib/global/analytics'
 import {saveMyAgent} from '@/lib/ingress-my-agent'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 /** Textos bilíngues dos toasts (ISTATS-19 fix) — `pt` reproduz o texto anterior. */
 const T = {

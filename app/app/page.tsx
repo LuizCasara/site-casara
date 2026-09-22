@@ -3,8 +3,8 @@
 import Link from "next/link";
 import {Fa0, Fa3, FaCloud, FaDice, FaFileArrowDown, FaMoneyBillTrendUp, FaPhotoFilm, FaSpoon, FaTrophy} from "react-icons/fa6";
 import {FaBitcoin, FaCoins, FaPercent, FaQrcode, FaBrain, FaHeart} from "react-icons/fa";
-import {useLang} from "@/context/LanguageContext";
-import {trackAppClick} from "@/utils/analytics";
+import {useLang} from "@/components/global/LanguageContext";
+import {trackAppClick} from "@/lib/global/analytics";
 
 const appCategories = [
     {

@@ -6,7 +6,7 @@ import IngressActivityFeed, {type ActivityRow} from './IngressActivityFeed'
 import IngressNerdStats, {type NerdStats} from './IngressNerdStats'
 import IngressComparisonTab from './IngressComparisonTab'
 import {loadMyAgent} from '@/lib/ingress-my-agent'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 
 type Tab = 'ranking' | 'activity' | 'nerd' | 'compare'
 

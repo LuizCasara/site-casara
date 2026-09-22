@@ -5,7 +5,7 @@ import {TIER_COLOR, tierLabel} from '@/lib/ingress-tiers.mjs'
 import {annotateLaneGaps, formatGap, groupLanes} from '@/lib/ingress-timeline.mjs'
 import {fmtMedalDate} from '@/lib/ingress-format.mjs'
 import {artPath} from '@/lib/ingress-art.mjs'
-import {useLang} from '@/context/LanguageContext'
+import {useLang} from '@/components/global/LanguageContext'
 import Panel from './Panel'
 import MedalDetail, {type DetailMedal} from './MedalDetail'
 

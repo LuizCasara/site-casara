@@ -22,7 +22,7 @@ import {contarEstantes} from '@/lib/shelf-years.mjs';
 import {QUADRO_Z, QUADROS_DO_FUNDO} from '@/lib/parede-do-fundo.mjs';
 import {linkDeSugestao} from '@/lib/whatsapp-livros.mjs';
 import {marcarCoisa} from '@/lib/progresso-da-sala';
-import {trackBookSuggestion, trackOutboundClick} from '@/utils/analytics';
+import {trackBookSuggestion, trackOutboundClick} from '@/lib/global/analytics';
 
 /** A quina de paredes que o canto de trabalho abraça: fundo à direita. */
 const QUINA_DO_PC: [number, number] = [PAREDE_LATERAL_X, -1.6];

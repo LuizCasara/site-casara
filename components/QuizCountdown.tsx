@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { playSound } from "@/lib/sound";
+import { playSound } from "@/lib/global/sound";
 
 type Props = {
   startedAt: string;

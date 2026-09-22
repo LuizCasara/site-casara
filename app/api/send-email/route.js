@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
-import { rateLimitOrNull } from '@/lib/rate-limit';
-import { escapeHtml } from '@/lib/sanitize';
+import { rateLimitOrNull } from '@/lib/global/rate-limit';
+import { escapeHtml } from '@/lib/global/sanitize';
 
 /** Só os 4 nomes que o teste realmente produz — qualquer outra coisa aqui já
  * seria um valor forjado (esta rota não recalcula o teste, confia no body). */

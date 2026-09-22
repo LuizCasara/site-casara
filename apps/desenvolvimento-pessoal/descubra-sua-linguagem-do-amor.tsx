@@ -6,7 +6,7 @@ import loveLanguagesJson from "./linguagens-do-amor.json";
 import {LOVE_LANGUAGE_INFO, getLoveLanguageDisplayName} from "./love-language-info";
 import {sendLoveLanguageTestMessage} from "@/app/api/telegram/utils";
 import {generateLoveLanguagePdf, LoveLanguagePdfContent} from "@/utils/love-language-pdf-generator";
-import {trackLoveLanguagePdfDownload, trackLoveLanguageQuestionDropout, trackLoveLanguageTestCompletion, trackLoveLanguageTestStart} from "@/utils/analytics";
+import {trackLoveLanguagePdfDownload, trackLoveLanguageQuestionDropout, trackLoveLanguageTestCompletion, trackLoveLanguageTestStart} from "@/lib/global/analytics";
 
 type Metrics = {
     total_completed: number;
