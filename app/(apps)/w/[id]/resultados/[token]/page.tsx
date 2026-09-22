@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import WordCloud from "@/components/WordCloud";
-import WordBarChart from "@/components/WordBarChart";
-import type { WordCount } from "@/lib/word-cloud";
+import WordCloud from "@/components/apps/word-cloud/WordCloud";
+import WordBarChart from "@/components/apps/word-cloud/WordBarChart";
+import type { WordCount } from "@/lib/apps/word-cloud";
 import { playSound } from "@/lib/global/sound";
 
 const RESULTS_POLL_MS = 2500;

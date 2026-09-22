@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { QUIZ_LIMITS, isValidQuestionDraft, type QuizQuestionDraft } from "@/lib/quiz";
+import { QUIZ_LIMITS, isValidQuestionDraft, type QuizQuestionDraft } from "@/lib/apps/quiz";
 import { trackQuizSessionCreated } from "@/lib/global/analytics";
 import QuestionBuilder from "./QuestionBuilder";
 import ControlPanel from "./ControlPanel";

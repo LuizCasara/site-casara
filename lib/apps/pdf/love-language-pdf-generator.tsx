@@ -1,6 +1,6 @@
 import React, {RefObject} from 'react';
 import {LOVE_LANGUAGE_INFO, getLoveLanguageDisplayName} from '@/apps/desenvolvimento-pessoal/love-language-info';
-import {renderElementToPdf} from '@/utils/pdf-generator';
+import {renderElementToPdf} from '@/lib/apps/pdf/pdf-generator';
 
 const getLoveLanguageColor = (name: string) => {
     return (LOVE_LANGUAGE_INFO as Record<string, { hexColor: string }>)[name]?.hexColor ?? "#999";

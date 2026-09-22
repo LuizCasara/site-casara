@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import QuizCountdown from "@/components/QuizCountdown";
-import { clockOffsetMs, correctedNow, podiumFullyRevealed, PODIUM_REVEAL_TOTAL_MS } from "@/lib/quiz";
+import QuizCountdown from "@/components/apps/quiz/QuizCountdown";
+import { clockOffsetMs, correctedNow, podiumFullyRevealed, PODIUM_REVEAL_TOTAL_MS } from "@/lib/apps/quiz";
 import { trackQuizAnswerSubmitted, trackQuizSessionJoined } from "@/lib/global/analytics";
 
 const POLL_MS = 2500;

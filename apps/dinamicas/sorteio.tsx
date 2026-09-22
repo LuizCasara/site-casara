@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { SORTEIO_LIMITS, parseEntries, drawWinners } from "@/lib/sorteio";
+import { SORTEIO_LIMITS, parseEntries, drawWinners } from "@/lib/apps/sorteio";
 import { playSound, startLoop } from "@/lib/global/sound";
 import { trackSorteioRealizado } from "@/lib/global/analytics";
 

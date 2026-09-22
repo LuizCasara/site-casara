@@ -11,7 +11,7 @@ import {
   HOT_ACCENT_RGB,
   type WordCount,
   type WordCountWithSize,
-} from "@/lib/word-cloud";
+} from "@/lib/apps/word-cloud";
 
 const PALETTE = [
   "#F97316",

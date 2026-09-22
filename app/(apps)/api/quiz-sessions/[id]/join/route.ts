@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import sql from "@/lib/global/db";
-import { PARTICIPANT_ID_RE } from "@/lib/session-ids";
-import { QUIZ_LIMITS, normalizeName } from "@/lib/quiz";
+import { PARTICIPANT_ID_RE } from "@/lib/apps/session-ids";
+import { QUIZ_LIMITS, normalizeName } from "@/lib/apps/quiz";
 
 export const dynamic = "force-dynamic";
 

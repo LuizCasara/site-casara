@@ -6,7 +6,7 @@ import {
   generateSessionId,
   generateToken,
   maxWordsCeiling,
-} from "@/lib/word-cloud";
+} from "@/lib/apps/word-cloud";
 import { rateLimitOrNull } from "@/lib/global/rate-limit";
 
 export const dynamic = "force-dynamic";

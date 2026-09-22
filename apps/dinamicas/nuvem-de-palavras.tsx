@@ -7,7 +7,7 @@ import {
   normalizeWord,
   type SessionMode,
   type SessionStatus,
-} from "@/lib/word-cloud";
+} from "@/lib/apps/word-cloud";
 import {
   trackWordSessionCreated,
   trackWordSessionDiscarded,

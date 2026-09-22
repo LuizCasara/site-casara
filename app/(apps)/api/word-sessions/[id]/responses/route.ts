@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import sql from "@/lib/global/db";
-import { WORD_CLOUD_LIMITS, canAcceptResponses, dedupeWords, normalizeWord } from "@/lib/word-cloud";
-import { PARTICIPANT_ID_RE } from "@/lib/session-ids";
+import { WORD_CLOUD_LIMITS, canAcceptResponses, dedupeWords, normalizeWord } from "@/lib/apps/word-cloud";
+import { PARTICIPANT_ID_RE } from "@/lib/apps/session-ids";
 
 export const dynamic = "force-dynamic";
 

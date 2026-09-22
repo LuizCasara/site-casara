@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-// import AppFooter from "@/components/AppFooter";
+// import AppFooter from "@/components/apps/AppFooter";
 
 // Import the app categories data
 const appCategories = [

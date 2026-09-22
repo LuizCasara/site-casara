@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { trackWordSessionSubmitted } from "@/lib/global/analytics";
-import { normalizeWord, type SessionMode, type SessionStatus } from "@/lib/word-cloud";
+import { normalizeWord, type SessionMode, type SessionStatus } from "@/lib/apps/word-cloud";
 
 type SessionPublic = {
   title: string;

@@ -2,16 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import QuizCountdown from "@/components/QuizCountdown";
-import QuizLeaderboard from "@/components/QuizLeaderboard";
-import QuizPodium from "@/components/QuizPodium";
+import QuizCountdown from "@/components/apps/quiz/QuizCountdown";
+import QuizLeaderboard from "@/components/apps/quiz/QuizLeaderboard";
+import QuizPodium from "@/components/apps/quiz/QuizPodium";
 import {
   clockOffsetMs,
   correctedNow,
   podiumRevealedPlaces,
   podiumFullyRevealed,
   PODIUM_REVEAL_TOTAL_MS,
-} from "@/lib/quiz";
+} from "@/lib/apps/quiz";
 import { playSound } from "@/lib/global/sound";
 
 const RESULTS_POLL_MS = 2500;

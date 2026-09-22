@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { HOT_ACCENT_RGB, rgbToCss, type WordCount } from "@/lib/word-cloud";
+import { HOT_ACCENT_RGB, rgbToCss, type WordCount } from "@/lib/apps/word-cloud";
 
 const TOP_N = 20;
 const BAR_COLOR = rgbToCss(HOT_ACCENT_RGB); // mesmo tom "quente" do modo Texto

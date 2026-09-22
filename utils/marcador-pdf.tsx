@@ -1,5 +1,5 @@
 import React, {RefObject} from 'react';
-import {renderElementToPdf} from '@/utils/pdf-generator';
+import {renderElementToPdf} from '@/lib/apps/pdf/pdf-generator';
 import {PERGUNTA_FINAL} from '@/lib/coisas-da-sala.mjs';
 import {BILHETE_FRASES} from '@/lib/bilhete';
 

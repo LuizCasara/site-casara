@@ -6,7 +6,7 @@ import temperamentosJson from "./temperamentos.json";
 import tiebreakerQuestionsJson from "./tiebreakerQuestions.json";
 import {TEMPERAMENT_INFO, getCharacteristicDisplayName, getTemperamentDisplayName} from "./temperament-info";
 import {sendTemperamentTestMessage} from "@/app/api/telegram/utils";
-import {generatePdf, PdfContent} from "@/utils/pdf-generator";
+import {generatePdf, PdfContent} from "@/lib/apps/pdf/pdf-generator";
 import {trackPdfDownload, trackQuestionDropout, trackTemperamentDistribution, trackTestCompletion, trackTestStart} from "@/lib/global/analytics";
 
 type Metrics = {
