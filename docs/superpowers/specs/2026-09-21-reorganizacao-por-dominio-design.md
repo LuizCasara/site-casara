@@ -148,6 +148,14 @@ e **a lista de rotas do build**.
 Script Node em pasta temporária (nada é commitado, **nenhuma dependência nova no projeto**): usa o `playwright` do cache do npx,
 `pixelmatch` e `pngjs` já presentes no `node_modules`.
 
+**Verificado em 2026-09-21:** `require.resolve('pixelmatch')` e `require.resolve('pngjs')` resolvem direto no projeto
+(hoisted como transitivos de `potrace`→`jimp`) — dá para `import`/`require` normalmente. `playwright` **não** é dependência
+do projeto (`require.resolve('playwright')` falha) — só existe em `%LOCALAPPDATA%\ms-playwright` (browsers já baixados:
+chromium, firefox, webkit) e em caches do `npx` fora do repo. O script de snapshot tem que **invocar via `npx playwright`
+(CLI ou subprocesso `npx -y playwright ...`)**, nunca `require('playwright')`/`import 'playwright'` direto — isso falha.
+Se o `npx` precisar resolver a versão pela primeira vez nesta máquina, pode exigir rede; os browsers já instalados evitam
+o download pesado, mas o pacote `playwright` em si ainda passa pelo `npx`.
+
 - **Servidor:** build de produção (`next build && next start`) numa porta livre — sem overlay de dev, e sem gravar analytics
   (`VERCEL_ENV` ausente, ver CLAUDE.md "Só produção grava evento"). O `.env.local` aponta para o banco de produção: as rotas só **leem**.
 - **Rotas:** todas as estáticas do build + amostras das dinâmicas (um slug de cada app em `/app/[app_name]`, alguns `/livros/[slug]`,
