@@ -60,10 +60,18 @@ function arcPoints(va: Vec3, vb: Vec3, lift: number, n: number): Vec3[] {
  * arcos "link" varrendo o globo com a luz viajando, e o portal-casa (Cascavel,
  * do `s2.center`) pulsando. Canvas 2D, projeção ortográfica — sem three.js.
  *
- * Só desktop (`matchMedia`), não monta nada no mobile. Pausa com a aba oculta
- * ou fora de vista; `prefers-reduced-motion` desenha um quadro parado.
- * Puramente decorativo: `aria-hidden`, `pointer-events: none` no CSS.
+ * Só desktop (`matchMedia`), não monta nada no mobile. Pausa com a aba
+ * oculta, fora de vista, OU a janela sem foco (visível numa janela/monitor
+ * separado enquanto outra tem o foco não é "oculto" pra `document.hidden` —
+ * sem o `blur`/`focus`, o loop seguia rodando a 60fps ali, disputando
+ * GPU/compositor com o que estivesse em primeiro plano). Quando roda, o
+ * desenho é limitado a `TARGET_FPS` (menos que os 60fps que `rAF` ofereceria)
+ * — metade dos frames por segundo é metade do trabalho de canvas (gradientes,
+ * `shadowBlur`) mesmo com foco. `prefers-reduced-motion` desenha um quadro
+ * parado. Puramente decorativo: `aria-hidden`, `pointer-events: none` no CSS.
  */
+const TARGET_FPS = 30
+const FRAME_INTERVAL_MS = 1000 / TARGET_FPS
 export default function HeroGlobe({center}: {center: {lat: number; lng: number}}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [enabled, setEnabled] = useState(false)
@@ -263,14 +271,21 @@ export default function HeroGlobe({center}: {center: {lat: number; lng: number}}
 
     let raf = 0
     let onScreen = true
+    let focused = document.hasFocus()
+    let lastFrameAt = 0
     const startedAt = performance.now()
 
+    const canPlay = () => onScreen && focused && !document.hidden
+
     const loop = (now: number) => {
-      render((now - startedAt) / 1000)
+      if (now - lastFrameAt >= FRAME_INTERVAL_MS) {
+        lastFrameAt = now
+        render((now - startedAt) / 1000)
+      }
       raf = requestAnimationFrame(loop)
     }
     const play = () => {
-      if (raf || !onScreen || document.hidden) return
+      if (raf || !canPlay()) return
       if (reduceMotion) {
         render(8)
         return
@@ -282,8 +297,19 @@ export default function HeroGlobe({center}: {center: {lat: number; lng: number}}
       raf = 0
     }
 
-    const onVisibility = () => (document.hidden ? stop() : play())
+    const onVisibility = () => (canPlay() ? play() : stop())
     document.addEventListener('visibilitychange', onVisibility)
+
+    const onBlur = () => {
+      focused = false
+      stop()
+    }
+    const onFocus = () => {
+      focused = true
+      play()
+    }
+    window.addEventListener('blur', onBlur)
+    window.addEventListener('focus', onFocus)
 
     const resizeObserver = new ResizeObserver(() => {
       measure()
@@ -306,6 +332,8 @@ export default function HeroGlobe({center}: {center: {lat: number; lng: number}}
     return () => {
       stop()
       document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('blur', onBlur)
+      window.removeEventListener('focus', onFocus)
       resizeObserver.disconnect()
       intersectionObserver.disconnect()
     }
