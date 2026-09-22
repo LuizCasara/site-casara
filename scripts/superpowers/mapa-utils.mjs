@@ -36,7 +36,10 @@ export function rowsForPhase(phase, tsvPath = TSV_PATH) {
   return loadMapaRows(tsvPath).filter((r) => phaseOf(r) === phase);
 }
 
-const DEFAULT_SKIP_DIRS = new Set(['node_modules', '.git', '.next', '.vercel', 'out', 'public']);
+// 'superpowers': scripts/superpowers/ é ferramental descartável desta refatoração (removido no
+// Task 9) — seus arquivos de teste contêm strings de fixture com sintaxe de import fake, que dão
+// falso positivo se escaneadas como código real.
+const DEFAULT_SKIP_DIRS = new Set(['node_modules', '.git', '.next', '.vercel', 'out', 'public', 'superpowers']);
 
 export function listSourceFiles(dir, exts = ['.ts', '.tsx', '.js', '.jsx', '.mjs'], out = [], skipDirs = DEFAULT_SKIP_DIRS) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
