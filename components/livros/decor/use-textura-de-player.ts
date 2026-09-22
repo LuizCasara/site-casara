@@ -3,7 +3,7 @@
 import {useEffect, useMemo, useRef} from 'react';
 import {useFrame} from '@react-three/fiber';
 import * as THREE from 'three';
-import {ESTACAO, tempoCurto} from '@/lib/radio';
+import {ESTACAO, tempoCurto} from '@/lib/livros/sala/radio';
 import {BINS_DO_ESPECTRO, type RadioDaSala} from '@/components/livros/decor/use-radio';
 
 /**

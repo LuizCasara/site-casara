@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import CreditosModelos from '@/components/livros/CreditosModelos';
-import { deriveLivrosMode } from '@/lib/livros-routing.mjs';
+import CreditosModelos from '@/components/livros/sala/CreditosModelos';
+import { deriveLivrosMode } from '@/lib/livros/sala/livros-routing.mjs';
 
 const Footer = () => {
   const pathname = usePathname();

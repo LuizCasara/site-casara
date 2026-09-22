@@ -2,7 +2,7 @@
 
 import {useState} from 'react';
 import {Html, useTexture} from '@react-three/drei';
-import {marcarCoisa} from '@/lib/progresso-da-sala';
+import {marcarCoisa} from '@/lib/livros/segredos/progresso-da-sala';
 import {trackOutboundClick} from '@/lib/global/analytics';
 
 /**

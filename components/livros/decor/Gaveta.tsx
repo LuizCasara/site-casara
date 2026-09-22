@@ -6,7 +6,7 @@ import {useFrame} from '@react-three/fiber';
 import {MathUtils} from 'three';
 import type * as THREE from 'three';
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
-import {deslocamentoDaGaveta, gavetaEmMetros} from '@/lib/gaveta-model.mjs';
+import {deslocamentoDaGaveta, gavetaEmMetros} from '@/lib/livros/sala/gaveta-model.mjs';
 
 /**
  * A gaveta da mesa em L, e o que mora dentro dela: um bloco de notas, uma caneta

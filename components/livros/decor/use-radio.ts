@@ -3,7 +3,7 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {
     ESTACAO, FAIXA_DE_RESERVA, buscarFaixa, proximoPollMs, type FaixaAoVivo,
-} from '@/lib/radio';
+} from '@/lib/livros/sala/radio';
 
 /**
  * O áudio da sala: a rádio ao vivo, a chuva, e o silêncio.

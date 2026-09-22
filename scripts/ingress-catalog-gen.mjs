@@ -14,7 +14,7 @@ import {writeFileSync, readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 import {STAT_COLUMNS} from '../lib/ingress-stats.mjs';
-import {slugify} from '../lib/book-utils.mjs';
+import {slugify} from '../lib/livros/acervo/book-utils.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'data', 'ingress', 'badge-catalog.json');

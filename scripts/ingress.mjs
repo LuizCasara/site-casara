@@ -22,7 +22,7 @@ import {parseAppExport} from '../lib/ingress-stats.mjs';
 import {buildProfile, mergeGdprDump} from '../lib/ingress-profile.mjs';
 import {computeAllBadges, BADGES} from '../lib/ingress-badges.mjs';
 import {loadCatalog, catalogEntry, coreBadges} from '../lib/ingress-catalog.mjs';
-import {slugify} from '../lib/book-utils.mjs';
+import {slugify} from '../lib/livros/acervo/book-utils.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PROFILE_PATH = join(ROOT, 'data', 'ingress', 'fencherlc.json');

@@ -2,8 +2,8 @@
 
 import {Suspense} from 'react';
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
-import {BOOKSHELF_SIZE_M, NICHOS_POR_ESTANTE} from '@/lib/bookshelf-model.mjs';
-import {contarEstantes} from '@/lib/shelf-years.mjs';
+import {BOOKSHELF_SIZE_M, NICHOS_POR_ESTANTE} from '@/lib/livros/sala/bookshelf-model.mjs';
+import {contarEstantes} from '@/lib/livros/sala/shelf-years.mjs';
 
 /**
  * **CONGELADO** — posição, escala, quantidade e divisão em nichos aprovadas pelo

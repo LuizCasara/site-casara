@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {horaFracionaria} from '@/lib/luz-do-dia.mjs';
+import {horaFracionaria} from '@/lib/livros/sala/luz-do-dia.mjs';
 
 /**
  * A hora de quem está vendo, em horas fracionárias, atualizada de minuto em

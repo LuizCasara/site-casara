@@ -2,8 +2,8 @@
 
 import {useEffect, useMemo} from 'react';
 import * as THREE from 'three';
-import {climaDaHora, posicaoDoAstro} from '@/lib/luz-do-dia.mjs';
-import {VIDRO_PROPORCAO} from '@/lib/janela-model.mjs';
+import {climaDaHora, posicaoDoAstro} from '@/lib/livros/sala/luz-do-dia.mjs';
+import {VIDRO_PROPORCAO} from '@/lib/livros/sala/janela-model.mjs';
 
 /**
  * O lado de fora da janela, desenhado num `<canvas>` — quinta tela desenhada

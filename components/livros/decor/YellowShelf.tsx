@@ -6,7 +6,7 @@ import type * as THREE from 'three';
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
 import DeitadoNoTampo from '@/components/livros/decor/DeitadoNoTampo';
 import {useLuzSuave} from '@/components/livros/decor/use-luz-suave';
-import {ALVO_DO_FEIXE, FEIXE, paraLocal, giroParaMirar} from '@/lib/lanterna.mjs';
+import {ALVO_DO_FEIXE, FEIXE, paraLocal, giroParaMirar} from '@/lib/livros/sala/lanterna.mjs';
 
 /**
  * Amarelo deliberadamente abafado, não o saturado de tinta que aparece na foto:

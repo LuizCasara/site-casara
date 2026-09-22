@@ -6,7 +6,7 @@ import type * as THREE from 'three';
 import {useTexturaDeChuva} from '@/components/livros/decor/use-textura-de-chuva';
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
 import Gaveta from '@/components/livros/decor/Gaveta';
-import {GAVETA, gavetaEmMetros} from '@/lib/gaveta-model.mjs';
+import {GAVETA, gavetaEmMetros} from '@/lib/livros/sala/gaveta-model.mjs';
 import ItensDeEstudo from '@/components/livros/decor/ItensDeEstudo';
 import DeitadoNoTampo from '@/components/livros/decor/DeitadoNoTampo';
 import PrateleiraAerea, {posicaoDaCaixaDeSom} from '@/components/livros/decor/PrateleiraAerea';
@@ -14,7 +14,7 @@ import Quadro from '@/components/livros/decor/Quadro';
 import StandDeEspadas from '@/components/livros/decor/StandDeEspadas';
 import {useRadio, NIVEIS_DE_VOLUME} from '@/components/livros/decor/use-radio';
 import {useTexturaDePlayer} from '@/components/livros/decor/use-textura-de-player';
-import {marcarCoisa} from '@/lib/progresso-da-sala';
+import {marcarCoisa} from '@/lib/livros/segredos/progresso-da-sala';
 import {trackRoomObjectClick} from '@/lib/global/analytics';
 
 /**

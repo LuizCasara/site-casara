@@ -4,7 +4,7 @@ import {useState} from 'react';
 import {Html} from '@react-three/drei';
 import {useRouter} from 'next/navigation';
 import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
-import {marcarCoisa} from '@/lib/progresso-da-sala';
+import {marcarCoisa} from '@/lib/livros/segredos/progresso-da-sala';
 import {trackRoomObjectClick} from '@/lib/global/analytics';
 
 /**

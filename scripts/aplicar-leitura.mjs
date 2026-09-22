@@ -22,7 +22,7 @@
 import {readFileSync} from 'node:fs';
 import {createInterface} from 'node:readline/promises';
 import {neon} from '@neondatabase/serverless';
-import {distribuirMeses} from '../lib/reading-dates.mjs';
+import {distribuirMeses} from '../lib/livros/acervo/reading-dates.mjs';
 
 const APLICAR = process.argv.includes('--apply');
 

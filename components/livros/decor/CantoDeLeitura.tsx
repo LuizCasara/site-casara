@@ -2,7 +2,7 @@
 
 import Poltrona, {ALTURA_POLTRONA} from '@/components/livros/decor/Poltrona';
 import MesaDeCentro, {ALTURA_MESA_CENTRO} from '@/components/livros/decor/MesaDeCentro';
-import {bracoEmMetros} from '@/lib/poltrona-model.mjs';
+import {bracoEmMetros} from '@/lib/livros/sala/poltrona-model.mjs';
 
 /**
  * **CONGELADO** — aprovado pelo dono do acervo em 06/08/2026, e vale para as

@@ -20,12 +20,12 @@ import {createInterface} from 'node:readline/promises';
 import {spawnSync} from 'node:child_process';
 import {writeFileSync, readFileSync as lerArquivo, unlinkSync} from 'node:fs';
 import {tmpdir} from 'node:os';
-import {buscarMetadados} from '../lib/book-sources/index.mjs';
-import {buscarComRetentativa} from '../lib/book-sources/openlibrary-search.mjs';
-import {baixarCapa, capaDaAmazon} from '../lib/book-cover.mjs';
-import {slugify, normalizeTag, tagKey} from '../lib/book-utils.mjs';
-import {CATEGORY_IDS} from '../lib/book-categories.mjs';
-import {parseDataDeLeitura} from '../lib/reading-dates.mjs';
+import {buscarMetadados} from '../lib/livros/acervo/book-sources/index.mjs';
+import {buscarComRetentativa} from '../lib/livros/acervo/book-sources/openlibrary-search.mjs';
+import {baixarCapa, capaDaAmazon} from '../lib/livros/acervo/book-cover.mjs';
+import {slugify, normalizeTag, tagKey} from '../lib/livros/acervo/book-utils.mjs';
+import {CATEGORY_IDS} from '../lib/livros/acervo/book-categories.mjs';
+import {parseDataDeLeitura} from '../lib/livros/acervo/reading-dates.mjs';
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
