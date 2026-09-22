@@ -61,6 +61,11 @@ test('resolve sem extensão explícita contra o arquivo .mjs real', () => {
   assert.deepEqual(findBrokenImports(dir), []);
 });
 
+test('ignora next-env.d.ts (gerado pelo Next, referencia .next/types/* que só existe após um build de verdade)', () => {
+  const dir = fixture({ 'next-env.d.ts': 'import "./.next/types/routes.d.ts";\n' });
+  assert.deepEqual(findBrokenImports(dir), []);
+});
+
 test('ignora arquivos dentro de scripts/superpowers/ (ferramental descartável, testes têm fixtures de import fake)', () => {
   const dir = fixture({
     'scripts/superpowers/algo.test.mjs': "test('x', () => { const t = \"import { x } from './nao-existe-de-verdade';\"; });\n",

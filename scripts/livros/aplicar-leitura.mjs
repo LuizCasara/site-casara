@@ -1,16 +1,16 @@
 /**
  * Aplica `pages` (estimadas) e `finished_at` (data de leitura) a partir de
- * scripts/seed/leitura.json.
+ * scripts/livros/seed/leitura.json.
  *
- * Escreve em PRODUÇÃO, igual a scripts/livros.mjs — por isso é dry-run por
+ * Escreve em PRODUÇÃO, igual a scripts/livros/livros.mjs — por isso é dry-run por
  * padrão: sem `--apply` ele só imprime a tabela do que faria. Com `--apply`,
  * mostra a mesma tabela e pede confirmação antes de gravar.
  *
- *   node scripts/aplicar-leitura.mjs            # prévia, não grava nada
- *   node scripts/aplicar-leitura.mjs --apply    # grava, com confirmação
+ *   node scripts/livros/aplicar-leitura.mjs            # prévia, não grava nada
+ *   node scripts/livros/aplicar-leitura.mjs --apply    # grava, com confirmação
  *
  * Casa por TÍTULO e não por slug, pelo mesmo motivo do `seed` em
- * scripts/livros.mjs: o slug gravado pode ter ganhado sufixo em caso de
+ * scripts/livros/livros.mjs: o slug gravado pode ter ganhado sufixo em caso de
  * colisão e nunca mais bater com slugify(title).
  *
  * Idempotente nos dois campos: `pages` só é preenchido onde está NULL (nunca
@@ -22,7 +22,7 @@
 import {readFileSync} from 'node:fs';
 import {createInterface} from 'node:readline/promises';
 import {neon} from '@neondatabase/serverless';
-import {distribuirMeses} from '../lib/livros/acervo/reading-dates.mjs';
+import {distribuirMeses} from '../../lib/livros/acervo/reading-dates.mjs';
 
 const APLICAR = process.argv.includes('--apply');
 
@@ -36,7 +36,7 @@ function abrirBanco() {
     return neon(url);
 }
 
-const dados = JSON.parse(readFileSync('scripts/seed/leitura.json', 'utf8'));
+const dados = JSON.parse(readFileSync('scripts/livros/seed/leitura.json', 'utf8'));
 const sql = abrirBanco();
 
 const doBanco = await sql`SELECT slug, title, pages FROM casara.books`;

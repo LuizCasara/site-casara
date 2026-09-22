@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-// Script one-off: gera `lib/ingress/countries.json` (nomes PT/EN por código ISO
+// Script one-off: gera `lib/ingress/catalog/countries.json` (nomes PT/EN por código ISO
 // 3166-1 alpha-2, via `i18n-iso-countries`) e copia as bandeiras 4x3 correspondentes
 // de `flag-icons` para `public/ingress/flags/<cc>.svg`. Roda uma vez; o resultado é
 // versionado no repo e o site nunca depende dessas duas libs em runtime — mesmo
-// espírito de `scripts/livros.mjs` (devDependency usada só por um script local).
+// espírito de `scripts/livros/livros.mjs` (devDependency usada só por um script local).
 // Re-rodar só se a lista de códigos ISO mudar (raríssimo).
+// Uso: npm run ingress:countries, ou node scripts/ingress/gen-ingress-countries.mjs
 
 import {mkdirSync, copyFileSync, writeFileSync, existsSync, readFileSync} from 'node:fs'
 import {dirname, join} from 'node:path'
@@ -21,8 +22,8 @@ const require = createRequire(import.meta.url)
 countries.registerLocale(JSON.parse(readFileSync(require.resolve('i18n-iso-countries/langs/en.json'), 'utf8')))
 countries.registerLocale(JSON.parse(readFileSync(require.resolve('i18n-iso-countries/langs/pt.json'), 'utf8')))
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const COUNTRIES_JSON = join(ROOT, 'lib/ingress/countries.json')
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..')
+const COUNTRIES_JSON = join(ROOT, 'lib/ingress/catalog/countries.json')
 const FLAGS_SRC_DIR = join(ROOT, 'node_modules/flag-icons/flags/4x3')
 const FLAGS_OUT_DIR = join(ROOT, 'public/ingress/flags')
 

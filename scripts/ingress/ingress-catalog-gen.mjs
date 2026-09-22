@@ -1,22 +1,22 @@
 /**
  * Gera `data/ingress/badge-catalog.json` a partir do ingress.plus (API PocketBase
  * aberta). One-off — roda só na máquina do Luiz, quando o catálogo do jogo mudar.
- * Histórico, como `scripts/migrate-casara.mjs`: o arquivo é versionado e o site
+ * Histórico, como `scripts/global/migrate-casara.mjs`: o arquivo é versionado e o site
  * NÃO depende do ingress.plus em runtime nem em build.
  *
  * Pega as 29 medalhas de contagem cujo `stat_line` casa com uma coluna do export
  * do app. **Preserva as entradas non-core** (evento/anomalia/colecionável) que o
- * `scripts/ingress.mjs badges add` tiver acrescentado. Idempotente.
+ * `scripts/ingress/ingress.mjs badges add` tiver acrescentado. Idempotente.
  *
- * Uso:  node scripts/ingress-catalog-gen.mjs [--apply]
+ * Uso: npm run ingress:catalog -- [--apply], ou node scripts/ingress/ingress-catalog-gen.mjs [--apply]
  */
 import {writeFileSync, readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
-import {STAT_COLUMNS} from '../lib/ingress/stats/ingress-stats.mjs';
-import {slugify} from '../lib/livros/acervo/book-utils.mjs';
+import {STAT_COLUMNS} from '../../lib/ingress/stats/ingress-stats.mjs';
+import {slugify} from '../../lib/livros/acervo/book-utils.mjs';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const OUT = join(ROOT, 'data', 'ingress', 'badge-catalog.json');
 const COLLECTION = 'i37o5ykupb5voix';
 const API = `https://ingress.plus/api/collections/${COLLECTION}/records?perPage=400`;

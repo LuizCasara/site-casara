@@ -12,7 +12,7 @@ import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 import {neon} from '@neondatabase/serverless';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const APPLY = process.argv.includes('--apply');
 
 const url = readFileSync(join(ROOT, '.env.local'), 'utf8')

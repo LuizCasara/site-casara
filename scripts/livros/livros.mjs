@@ -1,10 +1,11 @@
 /**
  * CLI do acervo de livros.
  *
- * Uso:  node scripts/livros.mjs list
- *       node scripts/livros.mjs add <isbn> [--dry-run]
- *       node scripts/livros.mjs edit <slug>
- *       node scripts/livros.mjs seed [--limit N] [--apply] [--incluir-revisar]
+ * Uso: npm run livros -- <comando>, ou node scripts/livros/livros.mjs <comando>
+ *       node scripts/livros/livros.mjs list
+ *       node scripts/livros/livros.mjs add <isbn> [--dry-run]
+ *       node scripts/livros/livros.mjs edit <slug>
+ *       node scripts/livros/livros.mjs seed [--limit N] [--apply] [--incluir-revisar]
  *
  * Roda APENAS na máquina do Luiz. O site não tem rota de admin nem sessão —
  * isso foi requisito explícito: zero superfície de ataque pública.
@@ -20,14 +21,14 @@ import {createInterface} from 'node:readline/promises';
 import {spawnSync} from 'node:child_process';
 import {writeFileSync, readFileSync as lerArquivo, unlinkSync} from 'node:fs';
 import {tmpdir} from 'node:os';
-import {buscarMetadados} from '../lib/livros/acervo/book-sources/index.mjs';
-import {buscarComRetentativa} from '../lib/livros/acervo/book-sources/openlibrary-search.mjs';
-import {baixarCapa, capaDaAmazon} from '../lib/livros/acervo/book-cover.mjs';
-import {slugify, normalizeTag, tagKey} from '../lib/livros/acervo/book-utils.mjs';
-import {CATEGORY_IDS} from '../lib/livros/acervo/book-categories.mjs';
-import {parseDataDeLeitura} from '../lib/livros/acervo/reading-dates.mjs';
+import {buscarMetadados} from '../../lib/livros/acervo/book-sources/index.mjs';
+import {buscarComRetentativa} from '../../lib/livros/acervo/book-sources/openlibrary-search.mjs';
+import {baixarCapa, capaDaAmazon} from '../../lib/livros/acervo/book-cover.mjs';
+import {slugify, normalizeTag, tagKey} from '../../lib/livros/acervo/book-utils.mjs';
+import {CATEGORY_IDS} from '../../lib/livros/acervo/book-categories.mjs';
+import {parseDataDeLeitura} from '../../lib/livros/acervo/reading-dates.mjs';
 
-export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
 
 function abrirBanco() {
     const url = readFileSync(join(ROOT, '.env.local'), 'utf8')
@@ -288,11 +289,11 @@ async function slugLivre(sql, base, ano) {
 const AJUDA = `
 Acervo de livros — luizcasara.com
 
-  node scripts/livros.mjs list
-  node scripts/livros.mjs add <isbn> [--dry-run]
-  node scripts/livros.mjs edit <slug>
-  node scripts/livros.mjs capa <slug> [url] [--dry-run]
-  node scripts/livros.mjs seed [--limit N] [--apply] [--incluir-revisar]
+  node scripts/livros/livros.mjs list
+  node scripts/livros/livros.mjs add <isbn> [--dry-run]
+  node scripts/livros/livros.mjs edit <slug>
+  node scripts/livros/livros.mjs capa <slug> [url] [--dry-run]
+  node scripts/livros/livros.mjs seed [--limit N] [--apply] [--incluir-revisar]
 
 O 'capa' troca a capa de um livro já cadastrado e recalcula a cor da lombada —
 é o conserto para os livros que ficaram com capa placeholder. Sem a url, ele
@@ -317,7 +318,7 @@ async function comandoList(sql) {
         ORDER BY status, title`;
 
     if (!livros.length) {
-        console.log('Acervo vazio. Use: node scripts/livros.mjs add <isbn>');
+        console.log('Acervo vazio. Use: node scripts/livros/livros.mjs add <isbn>');
         return;
     }
 
@@ -335,7 +336,7 @@ async function comandoList(sql) {
 
 async function comandoAdd(sql, isbn, dryRun) {
     if (!isbn) {
-        console.error('Faltou o ISBN. Uso: node scripts/livros.mjs add <isbn>');
+        console.error('Faltou o ISBN. Uso: node scripts/livros/livros.mjs add <isbn>');
         process.exitCode = 1;
         return;
     }
@@ -458,7 +459,7 @@ async function comandoAdd(sql, isbn, dryRun) {
 
 async function comandoEdit(sql, slug) {
     if (!slug) {
-        console.error('Faltou o slug. Uso: node scripts/livros.mjs edit <slug>');
+        console.error('Faltou o slug. Uso: node scripts/livros/livros.mjs edit <slug>');
         process.exitCode = 1;
         return;
     }
@@ -568,7 +569,7 @@ async function comandoEdit(sql, slug) {
  */
 async function comandoCapa(sql, slug, url, dryRun) {
     if (!slug) {
-        console.error('Faltou o slug. Uso: node scripts/livros.mjs capa <slug> [url]');
+        console.error('Faltou o slug. Uso: node scripts/livros/livros.mjs capa <slug> [url]');
         process.exitCode = 1;
         return;
     }
@@ -645,7 +646,7 @@ async function comandoCapa(sql, slug, url, dryRun) {
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function comandoSeed(sql, {limite, apply, incluirRevisar}) {
-    const arquivo = join(ROOT, 'scripts', 'seed', 'acervo.json');
+    const arquivo = join(ROOT, 'scripts', 'livros', 'seed', 'acervo.json');
     const {livros} = JSON.parse(lerArquivo(arquivo, 'utf8'));
 
     // Validação antes de qualquer rede: um valor inválido no arquivo é erro

@@ -117,6 +117,19 @@ Two things worth knowing going in:
   pure logic (scoring, validation, formatting — anything that doesn't touch
   Next or the DB) is unit tested
 - `npm run gen:favicons` — regenerates the favicon set from the source mark
+- `npm run livros -- <cmd>` — book catalog CLI (`list`, `add`, `edit`, `capa`,
+  `seed`); **writes to production**, always asks for confirmation
+- `npm run livros:leitura` — applies estimated `pages`/`finished_at` from
+  `scripts/livros/seed/leitura.json`
+- `npm run ingress -- <cmd>` — Ingress profile CLI
+- `npm run ingress:rescore` — recalculates the ranking score on the log₂
+  scale (ADR-0005)
+- `npm run ingress:catalog` — regenerates the badge catalog from ingress.plus
+- `npm run ingress:countries` — regenerates the country names/flags data
+- `npm run ingress:icons` — regenerates the Ingress PWA icon set
+
+`migrate-casara`, `migrate-status-livros` and `create-books-table` are
+historical one-time migrations — not re-run, so no npm shortcut.
 
 ## 📂 Project Structure
 
@@ -125,7 +138,7 @@ tree here goes stale within a week on a project this active. At a glance:
 
 - `app/` — routes (pages + `app/api/**` route handlers)
 - `apps/<category>/<slug>.tsx` — the utility mini-apps, dynamically loaded by
-  `app/app/[app_name]/page.tsx`
+  `app/(apps)/app/[app_name]/page.tsx`
 - `components/` — shared UI, grouped by feature area (`components/livros/`,
   `components/ingress/`, ...)
 - `lib/` — server-side logic and pure `.mjs` modules (kept dependency-free

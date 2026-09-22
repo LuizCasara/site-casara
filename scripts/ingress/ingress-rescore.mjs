@@ -4,11 +4,13 @@
  * `casara.ingress_ranking_history`). ESCREVE EM PRODUÇÃO: por isso tem 4 modos,
  * e só um deles escreve sem antes exigir backup.
  *
- *   node scripts/ingress-rescore.mjs                      dry-run (padrão): mostra o que mudaria, não grava nada
- *   node scripts/ingress-rescore.mjs --backup <tag>       cria as tabelas de backup + dump JSON e VERIFICA a cópia
- *   node scripts/ingress-rescore.mjs --apply <tag>        recalcula (transação única) — exige o backup <tag> íntegro
- *   node scripts/ingress-rescore.mjs --rollback <tag>     mostra o que o rollback restauraria (dry-run)
- *   node scripts/ingress-rescore.mjs --rollback <tag> --apply   restaura a nota do backup <tag>
+ * Atalho: npm run ingress:rescore -- <flags>
+ *
+ *   node scripts/ingress/ingress-rescore.mjs                      dry-run (padrão): mostra o que mudaria, não grava nada
+ *   node scripts/ingress/ingress-rescore.mjs --backup <tag>       cria as tabelas de backup + dump JSON e VERIFICA a cópia
+ *   node scripts/ingress/ingress-rescore.mjs --apply <tag>        recalcula (transação única) — exige o backup <tag> íntegro
+ *   node scripts/ingress/ingress-rescore.mjs --rollback <tag>     mostra o que o rollback restauraria (dry-run)
+ *   node scripts/ingress/ingress-rescore.mjs --rollback <tag> --apply   restaura a nota do backup <tag>
  *
  * `<tag>`: identificador do backup, `[a-z0-9_]{1,40}` (ex.: pre_log2_20260918).
  *
@@ -27,10 +29,10 @@ import {readFileSync, writeFileSync, mkdirSync} from 'node:fs'
 import {fileURLToPath} from 'node:url'
 import {dirname, join} from 'node:path'
 import {neon} from '@neondatabase/serverless'
-import {computeAxisScores, computeOverallScore} from '../lib/ingress/stats/ingress-tier-score.mjs'
-import {planRescore} from '../lib/ingress/ranking/ingress-rescore.mjs'
+import {computeAxisScores, computeOverallScore} from '../../lib/ingress/stats/ingress-tier-score.mjs'
+import {planRescore} from '../../lib/ingress/ranking/ingress-rescore.mjs'
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const args = process.argv.slice(2)
 
 function flagValue(name) {

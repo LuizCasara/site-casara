@@ -24,7 +24,7 @@ import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-const raiz = join(dirname(fileURLToPath(import.meta.url)), "..");
+const raiz = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
 const CONTAINER = "#0a0a0a";
 const GLIFO = "#22c55e";

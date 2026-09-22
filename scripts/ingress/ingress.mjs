@@ -1,14 +1,15 @@
 /**
  * CLI do perfil de Ingress.
  *
- * Uso:  node scripts/ingress.mjs show
- *       node scripts/ingress.mjs build <export.tsv> [--apply]
- *       node scripts/ingress.mjs gdpr  <pasta-do-dump> [--apply]
- *       node scripts/ingress.mjs medals [--fetch]
- *       node scripts/ingress.mjs badges list
- *       node scripts/ingress.mjs badges add <slug> [count=N] [tier=T] [<tier>=YYYY-MM-DD ...] [--apply]
- *       node scripts/ingress.mjs badges rm <slug> [--apply]
- *       node scripts/ingress.mjs badges medaldate <slug> <tier> <YYYY-MM-DD> [--apply]
+ * Uso: npm run ingress -- <comando>, ou node scripts/ingress/ingress.mjs <comando>
+ *       node scripts/ingress/ingress.mjs show
+ *       node scripts/ingress/ingress.mjs build <export.tsv> [--apply]
+ *       node scripts/ingress/ingress.mjs gdpr  <pasta-do-dump> [--apply]
+ *       node scripts/ingress/ingress.mjs medals [--fetch]
+ *       node scripts/ingress/ingress.mjs badges list
+ *       node scripts/ingress/ingress.mjs badges add <slug> [count=N] [tier=T] [<tier>=YYYY-MM-DD ...] [--apply]
+ *       node scripts/ingress/ingress.mjs badges rm <slug> [--apply]
+ *       node scripts/ingress/ingress.mjs badges medaldate <slug> <tier> <YYYY-MM-DD> [--apply]
  *
  * Roda APENAS na máquina do Luiz. NÃO toca em banco — a fonte de dados da rota
  * /ingress é o arquivo versionado `data/ingress/fencherlc.json` (ver AD-001).
@@ -18,13 +19,13 @@ import {readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync} from 'n
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 import {createInterface} from 'node:readline/promises';
-import {parseAppExport} from '../lib/ingress/stats/ingress-stats.mjs';
-import {buildProfile, mergeGdprDump} from '../lib/ingress/profile/ingress-profile.mjs';
-import {computeAllBadges, BADGES} from '../lib/ingress/catalog/ingress-badges.mjs';
-import {loadCatalog, catalogEntry, coreBadges} from '../lib/ingress/catalog/ingress-catalog.mjs';
-import {slugify} from '../lib/livros/acervo/book-utils.mjs';
+import {parseAppExport} from '../../lib/ingress/stats/ingress-stats.mjs';
+import {buildProfile, mergeGdprDump} from '../../lib/ingress/profile/ingress-profile.mjs';
+import {computeAllBadges, BADGES} from '../../lib/ingress/catalog/ingress-badges.mjs';
+import {loadCatalog, catalogEntry, coreBadges} from '../../lib/ingress/catalog/ingress-catalog.mjs';
+import {slugify} from '../../lib/livros/acervo/book-utils.mjs';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const PROFILE_PATH = join(ROOT, 'data', 'ingress', 'fencherlc.json');
 const CATALOG_PATH = join(ROOT, 'data', 'ingress', 'badge-catalog.json');
 const MEDALS_DIR = join(ROOT, 'public', 'ingress', 'medals');

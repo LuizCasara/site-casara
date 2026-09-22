@@ -1,6 +1,7 @@
 // Gera os ícones do PWA isolado de /ingress a partir da medalha oficial
 // "Simulacrum" (public/ingress/medals/simulacrum.png, 128x128). Rodar de novo
 // só é necessário se a arte-fonte mudar — os PNGs gerados são versionados.
+// Uso: npm run ingress:icons, ou node scripts/ingress/generate-ingress-pwa-icons.mjs
 import sharp from 'sharp'
 import {mkdir, writeFile} from 'node:fs/promises'
 
