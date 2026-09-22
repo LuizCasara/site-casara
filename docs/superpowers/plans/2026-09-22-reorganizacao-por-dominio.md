@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node.js (`node:fs`, `node:path`, `node:child_process`, `node:url`), `node --test` para os testes das ferramentas, TypeScript (`tsc --noEmit`), ESLint, Next.js 16 build, `npx playwright` (via subprocesso, nunca `require`) + `pixelmatch`/`pngjs` (já presentes em `node_modules`) para o snapshot visual.
 
-**Spec:** [`docs/superpowers/specs/2026-09-21-reorganizacao-por-dominio-design.md`](../specs/2026-09-21-reorganizacao-por-dominio-design.md) + [`2026-09-21-reorganizacao-por-dominio-mapa.tsv`](../specs/2026-09-21-reorganizacao-por-dominio-mapa.tsv) (318 linhas de dados, fonte única do que move). Este plano só sequencia e ferramentaliza a execução; qualquer dúvida sobre "por quê" de uma decisão está no spec, não aqui.
+**Spec:** [`docs/superpowers/specs/2026-09-21-reorganizacao-por-dominio-design.md`](../specs/2026-09-21-reorganizacao-por-dominio-design.md) + [`2026-09-21-reorganizacao-por-dominio-mapa.tsv`](../specs/2026-09-21-reorganizacao-por-dominio-mapa.tsv) (312 linhas de dados — eram 318, 6 arquivos `opengraph-image.tsx` dinâmicos foram removidos do mapa durante a execução, ver seção 5.1 do spec — fonte única do que move). Este plano só sequencia e ferramentaliza a execução; qualquer dúvida sobre "por quê" de uma decisão está no spec, não aqui.
 
 ## Global Constraints
 
@@ -25,7 +25,7 @@
 
 ## Task 0.1: `mapa-utils.mjs` — leitura do TSV e regra de fase
 
-O TSV tem uma coluna `dominio`, mas domínio sozinho não basta para saber em que fase (1–9) um arquivo move: `global` se espalha pelas fases 1 (lib/components), 6 (rotas) e 7 (docs/scripts); o mesmo vale para `apps`/`livros`/`ingress` (fase própria + fase 7 para docs/scripts). A regra exata, validada contra as 318 linhas do TSV (soma bate: 33+35+103+105+18+24 = 318, igual à seção 11 do spec):
+O TSV tem uma coluna `dominio`, mas domínio sozinho não basta para saber em que fase (1–9) um arquivo move: `global` se espalha pelas fases 1 (lib/components), 6 (rotas) e 7 (docs/scripts); o mesmo vale para `apps`/`livros`/`ingress` (fase própria + fase 7 para docs/scripts). A regra exata, validada contra as 312 linhas do TSV (soma bate: 33+34+103+101+17+24 = 312 — eram 318/35/105/18 antes de 6 `opengraph-image.tsx` dinâmicos serem removidos do mapa durante a execução, ver seção 5.1 do spec):
 
 ```
 docs/ ou scripts/          → fase 7
@@ -973,7 +973,7 @@ git commit -m "refactor(global): mover db/, lib/global/ e components/global/ par
 
 ## Task 2: Fase 2 do spec — `apps`
 
-35 linhas: rotas `app/(app|q|w)/**` → `app/(apps)/**`, `lib/{quiz,sorteio,word-cloud,session-ids}.ts` → `lib/apps/`, `utils/{pdf-generator,love-language-pdf-generator}.tsx` → `lib/apps/pdf/`, `components/{AppFooter,Quiz*,Word*}` → `components/apps/`.
+34 linhas (eram 35 — `app/app/[app_name]/opengraph-image.tsx` fica fora do grupo, ver seção 5.1 do spec): rotas `app/(app|q|w)/**` → `app/(apps)/**`, `lib/{quiz,sorteio,word-cloud,session-ids}.ts` → `lib/apps/`, `utils/{pdf-generator,love-language-pdf-generator}.tsx` → `lib/apps/pdf/`, `components/{AppFooter,Quiz*,Word*}` → `components/apps/`.
 
 **Files:**
 - Modify: todos os 35 caminhos das linhas de fase 2 do TSV
@@ -1150,10 +1150,10 @@ git commit -m "refactor(livros): mover lib/livros/, components/livros/ e as rota
 
 ## Task 5: Fase 5 do spec — `ingress`
 
-105 linhas: `lib/ingress/{catalog,stats,ranking,profile,map}/` + raiz (`ingress-format.mjs`, `ingress-lang.mjs`), `components/ingress/{hero,map,medals,profile,shell}/`, rotas `app/(ingress)/**`. Inclui `components/MotionProvider.tsx` → `components/ingress/shell/MotionProvider.tsx`.
+101 linhas (eram 105 — os 4 `opengraph-image.tsx` de `/ingress/fencherlc`, `/ingress/fencherlc/linha-do-tempo`, `/ingress/fencherlc/medalha/[slug]` e `/ingress/ranking` ficam fora do grupo `(ingress)`, ver seção 5.1 do spec: entrar no route group troca a URL pública por um sufixo de hash): `lib/ingress/{catalog,stats,ranking,profile,map}/` + raiz (`ingress-format.mjs`, `ingress-lang.mjs`), `components/ingress/{hero,map,medals,profile,shell}/`, rotas `app/(ingress)/**`. Inclui `components/MotionProvider.tsx` → `components/ingress/shell/MotionProvider.tsx`.
 
 **Files:**
-- Modify: todos os 105 caminhos das linhas de fase 5 do TSV
+- Modify: todos os 101 caminhos das linhas de fase 5 do TSV
 
 **Interfaces:**
 - Consumes: mesmas três ferramentas do Task 1
@@ -1188,6 +1188,17 @@ node scripts/superpowers/fix-imports.mjs --phase 5
 grep -rn "process\.cwd()\|import\.meta\.url\|readFileSync(\|join(" lib/ingress components/ingress "app/(ingress)"
 ```
 
+- [ ] **Step 5.1: Confirmar que os 4 `opengraph-image.tsx` de ingress continuam fora de `(ingress)` e sem sufixo de hash na URL**
+
+```bash
+find app -path "*ingress*opengraph-image.tsx"
+```
+
+Os 4 devem aparecer em `app/ingress/...` (sem `(ingress)` no caminho): `app/ingress/fencherlc/opengraph-image.tsx`,
+`app/ingress/fencherlc/linha-do-tempo/opengraph-image.tsx`,
+`app/ingress/fencherlc/medalha/[slug]/opengraph-image.tsx`, `app/ingress/ranking/opengraph-image.tsx`. O
+Step 6 (build) confirma que a URL de cada rota continua sem sufixo, comparando com o baseline.
+
 - [ ] **Step 6: Gate de verificação**
 
 ```bash
@@ -1210,10 +1221,10 @@ git commit -m "refactor(ingress): mover lib/ingress/, components/ingress/ e as r
 
 ## Task 6: Fase 6 do spec — rotas `(global)` + `app/` raiz
 
-18 linhas: `app/{about,api/events,api/metrics/*,api/send-email,api/telegram/*,casamento/*,page.tsx,projects/*,stats/page.tsx}` → `app/(global)/**`. `app/layout.tsx`, `globals.css`, `favicon.ico`, `robots.ts`, `sitemap.ts`, `opengraph-image.tsx` **ficam na raiz de `app/`** (seção 4 do spec) — não estão no TSV, não movem.
+17 linhas (eram 18 — `app/casamento/opengraph-image.tsx` fica fora do grupo `(global)`, ver seção 5.1 do spec): `app/{about,api/events,api/metrics/*,api/send-email,api/telegram/*,casamento/*,page.tsx,projects/*,stats/page.tsx}` → `app/(global)/**`. `app/layout.tsx`, `globals.css`, `favicon.ico`, `robots.ts`, `sitemap.ts`, `opengraph-image.tsx` **ficam na raiz de `app/`** (seção 4 do spec) — não estão no TSV, não movem.
 
 **Files:**
-- Modify: todos os 18 caminhos das linhas de fase 6 do TSV
+- Modify: todos os 17 caminhos das linhas de fase 6 do TSV
 
 **Interfaces:**
 - Consumes: mesmas três ferramentas do Task 1

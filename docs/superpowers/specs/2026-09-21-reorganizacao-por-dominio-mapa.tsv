@@ -10,7 +10,6 @@ app/api/word-sessions/[id]/results/route.ts	app/(apps)/api/word-sessions/[id]/re
 app/api/word-sessions/[id]/route.ts	app/(apps)/api/word-sessions/[id]/route.ts	apps
 app/api/word-sessions/route.ts	app/(apps)/api/word-sessions/route.ts	apps
 app/app/[app_name]/layout.tsx	app/(apps)/app/[app_name]/layout.tsx	apps
-app/app/[app_name]/opengraph-image.tsx	app/(apps)/app/[app_name]/opengraph-image.tsx	apps
 app/app/[app_name]/page.tsx	app/(apps)/app/[app_name]/page.tsx	apps
 app/app/layout.tsx	app/(apps)/app/layout.tsx	apps
 app/app/page.tsx	app/(apps)/app/page.tsx	apps
@@ -34,7 +33,6 @@ app/api/telegram/route.js	app/(global)/api/telegram/route.js	global
 app/api/telegram/utils.js	app/(global)/api/telegram/utils.js	global
 app/casamento/icon.svg	app/(global)/casamento/icon.svg	global
 app/casamento/layout.tsx	app/(global)/casamento/layout.tsx	global
-app/casamento/opengraph-image.tsx	app/(global)/casamento/opengraph-image.tsx	global
 app/casamento/page.tsx	app/(global)/casamento/page.tsx	global
 app/page.tsx	app/(global)/page.tsx	global
 app/projects/metadata.tsx	app/(global)/projects/metadata.tsx	global
@@ -47,16 +45,12 @@ app/api/ingress-rankings/agents/route.ts	app/(ingress)/api/ingress-rankings/agen
 app/api/ingress-rankings/compare/route.ts	app/(ingress)/api/ingress-rankings/compare/route.ts	ingress
 app/api/ingress-rankings/route.ts	app/(ingress)/api/ingress-rankings/route.ts	ingress
 app/ingress/fencherlc/layout.tsx	app/(ingress)/ingress/fencherlc/layout.tsx	ingress
-app/ingress/fencherlc/linha-do-tempo/opengraph-image.tsx	app/(ingress)/ingress/fencherlc/linha-do-tempo/opengraph-image.tsx	ingress
 app/ingress/fencherlc/linha-do-tempo/page.tsx	app/(ingress)/ingress/fencherlc/linha-do-tempo/page.tsx	ingress
-app/ingress/fencherlc/medalha/[slug]/opengraph-image.tsx	app/(ingress)/ingress/fencherlc/medalha/[slug]/opengraph-image.tsx	ingress
 app/ingress/fencherlc/medalha/[slug]/page.tsx	app/(ingress)/ingress/fencherlc/medalha/[slug]/page.tsx	ingress
-app/ingress/fencherlc/opengraph-image.tsx	app/(ingress)/ingress/fencherlc/opengraph-image.tsx	ingress
 app/ingress/fencherlc/page.tsx	app/(ingress)/ingress/fencherlc/page.tsx	ingress
 app/ingress/layout.tsx	app/(ingress)/ingress/layout.tsx	ingress
 app/ingress/manifest.webmanifest/route.ts	app/(ingress)/ingress/manifest.webmanifest/route.ts	ingress
 app/ingress/page.tsx	app/(ingress)/ingress/page.tsx	ingress
-app/ingress/ranking/opengraph-image.tsx	app/(ingress)/ingress/ranking/opengraph-image.tsx	ingress
 app/ingress/ranking/page.tsx	app/(ingress)/ingress/ranking/page.tsx	ingress
 app/ingress/theme.css	app/(ingress)/ingress/theme.css	ingress
 app/api/caderno/route.ts	app/(livros)/api/caderno/route.ts	livros
