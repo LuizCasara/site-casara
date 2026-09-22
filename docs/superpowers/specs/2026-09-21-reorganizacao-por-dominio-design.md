@@ -73,8 +73,8 @@ db/                  schema.sql, migrations/, seed-temperament.sql   (saem de li
 Testes (`*.test.mjs`) ficam ao lado do módulo; o glob `lib/**/*.test.mjs` do `npm test` já é recursivo.
 
 **Mapeamento completo:** [`2026-09-21-reorganizacao-por-dominio-mapa.tsv`](./2026-09-21-reorganizacao-por-dominio-mapa.tsv)
-(antigo → novo → domínio, 312 linhas — eram 318, ver seção 5.1). O TSV é a fonte do script de mover.
-**1067 arquivos rastreados: 312 movem, 755 ficam.**
+(antigo → novo → domínio, 311 linhas — eram 318, ver seção 5.1). O TSV é a fonte do script de mover.
+**1067 arquivos rastreados: 311 movem, 756 ficam.**
 
 ## 5. O que NÃO muda (e por quê)
 
@@ -87,31 +87,38 @@ Testes (`*.test.mjs`) ficam ao lado do módulo; o glob `lib/**/*.test.mjs` do `n
 - **`.specs/`, `.superpowers/`, `docs/adr/`** — registro histórico: mantêm os caminhos da época.
   Atualizo caminhos só em CLAUDE.md, README.md, `docs/<domínio>/` e comentários do código.
 
-### 5.1 Descoberto durante a execução: `opengraph-image.tsx` dinâmico não pode entrar no route group
+### 5.1 Descoberto durante a execução: arquivo de convenção especial não pode entrar no route group
 
-**6 arquivos removidos do TSV depois de já commitados como parte da fase 1/2** (achado ao rodar a
-fase 2 de verdade, 2026-09-22): `app/app/[app_name]/opengraph-image.tsx`,
-`app/casamento/opengraph-image.tsx`, `app/ingress/fencherlc/opengraph-image.tsx`,
+**7 arquivos removidos do TSV depois de já commitados como parte das fases 1/2/6** (achado ao rodar a
+fase 2 de verdade, 2026-09-22, e de novo na fase 6): `app/app/[app_name]/opengraph-image.tsx`,
+`app/casamento/opengraph-image.tsx`, `app/casamento/icon.svg`, `app/ingress/fencherlc/opengraph-image.tsx`,
 `app/ingress/fencherlc/linha-do-tempo/opengraph-image.tsx`,
 `app/ingress/fencherlc/medalha/[slug]/opengraph-image.tsx`, `app/ingress/ranking/opengraph-image.tsx`.
 
-O Next 16 adiciona um sufixo de hash de 6 caracteres à URL pública de qualquer arquivo de metadata
-**gerado dinamicamente** (`opengraph-image.tsx`/`twitter-image.tsx`, não `icon.svg` estático) que
-tenha **qualquer** route group `(...)` na cadeia de pastas ancestrais — mesmo sem colisão real
-nenhuma acontecendo, como precaução genérica (`node_modules/next/dist/lib/metadata/get-metadata-route.js`,
-função `getMetadataRouteSuffix`, comentário: *"If there's special convention like (...) or @ in the
-page path, Give it a unique hash suffix to avoid conflicts"*). Confirmado ao vivo: mover
-`app/app/[app_name]/opengraph-image.tsx` para `app/(apps)/app/[app_name]/opengraph-image.tsx` trocou
-a URL servida de `/app/[app_name]/opengraph-image` para `/app/[app_name]/opengraph-image-spti35` —
-uma mudança de URL real, violando a regra central da seção 1 ("nenhuma URL muda"), e grave porque são
-imagens de preview social (WhatsApp/Telegram/X cacheiam a URL do OG image).
+O Next 16 adiciona um sufixo de hash de 6 caracteres à URL pública de **qualquer** arquivo de
+convenção especial de metadata — tanto os gerados dinamicamente (`opengraph-image.tsx`,
+`twitter-image.tsx`) quanto os **estáticos** (`icon.svg`, confirmado ao vivo na fase 6: não é só
+`.tsx`, a suposição inicial de que arquivo estático escapava dessa lógica estava errada) — que tenha
+**qualquer** route group `(...)` na cadeia de pastas ancestrais, mesmo sem colisão real nenhuma
+acontecendo, como precaução genérica
+(`node_modules/next/dist/lib/metadata/get-metadata-route.js`, função `getMetadataRouteSuffix`,
+comentário: *"If there's special convention like (...) or @ in the page path, Give it a unique hash
+suffix to avoid conflicts"*). Confirmado ao vivo duas vezes: `opengraph-image.tsx` de `[app_name]`
+virou `/app/[app_name]/opengraph-image-spti35`; `casamento/icon.svg` virou
+`/casamento/icon-xjqhts.svg`. Mudança de URL real, violando a regra central da seção 1 ("nenhuma URL
+muda"), e grave porque `opengraph-image` é imagem de preview social (WhatsApp/Telegram/X cacheiam a
+URL) e `icon.svg` é o favicon servido pelo navegador/PWA.
 
-**Decisão do Luiz:** esses 6 arquivos ficam nos seus caminhos atuais (fora de qualquer route group),
+**Decisão do Luiz:** esses 7 arquivos ficam nos seus caminhos atuais (fora de qualquer route group),
 mesmo com o `page.tsx`/`layout.tsx` do mesmo segmento de URL já morando dentro do grupo do domínio —
 confirmado ao vivo que o Next resolve os dois fisicamente separados (uma árvore agrupada, outra não)
 para a mesma URL final sem problema, é um uso documentado de route groups. `app/opengraph-image.tsx`
-da raiz já não movia (fica em `app/` por definição, seção 4); `casamento/icon.svg` é estático, não
-passa por essa lógica, não é afetado.
+e `app/favicon.ico` da raiz já não moviam (ficam em `app/` por definição, seção 4).
+
+**Lição para o resto da execução:** qualquer arquivo de convenção especial do Next (`opengraph-image`,
+`twitter-image`, `icon`, `apple-icon`, `manifest` — exceto `robots`/`manifest` na raiz literal, que o
+próprio Next isenta) precisa ser checado contra este mesmo problema antes de entrar num route group,
+estático ou não.
 
 ## 6. Exceções de dependência (medidas com o mapa aplicado, 799 imports analisados)
 

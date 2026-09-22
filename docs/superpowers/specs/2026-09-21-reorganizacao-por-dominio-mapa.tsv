@@ -31,7 +31,6 @@ app/api/send-email/route.js	app/(global)/api/send-email/route.js	global
 app/api/telegram/ingress-radar.jsx	app/(global)/api/telegram/ingress-radar.jsx	global
 app/api/telegram/route.js	app/(global)/api/telegram/route.js	global
 app/api/telegram/utils.js	app/(global)/api/telegram/utils.js	global
-app/casamento/icon.svg	app/(global)/casamento/icon.svg	global
 app/casamento/layout.tsx	app/(global)/casamento/layout.tsx	global
 app/casamento/page.tsx	app/(global)/casamento/page.tsx	global
 app/page.tsx	app/(global)/page.tsx	global

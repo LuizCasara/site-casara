@@ -25,7 +25,7 @@
 
 ## Task 0.1: `mapa-utils.mjs` — leitura do TSV e regra de fase
 
-O TSV tem uma coluna `dominio`, mas domínio sozinho não basta para saber em que fase (1–9) um arquivo move: `global` se espalha pelas fases 1 (lib/components), 6 (rotas) e 7 (docs/scripts); o mesmo vale para `apps`/`livros`/`ingress` (fase própria + fase 7 para docs/scripts). A regra exata, validada contra as 312 linhas do TSV (soma bate: 33+34+103+101+17+24 = 312 — eram 318/35/105/18 antes de 6 `opengraph-image.tsx` dinâmicos serem removidos do mapa durante a execução, ver seção 5.1 do spec):
+O TSV tem uma coluna `dominio`, mas domínio sozinho não basta para saber em que fase (1–9) um arquivo move: `global` se espalha pelas fases 1 (lib/components), 6 (rotas) e 7 (docs/scripts); o mesmo vale para `apps`/`livros`/`ingress` (fase própria + fase 7 para docs/scripts). A regra exata, validada contra as 311 linhas do TSV (soma bate: 33+34+103+101+16+24 = 311 — eram 318/35/105/18 antes de 7 arquivos de convenção especial serem removidos do mapa durante a execução, ver seção 5.1 do spec):
 
 ```
 docs/ ou scripts/          → fase 7
@@ -1221,10 +1221,10 @@ git commit -m "refactor(ingress): mover lib/ingress/, components/ingress/ e as r
 
 ## Task 6: Fase 6 do spec — rotas `(global)` + `app/` raiz
 
-17 linhas (eram 18 — `app/casamento/opengraph-image.tsx` fica fora do grupo `(global)`, ver seção 5.1 do spec): `app/{about,api/events,api/metrics/*,api/send-email,api/telegram/*,casamento/*,page.tsx,projects/*,stats/page.tsx}` → `app/(global)/**`. `app/layout.tsx`, `globals.css`, `favicon.ico`, `robots.ts`, `sitemap.ts`, `opengraph-image.tsx` **ficam na raiz de `app/`** (seção 4 do spec) — não estão no TSV, não movem.
+16 linhas (eram 18 — `app/casamento/opengraph-image.tsx` e `app/casamento/icon.svg` ficam fora do grupo `(global)`, ver seção 5.1 do spec: o sufixo de hash atinge convenção especial estática também, não só `.tsx` dinâmico): `app/{about,api/events,api/metrics/*,api/send-email,api/telegram/*,casamento/*,page.tsx,projects/*,stats/page.tsx}` → `app/(global)/**`. `app/layout.tsx`, `globals.css`, `favicon.ico`, `robots.ts`, `sitemap.ts`, `opengraph-image.tsx` **ficam na raiz de `app/`** (seção 4 do spec) — não estão no TSV, não movem.
 
 **Files:**
-- Modify: todos os 17 caminhos das linhas de fase 6 do TSV
+- Modify: todos os 16 caminhos das linhas de fase 6 do TSV
 
 **Interfaces:**
 - Consumes: mesmas três ferramentas do Task 1
