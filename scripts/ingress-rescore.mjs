@@ -27,8 +27,8 @@ import {readFileSync, writeFileSync, mkdirSync} from 'node:fs'
 import {fileURLToPath} from 'node:url'
 import {dirname, join} from 'node:path'
 import {neon} from '@neondatabase/serverless'
-import {computeAxisScores, computeOverallScore} from '../lib/ingress-tier-score.mjs'
-import {planRescore} from '../lib/ingress-rescore.mjs'
+import {computeAxisScores, computeOverallScore} from '../lib/ingress/stats/ingress-tier-score.mjs'
+import {planRescore} from '../lib/ingress/ranking/ingress-rescore.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const args = process.argv.slice(2)

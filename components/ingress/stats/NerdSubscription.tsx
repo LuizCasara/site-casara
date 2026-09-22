@@ -1,5 +1,5 @@
-import {artPath} from '@/lib/ingress-art.mjs'
-import {buildSubscriptionSections} from '@/lib/ingress-nerd-records.mjs'
+import {artPath} from '@/lib/ingress/catalog/ingress-art.mjs'
+import {buildSubscriptionSections} from '@/lib/ingress/stats/ingress-nerd-records.mjs'
 import NerdRecords from './NerdRecords'
 import type {RecordSection} from './NerdRecordParts'
 import type {HallOfFameRecord} from './NerdHallOfFame'

@@ -1,4 +1,4 @@
-import {groupByHolder} from '@/lib/ingress-nerd-records.mjs'
+import {groupByHolder} from '@/lib/ingress/stats/ingress-nerd-records.mjs'
 import NerdAgentTag from './NerdAgentTag'
 import {
   OnyxMultiple,

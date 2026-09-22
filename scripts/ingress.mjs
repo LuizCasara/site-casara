@@ -18,10 +18,10 @@ import {readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync} from 'n
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 import {createInterface} from 'node:readline/promises';
-import {parseAppExport} from '../lib/ingress-stats.mjs';
-import {buildProfile, mergeGdprDump} from '../lib/ingress-profile.mjs';
-import {computeAllBadges, BADGES} from '../lib/ingress-badges.mjs';
-import {loadCatalog, catalogEntry, coreBadges} from '../lib/ingress-catalog.mjs';
+import {parseAppExport} from '../lib/ingress/stats/ingress-stats.mjs';
+import {buildProfile, mergeGdprDump} from '../lib/ingress/profile/ingress-profile.mjs';
+import {computeAllBadges, BADGES} from '../lib/ingress/catalog/ingress-badges.mjs';
+import {loadCatalog, catalogEntry, coreBadges} from '../lib/ingress/catalog/ingress-catalog.mjs';
 import {slugify} from '../lib/livros/acervo/book-utils.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');

@@ -1,7 +1,7 @@
 import {ImageResponse} from 'next/og'
-import {loadProfile} from '@/lib/ingress'
-import {loadCatalog} from '@/lib/ingress-catalog.mjs'
-import {collectAcquisitions} from '@/lib/ingress-timeline.mjs'
+import {loadProfile} from '@/lib/ingress/profile/ingress'
+import {loadCatalog} from '@/lib/ingress/catalog/ingress-catalog.mjs'
+import {collectAcquisitions} from '@/lib/ingress/profile/ingress-timeline.mjs'
 
 export const runtime = 'nodejs'
 export const size = {width: 1200, height: 630}

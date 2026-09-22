@@ -1,6 +1,6 @@
-import {artPath} from '@/lib/ingress-art.mjs'
-import {fmtStat} from '@/lib/ingress-format.mjs'
-import CountUp from '../CountUp'
+import {artPath} from '@/lib/ingress/catalog/ingress-art.mjs'
+import {fmtStat} from '@/lib/ingress/ingress-format.mjs'
+import CountUp from '../hero/CountUp'
 
 /**
  * Peças compartilhadas pelas três visões dos recordes (Resumo, Cards, Agentes).

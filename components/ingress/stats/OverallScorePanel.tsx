@@ -1,10 +1,10 @@
 'use client'
 
-import Panel from '../Panel'
-import {tierLabel} from '@/lib/ingress-tiers.mjs'
-import {RADAR_AXES} from '@/lib/ingress-radar.mjs'
-import {flagSrc} from '@/lib/ingress-countries.mjs'
-import {fmtStat} from '@/lib/ingress-format.mjs'
+import Panel from '../shell/Panel'
+import {tierLabel} from '@/lib/ingress/catalog/ingress-tiers.mjs'
+import {RADAR_AXES} from '@/lib/ingress/stats/ingress-radar.mjs'
+import {flagSrc} from '@/lib/ingress/catalog/ingress-countries.mjs'
+import {fmtStat} from '@/lib/ingress/ingress-format.mjs'
 import {useLang} from '@/components/global/LanguageContext'
 
 /**

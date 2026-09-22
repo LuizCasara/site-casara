@@ -1,6 +1,6 @@
 'use client'
 
-import Panel from '../Panel'
+import Panel from '../shell/Panel'
 import {useLang} from '@/components/global/LanguageContext'
 import NerdStatTiles, {type TierCounts} from './NerdStatTiles'
 import NerdFactionCompare, {type FactionStats} from './NerdFactionCompare'

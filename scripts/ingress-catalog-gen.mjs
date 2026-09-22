@@ -13,7 +13,7 @@
 import {writeFileSync, readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
-import {STAT_COLUMNS} from '../lib/ingress-stats.mjs';
+import {STAT_COLUMNS} from '../lib/ingress/stats/ingress-stats.mjs';
 import {slugify} from '../lib/livros/acervo/book-utils.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');

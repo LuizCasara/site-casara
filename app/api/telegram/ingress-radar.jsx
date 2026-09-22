@@ -1,5 +1,5 @@
 import {ImageResponse} from 'next/og'
-import {computeRadarAxes} from '@/lib/ingress-radar.mjs'
+import {computeRadarAxes} from '@/lib/ingress/stats/ingress-radar.mjs'
 
 const W = 620
 const H = 560

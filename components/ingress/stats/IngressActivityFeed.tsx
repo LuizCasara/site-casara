@@ -1,9 +1,9 @@
 'use client'
 
 import {useEffect, useMemo, useRef, useState, type CSSProperties} from 'react'
-import Panel from '../Panel'
-import {fmtScoreDecimal, fmtStat} from '@/lib/ingress-format.mjs'
-import {COUNTRIES, flagSrc} from '@/lib/ingress-countries.mjs'
+import Panel from '../shell/Panel'
+import {fmtScoreDecimal, fmtStat} from '@/lib/ingress/ingress-format.mjs'
+import {COUNTRIES, flagSrc} from '@/lib/ingress/catalog/ingress-countries.mjs'
 import {useLang, type Lang} from '@/components/global/LanguageContext'
 
 export type ActivityKind = 'novo_agente' | 'atualizacao'

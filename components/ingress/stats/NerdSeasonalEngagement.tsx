@@ -1,4 +1,4 @@
-import {buildSeasonalSections} from '@/lib/ingress-nerd-records.mjs'
+import {buildSeasonalSections} from '@/lib/ingress/stats/ingress-nerd-records.mjs'
 import NerdRecords from './NerdRecords'
 import type {RecordSection} from './NerdRecordParts'
 import type {HallOfFameRecord} from './NerdHallOfFame'

@@ -1,9 +1,9 @@
 'use client'
 
 import {useState} from 'react'
-import {COUNTRIES, flagSrc} from '@/lib/ingress-countries.mjs'
-import {fmtStat, fmtStatCompact} from '@/lib/ingress-format.mjs'
-import {rankCountries} from '@/lib/ingress-country-chart.mjs'
+import {COUNTRIES, flagSrc} from '@/lib/ingress/catalog/ingress-countries.mjs'
+import {fmtStat, fmtStatCompact} from '@/lib/ingress/ingress-format.mjs'
+import {rankCountries} from '@/lib/ingress/stats/ingress-country-chart.mjs'
 import {useLang} from '@/components/global/LanguageContext'
 
 type FactionTotals = {agentCount: number; totalAp: number}

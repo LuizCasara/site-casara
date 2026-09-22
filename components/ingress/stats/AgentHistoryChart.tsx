@@ -1,8 +1,8 @@
 'use client'
 
 import {useEffect, useId, useMemo, useRef, useState, type KeyboardEvent} from 'react'
-import {fmtScoreDecimal, fmtStat} from '@/lib/ingress-format.mjs'
-import {HISTORY_BUCKETS} from '@/lib/ingress-rankings.mjs'
+import {fmtScoreDecimal, fmtStat} from '@/lib/ingress/ingress-format.mjs'
+import {HISTORY_BUCKETS} from '@/lib/ingress/ranking/ingress-rankings.mjs'
 import {useLang, type Lang} from '@/components/global/LanguageContext'
 import AgentHistoryChanges, {type HistoryChanges} from './AgentHistoryChanges'
 

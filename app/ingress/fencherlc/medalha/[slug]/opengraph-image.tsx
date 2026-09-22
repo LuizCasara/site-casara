@@ -1,8 +1,8 @@
 import {ImageResponse} from 'next/og'
-import {loadProfile} from '@/lib/ingress'
-import {BADGES, computeBadge} from '@/lib/ingress-badges.mjs'
-import {catalogEntry, coreBadges} from '@/lib/ingress-catalog.mjs'
-import {tierLabel} from '@/lib/ingress-tiers.mjs'
+import {loadProfile} from '@/lib/ingress/profile/ingress'
+import {BADGES, computeBadge} from '@/lib/ingress/catalog/ingress-badges.mjs'
+import {catalogEntry, coreBadges} from '@/lib/ingress/catalog/ingress-catalog.mjs'
+import {tierLabel} from '@/lib/ingress/catalog/ingress-tiers.mjs'
 
 export const runtime = 'nodejs'
 export const size = {width: 1200, height: 630}

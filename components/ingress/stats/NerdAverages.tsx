@@ -1,8 +1,8 @@
 'use client'
 
-import {artPath} from '@/lib/ingress-art.mjs'
+import {artPath} from '@/lib/ingress/catalog/ingress-art.mjs'
 import {useLang} from '@/components/global/LanguageContext'
-import CountUp from '../CountUp'
+import CountUp from '../hero/CountUp'
 import CommunityRadarChart from './CommunityRadarChart'
 import NerdAgentTag from './NerdAgentTag'
 import type {HallOfFameRecord} from './NerdHallOfFame'

@@ -1,6 +1,6 @@
 import type {MetadataRoute} from 'next'
 import {listarLivros} from '@/lib/livros/acervo/books'
-import {coreBadges} from '@/lib/ingress-catalog.mjs'
+import {coreBadges} from '@/lib/ingress/catalog/ingress-catalog.mjs'
 
 const BASE_URL = 'https://luizcasara.com'
 

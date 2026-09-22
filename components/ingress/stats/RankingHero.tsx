@@ -1,10 +1,10 @@
 'use client'
 
 import {FaTrophy, FaKeyboard, FaTelegramPlane} from 'react-icons/fa'
-import {heroMeshPolygons} from '@/lib/ingress-s2.mjs'
+import {heroMeshPolygons} from '@/lib/ingress/map/ingress-s2.mjs'
 import {useLang} from '@/components/global/LanguageContext'
-import HeroMesh from '../HeroMesh'
-import HeroGlobe from '../HeroGlobe'
+import HeroMesh from '../hero/HeroMesh'
+import HeroGlobe from '../hero/HeroGlobe'
 
 const T = {
   pt: {

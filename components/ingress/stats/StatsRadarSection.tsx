@@ -2,12 +2,12 @@
 
 import {useState} from 'react'
 import {toast} from 'sonner'
-import ProfileRadar, {type Agent} from '../ProfileRadar'
+import ProfileRadar, {type Agent} from '../profile/ProfileRadar'
 import OverallScorePanel, {type AgentScore} from './OverallScorePanel'
-import {normalizeCodenameKey} from '@/lib/ingress-rankings.mjs'
-import {RADAR_STAT_KEYS} from '@/lib/ingress-compare-message.mjs'
+import {normalizeCodenameKey} from '@/lib/ingress/ranking/ingress-rankings.mjs'
+import {RADAR_STAT_KEYS} from '@/lib/ingress/ranking/ingress-compare-message.mjs'
 import {trackIngressRankingJoin} from '@/lib/global/analytics'
-import {saveMyAgent} from '@/lib/ingress-my-agent'
+import {saveMyAgent} from '@/lib/ingress/ranking/ingress-my-agent'
 import {useLang} from '@/components/global/LanguageContext'
 
 /** Textos bilíngues dos toasts (ISTATS-19 fix) — `pt` reproduz o texto anterior. */

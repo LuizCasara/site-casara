@@ -1,7 +1,7 @@
 'use client'
 
 import {useState} from 'react'
-import Panel from '../Panel'
+import Panel from '../shell/Panel'
 import {useLang} from '@/components/global/LanguageContext'
 
 const translations = {
