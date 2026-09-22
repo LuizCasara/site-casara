@@ -2,8 +2,8 @@
  * Lado Next da feature Ingress: tipos do perfil e o loader.
  *
  * A fonte de dados é `data/ingress/fencherlc.json`, gerado por
- * `scripts/ingress.mjs` a partir do export do app (e, no futuro, do dump GDPR).
- * A lógica de montagem vive em `lib/ingress-profile.mjs`; aqui só lemos o
+ * `scripts/ingress/ingress.mjs` a partir do export do app (e, no futuro, do dump GDPR).
+ * A lógica de montagem vive em `lib/ingress/profile/ingress-profile.mjs`; aqui só lemos o
  * resultado. Nada de banco, nada de rede — ver AD-001 em `.specs/STATE.md`.
  */
 

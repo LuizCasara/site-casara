@@ -219,7 +219,7 @@ export default function Book({
     useEffect(() => () => coverTexture?.dispose(), [coverTexture]);
 
     const materials = useMemo(() => {
-        // Mesma paleta da lombada (lib/cor-lombada.mjs): as faces laterais são
+        // Mesma paleta da lombada (lib/livros/sala/cor-lombada.mjs): as faces laterais são
         // pintadas com a cor da capa, e sem a correção elas brilhariam pelos
         // mesmos motivos — só que em área muito maior.
         const corCapa = corDeLombada(book.spineColor || FALLBACK_SPINE_COLOR);
@@ -311,7 +311,7 @@ export default function Book({
                 if (isOpen) return;
                 e.stopPropagation();
                 // "um livro qualquer" — um dos 17 itens da folha da mesa (ver
-                // lib/coisas-da-sala.mjs). Qual livro não importa: a lista pede
+                // lib/livros/segredos/coisas-da-sala.mjs). Qual livro não importa: a lista pede
                 // que se abra UM, não que se abra o acervo. Marcado ANTES do
                 // `push`, que desmonta esta lombada.
                 marcarCoisa('livro');

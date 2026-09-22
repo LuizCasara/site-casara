@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     ],
     apple: [{url: '/ingress/pwa/apple-touch-icon.png', type: 'image/png', sizes: '180x180'}],
   },
-  // PWA isolado (ver app/ingress/manifest.webmanifest/route.ts — `manifest.ts`,
+  // PWA isolado (ver app/(ingress)/ingress/manifest.webmanifest/route.ts — `manifest.ts`,
   // a convenção de arquivo do Next, só é reconhecida na raiz de `app/`, então
   // esta é uma Route Handler manual): scope/start_url ali cobrem Android;
   // `appleWebApp` é o que faz o iOS abrir em modo standalone (o Safari não usa

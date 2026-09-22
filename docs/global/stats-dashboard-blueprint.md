@@ -26,7 +26,7 @@ tabela `events`, diferenciada pelo `event_name` e por chaves dentro do
 
 ```
 Componente da UI
-   └─ trackEvent(name, payload)  (utils/analytics.ts)
+   └─ trackEvent(name, payload)  (lib/global/analytics.ts)
         ├─ track() do Vercel Analytics (fire-and-forget)
         └─ POST /api/events        (fire-and-forget, grava no Postgres)
 
@@ -42,7 +42,7 @@ middleware.ts (roda em toda request)
 
 ## 2. Modelo de dados
 
-Uma tabela única (`lib/schema.sql`):
+Uma tabela única (`db/schema.sql`):
 
 ```sql
 CREATE TABLE IF NOT EXISTS events (
@@ -120,7 +120,7 @@ da Vercel isso precisa de outra fonte (ex.: MaxMind, Cloudflare headers).
 
 ### 3.2 Eventos customizados via `trackEvent`
 
-`utils/analytics.ts` centraliza tudo num único wrapper, e cada evento de
+`lib/global/analytics.ts` centraliza tudo num único wrapper, e cada evento de
 domínio é uma função nomeada que só declara o payload:
 
 ```ts
@@ -145,13 +145,13 @@ export const trackProjectClick = (projectName: string) =>
 // ... uma função por evento de domínio
 ```
 
-`POST /api/events` (`app/api/events/route.ts`) só valida `event_name`,
+`POST /api/events` (`app/(global)/api/events/route.ts`) só valida `event_name`,
 resolve `country`/`city`/`browser` a partir dos headers da própria request e
 insere. Nada de lógica de negócio aqui — a agregação acontece só na leitura.
 
 ### 3.3 Allowlist de rotas reais
 
-`lib/routes.ts` define um regex allowlist (`REAL_ROUTE_PATTERN`) das rotas
+`lib/global/routes.ts` define um regex allowlist (`REAL_ROUTE_PATTERN`) das rotas
 "de verdade" do site, compartilhado entre o middleware (o que vira
 `page_view`) e a query de stats (o que conta como `TOP_ROTAS`/`page_views`).
 Isso filtra tanto arquivos estáticos (`manifest.json`, `*.jpg`) quanto
@@ -171,7 +171,7 @@ que precisa saber a lista completa de rotas navegáveis).
 
 ### 3.4 Detecção de browser
 
-`lib/request-meta.ts` — função `parseBrowser(ua)` simples baseada em regex
+`lib/global/request-meta.ts` — função `parseBrowser(ua)` simples baseada em regex
 no User-Agent (`Edg/`, `OPR/`, `Chrome/`, `Firefox/`, `Safari/`, senão
 `Other`), compartilhada entre middleware e `/api/events` para consistência.
 
@@ -244,7 +244,7 @@ em SQL — mais simples e evita divisão por zero em SQL.
 
 ---
 
-## 5. Estrutura visual da página (`app/stats/page.tsx`)
+## 5. Estrutura visual da página (`app/(global)/stats/page.tsx`)
 
 Estética: **terminal/hacker retrô** — fundo preto, monoespaçada, tudo em
 tons de verde, scanlines sutis, prompt de terminal no topo. É só CSS/Tailwind
@@ -333,11 +333,11 @@ tons de verde, scanlines sutis, prompt de terminal no topo. É só CSS/Tailwind
 1. **Banco**: criar a tabela `events` (seção 2) no Postgres do novo projeto.
    Se usar Neon/Vercel Postgres, rodar o SQL manualmente no console — este
    projeto não usa migrations automatizadas para isso.
-2. **`lib/db.ts`**: cliente lazy do Neon (ou driver equivalente), para não
+2. **`lib/global/db.ts`**: cliente lazy do Neon (ou driver equivalente), para não
    conectar em build time.
 3. **`middleware.ts`**: copiar o padrão de `page_view` fire-and-forget +
    allowlist de rotas reais + filtro de bot por User-Agent.
-4. **`utils/analytics.ts`**: um `trackEvent` central + uma função exportada
+4. **`lib/global/analytics.ts`**: um `trackEvent` central + uma função exportada
    por evento de domínio que você quer medir (nome do evento e payload
    específicos do novo site).
 5. **`POST /api/events`**: rota fina que só valida e insere.

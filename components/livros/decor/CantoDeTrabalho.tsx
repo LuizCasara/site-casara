@@ -189,7 +189,7 @@ export function ancorasDoCantoDeTrabalho(quina: [number, number]) {
          * um palmo atrás — ainda dentro do quadro, e antecipando o gesto.
          *
          * Nenhum dos números sai daqui: `gavetaEmMetros` os lê do `.glb` (ver
-         * `lib/gaveta-model.mjs`), e o sinal trocado em X e Z é a meia volta da
+         * `lib/livros/sala/gaveta-model.mjs`), e o sinal trocado em X e Z é a meia volta da
          * mesa, exatamente como no `Gaveta.tsx`.
          */
         gaveta: [

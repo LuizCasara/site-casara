@@ -17,7 +17,7 @@ import {computeNerdStats} from '@/lib/ingress/stats/ingress-nerd-stats.mjs'
 
 export const dynamic = 'force-dynamic'
 
-// Metadata em EN de propósito — ver o comentário em `app/ingress/layout.tsx`.
+// Metadata em EN de propósito — ver o comentário em `app/(ingress)/ingress/layout.tsx`.
 const TITLE = 'Ingress Agent Ranking — public stats comparison'
 const DESCRIPTION =
   'Public, live ranking of Ingress (Niantic) agents: paste your stats export from the app and compare Access Points, recursions, resonators and other metrics with FencherLC and other registered agents.'
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
  * Página 1 do ranking (SSR), consultado direto no banco em vez de `fetch` pra
  * própria rota (evita um round-trip desnecessário no primeiro paint) — MESMA
  * query paginada de `GET /api/ingress-rankings` (via `buildRankingPageQuery`,
- * `lib/ingress-rankings.mjs`), página 1, ordenação/tamanho padrão. `total` é
+ * `lib/ingress/ranking/ingress-rankings.mjs`), página 1, ordenação/tamanho padrão. `total` é
  * o total REAL de agentes (sem busca/filtro aplicados) — usado tanto pela
  * tabela quanto pelo hero (`RankingHero totalAgents`), que antes da paginação
  * usava `initialRows.length` (capado em 100, e ficaria capado em 20 se
@@ -171,7 +171,7 @@ async function loadInitialActivity(): Promise<ActivityRow[]> {
  * Estatísticas para nerds (aba estática, sem poll) — busca TODAS as linhas de
  * `casara.ingress_rankings` (sem `LIMIT`, ao contrário de `loadRankingFirstPage`)
  * mais o total de envios de `casara.ingress_ranking_history`, e agrega tudo
- * de uma vez via `computeNerdStats` (lib/ingress-nerd-stats.mjs). Mesmo
+ * de uma vez via `computeNerdStats` (lib/ingress/stats/ingress-nerd-stats.mjs). Mesmo
  * espírito de degradação de `loadRankingFirstPage`/`loadInitialActivity`.
  */
 async function loadNerdStats(): Promise<NerdStats | null> {

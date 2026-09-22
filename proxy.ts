@@ -30,7 +30,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // `.env.local` aponta para o banco de PRODUÇÃO, então sem este gate cada
-  // `npm run dev` gravava page_view real. Ver lib/analytics-env.ts.
+  // `npm run dev` gravava page_view real. Ver lib/global/analytics-env.ts.
   if (!shouldRecordEvents()) return NextResponse.next();
 
   if (!process.env.DATABASE_URL) return NextResponse.next();

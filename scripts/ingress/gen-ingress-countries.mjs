@@ -15,7 +15,7 @@ import countries from 'i18n-iso-countries'
 
 // `createRequire` em vez de `import ... with {type:'json'}` — este é um script
 // CLI standalone, nunca passa pelo bundler do Next (Turbopack), então não tem o
-// motivo técnico que obriga `lib/ingress-countries.mjs` a usar import attributes
+// motivo técnico que obriga `lib/ingress/catalog/ingress-countries.mjs` a usar import attributes
 // (ver o comentário lá: aquele módulo é importado por Client Components).
 
 const require = createRequire(import.meta.url)

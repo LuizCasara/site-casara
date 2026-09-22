@@ -13,7 +13,7 @@ export const QUIZ_LIMITS = {
 } as const;
 
 // A fórmula "de verdade" roda inteira dentro do SQL (ver
-// app/api/quiz-sessions/[id]/answers/route.ts) — o servidor nunca confia no
+// app/(apps)/api/quiz-sessions/[id]/answers/route.ts) — o servidor nunca confia no
 // relógio do cliente nem faz select-depois-insert. Estas constantes existem
 // pra não espalhar os números mágicos, e computePoints() serve de referência
 // pura (documentação executável / testes), não é chamada pela rota real.

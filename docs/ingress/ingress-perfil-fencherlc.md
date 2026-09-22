@@ -142,5 +142,5 @@ etc.).
 **Os limiares oficiais por tier (Bronze/Silver/Gold/Platinum/Onyx) NÃO estão
 transcritos aqui de propósito** — valores de memória saem errados. Devem ser
 copiados da wiki oficial do Ingress durante a implementação, para um arquivo
-`lib/ingress-badges.mjs` coberto por teste. Só então dá para dizer com certeza em
+`lib/ingress/catalog/ingress-badges.mjs` coberto por teste. Só então dá para dizer com certeza em
 que tier o FencherLC está em cada medalha.

@@ -1,8 +1,8 @@
 /**
  * Cria a tabela casara.books com seus 3 índices, de forma atômica.
  *
- * Uso:  node scripts/create-books-table.mjs           (dry-run: mostra o estado)
- *       node scripts/create-books-table.mjs --apply   (cria tabela e/ou índices faltantes)
+ * Uso:  node scripts/livros/create-books-table.mjs           (dry-run: mostra o estado)
+ *       node scripts/livros/create-books-table.mjs --apply   (cria tabela e/ou índices faltantes)
  *
  * Verificação de integridade: consulta pg_indexes para confirmar a existência dos
  * 3 índices esperados. Se a tabela existe mas algum índice falta, reporta quais
@@ -11,7 +11,7 @@
  * Atomicidade: CREATE TABLE + 3× CREATE INDEX rodam numa transação única,
  * evitando estados parciais após queda de conexão.
  *
- * Lê DATABASE_URL de .env.local, mesmo parsing de scripts/migrate-casara.mjs.
+ * Lê DATABASE_URL de .env.local, mesmo parsing de scripts/global/migrate-casara.mjs.
  */
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';

@@ -1,4 +1,4 @@
-/** Shared between middleware.ts (page_view) and app/api/events/route.ts
+/** Shared between middleware.ts (page_view) and app/(global)/api/events/route.ts
  * (custom events) so both record country/city/browser the same way. */
 export function parseBrowser(ua: string): string {
   if (/Edg\//i.test(ua)) return 'Edge';

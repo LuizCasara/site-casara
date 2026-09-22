@@ -11,7 +11,7 @@ import {BILHETE_FRASES} from '@/lib/livros/segredos/bilhete';
  * objeto e dá um fim ao folhear, em vez de pendurar um "baixar PDF" sobre o
  * conteúdo desde a primeira página.
  *
- * Reusa o `renderElementToPdf` de `utils/pdf-generator.tsx` (html2canvas →
+ * Reusa o `renderElementToPdf` de `lib/apps/pdf/pdf-generator.tsx` (html2canvas →
  * jsPDF), o mesmo motor dos dois testes de personalidade. Só o componente de
  * conteúdo e o nome do arquivo mudam — que é exatamente o que aquele motor foi
  * extraído para permitir.
@@ -67,11 +67,11 @@ const FRASES_NO_VERSO = 2;
 /**
  * Sorteia as frases que vão no verso deste marcador.
  *
- * São doze no bloco de notas da gaveta (`lib/bilhete.ts`) e não cabem num papel
+ * São doze no bloco de notas da gaveta (`lib/livros/segredos/bilhete.ts`) e não cabem num papel
  * de 5cm — então **cada marcador leva as suas**. Isso é feature e não limitação:
  * dois marcadores impressos em dias diferentes não são o mesmo papel.
  *
- * `Math.random()` sem cerimônia, pela mesma razão do sorteio de `lib/sorteio.ts`:
+ * `Math.random()` sem cerimônia, pela mesma razão do sorteio de `lib/apps/sorteio.ts`:
  * isto não é rifa paga, é qual frase sai impressa num marca-página.
  *
  * **Chamada uma vez por abertura do caderno, nunca durante o render**: um sorteio
@@ -170,7 +170,7 @@ export const MarcadorPdfContent = React.forwardRef<HTMLDivElement, {frases: stri
               preencher à mão e o endereço do site no pé.
 
               As frases são o que o marcador leva da sala para o mundo — são doze
-              no bloco (`lib/bilhete.ts`) e não caberiam nem duas de cada tipo num
+              no bloco (`lib/livros/segredos/bilhete.ts`) e não caberiam nem duas de cada tipo num
               papel de 5cm, então **cada marcador sai com um sorteio próprio**.
               Isso é feature e não limitação: dois marcadores impressos em dias
               diferentes não são o mesmo papel.

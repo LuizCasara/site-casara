@@ -21,7 +21,7 @@ import {
  * **O lado de fora é a hora de verdade de quem está vendo.** Às sete da manhã o
  * vidro mostra o sol subindo e joga luz quente no chão; às onze da noite mostra
  * o céu escuro com estrelas e a luz que entra é fria. Quem manda nisso é
- * `lib/luz-do-dia.mjs`, e a hora vem do mesmo relógio que o display da
+ * `lib/livros/sala/luz-do-dia.mjs`, e a hora vem do mesmo relógio que o display da
  * prateleira aérea mostra (`use-hora-do-dia.ts`) — as duas coisas aparecem na
  * mesma tela e não podem discordar.
  *

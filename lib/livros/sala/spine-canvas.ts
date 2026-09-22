@@ -35,7 +35,7 @@ function desenharLombada(
     heightPx: number,
 ) {
     // A cor crua da capa passa pela paleta da sala antes de virar tinta —
-    // pastel e quente, com teto de brilho (ver lib/cor-lombada.mjs). O texto é
+    // pastel e quente, com teto de brilho (ver lib/livros/sala/cor-lombada.mjs). O texto é
     // calculado sobre a cor JÁ corrigida, senão o contraste seria decidido
     // contra uma cor que ninguém vai ver.
     const cor = corDeLombada(book.spineColor || FALLBACK_SPINE_COLOR);

@@ -14,7 +14,7 @@ const DEFAULT_BUCKET = "day";
  *
  * `MAX(lifetime_ap)`/`MAX(overall_score)` por bucket assume que os dois só
  * crescem — mesma classe de dívida aceita que `RADAR_AXES.ref` já tem hoje
- * (ver docs/ingress-proximos-passos.md); se um limiar de tier mudar no
+ * (ver docs/ingress/ingress-proximos-passos.md); se um limiar de tier mudar no
  * catálogo, `overall_score` de snapshots antigos pode, em teoria, cair.
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ codenameKey: string }> }) {

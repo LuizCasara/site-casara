@@ -18,8 +18,8 @@ export function escapeHtml(value: unknown): string {
     .replace(/'/g, "&#39;");
 }
 
-// A versão para Telegram é `.mjs` puro (ver lib/telegram-markdown.mjs) porque
-// também é importada por lib/ingress-compare-message.mjs, que precisa rodar
+// A versão para Telegram é `.mjs` puro (ver lib/global/telegram-markdown.mjs) porque
+// também é importada por lib/ingress/ranking/ingress-compare-message.mjs, que precisa rodar
 // direto por `node --test`, sem bundler. Reexportada aqui só por
 // conveniência de quem já está em código TS.
 export { escapeTelegramMarkdown } from "./telegram-markdown.mjs";

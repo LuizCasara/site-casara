@@ -18,7 +18,7 @@ export type HallOfFameStatRecord =
  * P4 — hall da fama: recorde por cada um dos 12 stats do radar + os stats extras
  * com badge real + AP + recursões (NERD-20..23). Só monta as seções — o desenho
  * (Resumo, Cards ou Agentes) é de `NerdRecords`, e a lista, os grupos e os
- * rótulos vivem em `lib/ingress-nerd-records.mjs`.
+ * rótulos vivem em `lib/ingress/stats/ingress-nerd-records.mjs`.
  */
 export default function NerdHallOfFame({
   perStat,

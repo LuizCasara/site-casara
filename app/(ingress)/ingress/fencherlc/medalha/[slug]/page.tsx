@@ -30,7 +30,7 @@ export async function generateMetadata({
   const entry = catalogEntry(slug) as CatalogEntry | null
   if (!entry) return {}
   return {
-    // EN de propósito — ver o comentário em `app/ingress/layout.tsx`.
+    // EN de propósito — ver o comentário em `app/(ingress)/ingress/layout.tsx`.
     title: `${entry.name} — FencherLC's medal`,
     description: entry.requirement || `The ${entry.name} medal on agent FencherLC's profile.`,
   }

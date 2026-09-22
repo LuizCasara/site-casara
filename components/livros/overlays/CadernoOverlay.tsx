@@ -24,7 +24,7 @@ import type {PaginaDoCaderno} from '@/app/(livros)/api/caderno/route';
  * embutido na página. Duas razões, e nenhuma delas é segredo: as páginas não
  * pesam no carregamento da sala para os 99% que nunca vão chegar aqui, e não
  * ficam no HTML inicial de todo mundo. Quem chamar a rota no DevTools lê tudo —
- * ver o cabeçalho de `app/api/caderno/route.ts`.
+ * ver o cabeçalho de `app/(livros)/api/caderno/route.ts`.
  *
  * **A última página é o MARCADOR**, e não uma página de Markdown: ela gera um PDF
  * para imprimir. É o que dá um fim ao folhear, em vez de pendurar um botão de
@@ -101,7 +101,7 @@ export default function CadernoOverlay({onClose}: {onClose: () => void}) {
     const folhear = useCallback((direcao: -1 | 1) => {
         // Para nas pontas, e não dá a volta: um caderno tem começo e fim, e é
         // isso que a última página existe para marcar. Trilho de cena é que anda
-        // em loop — ver `paradaVizinha` em lib/livros-cenas.mjs.
+        // em loop — ver `paradaVizinha` em lib/livros/sala/livros-cenas.mjs.
         setIndice((atual) => Math.min(total - 1, Math.max(0, atual + direcao)));
     }, [total]);
 

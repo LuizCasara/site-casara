@@ -7,7 +7,7 @@ import {getSitePrefs} from '@/lib/global/use-site-preferences'
 
 /**
  * Filho de render nulo que roda UMA vez após a hidratação e troca o idioma se a
- * regra de `lib/ingress-lang.mjs` disser que não é EN. Precisa ser efeito, e não
+ * regra de `lib/ingress/ingress-lang.mjs` disser que não é EN. Precisa ser efeito, e não
  * `useState(() => ...)`: o servidor renderiza sem `localStorage`/`navigator`, e
  * um estado inicial diferente entre servidor e cliente quebraria a hidratação.
  * Trade-off deliberado frente a detectar no servidor (`cookies()`/`headers()`):

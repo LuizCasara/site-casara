@@ -26,7 +26,7 @@ function buildMedalStats(stats: Record<string, number>) {
 }
 
 export const metadata: Metadata = {
-  // EN de propósito — ver o comentário em `app/ingress/layout.tsx`.
+  // EN de propósito — ver o comentário em `app/(ingress)/ingress/layout.tsx`.
   title: 'Timeline — FencherLC',
   description:
     "Every achievement of agent FencherLC over time: stat medals, anomalies and events, with filters, zoom and navigation.",

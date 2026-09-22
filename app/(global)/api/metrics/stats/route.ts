@@ -142,7 +142,7 @@ export async function GET(request: Request) {
           WHERE n > 1 AND recorded_at > NOW() - INTERVAL '1 day' * ${days})       AS export_updates
     `;
 
-    // page_view por tela do /ingress. Só existe a partir de quando `lib/routes.ts`
+    // page_view por tela do /ingress. Só existe a partir de quando `lib/global/routes.ts`
     // passou a listar essas rotas — antes disso o proxy as descartava.
     const ingressViews = await sql`
       SELECT route, COUNT(*) AS count

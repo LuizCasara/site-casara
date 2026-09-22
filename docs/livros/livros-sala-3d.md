@@ -37,7 +37,7 @@ filtrável com query params compartilháveis.
 
 ### O `<Canvas>` mora no layout, nunca numa page
 
-`app/livros/layout.tsx`. Numa page ele desmonta a cada navegação e o efeito
+`app/(livros)/livros/layout.tsx`. Numa page ele desmonta a cada navegação e o efeito
 inteiro se perde. Clicar num livro muda a URL via **intercepting route**
 (`@livro/(.)[slug]`) e a cena continua de pé; o botão "voltar" fecha o livro.
 
@@ -51,7 +51,7 @@ inteiro se perde. Clicar num livro muda a URL via **intercepting route**
 >
 > **O único antídoto que funciona é navegar duro** — `<a href>`, não `<Link>`;
 > `window.location`, não `router.replace`. Está encapsulado em
-> `components/livros/LinkParaLista.tsx`, e todo caminho para a listagem passa
+> `components/livros/acervo/LinkParaLista.tsx`, e todo caminho para a listagem passa
 > por lá. Duas tentativas mais elegantes falharam: declarar o segmento estático
 > dentro do slot (`@livro/lista/page.tsx`) não adianta, porque a interceptação é
 > resolvida numa passada própria, antes da precedência entre estático e
@@ -125,7 +125,7 @@ ano, ou dois anos vizinhos quando os dois cabem juntos.
   livro caber no vão com folga para o gesto de hover. Sai em ~1,45, e a
   profundidade passar a acomodar os 20cm do livro é consequência, não sorte.
 - **As medidas dos nichos são medidas, não estimadas** — lidas dos vértices do
-  `.glb` e conferidas por `lib/bookshelf-model.test.mjs`. Trocar o arquivo sem
+  `.glb` e conferidas por `lib/livros/sala/bookshelf-model.test.mjs`. Trocar o arquivo sem
   atualizar a tabela quebra o teste em vez de enterrar os livros na madeira.
 - **A divisão em anos cai do dado**, não está escrita em lugar nenhum: percorre
   os anos do mais antigo ao mais novo, enchendo os nichos de baixo para cima
@@ -278,7 +278,7 @@ do centro do tampo de 78cm, longe da xícara (0,27) e dos óculos (-0,25).
 é selecionável, leitor de tela não alcança. O livro 3D fornece o quadro; o
 conteúdo aparece como painel DOM por cima.
 
-**A cor da lombada passa pela paleta da sala** (`lib/cor-lombada.mjs`) antes de
+**A cor da lombada passa pela paleta da sala** (`lib/livros/sala/cor-lombada.mjs`) antes de
 virar tinta: a cor crua da capa serve para identificar o livro, mas capas de
 fundo branco viram lombadas quase brancas que estouram no `<Bloom>` e engolem o
 próprio título.
@@ -306,7 +306,7 @@ importa TypeScript sem build.
 ## Falar com quem visita: WhatsApp, não banco de dados
 
 Recomendar um livro (o quadro branco na parede) e comentar sobre um livro (o
-botão no card) abrem o WhatsApp com uma mensagem pronta — `lib/whatsapp-livros.mjs`.
+botão no card) abrem o WhatsApp com uma mensagem pronta — `lib/livros/acervo/whatsapp-livros.mjs`.
 
 A alternativa era gravar isso numa tabela e exibir no site, e ela foi descartada
 de propósito: **conteúdo público de terceiros traz moderação e spam**, problema
@@ -333,7 +333,7 @@ Para o que sobra (primeiro livro da sessão, conexão ruim), o esqueleto em
 
 O monitor da direita manda no áudio da sala; a caixa de som da prateleira aérea
 manda no volume. `components/livros/decor/use-radio.ts` é o dono de tudo, e
-`lib/radio.ts` é o ponto único de configuração da estação.
+`lib/livros/sala/radio.ts` é o ponto único de configuração da estação.
 
 **A sala abre em silêncio, com a tela apagada.** Não é gosto: desde que a tela
 passou a mandar no som, começar em `lofi` seria mostrar um player que nenhum
@@ -414,7 +414,7 @@ faixa no mundo, não por visitante.
 
 Marca a hora de quem está vendo, entre os dois vasos da prateleira aérea.
 `RelogioDigital.tsx` mais `use-textura-de-relogio.ts`, com as medidas em
-`lib/relogio-model.mjs`.
+`lib/livros/sala/relogio-model.mjs`.
 
 **Os algarismos do `.glb` são geometria, não textura.** O material azul do
 modelo não é um painel liso esperando imagem: são cinco blocos extrudados — dois
@@ -540,7 +540,7 @@ monitor evita ao separar "tela preta" de "tela mostrando preto".
 
 ### A mira da lanterna é derivada, não escolhida
 
-`lib/lanterna.mjs` guarda o PONTO da parede do fundo onde o facho deve cair, e o
+`lib/livros/sala/lanterna.mjs` guarda o PONTO da parede do fundo onde o facho deve cair, e o
 ângulo da lanterna sai dele. O contrário — ângulo escrito à mão — já estava
 errado sem ninguém notar: com o giro decorativo que a peça tinha, o facho batia a
 9cm da quina e metade da poça dobrava no canto. Um feixe apontado para o lugar
@@ -586,7 +586,7 @@ A sala já diz o que foi lido (a estante), o que está sendo lido (a pilha na me
 de centro) e o que se quer ler (a torre no chão). **Faltava o que sobrou de ter
 lido tudo isso** — e é o que está na gaveta da mesa do PC: um bloco de notas com
 uma lista de frases, o "resumo de todos os livros". `Gaveta.tsx`,
-`BilheteOverlay.tsx`, `lib/gaveta-model.mjs`, `lib/bilhete.ts`.
+`BilheteOverlay.tsx`, `lib/livros/sala/gaveta-model.mjs`, `lib/livros/segredos/bilhete.ts`.
 
 **A gaveta já vinha no `desk-corner.glb`**, como nó próprio (`drawer`), com
 puxador modelado. Foi isso que tornou a ideia barata: ela não precisou ser
@@ -641,8 +641,8 @@ linhas e cansativa nas treze desta lista.
 Na parede lateral direita, entre a quina do canto de trabalho e o stand de
 espadas: uma janela com cortina, e do lado de fora **a hora de verdade de quem
 está vendo**. De manhã o sol subindo e luz quente entrando no chão; à noite o
-céu escuro com estrelas e uma luz fria. `Janela.tsx`, `lib/luz-do-dia.mjs`,
-`lib/janela-model.mjs`.
+céu escuro com estrelas e uma luz fria. `Janela.tsx`, `lib/livros/sala/luz-do-dia.mjs`,
+`lib/livros/sala/janela-model.mjs`.
 
 **A cortina abre fechada, e é ela a feature.** Fechada, não se revela nada — o
 lado de fora existe para quem clica. Uma janela já aberta entregaria o efeito de
@@ -856,7 +856,7 @@ sub-parada.
 
 ### A parede do fundo tem um ocupante que cresce sozinho
 
-`lib/parede-do-fundo.mjs` guarda a geometria dos quadros do fundo e a regra de
+`lib/livros/sala/parede-do-fundo.mjs` guarda a geometria dos quadros do fundo e a regra de
 que nada se sobrepõe; `Room.tsx` lê as medidas de lá, e o teste monta a lista de
 ocupantes. **Um quadro enterrado em madeira não estoura exceção nem quebra
 build — só some**, exatamente como o facho da lanterna apontado para a quina.
@@ -896,8 +896,8 @@ para cá seria copiar coordenada de móvel, que é o que este arquivo evita.
 
 Um cartão largado na vitrine do **nicho 2** da estante, dois andares abaixo da
 lava lamp. Clicar abre um painel com a arte ampliada e uma ficha do acervo.
-`decor/CarteiraHunter.tsx`, `CarteiraOverlay.tsx`, `lib/carteira.ts`,
-`lib/ficha-do-acervo.mjs`.
+`decor/CarteiraHunter.tsx`, `CarteiraOverlay.tsx`, `lib/livros/segredos/carteira.ts`,
+`lib/livros/acervo/ficha-do-acervo.mjs`.
 
 O objeto se chama **Licença Hunter** em todo lugar em que aparece — a etiqueta de
 hover no 3D, o título do painel e o `aria-label` do diálogo. Os arquivos ainda se
@@ -956,9 +956,9 @@ zoom naquele ano põe a vitrine no quadro.
 
 ### A ficha sai do acervo, não de um arquivo escrito à mão
 
-`lib/ficha-do-acervo.mjs` calcula livros lidos, páginas, "caçando desde",
+`lib/livros/acervo/ficha-do-acervo.mjs` calcula livros lidos, páginas, "caçando desde",
 categoria mais lida e nota média a partir da lista que o `RoomCanvas` **já
-recebe** — `app/livros/layout.tsx` entrega os livros com `pages`, `finished_at`,
+recebe** — `app/(livros)/livros/layout.tsx` entrega os livros com `pages`, `finished_at`,
 `rating` e `category` porque a estante precisa deles de qualquer forma.
 **Nenhuma query nova, nenhuma rota nova, nada no banco.** Escrever esses números
 à mão significaria vir corrigir um arquivo a cada livro cadastrado, e errar em
@@ -983,8 +983,8 @@ protege não é óbvio de olho:
 - **Campo sem dado devolve `null`, e a linha some do painel** em vez de mostrar
   "desde —". Um acervo recém cadastrado pode ter os 50 livros e nenhuma data.
 
-O texto fixo (nome, lema, privilégios) mora em `lib/carteira.ts`, separado do
-componente pelo mesmo motivo do `lib/bilhete.ts`: quem edita é o dono do acervo,
+O texto fixo (nome, lema, privilégios) mora em `lib/livros/segredos/carteira.ts`, separado do
+componente pelo mesmo motivo do `lib/livros/segredos/bilhete.ts`: quem edita é o dono do acervo,
 não quem mexe em layout. O lema é uma citação, e o autor é **campo próprio** e
 não parte da string — o painel o tipografa como assinatura (`blockquote` +
 `cite`), que não é a mesma coisa que a frase.
@@ -1014,7 +1014,7 @@ não há gráfico nenhum aqui: quatro escalares soltos não têm o que plotar.
 
 **O valor vai em tinta, nunca em cor.** A única coisa colorida da ficha é o ponto
 da categoria mais lida, porque ali a cor codifica identidade de verdade — e ela
-vem da taxonomia (`lib/book-categories.mjs`), a mesma que pinta a categoria no
+vem da taxonomia (`lib/livros/acervo/book-categories.mjs`), a mesma que pinta a categoria no
 card do livro, não de um tom escolhido para este painel. O nome sempre acompanha
 o ponto, então a identidade nunca depende só da cor.
 
@@ -1050,7 +1050,7 @@ não corrida.
 
 ### A fonte única, e as regras de quem acrescentar o item 18
 
-`lib/coisas-da-sala.mjs` — um array de `{id, texto, dica}` de onde saem tanto o
+`lib/livros/segredos/coisas-da-sala.mjs` — um array de `{id, texto, dica}` de onde saem tanto o
 `N` do contador quanto as linhas da folha. Os `id` reaproveitam os que
 `trackRoomObjectClick` já usava; onde não existia (a folha, o índice da lava
 lamp, abrir um livro, os dois pôsteres, o escudo), o id nasce ali e passa a ser o
@@ -1076,7 +1076,7 @@ prop obrigaria a atravessar a árvore 3D inteira com uma prop nova, **incluindo
 `Room.tsx`, que por contrato é cenário burro e não deve saber que existe um
 jogo**. Uma função importada direto é exatamente como `trackRoomObjectClick` já é
 usada nesses mesmos arquivos. Quem quer REAGIR assina `useProgressoDaSala()`
-(`lib/progresso-da-sala.ts`, com `useSyncExternalStore`).
+(`lib/livros/segredos/progresso-da-sala.ts`, com `useSyncExternalStore`).
 
 **O lado do navegador tem nome diferente de propósito.** Ele já se chamou
 `coisas-da-sala.ts`, e com os dois arquivos de mesmo basename na pasta,
@@ -1121,10 +1121,10 @@ dá antecipação sem negar nada a quem chegou agora, e faz o caderno chegar
 completando uma cena que estava incompleta desde o começo, em vez de materializar
 do nada. É o mesmo `caneta.glb` da gaveta — nenhum arquivo novo entrou.
 
-**Um efeito sonoro, e é a única exceção da sala a `lib/sound.ts`.** Fechar as 17
+**Um efeito sonoro, e é a única exceção da sala a `lib/global/sound.ts`.** Fechar as 17
 toca `reveal.mp3` a 45% de volume. O design original pedia reveal mudo e foi
 revertido depois de testar: sem som, completar a lista não tinha resposta
-nenhuma. A regra de que `/livros` não passa por `lib/sound.ts` continua valendo
+nenhuma. A regra de que `/livros` não passa por `lib/global/sound.ts` continua valendo
 para o que ela foi escrita — o RÁDIO e a chuva, que precisam de grafo de Web
 Audio (ganho, analisador, síntese) e não de um `<audio>`. Um clipe de meio
 segundo tocado uma vez é exatamente o caso de `playSound`. **Nenhum arquivo de
@@ -1154,7 +1154,7 @@ requisito de forma continua atendido: ele é fisicamente outra coisa que o
 `nota.glb` da gaveta, que é um bloco plano.
 
 **Onde ele pousa saiu dos vértices do `.glb`, não de chute**:
-`lib/poltrona-model.mjs` guarda a caixa da poltrona e o platô do braço (o trecho
+`lib/livros/sala/poltrona-model.mjs` guarda a caixa da poltrona e o platô do braço (o trecho
 em que a face de cima é plana e tem a largura inteira), e `bracoEmMetros()` os
 converte pela altura pedida ao móvel. Mesmo tratamento da gaveta, das cortinas e
 do vão do relógio, e pelo mesmo motivo: trocar o modelo sem atualizar a tabela
@@ -1182,12 +1182,12 @@ no HTML inicial de todo mundo. **A pasta precisa estar em
 o tracing do Next só enxerga `import`, e sem aquela linha a rota funciona no
 `npm run dev` e devolve zero páginas em produção.
 
-**A última página do caderno É o marcador** (`utils/marcador-pdf.tsx`), e não um
+**A última página do caderno É o marcador** (`lib/livros/segredos/marcador-pdf.tsx`), e não um
 botão flutuante no canto: quem folheia até o fim encontra uma página que manda
 arrancar aquela. Reusa o `renderElementToPdf` dos dois testes de personalidade.
 Frente: a pergunta, tipografia grande, muita folga, pouca tinta — vai sair de
 impressora doméstica. Verso: **duas frases sorteadas do bloco de notas da gaveta**
-(`lib/bilhete.ts` tem doze, e não cabem num papel de 5cm — cada marcador leva as
+(`lib/livros/segredos/bilhete.ts` tem doze, e não cabem num papel de 5cm — cada marcador leva as
 suas, o que é feature: dois impressos em dias diferentes não são o mesmo papel),
 a linha de `encontrado por` e o endereço do site no pé. **Sem formulário de
 nome**: o prêmio de um caderno de anotações ser um papel que pede para ser escrito
@@ -1226,7 +1226,7 @@ DevTools — fica registrado aqui em vez de virar um botão que ninguém deveria
 
 Dezessete modelos da sala são CC BY 3.0, e essa licença **exige atribuição no lugar
 onde a obra é exibida** — o `LICENSE.md` do repositório não cumpre isso para
-quem visita o site. `components/livros/CreditosModelos.tsx` põe a linha no
+quem visita o site. `components/livros/sala/CreditosModelos.tsx` põe a linha no
 rodapé, e o `Footer` a monta só em `/livros`. Mexeu no `LICENSE.md`, mexa lá.
 
 ## Bug conhecido do Next.js 16 em dev (não é nosso código)

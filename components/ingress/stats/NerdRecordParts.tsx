@@ -4,7 +4,7 @@ import CountUp from '../hero/CountUp'
 
 /**
  * Peças compartilhadas pelas três visões dos recordes (Resumo, Cards, Agentes).
- * Os tipos espelham o que `lib/ingress-nerd-records.mjs` devolve.
+ * Os tipos espelham o que `lib/ingress/stats/ingress-nerd-records.mjs` devolve.
  */
 
 export type RecordLang = 'pt' | 'en'

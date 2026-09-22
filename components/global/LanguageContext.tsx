@@ -11,7 +11,7 @@ const LanguageContext = createContext<{ lang: Lang; toggle: () => void; setLang:
 });
 
 // `initialLang` só existe para o `/ingress`, que abre em EN (ver
-// `components/ingress/IngressLanguageProvider.tsx`); o resto do site segue "pt".
+// `components/ingress/shell/IngressLanguageProvider.tsx`); o resto do site segue "pt".
 export function LanguageProvider({ children, initialLang = "pt" }: { children: ReactNode; initialLang?: Lang }) {
   const [lang, setLang] = useState<Lang>(initialLang);
   return (

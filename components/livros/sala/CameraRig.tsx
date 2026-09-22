@@ -12,7 +12,7 @@ import {contarEstantes} from '@/lib/livros/sala/shelf-years.mjs';
  * `camping` é a estante AMARELA (a dos trecos de acampamento), não a do
  * acervo — essa continua sendo `estante`. Os ids ficaram assim porque o rótulo
  * que a pessoa lê no botão mudou depois: hoje `estante` aparece como "Livros"
- * e `camping` aparece como "Estante" (ver CENAS em lib/livros-cenas.mjs).
+ * e `camping` aparece como "Estante" (ver CENAS em lib/livros/sala/livros-cenas.mjs).
  * Renomear os ids arrastaria os eventos de analytics já gravados, os
  * viewpoints e os testes — o id é o nome interno, o rótulo é o da tela.
  */
@@ -246,7 +246,7 @@ function focoDeObjeto(
  *
  * São quatro aqui e três no trilho: a gaveta tem enquadramento como qualquer
  * outra, mas ninguém a atravessa navegando — só o clique nela leva a câmera até
- * aqui (ver `foraDoTrilho` em lib/livros-cenas.mjs). O índice dela continua
+ * aqui (ver `foraDoTrilho` em lib/livros/sala/livros-cenas.mjs). O índice dela continua
  * valendo, e é por isso que ela segue nesta lista em vez de ser removida.
  *
  * **A lista abria no quadro de recados até 27/08/2026**, quando ele mudou para a
@@ -345,7 +345,7 @@ function larguraDoConjunto(totalEstantes: number) {
  * das paredes laterais), mas é o ponto em que enquadrar o conjunto inteiro deixa
  * de caber dentro do cômodo, e aí a saída é outra: enquadrar UMA estante por vez
  * e navegar entre elas, como já se faz com os nichos. Mesma classe de aviso da
- * colisão do Gorillaz em lib/parede-do-fundo.test.mjs — o acervo levaria uns
+ * colisão do Gorillaz em lib/livros/sala/parede-do-fundo.test.mjs — o acervo levaria uns
  * cinco anos para chegar lá.
  */
 function viewpointDaEstante(cobertoEmbaixoPx: number, totalGrupos: number): ViewpointConfig {

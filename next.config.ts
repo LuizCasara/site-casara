@@ -22,27 +22,27 @@ const nextConfig: NextConfig = {
     },
     /**
      * As páginas do caderno de `/livros` são lidas do disco em runtime, por
-     * caminho montado com `process.cwd()` (ver `app/api/caderno/route.ts`).
+     * caminho montado com `process.cwd()` (ver `app/(livros)/api/caderno/route.ts`).
      *
      * O tracing do Next empacota o que consegue enxergar num `import`, e um
      * caminho montado em runtime não é um import — sem esta linha a rota funciona
      * no `npm run dev` e devolve zero páginas em produção, que é o tipo de
      * defeito que só aparece depois do deploy.
      *
-     * `/ingress/**` pela mesma razão: `lib/ingress-catalog.mjs` e
-     * `lib/ingress-lore.mjs` leem `data/ingress/*.json` com `process.cwd()`.
+     * `/ingress/**` pela mesma razão: `lib/ingress/catalog/ingress-catalog.mjs` e
+     * `lib/ingress/catalog/ingress-lore.mjs` leem `data/ingress/*.json` com `process.cwd()`.
      * Hoje essas rotas são estáticas (o dado é empacotado no build), mas se
      * alguma virar dinâmica o `readFileSync` quebra em produção sem isto.
      */
     outputFileTracingIncludes: {
         '/api/caderno': ['./content/caderno/**/*'],
         '/ingress/**': ['./data/ingress/**/*'],
-        // `history/changes` calcula tier e medalha por stat (`lib/ingress-history-diff.mjs`
+        // `history/changes` calcula tier e medalha por stat (`lib/ingress/ranking/ingress-history-diff.mjs`
         // -> `ingress-badges.mjs` -> catálogo lido do disco), mesma razão de `/ingress/**`.
         '/api/ingress-rankings/**': ['./data/ingress/**/*'],
     },
     // Sem bloco `env`: as três variáveis do Telegram só são lidas dentro de
-    // app/api/telegram/route.js (server-only), que já enxerga process.env.*
+    // app/(global)/api/telegram/route.js (server-only), que já enxerga process.env.*
     // sem precisar disso — o bloco `env` do next.config existe justamente
     // para inlinar valores no bundle do NAVEGADOR, e essas variáveis não têm
     // prefixo NEXT_PUBLIC_, então declará-las aqui era só risco à toa: bastava

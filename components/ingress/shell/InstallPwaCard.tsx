@@ -37,7 +37,7 @@ function isStandalone() {
 
 /**
  * Card só do hub `/ingress` (não das sub-rotas) que simplifica instalar o PWA
- * isolado desta seção (ver app/ingress/manifest.webmanifest/route.ts). No
+ * isolado desta seção (ver app/(ingress)/ingress/manifest.webmanifest/route.ts). No
  * Android/Chrome intercepta o `beforeinstallprompt` e dispara o prompt nativo
  * num clique; no iOS Safari não existe esse evento, então só mostra o passo a
  * passo manual (Compartilhar → Adicionar à Tela de Início). Se já estiver

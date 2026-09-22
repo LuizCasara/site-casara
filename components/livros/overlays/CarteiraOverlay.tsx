@@ -56,7 +56,7 @@ type CarteiraOverlayProps = {
  * numa COLUNA de números que precisa alinhar e errado num valor grande e
  * solto, onde deixa o número frouxo.
  *
- * `null` some com o quadrinho inteiro — ver `lib/ficha-do-acervo.mjs`, que
+ * `null` some com o quadrinho inteiro — ver `lib/livros/acervo/ficha-do-acervo.mjs`, que
  * devolve `null` em vez de inventar valor quando o dado não existe.
  */
 function Numero({rotulo, valor}: {rotulo: string; valor: string | null}) {
@@ -158,7 +158,7 @@ export default function CarteiraOverlay({ficha, onClose}: CarteiraOverlayProps) 
                               e valor à direita as fazia parecer as linhas de uma
                               mesma tabela, sugerindo uma comparação que não
                               existe. Cada quadrinho some sozinho quando não há
-                              dado — ver `lib/ficha-do-acervo.mjs`.
+                              dado — ver `lib/livros/acervo/ficha-do-acervo.mjs`.
                             */}
                             <div className="mt-4 grid grid-cols-2 gap-2">
                                 <Numero rotulo="Livros lidos" valor={String(ficha.lidos)}/>
@@ -201,7 +201,7 @@ export default function CarteiraOverlay({ficha, onClose}: CarteiraOverlayProps) 
                               A categoria mais lida é a ÚNICA coisa colorida da
                               ficha, e é de propósito: cor aqui codifica
                               identidade, e esta é a única identidade do painel.
-                              A cor vem da taxonomia (lib/book-categories.mjs), a
+                              A cor vem da taxonomia (lib/livros/acervo/book-categories.mjs), a
                               mesma que pinta a categoria no card do livro — não é
                               um tom escolhido para este painel.
 

@@ -3,7 +3,7 @@ import type {ReactNode} from 'react'
 /**
  * Moldura de seção da direção "Scanner": painel de carvão com um fio que brilha
  * e cantos recortados em triângulo (o motivo do campo de controle). Server
- * component. Estilos em `app/ingress/theme.css` (`.ing-panel*`).
+ * component. Estilos em `app/(ingress)/ingress/theme.css` (`.ing-panel*`).
  */
 export default function Panel({
   label,

@@ -1,6 +1,6 @@
 # As 5 Linguagens do Amor: pesquisa para um novo teste
 
-Documento de pesquisa (passo 1 do planejamento) para o próximo teste de desenvolvimento pessoal do site, baseado na teoria das "5 linguagens do amor" de Gary Chapman. Antes de desenhar o fluxo de perguntas (passo 2) e implementar (passo 3), este documento resume origem, definições, prós/contras e fontes — e já aponta, ao final, como as lições de `docs/testes-de-personalidade.md` (ipsativo vs. normativo, forced-choice, desejabilidade social equivalente) se aplicam a este caso específico.
+Documento de pesquisa (passo 1 do planejamento) para o próximo teste de desenvolvimento pessoal do site, baseado na teoria das "5 linguagens do amor" de Gary Chapman. Antes de desenhar o fluxo de perguntas (passo 2) e implementar (passo 3), este documento resume origem, definições, prós/contras e fontes — e já aponta, ao final, como as lições de `docs/apps/testes-de-personalidade.md` (ipsativo vs. normativo, forced-choice, desejabilidade social equivalente) se aplicam a este caso específico.
 
 ## Origem e criador
 
@@ -42,7 +42,7 @@ Fontes: ([Psychology Today](https://www.psychologytoday.com/us/blog/click-here-h
 
 ## Questões relevantes para o design do nosso teste
 
-Isto conecta diretamente com as lições já documentadas em `docs/testes-de-personalidade.md`:
+Isto conecta diretamente com as lições já documentadas em `docs/apps/testes-de-personalidade.md`:
 
 1. **A teoria em si já é "ipsativa" na cabeça do autor**: o quiz oficial (`5lovelanguages.com`) usa exatamente o formato que adotamos no teste de temperamento — **30 perguntas forced-choice binário**, cada uma opondo duas frases (uma por linguagem), sem meio-termo. Isso reforça a escolha de formato já validada no projeto: forced-choice, não Likert.
 2. **Diferença estrutural importante em relação ao teste de temperamento**: lá tínhamos um modelo **2×2** (2 eixos independentes: quente/frio, seco/úmido). Aqui temos **5 categorias em pé de igualdade**, sem eixos ortogonais — é uma escolha "1 entre 5", não "1 entre 2 por eixo". Isso muda o desenho das perguntas: cada pergunta precisa opor exatamente **2 das 5 linguagens** por vez (nunca as 5 juntas em uma única pergunta, que seria uma escolha múltipla normal, não zero-sum entre pares).
@@ -90,4 +90,4 @@ Decisão: em vez de forçar as ~40 perguntas mencionadas inicialmente, **adotamo
 
 ## Próximos passos
 
-- **Passo 3**: implementação do app em `apps/desenvolvimento-pessoal/`, seguindo os mesmos mecanismos de `descubra-seu-temperamento.tsx` (forced-choice, cálculo/ranking de resultado, PDF, envio Telegram/e-mail se aplicável, tracking em `utils/analytics.ts`), consumindo `linguagens-do-amor.json`.
+- **Passo 3**: implementação do app em `apps/desenvolvimento-pessoal/`, seguindo os mesmos mecanismos de `descubra-seu-temperamento.tsx` (forced-choice, cálculo/ranking de resultado, PDF, envio Telegram/e-mail se aplicável, tracking em `lib/global/analytics.ts`), consumindo `linguagens-do-amor.json`.

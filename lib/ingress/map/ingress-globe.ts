@@ -1,5 +1,5 @@
 /**
- * Dados e matemática do globo do hero de `/ingress` (`components/ingress/HeroGlobe.tsx`).
+ * Dados e matemática do globo do hero de `/ingress` (`components/ingress/hero/HeroGlobe.tsx`).
  * Nada de DOM aqui — só o bitmap de terra e geração determinística da cena.
  *
  * O bitmap: Natural Earth 110m `land`, rasterizado num grid equirretangular

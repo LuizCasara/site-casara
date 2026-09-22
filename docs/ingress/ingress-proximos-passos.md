@@ -31,7 +31,7 @@ lista do que ele tem (não há popup dessas nos 56 prints de 08/09).
 
 ## Itens que já estavam pendentes
 
-- **Dump GDPR** — `GDPR_SERIES` em `scripts/ingress.mjs` a ajustar quando o
+- **Dump GDPR** — `GDPR_SERIES` em `scripts/ingress/ingress.mjs` a ajustar quando o
   formato real chegar; alimenta `history` e destrava a série temporal de AP.
 - **Mapa de calor de portais** — `/ingress` tem o placeholder; depende do dump.
 - **Segundo export** — destrava a projeção de próximo tier de verdade (hoje
@@ -47,15 +47,15 @@ para a rodada de higiene:
   `Completo` (brush/drag/tooltip) para o bundle. Separar `Resumo` +
   `annotateLaneGaps` num server component; só `Completo` fica client. Regra do
   `nextjs-use-client`, mas o arquivo tem ~490 linhas e o split é delicado.
-- **`RADAR_AXES` em `lib/ingress-radar.mjs`** — cada `ref` é o limiar de Onyx do
+- **`RADAR_AXES` em `lib/ingress/stats/ingress-radar.mjs`** — cada `ref` é o limiar de Onyx do
   badge copiado à mão (verificado: hoje bate 11/11 com o catálogo). Se o
   `TIER_OVERRIDES` do gerador mudar um limiar, o radar normaliza contra o número
   velho sem erro. Resolver `ref` de `catalogEntry(part.badge).tiers.at(-1)` em
   tempo de cálculo; precisa de teste cruzado.
-- **`STAT_GROUPS` em `lib/ingress-stats.mjs`** duplica o campo `group` que
+- **`STAT_GROUPS` em `lib/ingress/stats/ingress-stats.mjs`** duplica o campo `group` que
   `STAT_COLUMNS` já carrega — derivar um do outro para uma stat nova não sumir
   de `/ingress` por esquecerem de editar as duas listas.
-- **`parseAppExport` / `toNumber`** (`lib/ingress-stats.mjs`): tira o `.` de
+- **`parseAppExport` / `toNumber`** (`lib/ingress/stats/ingress-stats.mjs`): tira o `.` de
   valores decimais (colunas de km), o que num export em locale `.`-decimal
   infla o número. Não é trivial — no locale `.`-milhar o mesmo ponto é
   separador (o teste `"94.990.303" → 94990303` trava). Precisa de parsing
@@ -67,7 +67,7 @@ para a rodada de higiene:
 - **`HeroGlobe.tsx`** recalcula land/coast (~11k células) e os `arcPoints`
   (slerp) a cada frame; só a projeção depende do `yaw`. Pré-computar a cena uma
   vez. Puramente decorativo e desktop-only, roda ok hoje.
-- **`medalArt()` / `existsSync`** (`lib/ingress-medal-art.mjs`) — checagem de
+- **`medalArt()` / `existsSync`** (`lib/ingress/catalog/ingress-medal-art.mjs`) — checagem de
   arquivo em runtime que sempre dá `false` numa função serverless (assets vão
   para a CDN, não para o bundle). Latente enquanto as rotas são estáticas; se
   alguma virar dinâmica, trocar por um manifesto gerado no build.

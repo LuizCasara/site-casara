@@ -1,11 +1,11 @@
 /**
  * Migração 001 — move as tabelas deste site para o schema/tenant "casara".
  *
- * Uso:  node scripts/migrate-casara.mjs           (dry-run: só mostra o estado)
- *       node scripts/migrate-casara.mjs --apply   (executa a migração)
+ * Uso:  node scripts/global/migrate-casara.mjs           (dry-run: só mostra o estado)
+ *       node scripts/global/migrate-casara.mjs --apply   (executa a migração)
  *
  * Lê DATABASE_URL de .env.local. O SQL equivalente, para rodar à mão no Neon
- * SQL Editor, está em lib/migrations/001-schema-casara.sql.
+ * SQL Editor, está em db/migrations/001-schema-casara.sql.
  */
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';

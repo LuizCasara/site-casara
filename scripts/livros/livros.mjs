@@ -71,7 +71,7 @@ async function perguntarCategoria(io, padrao) {
 
 /**
  * Os quatro status possíveis, e o que cada um significa na sala 3D. A mesma
- * lista está no CHECK da coluna (lib/schema.sql) — se divergirem, o banco
+ * lista está no CHECK da coluna (db/schema.sql) — se divergirem, o banco
  * recusa a linha na hora do INSERT, que é o comportamento certo.
  */
 const STATUS_VALIDOS = ['lendo', 'lido', 'quero-ler', 'referencia'];
@@ -124,7 +124,7 @@ async function resolverProgresso(io, status, padrao) {
  * Pergunta quando o livro foi terminado e repete até a data ser válida.
  *
  * Não é um campo cosmético: `finished_at` é o que decide EM QUE PRATELEIRA o
- * livro aparece na sala 3D (lib/shelf-years.mjs agrupa por ano). Até aqui o
+ * livro aparece na sala 3D (lib/livros/sala/shelf-years.mjs agrupa por ano). Até aqui o
  * CLI não perguntava, e a única forma de preencher era SQL cru contra
  * produção — exatamente o que este script existe para evitar.
  */
@@ -140,7 +140,7 @@ async function perguntarDataDeLeitura(io, padrao) {
  * Formata o `finished_at` que veio do banco como AAAA-MM-DD, para servir de
  * padrão no prompt.
  *
- * Getters LOCAIS, não UTC — o oposto do que lib/shelf-years.mjs faz, e de
+ * Getters LOCAIS, não UTC — o oposto do que lib/livros/sala/shelf-years.mjs faz, e de
  * propósito: lá o valor já atravessou o JSON e chega como string ISO de
  * meia-noite UTC; aqui ele vem direto do driver, que monta a DATE do Postgres
  * com `new Date(ano, mes, dia)` no fuso da máquina. Ler esse objeto em UTC
@@ -259,7 +259,7 @@ function resolverTags(entrada, existentes) {
 /**
  * Slugs que nunca podem ser atribuídos a um livro, mesmo que estejam livres
  * no banco: colidiriam com uma rota estática ou com o diretório de assets.
- * "lista" é `app/livros/lista/page.tsx` — o Next resolve a rota estática
+ * "lista" é `app/(livros)/livros/lista/page.tsx` — o Next resolve a rota estática
  * antes da dinâmica `[slug]`, então um livro com esse slug ficaria inacessível
  * para sempre. "capas" é `public/livros/capas/`, o diretório onde as próprias
  * imagens de capa são salvas. Tratados como "já ocupados" para caírem no
@@ -385,7 +385,7 @@ async function comandoAdd(sql, isbn, dryRun) {
         const finishedAt = await resolverDataDeLeitura(io, status, '');
         const rating = await perguntarNota(io, '');
 
-        // 2-3 frases, não uma: é o que docs/livros-proximos-passos.md definiu
+        // 2-3 frases, não uma: é o que docs/livros/livros-proximos-passos.md definiu
         // para a sinopse escrita por IA durante o cadastro, e o que as duas
         // telas que a exibem comportam.
         const synopsis = await perguntar(io, 'Sinopse (2-3 frases, do que trata o livro)');

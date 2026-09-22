@@ -39,7 +39,7 @@ function tarja(texto: string) {
 
 type FolhaOverlayProps = {
     /** Os ids já encontrados. Só os que existem na sala de hoje — quem filtra é
-     *  `achadosValidos`, em lib/coisas-da-sala.mjs. */
+     *  `achadosValidos`, em lib/livros/segredos/coisas-da-sala.mjs. */
     achados: string[];
     onClose: () => void;
 };

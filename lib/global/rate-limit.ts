@@ -31,7 +31,7 @@ function getRedis(): Redis | null {
   return new Redis({ url, token });
 }
 
-// Lazy, como lib/db.ts: evita instanciar o client no carregamento do módulo
+// Lazy, como lib/global/db.ts: evita instanciar o client no carregamento do módulo
 // (build time) quando as env vars ainda não existem.
 let redis: Redis | null | undefined;
 function redisClient(): Redis | null {

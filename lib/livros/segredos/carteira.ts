@@ -2,13 +2,13 @@
  * O texto fixo da carteira de caçador — a parte que NÃO vem do acervo.
  *
  * Arquivo próprio, e separado do componente que o desenha, pela mesma razão do
- * `lib/bilhete.ts`: quem edita isto é o dono do acervo, não quem mexe em
+ * `lib/livros/segredos/bilhete.ts`: quem edita isto é o dono do acervo, não quem mexe em
  * layout, e trocar uma frase tem que ser mexer numa constante e não caçar um
  * `<p>` no meio de JSX.
  *
  * Os NÚMEROS da ficha (livros lidos, páginas, desde quando, categoria mais
  * lida, nota média) não estão aqui de propósito — eles saem de
- * `lib/ficha-do-acervo.mjs`, calculados sobre os livros que a sala já carregou.
+ * `lib/livros/acervo/ficha-do-acervo.mjs`, calculados sobre os livros que a sala já carregou.
  * Escrevê-los à mão significaria vir corrigir este arquivo a cada livro
  * cadastrado, e errar em silêncio quando alguém esquecesse.
  *

@@ -44,7 +44,7 @@ function isValidStats(stats: unknown): stats is Record<string, number> {
 
 /**
  * Posição (1-based) e total de agentes medidos, usando a mesma ordenação de
- * `lib/ingress-rankings.mjs` (`compareRankingRows`): nota geral desc -> AP
+ * `lib/ingress/ranking/ingress-rankings.mjs` (`compareRankingRows`): nota geral desc -> AP
  * total desc -> data da primeira medição asc.
  */
 async function computeRank(overallScore: number, lifetimeAp: number, createdAt: string | Date) {
@@ -62,7 +62,7 @@ type RankWindowEntry = { codenameKey: string; codename: string; overallScore: nu
 
 /**
  * Janela ao redor de `rank`: até 2 colocados antes + a própria posição + até
- * 2 depois (mesma ordenação de `computeRank`/`lib/ingress-rankings.mjs`) —
+ * 2 depois (mesma ordenação de `computeRank`/`lib/ingress/ranking/ingress-rankings.mjs`) —
  * substitui o antigo "top 3 fixo" por contexto relevante pra quem acabou de
  * entrar, mesmo quando está longe do topo. Perto das pontas a janela encolhe
  * (menos "antes" perto do 1º lugar, menos "depois" perto do último) em vez de

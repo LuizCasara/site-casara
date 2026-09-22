@@ -17,7 +17,7 @@ const T = {
 }
 
 /**
- * Rodapé de toda `/ingress/**` (montado uma vez em `app/ingress/layout.tsx`,
+ * Rodapé de toda `/ingress/**` (montado uma vez em `app/(ingress)/ingress/layout.tsx`,
  * como o `IngressTopBar`) — o mesmo disclaimer que qualquer fan site de
  * Ingress carrega, mais o contato pessoal no Telegram. Client leaf só por
  * causa do `useLang()`.

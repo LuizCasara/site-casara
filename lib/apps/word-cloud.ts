@@ -78,7 +78,7 @@ export function computeFontSizes(
   });
 }
 
-// Movidas para lib/session-ids.ts (genéricas, reusadas também pelo Quiz ao Vivo).
+// Movidas para lib/apps/session-ids.ts (genéricas, reusadas também pelo Quiz ao Vivo).
 export { generateSessionId, generateToken } from "./session-ids";
 
 export function canAcceptResponses(

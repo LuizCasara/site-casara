@@ -3,7 +3,7 @@ import sql from '@/lib/global/db';
 
 /**
  * Onde o livro aparece na sala 3D — e, no caso de 'referencia', onde ele NÃO
- * aparece. Ver o CHECK em lib/schema.sql.
+ * aparece. Ver o CHECK em db/schema.sql.
  */
 export type BookStatus = 'lendo' | 'lido' | 'referencia' | 'quero-ler';
 
@@ -53,7 +53,7 @@ export type BookFilters = {
  *
  * Livros com status 'lendo' aparecem primeiro — é o destaque do acervo.
  *
- * Envolvida em `cache()` do React: o driver do Neon usado por `lib/db.ts` é o
+ * Envolvida em `cache()` do React: o driver do Neon usado por `lib/global/db.ts` é o
  * HTTP direto do `@neondatabase/serverless`, não o `fetch()` do Next, então a
  * deduplicação automática de requests do framework não cobre essas queries —
  * sem isso, `generateMetadata` e o componente da página fariam dois

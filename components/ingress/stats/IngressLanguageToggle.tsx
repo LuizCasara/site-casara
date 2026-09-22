@@ -6,9 +6,9 @@ import {trackIngressLanguageToggle} from '@/lib/global/analytics'
 
 /**
  * Chave PT/EN visível dentro de `/ingress` — o `Header.tsx` genérico do site se
- * esconde nessas rotas (guarda de pathname em `components/Header.tsx`), então
+ * esconde nessas rotas (guarda de pathname em `components/global/Header.tsx`), então
  * esta é a única forma do visitante trocar o idioma aqui (ISTATS-18/19).
- * Estilizada com os tokens do tema Sora/Barlow de `app/ingress/theme.css` via
+ * Estilizada com os tokens do tema Sora/Barlow de `app/(ingress)/ingress/theme.css` via
  * inline style (as CSS custom properties já estão disponíveis em qualquer
  * descendente de `.ingress-prime`), não com as classes Tailwind do `Header`.
  * Não se posiciona sozinha (`position:fixed`) — quem faz isso é `IngressTopBar`,

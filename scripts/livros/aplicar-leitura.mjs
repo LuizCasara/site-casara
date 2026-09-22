@@ -81,7 +81,7 @@ console.table(planejado.map((l) => ({
 if (ausentes.length) {
     console.log('\n⚠ Títulos do leitura.json que NÃO existem no banco (nada será feito com eles):');
     for (const a of ausentes) console.log(`   ${a.ano}: ${a.title}`);
-    console.log('   Cadastre-os antes (scripts/livros.mjs add / seed) e rode de novo.');
+    console.log('   Cadastre-os antes (scripts/livros/livros.mjs add / seed) e rode de novo.');
 }
 
 const vaiEstimar = planejado.filter((l) => l.paginaEraNula).length;

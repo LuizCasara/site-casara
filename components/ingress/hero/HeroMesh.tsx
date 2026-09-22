@@ -1,7 +1,7 @@
 /**
  * A malha de células do hero, desenhando-se uma vez no load (o scanner
  * ligando) por animação CSS escalonada — sem JS, sem client component.
- * `prefers-reduced-motion` já é neutralizado em `app/ingress/theme.css`.
+ * `prefers-reduced-motion` já é neutralizado em `app/(ingress)/ingress/theme.css`.
  * Decorativo: `aria-hidden`.
  */
 export default function HeroMesh({polygons}: {polygons: [number, number][][]}) {

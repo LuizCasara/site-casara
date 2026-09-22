@@ -4,7 +4,7 @@ import CloseBookButton from '@/components/livros/overlays/CloseBookButton';
  * Sem isso, `notFound()` chamado dentro de `(.)[slug]/page.tsx` (slug
  * inexistente, ex.: link obsoleto) escala pro not-found padrão do Next no
  * segmento mais próximo acima — que sem este arquivo seria o da raiz do
- * app, levando junto o slot `children` desta mesma `app/livros/layout.tsx`
+ * app, levando junto o slot `children` desta mesma `app/(livros)/livros/layout.tsx`
  * (a sala 3D persistente). Este arquivo mantém o "não encontrado" contido
  * só dentro do slot `@livro`, exatamente como `default.tsx` mantém esse
  * slot em silêncio quando não há rota interceptada ativa.

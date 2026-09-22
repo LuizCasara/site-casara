@@ -18,8 +18,8 @@
  * `updated_at`, `created_at`, AP, faixas de stats ou qualquer outra coluna, então
  * "atualizado há N dias" e o desempate por "medido desde" seguem iguais.
  *
- * Lê DATABASE_URL de .env.local (mesmo parsing de scripts/migrate-casara.mjs) e
- * usa o mesmo cálculo que `POST /api/ingress-rankings` (lib/ingress-tier-score.mjs).
+ * Lê DATABASE_URL de .env.local (mesmo parsing de scripts/global/migrate-casara.mjs) e
+ * usa o mesmo cálculo que `POST /api/ingress-rankings` (lib/ingress/stats/ingress-tier-score.mjs).
  * Rode a partir da raiz do repositório (o catálogo de badges é lido de `process.cwd()`).
  *
  * `--rankings-table` / `--history-table` (só nomes `ingress_*` do schema casara)

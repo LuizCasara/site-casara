@@ -1,6 +1,6 @@
 import type {Metadata} from 'next'
 
-// Metadata em EN de propósito — ver o comentário em `app/ingress/layout.tsx`.
+// Metadata em EN de propósito — ver o comentário em `app/(ingress)/ingress/layout.tsx`.
 const TITLE = 'FencherLC — Ingress Agent'
 const DESCRIPTION =
   "Field profile of agent FencherLC (Enlightened): stats, medals and play style, straight from the scanner."

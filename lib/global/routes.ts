@@ -1,5 +1,5 @@
 /** Slugs of every mini-app under /app/[app_name] — keep in sync with the
- * `appCategories` list in app/app/page.tsx and app/app/[app_name]/page.tsx. */
+ * `appCategories` list in app/(apps)/app/(global)/page.tsx and app/(apps)/app/[app_name]/page.tsx. */
 export const APP_SLUGS = [
   "descubra-seu-temperamento",
   "rule-of-three",
@@ -17,15 +17,15 @@ export const APP_SLUGS = [
   "sorteio",
 ] as const;
 
-const SESSION_ID = "[0-9a-f]{10}"; // lib/session-ids.ts generateSessionId()
-const RESULTS_TOKEN = "[0-9a-f-]{20,40}"; // lib/session-ids.ts PARTICIPANT_ID_RE
+const SESSION_ID = "[0-9a-f]{10}"; // lib/apps/session-ids.ts generateSessionId()
+const RESULTS_TOKEN = "[0-9a-f-]{20,40}"; // lib/apps/session-ids.ts PARTICIPANT_ID_RE
 
 /**
  * POSIX/JS-compatible regex source matching only real, addressable site
  * routes — deliberately an allowlist, not a blocklist, so it filters out
  * both static-file page_views (manifest.json, *.jpg, ...) and bot/scanner
  * probes (/.env, /app/next.config.js, ...) in one place. Used by
- * middleware.ts (page_view tracking) and app/api/metrics/stats/route.ts
+ * middleware.ts (page_view tracking) and app/(global)/api/metrics/stats/route.ts
  * (TOP_ROTAS + top counters), so they can't drift apart.
  */
 export const REAL_ROUTE_PATTERN =

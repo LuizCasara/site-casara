@@ -160,7 +160,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
      * O caderno do prêmio, aberto.
      *
      * Ele só existe na sala depois que alguém achou as 17 coisas E aceitou o
-     * prêmio (`premiadoEm`) — ver `lib/coisas-da-sala.mjs`. A partir daí é
+     * prêmio (`premiadoEm`) — ver `lib/livros/segredos/coisas-da-sala.mjs`. A partir daí é
      * mobília: sempre lá, sempre clicável, sem aviso nenhum.
      */
     const [cadernoAberto, setCadernoAberto] = useState(false);
@@ -203,7 +203,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     const alternarLuz = useCallback((qual: 'abajur' | 'lanterna') => {
         // Fora do updater: `setState` precisa ser puro para o StrictMode, e
         // `marcarCoisa` grava no localStorage. Os dois interruptores são itens da
-        // folha (ver lib/coisas-da-sala.mjs), e acender ou apagar dá no mesmo —
+        // folha (ver lib/livros/segredos/coisas-da-sala.mjs), e acender ou apagar dá no mesmo —
         // o que se descobre é que a peça responde.
         marcarCoisa(qual);
         setLuzes((atual) => {
@@ -225,7 +225,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
      *
      * Mora no `localStorage` e chega aqui por `useSyncExternalStore`, não por
      * prop nem contexto: metade dos objetos da sala se marca sozinha, de dentro
-     * do próprio componente (ver `lib/progresso-da-sala.ts`). Este hook é o lado de
+     * do próprio componente (ver `lib/livros/segredos/progresso-da-sala.ts`). Este hook é o lado de
      * quem OUVE.
      */
     const progresso = useProgressoDaSala();
@@ -285,7 +285,7 @@ export default function RoomCanvas({books, deskBooks, queroLer, tags, mode}: Roo
     /**
      * O som de fechar a lista — o único efeito curto de `/livros`.
      *
-     * **Ele é a exceção à regra de que a sala não passa por `lib/sound.ts`**, e a
+     * **Ele é a exceção à regra de que a sala não passa por `lib/global/sound.ts`**, e a
      * exceção cabe: aquela regra existe para o RÁDIO e a chuva, que precisam de
      * grafo de Web Audio (ganho, analisador, síntese) e não de um `<audio>`. Isto
      * aqui é exatamente o contrário — um clipe de meio segundo tocado uma vez —,

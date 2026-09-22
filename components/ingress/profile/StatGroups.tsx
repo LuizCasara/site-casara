@@ -24,13 +24,13 @@ const T = {
  * Um `Panel` por grupo de estatísticas. Cada `StatValue` recebe a badge que
  * aquele número alimenta (hover mostra a medalha). Chave ausente é omitida.
  * Client component (ISTATS-19: `useLang()` escolhe título/rótulos em EN,
- * vindos de `lib/ingress-stats.mjs` — T15).
+ * vindos de `lib/ingress/stats/ingress-stats.mjs` — T15).
  *
  * SPEC_DEVIATION: a badge de cada estatística (antes computada aqui via
  * `slugForStatKey`/`medalArt`, ambos dependentes de `node:fs`) agora chega
  * pré-computada via a prop `badges` — o build falha (`UnhandledSchemeError:
  * node:fs`) se este arquivo virar client E importar esses módulos, porque o
- * bundle do navegador não pode carregar `node:fs`. `app/ingress/page.tsx`
+ * bundle do navegador não pode carregar `node:fs`. `app/(ingress)/ingress/page.tsx`
  * (Server Component) faz esse cálculo, no mesmo padrão que já usa para
  * `buildMedals`/`MedalGrid`.
  */

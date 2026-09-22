@@ -46,7 +46,7 @@ const PLAYLIST_HUNTER =
  * `noopener` não é detalhe: sem ele a página aberta recebe uma referência a
  * esta pelo `window.opener` e pode navegá-la para qualquer lugar. E o evento vai
  * ANTES do `open` — depois dele a aba pode já ter perdido o foco, e o lote de
- * eventos do cliente ainda não teria saído (ver utils/analytics.ts).
+ * eventos do cliente ainda não teria saído (ver lib/global/analytics.ts).
  */
 function abrirExterno(url: string, rotulo: string, coisa: string) {
     trackOutboundClick(rotulo);
@@ -62,7 +62,7 @@ function abrirExterno(url: string, rotulo: string, coisa: string) {
  * A faixa de parede lateral ESQUERDA entre a estante amarela (que ocupa até
  * z ≈ -0,33) e a quina com a parede do fundo (z = -1,6). **É a única faixa de
  * parede da sala que nenhum móvel disputa**, e por isso nada aqui passa por
- * `lib/parede-do-fundo.mjs`: aquele arquivo existe porque a estante do acervo
+ * `lib/livros/sala/parede-do-fundo.mjs`: aquele arquivo existe porque a estante do acervo
  * cresce e come a parede do fundo, e aqui não há o que colidir. Mexer na
  * estante amarela obriga a revisar este z, como já vale para a janela e o stand
  * de espadas.
@@ -104,7 +104,7 @@ const POSTER_HUNTER: [number, number, number] = [-PAREDE_LATERAL_X, 1.885, FAIXA
 
 /**
  * Os objetos COM AÇÃO do canto de trabalho, na ordem em que o trilho os varre
- * (ver FOCOS_DO_PC em lib/livros-cenas.mjs). O CameraRig monta uma parada para
+ * (ver FOCOS_DO_PC em lib/livros/sala/livros-cenas.mjs). O CameraRig monta uma parada para
  * cada um a partir daqui — Room continua sendo o mapa da sala, e nenhuma
  * coordenada precisa ser copiada para dentro da câmera.
  *
@@ -219,7 +219,7 @@ const AVANCO_DA_CARTEIRA_M = 0.035;
 /**
  * A lava lamp NÃO fica no vão dos livros: ela fica na vitrine ao lado — o
  * compartimento estreito que o zigue-zague deixa livre naquele andar, do lado
- * oposto ao vão (ver `vitrineOffsetXM` em lib/bookshelf-model.mjs).
+ * oposto ao vão (ver `vitrineOffsetXM` em lib/livros/sala/bookshelf-model.mjs).
  *
  * Calculada a partir da geometria da estante em vez de escrita à mão: uma
  * coordenada fixa aqui descolaria do móvel no dia em que um segundo aparecesse
@@ -477,7 +477,7 @@ export default function Room({
               Clicar abre a playlist da banda no YouTube, com a mesma mecânica do
               escudo escoteiro, o outro objeto da sala que leva para fora.
 
-              **As medidas saem de `lib/parede-do-fundo.mjs`, não daqui**, e o
+              **As medidas saem de `lib/livros/sala/parede-do-fundo.mjs`, não daqui**, e o
               motivo é o vizinho: quem fecha esta parede pela direita é a ESTANTE
               DO ACERVO, que ganha uma cópia a cada cinco grupos de ano com o
               conjunto sempre centrado — ou seja, cada móvel novo empurra a borda
@@ -549,7 +549,7 @@ export default function Room({
 
               Clicar abre o WhatsApp com uma mensagem pronta de sugestão de
               livro. É o quadro de recados da sala, e o recado sai por onde ele
-              sairia mesmo — ver lib/whatsapp-livros.mjs para o porquê de não
+              sairia mesmo — ver lib/livros/acervo/whatsapp-livros.mjs para o porquê de não
               ser um formulário que grava no banco.
             */}
             <Quadro

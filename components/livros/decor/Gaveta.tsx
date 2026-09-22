@@ -14,7 +14,7 @@ import {deslocamentoDaGaveta, gavetaEmMetros} from '@/lib/livros/sala/gaveta-mod
  *
  * **A sala já diz o que foi lido, o que está sendo lido e o que se quer ler.
  * Faltava o que SOBROU de ter lido tudo isso** — e é o que está anotado no bloco
- * (ver `lib/bilhete.ts`). Uma gaveta é o lugar certo para isso: fechada por
+ * (ver `lib/livros/segredos/bilhete.ts`). Uma gaveta é o lugar certo para isso: fechada por
  * padrão, embaixo da mesa de estudo, achável só por quem foi curioso o bastante
  * para abrir.
  *

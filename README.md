@@ -38,7 +38,7 @@ decision was made the way it was*, see [`docs/adr/`](./docs/adr/README.md).
   game API — Niantic's ToS doesn't allow it)
 - 📊 An internal analytics dashboard (`/stats`) reading from a self-hosted
   Postgres events table (production traffic only — dev/preview writes are
-  gated out, see [`lib/analytics-env.ts`](./lib/analytics-env.ts))
+  gated out, see [`lib/global/analytics-env.ts`](./lib/global/analytics-env.ts))
 - 📱 Telegram notifications, 📧 email notifications, 📄 client-side PDF
   generation for test results
 - 🛡️ Per-IP rate limiting on every public write route that could otherwise be
@@ -74,7 +74,7 @@ decision was made the way it was*, see [`docs/adr/`](./docs/adr/README.md).
 - **Libraries**:
   - [potrace](https://github.com/tooolbox/node-potrace) — image → SVG mini-app (runs entirely client-side)
   - [qrcode](https://github.com/soldair/node-qrcode) — QR codes for the standalone generator app *and* for joining a live session from a phone
-  - [html2canvas](https://html2canvas.hertzen.com/) + [jspdf](https://github.com/parallax/jsPDF) — the shared PDF pipeline for personality test results (see `utils/pdf-generator.tsx`)
+  - [html2canvas](https://html2canvas.hertzen.com/) + [jspdf](https://github.com/parallax/jsPDF) — the shared PDF pipeline for personality test results (see `lib/apps/pdf/pdf-generator.tsx`)
   - [nodemailer](https://nodemailer.com/) — sends the temperament test result email via Gmail
   - [sharp](https://sharp.pixelplumbing.com/) — image processing at build/CLI time (favicons, book cover downsizing + dominant-color extraction — never in a request path)
 
@@ -93,7 +93,7 @@ here would just drift out of sync, so this README doesn't duplicate the list.
 Two things worth knowing going in:
 
 - `DATABASE_URL` points at **production** Neon even in local dev — see
-  `lib/analytics-env.ts` for the gate that stops `npm run dev` from writing
+  `lib/global/analytics-env.ts` for the gate that stops `npm run dev` from writing
   fake analytics rows into it.
 - `UPSTASH_REDIS_REST_URL`/`_TOKEN` are optional in the sense that the app
   runs fine without them (rate limiting fails open, see ADR-0001) — but

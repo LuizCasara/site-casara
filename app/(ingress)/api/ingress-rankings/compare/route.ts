@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     }
 
     // `rank` usa a mesma ordenação canônica de `buildRankingPageQuery`
-    // (lib/ingress-rankings.mjs): nota geral desc -> AP total desc -> primeira
+    // (lib/ingress/ranking/ingress-rankings.mjs): nota geral desc -> AP total desc -> primeira
     // medição asc. Precisa ser calculado sobre a tabela inteira, por isso o
     // filtro por chave vem DEPOIS da CTE e não dentro dela.
     const rows = await sql`

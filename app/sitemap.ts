@@ -5,7 +5,7 @@ import {coreBadges} from '@/lib/ingress/catalog/ingress-catalog.mjs'
 const BASE_URL = 'https://luizcasara.com'
 
 /**
- * Mesma lista de ids de `app/app/page.tsx` (`appCategories`). Não importamos
+ * Mesma lista de ids de `app/(apps)/app/(global)/page.tsx` (`appCategories`). Não importamos
  * aquele arquivo diretamente porque é `"use client"` e traz `react-icons`
  * junto só pra extrair uma lista de strings — mantido em sincronia manual,
  * como o próprio arquivo já avisa fazer entre listagem e roteamento.

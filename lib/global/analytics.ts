@@ -2,7 +2,7 @@ import { track } from '@vercel/analytics/react';
 
 /**
  * O gate do CLIENTE: em `npm run dev` nem chega a enfileirar. Quem realmente
- * barra é o servidor (`lib/analytics-env.ts`, por `VERCEL_ENV`) — aqui só dá
+ * barra é o servidor (`lib/global/analytics-env.ts`, por `VERCEL_ENV`) — aqui só dá
  * para olhar `NODE_ENV`, porque o Next só inlina `NEXT_PUBLIC_*` no bundle.
  * Este primeiro gate poupa a viagem de rede; o de lá fecha a porta.
  */
@@ -357,7 +357,7 @@ export const trackRoomObjectClick = (objeto: string, estado = '') =>
 
 /**
  * Alguém achou as 17 coisas da sala e aceitou o prêmio — o momento em que
- * `premiadoEm` é gravado (ver lib/coisas-da-sala.mjs).
+ * `premiadoEm` é gravado (ver lib/livros/segredos/coisas-da-sala.mjs).
  *
  * **É o ÚNICO evento de "Coisas que ninguém repara", e é de propósito.** Ele
  * passa nos dois testes que a auditoria de agosto de 2026 estabeleceu: responde

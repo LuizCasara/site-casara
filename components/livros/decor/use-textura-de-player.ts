@@ -213,7 +213,7 @@ export function useTexturaDePlayer(ativa: boolean, radio: RadioDaSala) {
 
     // A capa é uma <img> comum porque o proxy a serve da NOSSA origem — se
     // viesse de i.plaza.one direto, o canvas ficaria "contaminado" e a textura
-    // seria recusada pelo WebGL. Ver app/api/livros/capa-radio/route.ts.
+    // seria recusada pelo WebGL. Ver app/(livros)/api/livros/capa-radio/route.ts.
     const imagemRef = useRef<HTMLImageElement | null>(null);
     const urlDaCapa = radio.faixa?.capa ?? null;
     useEffect(() => {

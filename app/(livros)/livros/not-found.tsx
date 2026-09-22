@@ -3,7 +3,7 @@ import LinkParaLista from '@/components/livros/acervo/LinkParaLista';
 /**
  * Cobre o segmento `/livros/*` inteiro — sem isso, `notFound()` chamado em
  * `[slug]/page.tsx` (slug inexistente) caía no not-found padrão do Next,
- * genérico e fora do estilo do site. `app/livros/@livro/not-found.tsx` é o
+ * genérico e fora do estilo do site. `app/(livros)/livros/@livro/not-found.tsx` é o
  * equivalente pra rota interceptada; este aqui cobre o acesso direto/SSR.
  */
 export default function LivrosNaoEncontrado() {

@@ -1,12 +1,12 @@
 /**
  * Migração 002 — abre `casara.books.status` para 'referencia' e 'quero-ler'.
  *
- * Uso:  node scripts/migrate-status-livros.mjs           (dry-run: mostra o estado)
- *       node scripts/migrate-status-livros.mjs --apply   (aplica)
+ * Uso:  node scripts/livros/migrate-status-livros.mjs           (dry-run: mostra o estado)
+ *       node scripts/livros/migrate-status-livros.mjs --apply   (aplica)
  *
  * Lê DATABASE_URL de .env.local, mesmo parsing manual de migrate-casara.mjs. O
  * SQL equivalente, para rodar à mão no Neon SQL Editor, está em
- * lib/migrations/002-status-livros.sql.
+ * db/migrations/002-status-livros.sql.
  *
  * **Escreve em PRODUÇÃO** — daí o dry-run ser o padrão. A mudança é só na
  * restrição da coluna: nenhuma linha existente é lida ou alterada, e os dois

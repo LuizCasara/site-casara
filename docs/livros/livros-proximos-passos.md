@@ -83,7 +83,7 @@ estão `✅`.
    Luiz pensa HOJE sobre o que lembra, não o que achou na época. Sem a data, o
    leitor não tem como saber a distância entre as duas coisas. Regra adotada
    em 07/08/2026; as cinco resenhas anteriores foram acertadas na mesma data.
-7. Grave pelo `edit` de `scripts/livros.mjs` (nunca por SQL: o `\n` literal e o
+7. Grave pelo `edit` de `scripts/livros/livros.mjs` (nunca por SQL: o `\n` literal e o
    apóstrofo já morderam uma vez — ver o histórico da Metamorfose).
 8. **Marque a linha na tabela**: remova os campos preenchidos da coluna "falta"
    e troque para `✅` quando não sobrar nada.
@@ -93,14 +93,14 @@ estão `✅`.
 `quero-ler` e a Bíblia — todos legitimamente sem nota ainda.
 
 `progress_pct` também não: desde 07/08/2026 ele é derivado do status pelo
-próprio CLI (`resolverProgresso` em `scripts/livros.mjs`) — 100 para `lido`,
+próprio CLI (`resolverProgresso` em `scripts/livros/livros.mjs`) — 100 para `lido`,
 perguntado só para `lendo`, nulo nos outros dois. Os 48 livros que já estavam
 lidos foram acertados de uma vez na mesma data.
 
 `finished_at` entrou no CLI em 23/08/2026 (`resolverDataDeLeitura`, mesma forma
 do progresso: perguntado só para `lido`, nulo nos outros três). Até então o
 campo que decide **em que prateleira o livro aparece na sala 3D**
-(`lib/shelf-years.mjs` agrupa por ano) era o único que só dava para escrever
+(`lib/livros/sala/shelf-years.mjs` agrupa por ano) era o único que só dava para escrever
 com SQL cru contra produção — exatamente o que este script existe para evitar.
 Aceita `AAAA-MM-DD` e `AAAA-MM`; a forma curta cai no dia 15, igual ao que o
 `distribuirMeses` gravou na importação em lote.

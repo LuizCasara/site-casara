@@ -2758,7 +2758,7 @@ html:has(.ingress-prime) {
 }
 
 /* Selo do tier: borda grossa, padding mínimo e cores próprias por tier.
-   Não usa `TIER_COLOR` (lib/ingress-tiers.mjs) porque aquelas cores são as da
+   Não usa `TIER_COLOR` (lib/ingress/catalog/ingress-tiers.mjs) porque aquelas cores são as da
    medalha do jogo — Onyx é #0c0f14 e Platinum um cinza opaco, ilegíveis sobre
    o carvão do painel. Aqui cada tier tem fundo, borda e texto pensados pra
    este fundo escuro. */
@@ -4394,7 +4394,7 @@ html:has(.ingress-prime) {
 
 /*
  * Hub `/ingress` — placeholder simples enquanto o design final (mini-cards de
- * ferramentas/links/Telegram) não é feito; ver `components/ingress/IngressHub.tsx`.
+ * ferramentas/links/Telegram) não é feito; ver `components/ingress/hero/IngressHub.tsx`.
  */
 .ing-hub__intro {
   text-align: center;
