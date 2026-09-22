@@ -133,7 +133,10 @@ export function rowsForPhase(phase, tsvPath = TSV_PATH) {
   return loadMapaRows(tsvPath).filter((r) => phaseOf(r) === phase);
 }
 
-const DEFAULT_SKIP_DIRS = new Set(['node_modules', '.git', '.next', '.vercel', 'out', 'public']);
+// 'superpowers': scripts/superpowers/ é ferramental descartável desta refatoração (removido no
+// Task 9) — seus arquivos de teste contêm strings de fixture com sintaxe de import fake, que dão
+// falso positivo se escaneadas como código real.
+const DEFAULT_SKIP_DIRS = new Set(['node_modules', '.git', '.next', '.vercel', 'out', 'public', 'superpowers']);
 
 export function listSourceFiles(dir, exts = ['.ts', '.tsx', '.js', '.jsx', '.mjs'], out = [], skipDirs = DEFAULT_SKIP_DIRS) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -251,6 +254,7 @@ Expected: FAIL — `Cannot find module './verify-imports.mjs'`
 // scripts/superpowers/verify-imports.mjs
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { ROOT, listSourceFiles, toPosix } from './mapa-utils.mjs';
 
 export const RESOLVE_SUFFIXES = ['', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.json'];
@@ -289,7 +293,7 @@ export function findBrokenImports(rootDir = ROOT) {
   return broken;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const broken = findBrokenImports();
   if (broken.length === 0) {
     console.log('verify-imports: 0 imports quebrados.');
@@ -420,6 +424,7 @@ Expected: FAIL — `Cannot find module './move-by-domain.mjs'`
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { ROOT, rowsForPhase } from './mapa-utils.mjs';
 
 export function moveRows(rows, { rootDir = ROOT, dryRun = false } = {}) {
@@ -457,7 +462,7 @@ function parseArgs(argv) {
   return args;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { phase, dryRun } = parseArgs(process.argv.slice(2));
   if (!phase) {
     console.error('uso: node scripts/superpowers/move-by-domain.mjs --phase <1|2|4|5|6|7> [--dry-run]');
@@ -621,6 +626,7 @@ Expected: FAIL — `Cannot find module './fix-imports.mjs'`
 // scripts/superpowers/fix-imports.mjs
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { ROOT, rowsForPhase, listSourceFiles, toPosix } from './mapa-utils.mjs';
 import { SPEC_RE, RESOLVE_SUFFIXES } from './verify-imports.mjs';
 
@@ -730,7 +736,7 @@ function rowsForPhaseFromFile(tsvPath) {
   return rows;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const phaseArgIdx = process.argv.indexOf('--phase');
   const phase = phaseArgIdx >= 0 ? Number(process.argv[phaseArgIdx + 1]) : null;
   if (!phase) {
@@ -1440,6 +1446,14 @@ test('não reporta nada dentro de docs/adr/ ou .specs/ (registro histórico pres
   assert.deepEqual(scanStalePaths(dir, rows), []);
 });
 
+test('não reporta nada dentro de scripts/superpowers/ (testes do próprio ferramental citam caminho antigo como fixture)', () => {
+  const dir = fixture({
+    'scripts/superpowers/mapa-utils.test.mjs': "assert.equal(phaseOf({ antigo: 'lib/db.ts' }), 1);\n",
+  });
+  const rows = [{ antigo: 'lib/db.ts', novo: 'lib/global/db.ts', dominio: 'global' }];
+  assert.deepEqual(scanStalePaths(dir, rows), []);
+});
+
 test('não reporta o caminho novo, só o antigo', () => {
   const dir = fixture({ 'CLAUDE.md': 'Ver `lib/global/db.ts`.\n' });
   const rows = [{ antigo: 'lib/db.ts', novo: 'lib/global/db.ts', dominio: 'global' }];
@@ -1458,9 +1472,12 @@ Expected: FAIL — `Cannot find module './scan-stale-paths.mjs'`
 // scripts/superpowers/scan-stale-paths.mjs
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { ROOT, loadMapaRows, toPosix } from './mapa-utils.mjs';
 
-const SKIP_DIRS = new Set(['node_modules', '.git', '.next', '.vercel', 'out', 'public', '.specs', '.superpowers']);
+// 'superpowers': mesmo motivo do verify-imports.mjs — os testes deste próprio ferramental citam
+// caminhos antigos como fixture (ex: 'lib/db.ts'), que dão falso positivo contra o TSV real.
+const SKIP_DIRS = new Set(['node_modules', '.git', '.next', '.vercel', 'out', 'public', '.specs', '.superpowers', 'superpowers']);
 const TEXT_EXT = new Set(['.md', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.json', '.html', '.css']);
 
 function listTextFiles(dir, out = []) {
@@ -1496,7 +1513,7 @@ export function scanStalePaths(rootDir = ROOT, rows = loadMapaRows()) {
   return hits;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const hits = scanStalePaths();
   if (hits.length === 0) {
     console.log('scan-stale-paths: nenhum caminho antigo residual.');
@@ -1511,7 +1528,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 - [ ] **Step 4: Rodar e confirmar que passa**
 
 Run: `node --test scripts/superpowers/scan-stale-paths.test.mjs`
-Expected: PASS — 3 testes
+Expected: PASS — 4 testes
 
 - [ ] **Step 5: Commit da ferramenta**
 
