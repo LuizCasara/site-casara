@@ -6,6 +6,11 @@ const APP_META: Record<string, { title: string; description: string }> = {
     description:
       "Responda perguntas simples e descubra qual dos quatro temperamentos humanos é predominante em você: Colérico, Sanguíneo, Melancólico ou Fleumático.",
   },
+  "descubra-sua-linguagem-do-amor": {
+    title: "Descubra sua Linguagem do Amor",
+    description:
+      "Responda perguntas simples e descubra como você prefere receber carinho entre as 5 linguagens do amor: Palavras de Afirmação, Tempo de Qualidade, Presentes, Atos de Serviço ou Toque Físico.",
+  },
   "rule-of-three": {
     title: "Calculadora de Regra de Três",
     description: "Calcule proporções automaticamente com esta calculadora interativa.",
