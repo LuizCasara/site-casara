@@ -25,7 +25,7 @@ This is a **Next.js 16 (App Router)** personal portfolio site with Tailwind CSS.
 - `/app` — Mini-apps hub listing all tools by category
 - `/app/[app_name]` — Dynamic route that lazy-loads the matching app component
 - `/casamento` — Standalone wedding invitation page (own `layout.tsx`, `icon.tsx`, `opengraph-image.tsx`); photos live in `public/casamento/`
-- `/stats` — Internal analytics dashboard reading from the Neon `events` table via `/api/metrics/*`
+- `/stats` — Internal analytics dashboard reading from the Neon `events` table via `/api/metrics/*` — **only exists under `npm run dev`** (`lib/global/dev-only.ts`): in production/preview the page and every `/api/metrics/*` route return 404, and the footer's hidden "©" link becomes plain text. Its ~15 aggregations per visit kept the Neon compute awake for a dashboard only the owner reads; re-enabling it in production should come with a cache on `/api/metrics/stats`
 - `/w/[id]` — Public participant page for a live "Nuvem de Palavras" word-cloud session (standalone layout, no header/footer)
 - `/w/[id]/resultados/[token]` — Live results display for the same session (bolhas/texto/gráfico views), gated by a separate `results_token` in the path — see "Nuvem de Palavras" below
 - `/q/[id]` — Public participant page for a live "Quiz ao Vivo" session (name entry → lobby → question → results, standalone layout)

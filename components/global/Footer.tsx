@@ -5,6 +5,15 @@ import { usePathname } from 'next/navigation';
 import CreditosModelos from '@/components/livros/sala/CreditosModelos';
 import { deriveLivrosMode } from '@/lib/livros/sala/livros-routing.mjs';
 
+// O "©" é a porta escondida do `/stats`, que só existe no `npm run dev` (ver
+// lib/global/dev-only.ts). Fora dele vira texto: um link para um 404 em toda
+// página, e o prefetch do `<Link>` que o acompanhava, não servem para nada.
+// `NODE_ENV` é inlinado pelo Next no bundle do cliente.
+function Copyright() {
+  if (process.env.NODE_ENV !== 'development') return <>©</>;
+  return <Link href="/stats" className="hover:text-green-500 transition-colors duration-300" tabIndex={-1}>©</Link>;
+}
+
 const Footer = () => {
   const pathname = usePathname();
   if (pathname.startsWith('/casamento') || pathname.startsWith('/w/') || pathname.startsWith('/q/') || pathname.startsWith('/ingress')) return null;
@@ -41,7 +50,7 @@ const Footer = () => {
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1
                           text-center text-[10px] leading-tight text-gray-400 dark:text-gray-500">
             <span>
-              <Link href="/stats" className="hover:text-green-500 transition-colors duration-300" tabIndex={-1}>©</Link>
+              <Copyright/>
               {" "}{new Date().getFullYear()} Luiz Casara
             </span>
             <CreditosModelos compacto/>
@@ -69,7 +78,7 @@ const Footer = () => {
           </p>
 
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            <Link href="/stats" className="hover:text-green-500 transition-colors duration-300" tabIndex={-1}>©</Link>
+            <Copyright/>
             {" "}{new Date().getFullYear()} Luiz Casara
           </p>
 

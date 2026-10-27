@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/global/db';
+import { devOnlyOrNotFound } from '@/lib/global/dev-only';
 
 export async function GET() {
+  // Só no `npm run dev` — ver lib/global/dev-only.ts.
+  const blocked = devOnlyOrNotFound();
+  if (blocked) return blocked;
+
   try {
     const [totals] = await sql`
       SELECT

@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/global/db';
+import { devOnlyOrNotFound } from '@/lib/global/dev-only';
 import { REAL_ROUTE_PATTERN } from '@/lib/global/routes';
 
 export async function GET(request: Request) {
+  // Só no `npm run dev` — ver lib/global/dev-only.ts.
+  const blocked = devOnlyOrNotFound();
+  if (blocked) return blocked;
+
   const { searchParams } = new URL(request.url);
   const period = searchParams.get('period') ?? 'all';
   const days = period === '7d' ? 7 : period === '30d' ? 30 : 36500;
