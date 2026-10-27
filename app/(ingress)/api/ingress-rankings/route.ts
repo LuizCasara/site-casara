@@ -334,7 +334,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       { rows: serialized, total, page, pageSize },
-      { headers: { "Cache-Control": "s-maxage=20, stale-while-revalidate=40" } }
+      { headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=120" } }
     );
   } catch (err) {
     console.error("[api/ingress-rankings] GET error:", err);

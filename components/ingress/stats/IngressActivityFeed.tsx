@@ -5,6 +5,7 @@ import Panel from '../shell/Panel'
 import {fmtScoreDecimal, fmtStat} from '@/lib/ingress/ingress-format.mjs'
 import {COUNTRIES, flagSrc} from '@/lib/ingress/catalog/ingress-countries.mjs'
 import {useLang, type Lang} from '@/components/global/LanguageContext'
+import {useRefreshOnReturn} from '@/lib/ingress/stats/use-refresh-on-return'
 
 export type ActivityKind = 'novo_agente' | 'atualizacao'
 
@@ -42,10 +43,6 @@ function countryName(code: string, lang: Lang): string | null {
   if (!c) return null
   return lang === 'en' ? c.nameEn : c.namePt
 }
-
-// Espelha o `s-maxage=20` de `GET /api/ingress-rankings/activity` — mesmo
-// espírito de `IngressRankingTable` (poll + botão "Atualizar" manual).
-const POLL_MS = 20_000
 
 const T = {
   pt: {
@@ -151,8 +148,8 @@ const PERIODS: Period[] = ['hoje', 'semana', 'mes', 'tudo']
  * Feed de eventos derivados de `casara.ingress_ranking_history` (ver
  * `GET /api/ingress-rankings/activity`): "novo agente" (primeiro snapshot) e
  * "atualização" (delta de AP/nota contra o snapshot anterior do mesmo
- * agente). Sem "ao vivo" automático por design — poll de 20s (mesma janela do
- * `s-maxage` da rota) + botão "Atualizar" manual, igual a
+ * agente). Sem "ao vivo" automático por design — nem poll: botão "Atualizar"
+ * manual + refresh ao voltar à aba (`useRefreshOnReturn`), igual a
  * `IngressRankingTable`. Filtro de período é cumulativo (Hoje ⊂ Semana ⊂ Mês
  * ⊂ Tudo), mesmo espírito do `period` (`7d`/`30d`/`all`) de
  * `GET /api/metrics/stats`.
@@ -168,18 +165,16 @@ export default function IngressActivityFeed({initialEvents}: {initialEvents: Act
 
   useEffect(() => {
     mounted.current = true
-    const id = window.setInterval(async () => {
-      const fresh = await fetchEvents()
-      if (fresh && mounted.current) setEvents(fresh)
-    }, POLL_MS)
     return () => {
       mounted.current = false
-      window.clearInterval(id)
     }
   }, [])
 
-  const refreshNow = async () => {
+  const markFetched = useRefreshOnReturn(() => void refreshNow())
+
+  async function refreshNow() {
     setRefreshing(true)
+    markFetched()
     const fresh = await fetchEvents()
     if (fresh && mounted.current) setEvents(fresh)
     if (mounted.current) setRefreshing(false)

@@ -49,7 +49,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(
       { points },
-      { headers: { "Cache-Control": "s-maxage=20, stale-while-revalidate=40" } }
+      { headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=120" } }
     );
   } catch (err) {
     console.error("[api/ingress-rankings/[codenameKey]/history] GET error:", err);

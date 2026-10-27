@@ -14,6 +14,7 @@ import {artPath} from '@/lib/ingress/catalog/ingress-art.mjs'
 import {TIER_COLOR} from '@/lib/ingress/catalog/ingress-tiers.mjs'
 import {COUNTRIES, flagSrc} from '@/lib/ingress/catalog/ingress-countries.mjs'
 import {RANKING_PAGE_SIZES, defaultSortDir} from '@/lib/ingress/ranking/ingress-rankings.mjs'
+import {useRefreshOnReturn} from '@/lib/ingress/stats/use-refresh-on-return'
 import {useLang, type Lang} from '@/components/global/LanguageContext'
 import {trackIngressAgentShared} from '@/lib/global/analytics'
 
@@ -232,12 +233,9 @@ function MiniPlayStyleRadar({
   )
 }
 
-// Espelha o `s-maxage=20` do `GET /api/ingress-rankings` (ver route.ts) — não
-// tem por que o cliente pedir dado mais fresco do que o próprio cache permite.
-const POLL_MS = 20_000
 const SEARCH_DEBOUNCE_MS = 300
 
-/** Mola das linhas que trocam de lugar (ordenação, ou o poll de 20s reposicionando alguém). */
+/** Mola das linhas que trocam de lugar (ordenação, ou um refresh reposicionando alguém). */
 const ROW_LAYOUT_TRANSITION = {type: 'spring', stiffness: 420, damping: 40} as const
 
 const fmtScore = (n: number) => Math.round(n).toString()
@@ -418,7 +416,7 @@ export default function IngressRankingTable({
   const [highlightKey, setHighlightKey] = useState<string | null>(null)
   const rowRefs = useRef(new Map<string, HTMLTableRowElement>())
   // Garante que o auto-abrir + rolar só aconteça uma vez — sem isso, cada
-  // poll de 20s (`rows` ganha uma referência nova) repetiria o scroll pra
+  // refresh (`rows` ganha uma referência nova) repetiria o scroll pra
   // sempre, inclusive depois do agente já ter fechado o detalhe na mão.
   const highlightHandledRef = useRef(false)
 
@@ -444,10 +442,22 @@ export default function IngressRankingTable({
   // mudam — inclui o mount (mesmos parâmetros default da SSR), o que dá ao
   // componente o `total` real que `page.tsx` não passa mais por prop.
   useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
+
+  // Sem poll automático (ver `useRefreshOnReturn`): o refresh ao voltar à aba
+  // refaz a MESMA página/filtro/ordenação atuais, igual ao botão.
+  const markFetched = useRefreshOnReturn(() => void refreshNow())
+
+  useEffect(() => {
     let cancelled = false
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     setError(false)
+    markFetched()
     fetchPage({page, pageSize, sortKey, sortDir, search, faction: factionFilter}).then((result) => {
       if (cancelled) return
       setLoading(false)
@@ -461,28 +471,8 @@ export default function IngressRankingTable({
     return () => {
       cancelled = true
     }
-  }, [page, pageSize, sortKey, sortDir, search, factionFilter])
-
-  // Poll (20s) refaz a MESMA página/filtro/ordenação atuais — nunca mais um
-  // "top 100" fixo como antes de T15.
-  useEffect(() => {
-    mounted.current = true
-    // `cancelled` é por execução do efeito: `mounted.current` volta a `true` assim que o efeito re-executa (mudou
-    // ordenação/página/filtro), então sozinho ele deixava uma resposta do poll ANTIGO ainda em voo sobrescrever
-    // `rows` com a ordenação anterior.
-    let cancelled = false
-    const id = window.setInterval(async () => {
-      const fresh = await fetchPage({page, pageSize, sortKey, sortDir, search, faction: factionFilter})
-      if (fresh && mounted.current && !cancelled) {
-        setRows(fresh.rows)
-        setTotal(fresh.total)
-      }
-    }, POLL_MS)
-    return () => {
-      cancelled = true
-      mounted.current = false
-      window.clearInterval(id)
-    }
+    // `markFetched` é uma função nova a cada render, mas só toca um ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, sortKey, sortDir, search, factionFilter])
 
   // Busca por texto: debounce de 300ms antes de virar parâmetro de servidor;
@@ -523,8 +513,9 @@ export default function IngressRankingTable({
   const ariaSort = (key: SortableKey): 'ascending' | 'descending' | 'none' =>
     sortKey !== key ? 'none' : sortDir === 'asc' ? 'ascending' : 'descending'
 
-  const refreshNow = async () => {
+  async function refreshNow() {
     setRefreshing(true)
+    markFetched()
     const fresh = await fetchPage({page, pageSize, sortKey, sortDir, search, faction: factionFilter})
     if (fresh && mounted.current) {
       setRows(fresh.rows)

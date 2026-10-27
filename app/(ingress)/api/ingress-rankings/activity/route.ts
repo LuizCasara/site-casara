@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       { events },
-      { headers: { "Cache-Control": "s-maxage=20, stale-while-revalidate=40" } }
+      { headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=120" } }
     );
   } catch (err) {
     console.error("[api/ingress-rankings/activity] GET error:", err);
