@@ -2,8 +2,8 @@
 
 import {useEffect, useRef} from 'react';
 import {CameraControls, CameraControlsImpl} from '@react-three/drei';
-import {ROOM_ANCHORS, ANCORAS_DO_PC} from '@/components/livros/sala/Room';
-import {ESTANTE_ANCHOR, posicaoDaEstante} from '@/components/livros/decor/EstanteDoAcervo';
+import {ROOM_ANCHORS, ANCORAS_DO_PC, TOPO_DA_FAIXA_LIVRE_M} from '@/components/livros/sala/Room';
+import {ESTANTE_ANCHOR, ladoDaEstante, posicaoDaEstante} from '@/components/livros/decor/EstanteDoAcervo';
 import {ESTANTE_AMARELA_ANCHOR, ESTANTE_AMARELA_ALTURA_M} from '@/components/livros/decor/YellowShelf';
 import {NICHOS, NICHOS_POR_ESTANTE, BOOKSHELF_SIZE_M} from '@/lib/livros/sala/bookshelf-model.mjs';
 import {contarEstantes} from '@/lib/livros/sala/shelf-years.mjs';
@@ -322,6 +322,11 @@ function larguraDoConjunto(totalEstantes: number) {
     return direita - esquerda;
 }
 
+/** O x do meio do conjunto, pela mesma fonte que `larguraDoConjunto`. */
+function centroDoConjuntoX(totalEstantes: number) {
+    return (posicaoDaEstante(0, totalEstantes)[0] + posicaoDaEstante(totalEstantes - 1, totalEstantes)[0]) / 2;
+}
+
 /**
  * Nível 1: o móvel inteiro em quadro. A distância vem das medidas dele e da
  * faixa livre da tela, não de um número calibrado à mão — trocar o modelo por
@@ -332,7 +337,9 @@ function larguraDoConjunto(totalEstantes: number) {
  * segunda estante: com uma só, o móvel é bem mais alto que largo e a altura
  * decide sozinha; com duas, o conjunto passa a 1,73m e num celular em retrato
  * ficaria cortado nas pontas. `larguraDoConjunto` cresce junto com o acervo, e a
- * câmera continua no x=0 porque o conjunto fica centrado na parede.
+ * câmera mira o MEIO do conjunto (`centroDoConjuntoX`) — não x=0: desde
+ * 27/10/2026 o conjunto escorrega para a esquerda para sair da mesa do PC, e a
+ * largura calculada só vale se a câmera estiver no centro dela.
  *
  * Medido nas telas que importam: com UMA estante a largura nunca manda, em
  * nenhuma delas — ou seja, esta cena continua exatamente como era. Com DUAS, só
@@ -354,9 +361,10 @@ function viewpointDaEstante(cobertoEmbaixoPx: number, totalGrupos: number): View
         BOOKSHELF_SIZE_M.alturaM, cobertoEmbaixoPx, larguraDoConjunto(totalEstantes),
     );
     const alvoY = estanteCentroY + alvoDeslocadoM;
+    const alvoX = centroDoConjuntoX(totalEstantes);
     return {
-        camera: [0, alvoY, estanteZ + distancia],
-        target: [0, alvoY, estanteZ],
+        camera: [alvoX, alvoY, estanteZ + distancia],
+        target: [alvoX, alvoY, estanteZ],
         minAzimuth: -0.25, maxAzimuth: 0.25,
         minPolar: 1.3, maxPolar: 1.75,
     };
@@ -380,8 +388,17 @@ function viewpointDaEstante(cobertoEmbaixoPx: number, totalGrupos: number): View
  */
 const GIRO_LIVRE_RAD = 0.25;
 
+/**
+ * Margem acima do topo do pôster de HxH. **A cena enquadra a parede, não só o
+ * móvel, desde 27/10/2026**: pela altura da estante (1,45m) o pôster ficava
+ * inteiro fora do quadro, e ele divide aquele canto com o escudo e o quadro de
+ * recados. O alvo sobe junto, então a estante continua no meio, só menor.
+ */
+const MARGEM_ACIMA_DO_POSTER_M = 0.1;
+
 function viewpointDaEstanteAmarela(cobertoEmbaixoPx: number): ViewpointConfig {
-    const {distancia, alvoDeslocadoM} = enquadrar(ESTANTE_AMARELA_ALTURA_M, cobertoEmbaixoPx);
+    const alturaM = Math.max(ESTANTE_AMARELA_ALTURA_M, TOPO_DA_FAIXA_LIVRE_M + MARGEM_ACIMA_DO_POSTER_M);
+    const {distancia, alvoDeslocadoM} = enquadrar(alturaM, cobertoEmbaixoPx);
     const [x, , z] = ESTANTE_AMARELA_ANCHOR.position;
     const angulo = ESTANTE_AMARELA_ANCHOR.rotationY;
 
@@ -389,7 +406,7 @@ function viewpointDaEstanteAmarela(cobertoEmbaixoPx: number): ViewpointConfig {
     // (sin, cos) desse mesmo ângulo — a câmera recua por ali.
     const camX = x + distancia * Math.sin(angulo);
     const camZ = z + distancia * Math.cos(angulo);
-    const alvoY = ESTANTE_AMARELA_ALTURA_M / 2 + alvoDeslocadoM;
+    const alvoY = alturaM / 2 + alvoDeslocadoM;
 
     return {
         camera: [camX, alvoY, camZ],
@@ -410,10 +427,11 @@ const MARGEM_VIZINHOS_M = 0.16;
 function viewpointDoGrupo(indiceGrupo: number, totalGrupos: number, cobertoEmbaixoPx: number): ViewpointConfig {
     const totalEstantes = contarEstantes(totalGrupos, NICHOS_POR_ESTANTE);
     const nicho = NICHOS[indiceGrupo % NICHOS_POR_ESTANTE];
-    const base = posicaoDaEstante(Math.floor(indiceGrupo / NICHOS_POR_ESTANTE), totalEstantes);
+    const iEstante = Math.floor(indiceGrupo / NICHOS_POR_ESTANTE);
+    const base = posicaoDaEstante(iEstante, totalEstantes);
 
     const {distancia, alvoDeslocadoM} = enquadrar(nicho.alturaUtilM + MARGEM_VIZINHOS_M, cobertoEmbaixoPx);
-    const alvoX = base[0] + nicho.offsetX;
+    const alvoX = base[0] + ladoDaEstante(iEstante) * nicho.offsetX;
     const alvoY = base[1] + nicho.pisoY + nicho.alturaUtilM / 2 + alvoDeslocadoM;
 
     return {

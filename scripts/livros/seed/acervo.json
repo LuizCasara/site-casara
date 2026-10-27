@@ -61,7 +61,7 @@
     { "title": "Chaves Bíblicas para o Homem de Deus", "author": "Sandro Antônio dos Santos", "rating": 4.5, "category": "espiritualidade", "tags": [], "status": "lido" },
 
     { "title": "A Vida Feliz", "author": "Sêneca", "rating": null, "category": "filosofia", "tags": ["estoicismo"], "status": "lendo", "progress_pct": 0 },
-    { "title": "Cada Homem um Guerreiro", "author": "Lonnie Berger", "rating": null, "category": "espiritualidade", "tags": [], "status": "lendo", "progress_pct": 0 },
+    { "title": "Cada Homem um Guerreiro 1","author": "Lonnie Berger", "rating": null, "category": "espiritualidade", "tags": [], "status": "lendo", "progress_pct": 0 },
     { "title": "Sapiens: Uma Breve História da Humanidade", "author": "Yuval Noah Harari", "rating": null, "category": "ciencia-sociedade", "tags": ["história", "humanidade"], "status": "lendo", "progress_pct": 0 }
   ]
 }

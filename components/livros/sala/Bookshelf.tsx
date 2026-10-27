@@ -2,10 +2,9 @@
 
 import {Html} from '@react-three/drei';
 import Book, {type ShelfBookData} from '@/components/livros/sala/Book';
-import {ESTANTE_ANCHOR, posicaoDaEstante} from '@/components/livros/decor/EstanteDoAcervo';
-import {shelfWidthM, SHELF_GAP_M} from '@/lib/livros/sala/book-dimensions.mjs';
+import {ESTANTE_ANCHOR, ladoDaEstante, posicaoDaEstante} from '@/components/livros/decor/EstanteDoAcervo';
 import {NICHOS, NICHOS_POR_ESTANTE, NICHO_CAPACIDADE_M, BOOKSHELF_SIZE_M} from '@/lib/livros/sala/bookshelf-model.mjs';
-import {agruparPorAnoDeLeitura, livrosDoGrupo, contarEstantes} from '@/lib/livros/sala/shelf-years.mjs';
+import {agruparPorAnoDeLeitura, livrosDoGrupo, contarEstantes, posicoesNoNicho} from '@/lib/livros/sala/shelf-years.mjs';
 import type {SpineAtlas} from '@/lib/livros/sala/spine-canvas';
 
 type BookshelfProps = {
@@ -51,13 +50,12 @@ export default function Bookshelf({
                 const iEstante = Math.floor(iGrupo / NICHOS_POR_ESTANTE);
                 const nicho = NICHOS[iGrupo % NICHOS_POR_ESTANTE];
                 const base = posicaoDaEstante(iEstante, totalEstantes);
+                const nichoX = base[0] + ladoDaEstante(iEstante) * nicho.offsetX;
 
                 const livros: ShelfBookData[] = livrosDoGrupo(grupo, shelfBooks);
-                // Fila centrada dentro do nicho, não colada à esquerda: um ano
-                // com poucos livros num nicho largo lê melhor centralizado do
-                // que empurrado pra um canto.
-                const largura = shelfWidthM(livros);
-                let xAtual = -largura / 2;
+                // Um ano: fila centrada. Dois: cada ano encosta numa lateral —
+                // ver posicoesNoNicho.
+                const posicoes = posicoesNoNicho(grupo, livros, nicho.larguraUtilM);
 
                 // Com filtro ativo a etiqueta vira contador ("2023 · 4") e o ano
                 // que zerou fica apagado e sem clique — não faria sentido dar
@@ -81,7 +79,7 @@ export default function Bookshelf({
                         {mostrarEtiquetas && (
                             <Html
                                 position={[
-                                    base[0] + nicho.offsetX,
+                                    nichoX,
                                     base[1] + nicho.pisoY - 0.035,
                                     base[2] + BOOKSHELF_SIZE_M.profundidadeM / 2,
                                 ]}
@@ -106,17 +104,15 @@ export default function Bookshelf({
                                 </button>
                             </Html>
                         )}
-                        {livros.map((book) => {
+                        {posicoes.map(({livro: book, x}) => {
                             const spine = spineBySlug.get(book.slug);
                             if (!spine) return null; // não deveria acontecer — o atlas cobre todo livro 'lido'
-                            const x = xAtual + book.thicknessM / 2;
-                            xAtual += book.thicknessM + SHELF_GAP_M;
                             return (
                                 <Book
                                     key={book.slug}
                                     book={book}
                                     position={[
-                                        base[0] + nicho.offsetX + x,
+                                        nichoX + x,
                                         base[1] + nicho.pisoY + book.heightM / 2,
                                         base[2],
                                     ]}

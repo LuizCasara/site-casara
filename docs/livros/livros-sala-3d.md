@@ -115,7 +115,10 @@ que ainda se mexe.
 ## A estante por ano de leitura
 
 O acervo é uma linha do tempo, e a estante mostra isso: cada nicho guarda um
-ano, ou dois anos vizinhos quando os dois cabem juntos.
+ano, ou dois anos vizinhos quando os dois cabem juntos — **nunca três**, mesmo
+que caibam (`MAX_ANOS_POR_NICHO`, desde 27/10/2026). Num nicho de dois anos o
+mais antigo encosta na lateral esquerda e o mais novo na direita, e o vão entre
+eles é a divisória (`posicoesNoNicho`); com um ano só a fila sai centrada.
 
 - **O móvel é `bookshelf-tall.glb`**, escolhido pelo dono do acervo. Já tinha
   sido descartado uma vez (nichos em zigue-zague, só 5 deles, textura embutida
@@ -232,10 +235,11 @@ A ordem é a do MUNDO — mais antigo embaixo, subindo —, e não a do trilho d
 câmera, que varre os anos de cima para baixo: aqui se está folheando o que está
 na prateleira, não sendo apresentado a ela.
 
-Dentro de um nicho que guarda DOIS anos eles se intercalam, porque a ordem de
-dentro é a da lista recebida. Isso é fiel: é exatamente assim que `Bookshelf`
-desenha aquele vão. Por isso a invariante que o teste guarda é troca de NICHO, e
-não troca de ano.
+Dentro de um nicho que guarda DOIS anos, o mais antigo vem inteiro primeiro e
+depois o mais novo, cada um na ordem da lista recebida — que é como `Bookshelf`
+desenha aquele vão desde que cada ano encosta numa lateral (até 27/10/2026 os
+dois se intercalavam). A invariante que o teste guarda continua sendo troca de
+NICHO, não de ano.
 
 **A câmera nunca se move ao abrir um livro.** Existiu um ponto de vista que
 recuava até o centro da sala, e o zoom dava um solavanco no mesmo instante em

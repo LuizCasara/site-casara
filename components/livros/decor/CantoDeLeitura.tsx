@@ -16,28 +16,29 @@ import {bracoEmMetros} from '@/lib/livros/sala/poltrona-model.mjs';
  * publicado aqui e continua ajustável sem tocar no móvel.
  */
 
-const POLTRONA_CHAO: [number, number, number] = [-1.45, 0, -0.55];
+/**
+ * **No canto do fundo à esquerda desde 27/10/2026**, onde morava a planta (que
+ * foi para o lado da mesa do PC). Era [-1.45, 0, -0.55]. Com o giro de 0.7 a
+ * pegada da poltrona vai de x ≈ -2,43 a -1,37 e de z ≈ -1,44 a -0,36: 17cm da
+ * parede lateral e 16cm da do fundo. O canto da frente é o que chega mais
+ * perto da estante amarela (z ≈ 0): avançar a poltrona em z é por onde as duas
+ * se tocam.
+ */
+const POLTRONA_CHAO: [number, number, number] = [-1.9, 0, -0.9];
 // +Math.PI: com só `0.7` a poltrona fica de costas pra câmera.
 const POLTRONA_ROT_Y = 0.7 + Math.PI;
 /**
- * Vetor (x, z) pra onde a poltrona olha. O modelo aponta pra -z local, daí os
- * dois sinais negativos. Existe para a mesa se posicionar A PARTIR da poltrona:
- * com números escritos à mão, girar a poltrona deixaria a mesa de centro
- * atravessada na frente dela sem ninguém perceber.
+ * A mesa de centro. **Deixou de sair da poltrona em 27/10/2026**: até então era
+ * a posição dela mais 0,65m na direção em que ela olha, e quando a poltrona foi
+ * para o canto o pedido foi a mesa ficar onde estava. Estes são os números que
+ * aquela conta dava com a poltrona em [-1.45, 0, -0.55] — continuam na linha
+ * do olhar dela, agora a ~1,2m em vez de 0,65.
  */
-const POLTRONA_FRENTE: [number, number] = [-Math.sin(POLTRONA_ROT_Y), -Math.cos(POLTRONA_ROT_Y)];
-
-/** Distância da mesa de centro à poltrona, medida na frente dela. */
-const MESA_DISTANCIA_M = 0.65;
-const MESA_CHAO: [number, number, number] = [
-    POLTRONA_CHAO[0] + POLTRONA_FRENTE[0] * MESA_DISTANCIA_M,
-    0,
-    POLTRONA_CHAO[2] + POLTRONA_FRENTE[1] * MESA_DISTANCIA_M,
-];
-// Mesma orientação da poltrona (menos o meio giro que faz o modelo dela olhar
-// pra câmera): o tampo fica paralelo ao encosto, e a pilha de livros, que herda
-// esta rotação, fica de frente pra quem senta.
-const MESA_ROT_Y = POLTRONA_ROT_Y - Math.PI;
+const MESA_CHAO: [number, number, number] = [-1.0313, 0, -0.0529];
+// Fixa pelo mesmo motivo de MESA_CHAO: era `POLTRONA_ROT_Y - Math.PI`, e
+// derivada ela giraria a mesa no lugar quando a poltrona girasse. Hoje as duas
+// coincidem — o tampo paralelo ao encosto, a pilha de frente pra quem senta.
+const MESA_ROT_Y = 0.7;
 
 /**
  * O TOPO do tampo — é sobre ele que a pilha de DeskBooks.tsx assenta, e é o

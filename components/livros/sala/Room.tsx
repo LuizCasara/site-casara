@@ -6,7 +6,7 @@ import KenneyModel, {MODELOS} from '@/components/livros/decor/KenneyModel';
 import {INTERRUPTOR_RECUO_M} from '@/components/livros/decor/Interruptor';
 import {JANELA_RECUO_M} from '@/components/livros/decor/Janela';
 import {useLuzSuave} from '@/components/livros/decor/use-luz-suave';
-import EstanteDoAcervo, {ESTANTE_ANCHOR, posicaoDaEstante} from '@/components/livros/decor/EstanteDoAcervo';
+import EstanteDoAcervo, {ESTANTE_ANCHOR, ladoDaEstante, posicaoDaEstante} from '@/components/livros/decor/EstanteDoAcervo';
 import CantoDeLeitura, {
     MESA_ANCHOR, pontoNoTampo, pontoNoBraco, BRACO_ROT_Y,
 } from '@/components/livros/decor/CantoDeLeitura';
@@ -81,12 +81,15 @@ const FAIXA_LIVRE_Z = -0.98;
  * borda dela e a prateleira aérea sobram 8,5cm. Não havia para onde escorregar
  * na horizontal.
  *
- * **O y de 1,36 é o mesmo que ele tinha na parede do fundo**, e isso é a escolha
- * central deste arranjo: dos dois que dividem a faixa, ele é o que se lê e se
- * clica, então é ele que fica na altura de quem está de pé. Quem subiu foi o
- * pôster — ver `POSTER_HUNTER`.
+ * **O y foi 1,36 — o que ele tinha na parede do fundo — até 27/10/2026**, e a
+ * escolha central deste arranjo continua: dos dois que dividem a faixa, ele é o
+ * que se lê e se clica, então é ele que fica mais perto da altura de quem está
+ * de pé. Desceu 15cm junto com o pôster para os dois caberem na cena
+ * "Estante" (ver `TOPO_DA_FAIXA_LIVRE_M`). Não desce mais que isso porque a
+ * poltrona agora fica embaixo dele, a 17cm da parede: a base do quadro em
+ * ~1,0m ainda passa por cima do encosto (0,82m).
  */
-const QUADRO_RECOMENDACOES: [number, number, number] = [-PAREDE_LATERAL_X, 1.36, FAIXA_LIVRE_Z];
+const QUADRO_RECOMENDACOES: [number, number, number] = [-PAREDE_LATERAL_X, 1.21, FAIXA_LIVRE_Z];
 const QUADRO_RECOMENDACOES_TAMANHO = {larguraM: 0.44, alturaM: 0.43};
 
 /**
@@ -97,10 +100,18 @@ const QUADRO_RECOMENDACOES_TAMANHO = {larguraM: 0.44, alturaM: 0.43};
  * 1,00m, o que caberia — mas deixaria ~8cm de folga em todos os lados, e a faixa
  * deixaria de respirar. Na vertical sobra parede de sobra (o pé-direito é 3m).
  *
- * O y de 1,885 põe a base do pôster em 1,675m, 10cm acima do topo do quadro, e o
- * topo em 2,095m. Antes ele estava em 1,5, que é onde o quadro está agora.
+ * O y de 1,735 põe a base do pôster em 1,525m, 10cm acima do topo do quadro, e o
+ * topo em 1,945m. Já foi 1,5 e depois 1,885; desceu com o quadro em 27/10/2026.
  */
-const POSTER_HUNTER: [number, number, number] = [-PAREDE_LATERAL_X, 1.885, FAIXA_LIVRE_Z];
+const POSTER_HUNTER: [number, number, number] = [-PAREDE_LATERAL_X, 1.735, FAIXA_LIVRE_Z];
+const POSTER_HUNTER_ALTURA_M = 0.42;
+
+/**
+ * Até onde sobe o que está pendurado na faixa livre — o topo do pôster de HxH.
+ * Publicado para a cena "Estante" enquadrar a parede inteira daquele canto, e
+ * não só a altura da estante amarela: antes o pôster ficava fora do quadro.
+ */
+export const TOPO_DA_FAIXA_LIVRE_M = POSTER_HUNTER[1] + POSTER_HUNTER_ALTURA_M / 2;
 
 /**
  * Os objetos COM AÇÃO do canto de trabalho, na ordem em que o trilho os varre
@@ -191,11 +202,17 @@ const FLOOR_COLOR = '#3a2f2b';
 const WALL_COLOR = '#2b2320';
 const RUG_COLOR = '#a89584';
 
-/** Nicho onde a lava lamp mora: o quarto de baixo pra cima (base = 0). */
-const NICHO_DA_LAVA = 3;
+/**
+ * Nicho onde a lava lamp mora: o de cima (base = 0), na ÚLTIMA estante — a da
+ * direita, espelhada, cuja vitrine do topo fica no canto externo do conjunto.
+ * Até 27/10/2026 era o quarto nicho da primeira estante, colada ao vão de 2024.
+ */
+const NICHO_DA_LAVA = 4;
 
 /**
- * Nicho da carteira de caçador: o terceiro, dois andares abaixo da lava lamp.
+ * Nicho da carteira de caçador: o terceiro, dois andares abaixo de onde a lava
+ * lamp morava até 27/10/2026 — a conta abaixo foi feita contra aquele lugar, e
+ * hoje a lâmpada está na outra estante.
  *
  * **Não é o nicho 1, que também está "mais embaixo".** As vitrines alternam de
  * lado a cada andar (é isso que o zigue-zague do móvel significa), e a do 1 cai
@@ -230,9 +247,10 @@ const AVANCO_DA_CARTEIRA_M = 0.035;
  */
 export function posicaoDaLavaLamp(gruposDeAno: number): [number, number, number] {
     const nicho = NICHOS[NICHO_DA_LAVA];
-    const base = posicaoDaEstante(0, contarEstantes(gruposDeAno, NICHOS_POR_ESTANTE));
+    const total = contarEstantes(gruposDeAno, NICHOS_POR_ESTANTE);
+    const base = posicaoDaEstante(total - 1, total);
     return [
-        base[0] + nicho.vitrineOffsetX,
+        base[0] + ladoDaEstante(total - 1) * nicho.vitrineOffsetX,
         base[1] + nicho.pisoY,
         // Um pouco à frente do centro da estante (onde as lombadas ficam): a
         // lâmpada é fina, e no meio da profundidade pareceria enfiada no fundo.
@@ -259,7 +277,7 @@ export function posicaoDaCarteira(gruposDeAno: number): [number, number, number]
     const nicho = NICHOS[NICHO_DA_CARTEIRA];
     const base = posicaoDaEstante(0, contarEstantes(gruposDeAno, NICHOS_POR_ESTANTE));
     return [
-        base[0] + nicho.vitrineOffsetX,
+        base[0] + ladoDaEstante(0) * nicho.vitrineOffsetX,
         base[1] + nicho.pisoY,
         base[2] + AVANCO_DA_CARTEIRA_M,
     ];
@@ -384,9 +402,11 @@ export default function Room({
                 dois formam um conjunto, e mover só o móvel deixaria o escudo
                 para trás, sozinho no meio da parede. */}
             <EscudoEscoteiro position={[-PAREDE_LATERAL_X, 1.15, 0.8]} normal={1} isMobile={isMobile}/>
-            {/* A planta é "atrás da poltrona", não do conjunto da estante
-                amarela — inclusive o tamanho foi pedido assim. */}
-            <Planta position={[-2.2, 0, -1.4]} alturaM={0.94}/>
+            {/* A planta de chão, à direita da mesa do PC: rente à parede lateral,
+                logo depois da ponta do braço da mesa (que termina em z ≈ 0,28).
+                Até 27/10/2026 ficava atrás da poltrona, em [-2.2, 0, -1.4] — a
+                poltrona ocupou aquele canto. O tamanho é o que foi pedido lá. */}
+            <Planta position={[2.3, 0, 0.55]} alturaM={0.94}/>
 
             {/* Território congelado — ver o cabeçalho de CantoDeLeitura.tsx. O
                 abajur é a exceção: ele virou interruptor, e o congelamento vale
@@ -518,7 +538,7 @@ export default function Room({
                 position={POSTER_HUNTER}
                 imagem="/livros/poster-hunter.jpg"
                 larguraM={0.56}
-                alturaM={0.42}
+                alturaM={POSTER_HUNTER_ALTURA_M}
                 parede={1}
                 rotationY={-0.04}
                 onClick={() => abrirExterno(PLAYLIST_HUNTER, 'hunter-youtube', 'poster-hunter')}

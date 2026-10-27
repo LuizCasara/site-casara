@@ -72,8 +72,16 @@ export default function Poltrona({position, rotationY = 0, abajurAceso = true, p
                 cores={{carpet: '#b5a48d', wood: '#5c4326', metal: '#4a4238'}}
             />
 
+            {/*
+              No espaço da poltrona (+z é o encosto, que mede ~0,88m de fundo
+              e ~0,64m de largura). Até 27/10/2026 era [-0.75, 0, 0.1]: longe da
+              lateral e na altura do assento, o que no mundo caía em x ≈ -0,94 —
+              colado à borda da estante do acervo depois que ela andou para a
+              esquerda. Agora fica junto do canto do encosto. O z é 0.25 e não
+              mais: com a poltrona no canto, 0.35 encostava a cúpula na parede.
+            */}
             <group
-                position={[-0.75, 0, 0.1]}
+                position={[-0.5, 0, 0.25]}
                 onPointerOver={(e) => {
                     if (isMobile || !interativo) return;
                     e.stopPropagation();
