@@ -1,0 +1,35 @@
+-- ════════════════════════════════════════════════════════════════════════════
+-- 011 — Remover os backups da reescala log₂ do ranking do Ingress
+-- ════════════════════════════════════════════════════════════════════════════
+--
+-- CONTEXTO
+-- `scripts/ingress/ingress-rescore.mjs --backup pre_log2_20260918` criou duas
+-- cópias antes da troca para a escala logarítmica (ADR-0005, 18/09/2026):
+--   casara.ingress_rankings_bkp_pre_log2_20260918        (30 linhas em 27/10)
+--   casara.ingress_ranking_history_bkp_pre_log2_20260918 (38 linhas em 27/10)
+-- A escala nova está em produção há mais de um mês. Ninguém lê essas tabelas.
+--
+-- O QUE SE PERDE
+-- O caminho `ingress-rescore.mjs --rollback pre_log2_20260918 --apply`, que
+-- lê exatamente estas duas tabelas. Depois do DROP, reverter o ADR-0005 passa
+-- a ser recalcular as notas na escala antiga a partir de `stat_values` (que
+-- continua íntegro), não restaurar backup. Uma cópia JSON das mesmas linhas
+-- continua em `scripts/backups/ingress-rescore-pre_log2_20260918.json` na
+-- máquina do Luiz (ignorado pelo git) — não apague esse arquivo junto se
+-- quiser manter alguma volta.
+--
+-- O QUE ELA NÃO TOCA
+-- `casara.ingress_rankings` e `casara.ingress_ranking_history` (as tabelas
+-- reais), e nada do schema `geav` (outro site).
+--
+-- COMO RODAR
+-- NÃO aplicada automaticamente. Confira antes (bloco abaixo) e cole no Neon
+-- SQL Editor. `IF EXISTS` torna rodar duas vezes seguro.
+--
+-- ─── Conferência prévia (rodar solto) ───────────────────────────────────────
+--
+-- SELECT relname, n_live_tup FROM pg_stat_user_tables
+-- WHERE schemaname = 'casara' AND relname LIKE '%_bkp_%';
+
+DROP TABLE IF EXISTS casara.ingress_rankings_bkp_pre_log2_20260918;
+DROP TABLE IF EXISTS casara.ingress_ranking_history_bkp_pre_log2_20260918;
