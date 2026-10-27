@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
-import { REAL_ROUTE_RE } from '@/lib/global/routes';
+import { shouldRecordPageView } from '@/lib/global/routes';
 import { parseBrowser } from '@/lib/global/request-meta';
 import { shouldRecordEvents } from '@/lib/global/analytics-env';
 
@@ -24,8 +24,9 @@ export async function proxy(request: NextRequest) {
 
   // Só rastreia page_view para rotas reais do site — filtra tanto arquivos
   // estáticos (manifest.json, *.jpg, ...) quanto sondas de bot/scanner
-  // (/.env, /app/next.config.js, ...) na origem.
-  if (!REAL_ROUTE_RE.test(pathname)) {
+  // (/.env, /app/next.config.js, ...) na origem — e, dentre elas, só as que
+  // ainda valem acordar o Neon (ver `shouldRecordPageView`).
+  if (!shouldRecordPageView(pathname)) {
     return NextResponse.next();
   }
 

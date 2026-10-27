@@ -43,3 +43,26 @@ export const REAL_ROUTE_PATTERN =
   `|^/[wq]/${SESSION_ID}/resultados/${RESULTS_TOKEN}$`;
 
 export const REAL_ROUTE_RE = new RegExp(REAL_ROUTE_PATTERN);
+/**
+ * Das rotas reais, as únicas cujo `page_view` o proxy ainda grava no Neon.
+ *
+ * Cada `page_view` isolado acorda o compute do Neon por no mínimo 5 min (ele
+ * só suspende após 5 min sem query). Numa medição de 30 dias (out/2026), os
+ * page views abriam sozinhos a maioria das janelas de compute; os cliques quase
+ * sempre caíam numa janela já aberta. Home, about, projects, `/app*` e
+ * `/casamento` saíram: o Vercel Analytics já conta esses acessos, e nada no
+ * site lê esses números do banco. Ficaram:
+ * - `/ingress*`: o painel INGRESS_ANALYSIS do `/stats` conta acessos por aqui;
+ * - `/livros*`: os gráficos da sala de leitura;
+ * - `/w/*` e `/q/*`: durante uma dinâmica o banco já está acordado pelo
+ *   polling da sessão, então gravar não custa nada a mais.
+ *
+ * `REAL_ROUTE_PATTERN` continua o allowlist completo porque o `/stats` o usa
+ * para filtrar o histórico, que tem page views de todas as rotas.
+ */
+const PAGE_VIEW_ROUTE_RE = /^\/(ingress|livros)(\/|$)|^\/[wq]\//;
+
+export function shouldRecordPageView(pathname: string): boolean {
+  return REAL_ROUTE_RE.test(pathname) && PAGE_VIEW_ROUTE_RE.test(pathname);
+}
+
