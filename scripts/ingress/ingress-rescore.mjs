@@ -31,6 +31,11 @@ import {dirname, join} from 'node:path'
 import {neon} from '@neondatabase/serverless'
 import {computeAxisScores, computeOverallScore} from '../../lib/ingress/stats/ingress-tier-score.mjs'
 import {planRescore} from '../../lib/ingress/ranking/ingress-rescore.mjs'
+import {revalidarCache} from '../global/revalidar-cache.mjs'
+
+// Mesmas strings de lib/ingress/ranking/ingress-ranking-cache.ts (que é .ts e não
+// pode ser importado daqui): a página do ranking é ISR e as notas mudaram.
+const TAGS_RANKING = ['ingress-ranking', 'ingress-nerd-stats']
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const args = process.argv.slice(2)
@@ -318,8 +323,10 @@ if (BACKUP_TAG) {
     await doBackup(BACKUP_TAG)
 } else if (ROLLBACK_TAG) {
     await doRollback(ROLLBACK_TAG)
+    if (APPLY) await revalidarCache(TAGS_RANKING, 'o rollback das notas')
 } else if (APPLY_TAG) {
     await doApply(APPLY_TAG)
+    await revalidarCache(TAGS_RANKING, 'as notas recalculadas')
 } else {
     printPlan(await loadPlan())
     console.log('\nDry-run — nada foi gravado. Próximos passos: --backup <tag>, depois --apply <tag>.')

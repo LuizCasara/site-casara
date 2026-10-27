@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       a: keyA ? serialize(byKey.get(keyA)) : null,
       b: keyB ? serialize(byKey.get(keyB)) : null,
-    });
+    }, { headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=120" } });
   } catch (err) {
     console.error("[api/ingress-rankings/compare] GET error:", err);
     return NextResponse.json({ error: "internal error" }, { status: 500 });

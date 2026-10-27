@@ -370,16 +370,20 @@ async function fetchPage(params: FetchParams): Promise<{rows: RankingRow[]; tota
  * cliente não guarda mais o ranking inteiro em memória. `rank` chega pronto
  * em cada linha (rank canônico, calculado no servidor antes de
  * busca/filtro/ordenação de exibição — IRCMP-18), então não há mais cálculo
- * de posição no cliente. O componente busca a página 1 default no mount
- * (mesmos parâmetros da SSR) pra descobrir `total` — `page.tsx` não passa
- * mais esse número por prop (ver SPEC_DEVIATION em T7/tasks.md).
+ * de posição no cliente. `initialRows`/`initialTotal` são a página 1 default
+ * vinda da SSR (cacheada, ver `page.tsx`), então o mount não refaz a mesma
+ * busca — antes refazia só para descobrir `total` (SPEC_DEVIATION em
+ * T7/tasks.md), uma ida à API por visita.
  */
 export default function IngressRankingTable({
   initialRows,
+  initialTotal,
   onCompareRow,
   pendingCompareKey,
 }: {
   initialRows: RankingRow[]
+  /** Total real de agentes da SSR (sem busca/filtro), o mesmo que o hero mostra. */
+  initialTotal: number
   /** Atalho "Comparar" por linha (P2, IRCMP-31/32) — 1º clique marca, 2º clique (em `IngressRankingTabs`) preenche Agente A/B e troca a aba. */
   onCompareRow: (codenameKey: string) => void
   /** Agente já marcado pelo 1º clique, esperando o segundo — a linha dele fica destacada. */
@@ -390,7 +394,11 @@ export default function IngressRankingTable({
   // O scramble é JS (timers), então nem o CSS nem o `MotionConfig` o alcançam.
   const reduceMotion = useReducedMotion()
   const [rows, setRows] = useState(initialRows)
-  const [total, setTotal] = useState<number | null>(null)
+  // Com a SSR vazia (tabela inexistente, banco fora) não há o que confiar: o
+  // mount busca de novo, como antes.
+  const ssrUsable = initialRows.length > 0
+  const [total, setTotal] = useState<number | null>(ssrUsable ? initialTotal : null)
+  const skipMountFetch = useRef(ssrUsable)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -438,9 +446,6 @@ export default function IngressRankingTable({
     el.scrollIntoView({behavior: 'smooth', block: 'center'})
   }, [highlightKey, rows])
 
-  // Busca ao servidor sempre que página/tamanho/ordenação/busca/facção
-  // mudam — inclui o mount (mesmos parâmetros default da SSR), o que dá ao
-  // componente o `total` real que `page.tsx` não passa mais por prop.
   useEffect(() => {
     mounted.current = true
     return () => {
@@ -452,9 +457,14 @@ export default function IngressRankingTable({
   // refaz a MESMA página/filtro/ordenação atuais, igual ao botão.
   const markFetched = useRefreshOnReturn(() => void refreshNow())
 
+  // Busca ao servidor sempre que página/tamanho/ordenação/busca/facção
+  // mudam. O mount pula a busca quando a SSR já trouxe a página 1 default.
   useEffect(() => {
+    if (skipMountFetch.current) {
+      skipMountFetch.current = false
+      return
+    }
     let cancelled = false
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     setError(false)
     markFetched()

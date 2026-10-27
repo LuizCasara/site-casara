@@ -23,6 +23,7 @@ import {readFileSync} from 'node:fs';
 import {createInterface} from 'node:readline/promises';
 import {neon} from '@neondatabase/serverless';
 import {distribuirMeses} from '../../lib/livros/acervo/reading-dates.mjs';
+import {revalidarCache} from '../global/revalidar-cache.mjs';
 
 const APLICAR = process.argv.includes('--apply');
 
@@ -113,3 +114,5 @@ for (const l of planejado) {
 }
 
 console.log(`\n${gravados} livros atualizados.`);
+// Tag `livros` = `LIVROS_CACHE_TAG` de lib/livros/acervo/books.ts.
+await revalidarCache(['livros'], 'as datas de leitura');

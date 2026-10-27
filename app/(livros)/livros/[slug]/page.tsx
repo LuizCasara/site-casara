@@ -12,7 +12,16 @@ import BotaoCompartilhar from '@/components/livros/acervo/BotaoCompartilhar';
 import {TagDoLivro, VoltarDoLivro} from '@/components/livros/acervo/LinksDoLivro';
 import {REMAP_HEADINGS} from '@/components/livros/acervo/markdown-headings';
 
-export const dynamic = 'force-dynamic';
+// ISR sob demanda: nenhum livro é gerado no build (`[]`), cada um é renderizado
+// na primeira visita e servido da CDN depois. O dado vem do Data Cache com a
+// tag `livros` (ver `lib/livros/acervo/books.ts`), invalidada pelos scripts de
+// cadastro — `revalidate` é só a rede de segurança. Antes era `force-dynamic`,
+// e todo render (bots e previews de link inclusive) acordava o Neon.
+export const revalidate = 3600;
+
+export function generateStaticParams() {
+    return [];
+}
 
 export async function generateMetadata({params}: {
     params: Promise<{slug: string}>;

@@ -4,6 +4,13 @@ import BookOverlay from '@/components/livros/overlays/BookOverlay';
 import CardDoLivro from '@/components/livros/acervo/CardDoLivro';
 import CloseBookButton from '@/components/livros/overlays/CloseBookButton';
 
+// Mesmo regime de `../../[slug]/page.tsx`: ISR sob demanda, dado da tag `livros`.
+export const revalidate = 3600;
+
+export function generateStaticParams() {
+    return [];
+}
+
 export default async function LivroInterceptado({params}: {params: Promise<{slug: string}>}) {
     const {slug} = await params;
     const livro = await buscarLivroPorSlug(slug);

@@ -2,7 +2,10 @@ import type {Metadata} from 'next';
 import {listarLivros, listarTags} from '@/lib/livros/acervo/books';
 import ListaFiltravel from '@/components/livros/acervo/ListaFiltravel';
 
-export const dynamic = 'force-dynamic';
+// Sem `force-dynamic`: a página continua renderizando por request porque lê
+// `searchParams` (estado inicial dos filtros), mas `listarLivros`/`listarTags`
+// vêm do Data Cache (tag `livros`, ver `lib/livros/acervo/books.ts`) — o render
+// não toca o banco.
 
 export const metadata: Metadata = {
     title: 'Livros',

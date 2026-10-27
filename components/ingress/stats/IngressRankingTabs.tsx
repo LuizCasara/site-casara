@@ -37,10 +37,12 @@ const LABEL = {
  */
 export default function IngressRankingTabs({
   initialRows,
+  initialTotal,
   initialEvents,
   nerdStats,
 }: {
   initialRows: RankingRow[]
+  initialTotal: number
   initialEvents: ActivityRow[]
   nerdStats: NerdStats | null
 }) {
@@ -152,7 +154,7 @@ export default function IngressRankingTabs({
         </button>
       </div>
       {tab === 'ranking' ? (
-        <IngressRankingTable initialRows={initialRows} onCompareRow={handleCompareRow} pendingCompareKey={pendingKey} />
+        <IngressRankingTable initialRows={initialRows} initialTotal={initialTotal} onCompareRow={handleCompareRow} pendingCompareKey={pendingKey} />
       ) : tab === 'activity' ? (
         <IngressActivityFeed initialEvents={initialEvents} />
       ) : tab === 'nerd' ? (

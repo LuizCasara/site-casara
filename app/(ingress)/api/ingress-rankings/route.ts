@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import sql from "@/lib/global/db";
 import {
   normalizeCodenameKey,
@@ -13,6 +14,7 @@ import { computeAxisScores, computeOverallScore, overallTierLabel, computeStatTi
 import { RADAR_STAT_KEYS } from "@/lib/ingress/ranking/ingress-compare-message.mjs";
 import { pickHistoryStats } from "@/lib/ingress/ranking/ingress-history-diff.mjs";
 import { rateLimitOrNull } from "@/lib/global/rate-limit";
+import { INGRESS_NERD_STATS_TAG, INGRESS_RANKING_TAG } from "@/lib/ingress/ranking/ingress-ranking-cache";
 
 export const dynamic = "force-dynamic";
 
@@ -270,6 +272,12 @@ export async function POST(request: NextRequest) {
       } catch (err) {
         console.error("[api/ingress-rankings] falha ao gravar snapshot de histórico:", err);
       }
+      // A página do ranking é ISR (ver `ingress-ranking-cache.ts`). `expire: 0`
+      // no ranking: quem acabou de enviar recarrega e precisa se ver na lista,
+      // sem receber primeiro a versão velha. As estatísticas para nerds podem
+      // servir a versão anterior enquanto recalculam ('max').
+      revalidateTag(INGRESS_RANKING_TAG, { expire: 0 });
+      revalidateTag(INGRESS_NERD_STATS_TAG, "max");
     }
 
     const responseBody = await buildResponseFromRow(finalRow, written);

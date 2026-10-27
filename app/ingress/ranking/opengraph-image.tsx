@@ -1,9 +1,16 @@
 import {ImageResponse} from 'next/og'
+import {unstable_cache} from 'next/cache'
 import sql from '@/lib/global/db'
+import {INGRESS_RANKING_TAG} from '@/lib/ingress/ranking/ingress-ranking-cache'
 
 export const runtime = 'nodejs'
 export const size = {width: 1200, height: 630}
 export const contentType = 'image/png'
+// Antes a imagem só era gerada no build, com o contador congelado até o próximo
+// deploy. Agora regenera a cada hora, no máximo; a contagem vem do Data Cache
+// (tag do ranking, invalidada a cada envio de agente), então um preview de link
+// raramente toca o banco.
+export const revalidate = 3600
 
 const GREEN = '#00e676'
 const CYAN = '#26b6ff'
@@ -16,10 +23,18 @@ const DIM = '#93a7a0'
  * a tabela pode ainda não existir, ou o banco pode estar fora — a imagem
  * nunca pode quebrar por causa disso, só cai pro card sem o contador.
  */
-async function countAgents(): Promise<number | null> {
-  try {
+const countAgentsCached = unstable_cache(
+  async (): Promise<number> => {
     const [{count}] = await sql`SELECT COUNT(*)::int AS count FROM casara.ingress_rankings`
     return count
+  },
+  ['ingress:og-agent-count'],
+  {tags: [INGRESS_RANKING_TAG], revalidate: 3600},
+)
+
+async function countAgents(): Promise<number | null> {
+  try {
+    return await countAgentsCached()
   } catch {
     return null
   }

@@ -27,6 +27,11 @@ import {baixarCapa, capaDaAmazon} from '../../lib/livros/acervo/book-cover.mjs';
 import {slugify, normalizeTag, tagKey} from '../../lib/livros/acervo/book-utils.mjs';
 import {CATEGORY_IDS} from '../../lib/livros/acervo/book-categories.mjs';
 import {parseDataDeLeitura} from '../../lib/livros/acervo/reading-dates.mjs';
+import {revalidarCache} from '../global/revalidar-cache.mjs';
+
+// Mesma string de `LIVROS_CACHE_TAG` em lib/livros/acervo/books.ts (que é .ts e
+// não pode ser importado daqui).
+const TAG_LIVROS = 'livros';
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -850,12 +855,15 @@ async function main() {
         }
         case 'add': {
             const sql = abrirBanco();
-            await comandoAdd(sql, argumento, process.argv.includes('--dry-run'));
+            const dryRun = process.argv.includes('--dry-run');
+            await comandoAdd(sql, argumento, dryRun);
+            if (!dryRun) await revalidarCache([TAG_LIVROS], 'o livro novo');
             break;
         }
         case 'edit': {
             const sql = abrirBanco();
             await comandoEdit(sql, argumento);
+            await revalidarCache([TAG_LIVROS], 'a edição');
             break;
         }
         case 'capa': {
@@ -864,7 +872,11 @@ async function main() {
             // `capa <slug> --dry-run` não tome "--dry-run" como sendo a URL.
             const url = process.argv[4]?.startsWith('--') ? undefined : process.argv[4];
             const sql = abrirBanco();
-            await comandoCapa(sql, argumento, url, process.argv.includes('--dry-run'));
+            const dryRun = process.argv.includes('--dry-run');
+            await comandoCapa(sql, argumento, url, dryRun);
+            // A capa nova só existe no site depois do deploy (public/ é
+            // versionado); a lombada (`spine_color`) aparece já.
+            if (!dryRun) await revalidarCache([TAG_LIVROS], 'a capa nova');
             break;
         }
         case 'seed': {
@@ -889,11 +901,13 @@ async function main() {
             }
 
             const sql = abrirBanco();
+            const apply = process.argv.includes('--apply');
             await comandoSeed(sql, {
                 limite,
-                apply: process.argv.includes('--apply'),
+                apply,
                 incluirRevisar: process.argv.includes('--incluir-revisar'),
             });
+            if (apply) await revalidarCache([TAG_LIVROS], 'a importação');
             break;
         }
         default:

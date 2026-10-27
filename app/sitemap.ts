@@ -4,6 +4,11 @@ import {coreBadges} from '@/lib/ingress/catalog/ingress-catalog.mjs'
 
 const BASE_URL = 'https://luizcasara.com'
 
+// Sem isto o sitemap era gerado só no build: um livro cadastrado depois do
+// deploy ficava de fora até o próximo. Uma vez por dia basta para buscador, e
+// `listarLivros` lê do Data Cache (tag `livros`), não do banco.
+export const revalidate = 86400
+
 /**
  * Mesma lista de ids de `app/(apps)/app/(global)/page.tsx` (`appCategories`). Não importamos
  * aquele arquivo diretamente porque é `"use client"` e traz `react-icons`

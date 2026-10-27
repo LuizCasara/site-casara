@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       rows: serialized,
       hasMore,
       nextCursor: hasMore ? serialized[serialized.length - 1].codename_key : null,
-    });
+    }, { headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=120" } });
   } catch (err) {
     console.error("[api/ingress-rankings/agents] GET error:", err);
     return NextResponse.json({ error: "internal error" }, { status: 500 });

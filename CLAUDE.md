@@ -49,6 +49,7 @@ Current apps live in:
 - `POST /api/telegram` — Sends test results to a Telegram group; `type: "temperament-test"` and `type: "love-language-test"` post to the **same bot/chat**, but different topics (`TELEGRAM_THREAD_ID` vs `TELEGRAM_LOVE_LANGUAGES_THREAD_ID`)
 - `POST /api/send-email` — Sends formatted HTML email via nodemailer/Gmail (temperament test only — the love language test does not send email)
 - `POST /api/events` — Inserts an analytics event row into the Neon `events` table
+- `POST /api/revalidate` — Invalidates Data Cache tags (`livros`, `ingress-ranking`, `ingress-nerd-stats`) after a local script writes to production; requires `x-revalidate-secret` = `REVALIDATE_SECRET`, refuses everything when the env var is unset. Called by `scripts/global/revalidar-cache.mjs`
 - `GET /api/metrics/stats` — Aggregate stats (page views, events, browsers, countries, timeline, temperament breakdown, love language breakdown) for `/stats`, filterable by `period` (`7d` | `30d` | `all`)
 - `GET /api/metrics/temperament` — Temperament test funnel/averages only
 - `GET /api/metrics/love-languages` — Love language test funnel/averages only (mirrors `/api/metrics/temperament`)
@@ -164,7 +165,12 @@ ficou de fora do V1 está em `docs/livros/livros-proximos-passos.md`.
   Node puro e não consegue importar `.ts` sem build. Esses arquivos são
   importados tanto pelo CLI quanto pelo Next, e são os únicos cobertos por teste
   (`npm test`, via `node --test`) — porque um bug ali corrompe dado permanente
-- `lib/livros/acervo/books.ts` é o lado Next: tipo `Book` e queries. Sempre `casara.books`
+- `lib/livros/acervo/books.ts` é o lado Next: tipo `Book` e queries. Sempre `casara.books`.
+  **Toda leitura passa pelo Data Cache** (`unstable_cache`, tag `livros`, 1 h) e
+  `[slug]`/`(.)[slug]` são ISR sob demanda: render de `/livros*` não toca o Neon,
+  porque cada render (bots e previews inclusive) acordava o compute por 5 min.
+  Os scripts de cadastro invalidam a tag no final via `POST /api/revalidate`. O
+  cache serializa em JSON, por isso `reviverDatas` reconstrói os `Date` do `Book`
 - **Um livro tem UMA `category`** (taxonomia fechada em `lib/livros/acervo/book-categories.mjs`,
   define a cor) **e N `tags` livres** (eixo transversal de busca). Multi-categoria
   tornaria a posição na prateleira ambígua
@@ -277,6 +283,7 @@ EMAIL_PASS=
 DATABASE_URL=
 UPSTASH_REDIS_REST_URL=              # rate limiting, ver lib/global/rate-limit.ts — sem isso, fail-open (desativado)
 UPSTASH_REDIS_REST_TOKEN=
+REVALIDATE_SECRET=                   # POST /api/revalidate — mesmo valor na Vercel e no .env.local
 ```
 
 ### Preferências do visitante (`localStorage`)
