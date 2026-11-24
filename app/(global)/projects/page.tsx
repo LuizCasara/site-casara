@@ -1,16 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import {FaBookOpen, FaGlobeAmericas, FaThLarge} from "react-icons/fa";
 import {useLang} from "@/components/global/LanguageContext";
 import {ProjectAccordion} from "@/components/global/ui/interactive-image-accordion";
-import {trackInternalProjectClick} from "@/lib/global/analytics";
+import {type Experimento, ExperimentBento} from "@/components/global/projects/ExperimentCards";
 
-const experimentos = [
+const experimentos: Experimento[] = [
   {
     slug: "aplicativos",
     href: "/app",
-    icon: <FaThLarge size={18} />,
     wip: false,
     title: {pt: "Aplicativos", en: "Apps"},
     blurb: {
@@ -21,7 +18,6 @@ const experimentos = [
   {
     slug: "livros",
     href: "/livros",
-    icon: <FaBookOpen size={18} />,
     wip: false,
     title: {pt: "Livros", en: "Books"},
     blurb: {
@@ -32,12 +28,21 @@ const experimentos = [
   {
     slug: "ingress",
     href: "/ingress",
-    icon: <FaGlobeAmericas size={18} />,
-    wip: true,
+    wip: false,
     title: {pt: "Ingress", en: "Ingress"},
     blurb: {
-      pt: "Painel do meu perfil de agente: medalhas, estatísticas e linha do tempo.",
-      en: "My agent profile dashboard: medals, stats and timeline.",
+      pt: "Painel do meu perfil de agente: medalhas, estatísticas, ranking e linha do tempo.",
+      en: "My agent profile dashboard: medals, stats, ranking and timeline.",
+    },
+  },
+  {
+    slug: "sintonia",
+    href: null,
+    wip: true,
+    title: {pt: "Sintonia", en: "Sintonia"},
+    blurb: {
+      pt: "Um app novo que está saindo do forno. Por enquanto, só um spoiler.",
+      en: "A new app fresh out of the oven. For now, just a teaser.",
     },
   },
 ];
@@ -45,21 +50,45 @@ const experimentos = [
 const translations = {
   pt: {
     title: "Projetos",
-    desc: "Coisas que construí — as que vivem aqui dentro do site e as que entreguei para clientes.",
+    desc: "Coisas que construí — as que vivem aqui dentro do site e as que vivem lá fora.",
     experimentsLabel: "Experimentos · feitos aqui",
-    clientWorkLabel: "Trabalho com clientes",
+    clientWorkLabel: "Outros Trabalhos",
     wipBadge: "em construção",
+    open: "Abrir",
   },
   en: {
     title: "Projects",
-    desc: "Things I've built — the ones that live here on the site and the ones I delivered for clients.",
+    desc: "Things I've built — the ones that live here on the site and the ones that live out there.",
     experimentsLabel: "Experiments · built here",
-    clientWorkLabel: "Client work",
+    clientWorkLabel: "Other Work",
     wipBadge: "work in progress",
+    open: "Open",
   },
 };
 
 const projects = [
+  {
+    id: 4,
+    title: "PageFoundry",
+    image: "/thumbnails/pagefoundryThumb.png",
+    tags: ["Next.js", "Tailwind CSS", "Landing pages"],
+    link: "https://pagefoundry-seven.vercel.app/",
+    description: {
+      pt: "Vitrine de landing pages prontas, cada uma com deploy próprio — veja a demo, confira a stack e escolha a que combina com o seu negócio.",
+      en: "A showcase of ready-made landing pages, each with its own deploy — see the demo, check the stack and pick the one that fits your business.",
+    },
+  },
+  {
+    id: 5,
+    title: "CyberPyo",
+    image: "/thumbnails/cyberpyoThumb.png",
+    tags: ["Next.js", "React", "PWA"],
+    link: "https://www.gealdeiaverde.org/cyberpyo",
+    description: {
+      pt: "Site do Mutirão Regional Pioneiro 2027, com tema cyberpunk: contagem regressiva, programação ao vivo, mural, FAQ e boletins — instalável como app.",
+      en: "Website for the 2027 Regional Rover Service Camp, cyberpunk-themed: countdown, live schedule, message board, FAQ and bulletins — installable as an app.",
+    },
+  },
   {
     id: 1,
     title: "Grupo Escoteiro Aldeia Verde",
@@ -112,31 +141,7 @@ export default function ProjectsPage() {
           <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-4">
             {t.experimentsLabel}
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {experimentos.map((exp) => (
-              <Link
-                key={exp.slug}
-                href={exp.href}
-                onClick={() => trackInternalProjectClick(exp.slug)}
-                className={`block rounded-xl border p-4 transition-all ${
-                  exp.wip
-                    ? "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50/50 dark:hover:bg-gray-800/30"
-                    : "border-green-200 dark:border-green-900/50 hover:border-green-300 dark:hover:border-green-800 hover:bg-green-50/50 dark:hover:bg-green-950/20"
-                }`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-green-500 shrink-0">{exp.icon}</span>
-                  <span className="font-semibold text-sm text-gray-900 dark:text-white">{exp.title[lang]}</span>
-                  {exp.wip && (
-                    <span className="font-mono text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 rounded px-1 py-px">
-                      {t.wipBadge}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{exp.blurb[lang]}</p>
-              </Link>
-            ))}
-          </div>
+          <ExperimentBento items={experimentos} lang={lang} wipLabel={t.wipBadge} openLabel={t.open} />
         </section>
 
         <section>

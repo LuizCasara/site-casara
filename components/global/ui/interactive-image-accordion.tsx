@@ -40,9 +40,11 @@ const AccordionItem = ({
         // mobile sizing
         "w-full",
         isActive ? "h-[300px]" : "h-[68px]",
-        // desktop overrides
-        "md:h-[520px]",
-        isActive ? "md:w-[600px]" : "md:w-[80px]",
+        // desktop overrides: os fechados têm largura fixa e o aberto ocupa o que
+        // sobra (`flex-1`), em vez de 600px fixos — com 5+ projetos a soma das
+        // larguras fixas passava do container e aparecia scroll horizontal.
+        "md:h-[520px] md:w-auto",
+        isActive ? "md:flex-[1_1_0%] md:min-w-[280px]" : "md:flex-[0_0_72px]",
       ].join(" ")}
       onClick={onActivate}
       onMouseEnter={onActivate}
@@ -52,7 +54,7 @@ const AccordionItem = ({
         alt={project.title}
         fill
         className="object-cover"
-        sizes="(max-width: 768px) 100vw, 600px"
+        sizes="(max-width: 767px) 100vw, (max-width: 1023px) 400px, 640px"
       />
 
       {/* Overlay */}
@@ -110,6 +112,8 @@ const AccordionItem = ({
           href={project.link}
           target="_blank"
           rel="noopener noreferrer"
+          // Fechado, o link está invisível (opacity-0): fora da ordem do Tab.
+          tabIndex={isActive ? 0 : -1}
           onClick={(e) => {
             e.stopPropagation();
             trackProjectClick(project.title);
@@ -135,7 +139,10 @@ export function ProjectAccordion({ projects }: Props) {
 
   return (
     // Mobile: coluna empilhada | Desktop: linha lado a lado
-    <div className="flex flex-col gap-3 md:flex-row md:items-stretch md:overflow-x-auto md:pb-2">
+    // `overflow-x-auto` é só rede de segurança: com a lista atual tudo cabe e
+    // não aparece barra; ela só surge se um dia os projetos forem tantos que o
+    // aberto bateria no `min-w-[280px]`.
+    <div className="flex flex-col gap-3 md:flex-row md:items-stretch md:overflow-x-auto">
       {projects.map((project, index) => (
         <AccordionItem
           key={project.id}

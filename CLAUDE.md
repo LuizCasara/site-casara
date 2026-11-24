@@ -21,7 +21,7 @@ This is a **Next.js 16 (App Router)** personal portfolio site with Tailwind CSS.
 
 - `/` — Homepage with random quote/tip generator and quick-access cards
 - `/about` — Personal bio, social links, gaming/music profiles
-- `/projects` — Portfolio of real client projects
+- `/projects` — Portfolio: bento of the on-site experiments (`components/global/projects/ExperimentCards.tsx`, incl. the "Sintonia" teaser with no link) above an accordion of "Outros Trabalhos" (client work + external projects). The header has no dropdown: "Projetos" is a plain link, lit on `/projects`, `/app*` and `/livros*`
 - `/app` — Mini-apps hub listing all tools by category
 - `/app/[app_name]` — Dynamic route that lazy-loads the matching app component
 - `/casamento` — Standalone wedding invitation page (own `layout.tsx`, `icon.tsx`, `opengraph-image.tsx`); photos live in `public/casamento/`

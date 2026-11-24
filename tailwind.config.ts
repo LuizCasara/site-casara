@@ -21,6 +21,16 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      // Barras do equalizador do card "Sintonia" em /projects.
+      keyframes: {
+        eq: {
+          "0%, 100%": { transform: "scaleY(0.25)" },
+          "50%": { transform: "scaleY(1)" },
+        },
+      },
+      animation: {
+        eq: "eq 1.1s ease-in-out infinite",
+      },
     },
   },
   plugins: [require("@tailwindcss/typography")],
