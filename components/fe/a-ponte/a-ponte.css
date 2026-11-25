@@ -75,6 +75,12 @@
   gap: 10px;
   min-height: 38px;
 }
+.ap-top-start {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
 .ap-brand {
   display: flex;
   align-items: center;
@@ -176,6 +182,7 @@
   overflow: hidden;
   background: linear-gradient(var(--sky-top), var(--sky-bottom));
   justify-self: center;
+  transition: max-height 0.6s ease;
 }
 .ap-stage svg {
   display: block;
@@ -756,6 +763,83 @@
   color: var(--gold-soft);
 }
 
+/* ── Celular ──
+   Num iPhone 12 (≈390×660 úteis no Safari) o desenho a 3:2 levava ~240px e os
+   botões de 50px sobravam pouco cartão: o texto rolava demais. Aqui o desenho
+   cede altura (o SVG é `meet`, então só ganha margem nas laterais) e os
+   controles ficam mais justos, sem descer dos 44px de alvo de toque. */
+@media (max-width: 899px) {
+  .ap {
+    gap: 10px;
+  }
+  .ap-stage {
+    max-height: min(30dvh, 300px);
+    border-radius: 16px;
+  }
+  /* último passo: o texto é o protagonista, o desenho vira lembrança */
+  .ap[data-fim] .ap-stage {
+    max-height: min(17dvh, 150px);
+  }
+  .ap-icon-btn {
+    width: 32px;
+    height: 32px;
+  }
+  /* sair + marca + 8 bolinhas + 2 ícones cabem em ~330px: folga para celulares de 360 */
+  .ap-top,
+  .ap-top-start {
+    gap: 7px;
+  }
+  .ap-scroll,
+  .ap-body {
+    gap: 10px;
+  }
+  .ap h1 {
+    font-size: 1.45rem;
+  }
+  .ap-primary,
+  .ap-ghost {
+    min-height: 44px;
+    padding: 9px 14px;
+    font-size: 0.95rem;
+  }
+  .ap-ghost {
+    padding-inline: 12px;
+  }
+  .ap-choice {
+    min-height: 44px;
+    padding: 8px 12px;
+    gap: 10px;
+    font-size: 0.95rem;
+  }
+  .ap-chip {
+    min-height: 38px;
+    padding: 6px 14px;
+  }
+  .ap-hold {
+    min-height: 48px;
+  }
+  .ap-hold svg {
+    width: 26px;
+    height: 26px;
+  }
+  .ap-mas {
+    width: 84px;
+    height: 84px;
+    font-size: 2.1rem;
+  }
+  .ap-actions {
+    padding-top: 8px;
+    gap: 8px;
+  }
+  .ap-quote {
+    font-size: 1.05rem;
+  }
+  .ap-verse {
+    font-size: 0.92rem;
+    padding-top: 8px;
+  }
+}
+
 /* ── Desktop ── */
 @media (min-width: 900px) {
   .ap {
@@ -772,6 +856,10 @@
   .ap-stage {
     align-self: center;
     max-height: 100%;
+  }
+  /* último passo: a coluna do texto passa a ser a maior */
+  .ap[data-fim] {
+    grid-template-columns: minmax(0, 1fr) minmax(380px, 1.3fr);
   }
   .ap-card {
     justify-content: center;

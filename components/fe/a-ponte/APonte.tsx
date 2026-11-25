@@ -11,6 +11,7 @@
 // Feita para quem recebe o link e segue sozinho — o "modo conduzir" do
 // protótipo saiu de propósito.
 
+import Link from 'next/link';
 import {useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode} from 'react';
 import {Cena, TRAVESSIA, vibrar} from '@/lib/fe/a-ponte/cena';
 import * as Som from '@/lib/fe/a-ponte/som';
@@ -703,12 +704,21 @@ export default function APonte({arte, versiculo}: {arte: ReactNode; versiculo: R
   const Passo = PASSOS[passo];
 
   return (
-    <div className="ap" ref={raiz}>
+    // `data-fim`: no último passo o texto (oração, links) é o protagonista e o
+    // desenho encolhe — ver `.ap[data-fim]` no CSS.
+    <div className="ap" ref={raiz} data-fim={passo === PASSOS.length - 1 || undefined}>
       <header className="ap-top">
-        <button type="button" className="ap-brand" aria-label="A Ponte: voltar ao início" onClick={() => irPara(0)}>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3h3v6h5.5v3h-5.5v9h-3v-9H5V9h5.5z" /><path d="M2 16h5M17 16h5" /></svg>
-          A Ponte
-        </button>
+        <div className="ap-top-start">
+          {/* A página é tela cheia, sem o header do site: esta é a saída. Vai
+              para /fe, que tem menu e rodapé. O som para no desmonte. */}
+          <Link href="/fe" className="ap-icon-btn" aria-label="Sair de A Ponte e voltar ao site" title="Voltar ao site">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+          </Link>
+          <button type="button" className="ap-brand" aria-label="A Ponte: voltar ao início" onClick={() => irPara(0)}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3h3v6h5.5v3h-5.5v9h-3v-9H5V9h5.5z" /><path d="M2 16h5M17 16h5" /></svg>
+            A Ponte
+          </button>
+        </div>
         <nav className="ap-dots" aria-label="Passos">
           {PASSOS.slice(1).map((_, k) => {
             const i = k + 1;
