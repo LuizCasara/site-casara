@@ -147,13 +147,34 @@ function criar() {
     }),
   );
   padGain.gain.setTargetAtTime(0.045, ctx.currentTime, 4);
-  // Aba escondida dorme sempre; ao voltar, só acorda se for para tocar.
-  document.addEventListener('visibilitychange', () => {
-    if (!ctx) return;
-    if (document.hidden) ctx.suspend();
-    else if (audivel()) ctx.resume();
-  });
+  document.addEventListener('visibilitychange', aoMudarVisibilidade);
   return true;
+}
+
+// Aba escondida dorme sempre; ao voltar, só acorda se for para tocar.
+function aoMudarVisibilidade() {
+  if (!ctx) return;
+  if (document.hidden) ctx.suspend();
+  else if (audivel()) ctx.resume();
+}
+
+/**
+ * Saindo da rota: fecha o grafo inteiro (o próximo "Começar" cria outro). Não
+ * basta suspender — o listener de visibilidade acordaria o contexto em outra
+ * página. Não mexe na preferência.
+ */
+export function sair() {
+  if (suspensao) clearTimeout(suspensao);
+  suspensao = null;
+  document.removeEventListener('visibilitychange', aoMudarVisibilidade);
+  if (!ctx) return;
+  const c = ctx;
+  ctx = null;
+  sw = null;
+  voices = [];
+  pausadoNoFim = false;
+  c.close().catch(() => {});
+  avisar();
 }
 
 /** Chamado a partir de um gesto ("Começar"): cria o grafo na 1ª vez e, se a preferência deixa, toca. */

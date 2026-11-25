@@ -665,7 +665,11 @@ export default function APonte({arte, versiculo}: {arte: ReactNode; versiculo: R
   // deste componente; a ref da raiz já está ligada nessa hora.
   const cena = useCallback(() => (cenaRef.current ??= new Cena(raiz.current!)), []);
 
-  useEffect(() => () => cenaRef.current?.cancelar(), []);
+  // Saiu da rota (link do site, voltar do navegador): animação e som param juntos.
+  useEffect(() => () => {
+    cenaRef.current?.cancelar();
+    Som.sair();
+  }, []);
 
   const irPara = useCallback((i: number) => {
     cena().cancelar();
