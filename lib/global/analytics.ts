@@ -433,3 +433,22 @@ export const trackIngressAgentShared = (metodo: 'share' | 'clipboard') =>
 // critério que já vale para o resto dos eventos de `/ingress`).
 export const trackIngressComparisonViewed = (codenameKeyA: string, codenameKeyB: string) =>
   trackEvent('ingress_comparison_viewed', { codenameKeyA, codenameKeyB });
+// ─── Fé · A Ponte (/fe/a-ponte) ──────────────────────────────────────────────
+// Só gestos deliberados. Cada passo da dinâmica NÃO vira evento: seria medir
+// travessia (o antipadrão de `room_scene_changed`); quem começou e quem chegou
+// ao fim já dizem quanto se perde no caminho.
+
+/** Tocou em "Começar". */
+export const trackPonteIniciada = () => trackEvent('ponte_started');
+
+/** No último passo, escolheu o que fazer agora — e, por tabela, chegou ao fim. */
+export const trackPonteResposta = (opcao: 'orar' | 'conversar' | 'pensar') =>
+  trackEvent('ponte_response', { opcao });
+
+export const trackPonteWhatsapp = (motivo: 'orei' | 'conversar') =>
+  trackEvent('ponte_whatsapp', { motivo });
+
+// `metodo`: mesmo par de `trackBookShared`. `origem`: o ícone do topo (a
+// qualquer momento) ou o botão do fim (depois de fazer a dinâmica inteira).
+export const trackPonteCompartilhada = (metodo: 'share' | 'clipboard', origem: 'topo' | 'fim') =>
+  trackEvent('ponte_shared', { metodo, origem });

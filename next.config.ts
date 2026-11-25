@@ -41,6 +41,22 @@ const nextConfig: NextConfig = {
         // -> `ingress-badges.mjs` -> catálogo lido do disco), mesma razão de `/ingress/**`.
         '/api/ingress-rankings/**': ['./data/ingress/**/*'],
     },
+    /**
+     * A área "Fé" mora em `/fe`, sem acento: uma pasta `fé` no App Router vira
+     * `/f%C3%A9` no link compartilhado (o WhatsApp nem sempre decodifica) e
+     * segmentos não-ASCII já deram 404 em produção em versões do Next. Quem
+     * digitar com acento cai no mesmo lugar.
+     */
+    async redirects() {
+        return [
+            {source: '/f%C3%A9', destination: '/fe', permanent: true},
+            {source: '/f%C3%A9/:caminho*', destination: '/fe/:caminho*', permanent: true},
+            // O mesmo "é" decomposto (e + acento combinante, NFD), que alguns
+            // teclados/apps da Apple produzem — sem isto, 404 (medido com `next start`).
+            {source: '/fe%CC%81', destination: '/fe', permanent: true},
+            {source: '/fe%CC%81/:caminho*', destination: '/fe/:caminho*', permanent: true},
+        ];
+    },
     // Sem bloco `env`: as três variáveis do Telegram só são lidas dentro de
     // app/(global)/api/telegram/route.js (server-only), que já enxerga process.env.*
     // sem precisar disso — o bloco `env` do next.config existe justamente

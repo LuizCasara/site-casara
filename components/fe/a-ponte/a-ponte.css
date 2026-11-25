@@ -1,0 +1,805 @@
+/*
+ * "A Ponte" (/fe/a-ponte). Tudo escopado sob `.ap`: a página é uma tela cheia
+ * com identidade própria (noite verde-petróleo + dourado) e não pode vazar
+ * estilo para o resto do site, nem herdar o tema claro/escuro dele — é um
+ * único tema escuro, de propósito.
+ *
+ * Layout: app de uma tela. Celular = desenho em cima, um cartão por vez,
+ * versículo no rodapé. Desktop (>= 900px) = desenho à esquerda, cartão à direita.
+ */
+.ap {
+  --night: #0d1f22;
+  --sky-top: #0f2427;
+  --sky-bottom: #1f3d41;
+  --panel: #132a2d;
+  --line: #24403f;
+  --line-strong: #33504f;
+  --text: #ecebe0;
+  --muted: #a8b4ac;
+  --faint: #6e8079;
+  --gold: #d6ab66;
+  --gold-soft: #f1d9a4;
+  --gold-wash: rgba(214, 171, 102, 0.14);
+  --ember: #e2a68f;
+  --slot: rgba(168, 180, 172, 0.13);
+  --f-display: var(--font-newsreader), Georgia, 'Times New Roman', serif;
+  --f-ui: var(--font-instrument), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  color-scheme: dark;
+  background: var(--night);
+  color: var(--text);
+  font: 16px/1.55 var(--f-ui);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-areas: 'top' 'stage' 'card' 'verse';
+  gap: 12px;
+  padding-top: max(10px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.ap *,
+.ap *::before,
+.ap *::after {
+  box-sizing: border-box;
+}
+.ap button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.ap button:focus-visible,
+.ap a:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+.ap h1:focus {
+  outline: none;
+}
+.ap p {
+  margin: 0;
+}
+
+/* ── Barra do topo ── */
+.ap-top {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 38px;
+}
+.ap-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 1.15rem var(--f-display);
+  letter-spacing: 0.02em;
+  color: var(--gold-soft);
+  white-space: nowrap;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+.ap-brand svg {
+  width: 22px;
+  height: 22px;
+  stroke: var(--gold);
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ap-dots {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.ap-dots button {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 99px;
+  background: var(--line-strong);
+  transition: width 0.3s, background 0.3s;
+}
+.ap-dots button.done {
+  background: var(--gold);
+  opacity: 0.55;
+}
+.ap-dots button.current {
+  width: 20px;
+  background: var(--gold);
+  opacity: 1;
+}
+.ap-dots button:disabled {
+  cursor: default;
+}
+.ap-tools {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.ap-icon-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--muted);
+}
+.ap-icon-btn:hover {
+  color: var(--text);
+}
+.ap-icon-btn svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ap-toast {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: 99px;
+  background: var(--gold);
+  color: var(--night);
+  font-size: 0.75rem;
+  font-weight: 600;
+  pointer-events: none;
+  animation: ap-rise 0.3s ease both;
+}
+
+/* ── Palco (desenho) ── */
+.ap-stage {
+  grid-area: stage;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  max-height: min(42dvh, 380px);
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(var(--sky-top), var(--sky-bottom));
+  justify-self: center;
+}
+.ap-stage svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ap .reveal {
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.ap .reveal.on {
+  opacity: 1;
+}
+.ap .draw {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1.8s ease;
+}
+.ap .draw.on {
+  stroke-dashoffset: 0;
+}
+.ap .glow {
+  opacity: calc(var(--glow, 0) + var(--hold, 0) * 0.35);
+  transition: opacity 1.6s ease;
+}
+.ap .dawn {
+  opacity: var(--dawn, 0);
+  transition: opacity 2s ease;
+}
+.ap .sep {
+  transition: opacity 0.6s;
+}
+.ap .bridged .sep {
+  opacity: 0 !important;
+}
+.ap .star {
+  fill: #f4ead0;
+  animation: ap-twinkle var(--d, 5s) ease-in-out infinite;
+  animation-delay: var(--dl, 0s);
+}
+@keyframes ap-twinkle {
+  0%,
+  100% {
+    opacity: var(--o, 0.6);
+  }
+  50% {
+    opacity: calc(var(--o, 0.6) * 0.25);
+  }
+}
+.ap .cross .c-line {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1s ease;
+}
+.ap .cross.on .c-line {
+  stroke-dashoffset: 0;
+}
+.ap .cross .c-fill {
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.ap .cross.on .c-fill {
+  opacity: 1;
+}
+.ap .cross .t-christ {
+  opacity: 0;
+  transition: opacity 0.9s ease 0.3s;
+}
+.ap .cross.on .t-christ {
+  opacity: 1;
+}
+/* enquanto o dedo segura, a cruz segue o progresso sem atraso de transição */
+.ap .holding-cross .cross .c-line,
+.ap .holding-cross .cross .c-fill {
+  transition: none;
+}
+.ap .burst {
+  opacity: 0;
+  fill: none;
+  stroke: var(--gold-soft);
+  stroke-width: 3;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.ap .arrived .burst {
+  animation: ap-burst 1.8s ease-out both;
+}
+@keyframes ap-burst {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(3.2);
+  }
+}
+/* leitura do versículo inteiro: o trecho lido acende a sua parte do desenho */
+.ap .focusing [data-part] {
+  opacity: 0.13 !important;
+  transition: opacity 0.9s ease;
+}
+.ap .focusing [data-part].lit {
+  opacity: 1 !important;
+}
+
+.ap .t-small {
+  font: 500 28px var(--f-ui);
+  letter-spacing: 5px;
+  fill: var(--muted);
+}
+.ap .t-god {
+  font: italic 400 84px var(--f-display);
+  fill: var(--gold-soft);
+}
+.ap .t-label {
+  font: 600 34px var(--f-ui);
+  letter-spacing: 2px;
+  fill: var(--text);
+}
+.ap .t-gift {
+  fill: var(--gold-soft);
+}
+.ap .t-sep {
+  font: 600 27px var(--f-ui);
+  letter-spacing: 4px;
+  fill: var(--ember);
+}
+.ap .t-mas {
+  font: italic 500 40px var(--f-display);
+  fill: var(--gold-soft);
+}
+.ap .t-christ {
+  font: 600 37px var(--f-display);
+  fill: var(--night);
+}
+.ap .t-plank {
+  font: 500 27px var(--f-ui);
+  fill: var(--gold-soft);
+}
+
+/* ── Cartão ── */
+.ap-card {
+  grid-area: card;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+.ap-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 2px 2px 10px;
+}
+.ap-scroll > * {
+  animation: ap-rise 0.5s ease both;
+}
+.ap-scroll > *:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.ap-scroll > *:nth-child(3) {
+  animation-delay: 0.12s;
+}
+.ap-kicker {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.ap h1 {
+  margin: 0;
+  font: 400 1.7rem/1.15 var(--f-display);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.ap-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--muted);
+}
+.ap-body > * {
+  animation: ap-rise 0.45s ease both;
+}
+.ap-body strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.ap-feedback {
+  font: 400 1.14rem/1.45 var(--f-display);
+  color: var(--gold-soft);
+}
+.ap-muted {
+  color: var(--faint);
+  font-size: 0.92rem;
+}
+.ap-quote {
+  margin: 0;
+  padding: 2px 0 2px 14px;
+  border-left: 2px solid var(--gold);
+  font: italic 400 1.12rem/1.5 var(--f-display);
+  color: var(--text);
+}
+.ap-quote cite {
+  display: block;
+  margin-top: 4px;
+  font: 500 0.75rem var(--f-ui);
+  font-style: normal;
+  letter-spacing: 0.08em;
+  color: var(--faint);
+}
+@keyframes ap-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.ap-choices {
+  display: grid;
+  gap: 8px;
+}
+.ap-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 14px;
+  text-align: left;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+  transition: border-color 0.2s, background 0.2s, opacity 0.2s;
+}
+.ap-choice:hover:not(:disabled) {
+  border-color: var(--gold);
+}
+.ap-choice .mark {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--faint);
+  transition: all 0.2s;
+}
+.ap-choice.picked {
+  border-color: var(--gold);
+  background: var(--gold-wash);
+}
+.ap-choice.picked .mark {
+  border-color: var(--gold);
+  background: var(--gold);
+  box-shadow: inset 0 0 0 3px var(--panel);
+}
+.ap-choice:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.ap-fill-row {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.ap-fill-row p {
+  color: var(--text);
+  font: 400 1.08rem var(--f-display);
+}
+.ap-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ap-chip {
+  min-height: 42px;
+  padding: 8px 16px;
+  border-radius: 99px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  color: var(--text);
+  transition: all 0.2s;
+}
+.ap-chip:hover:not(:disabled) {
+  border-color: var(--gold);
+}
+.ap-chip.picked {
+  border-color: var(--gold);
+  background: var(--gold-wash);
+  color: var(--gold-soft);
+}
+.ap-chip.right {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--night);
+}
+.ap-chip:disabled {
+  cursor: default;
+}
+.ap-chip:disabled:not(.picked):not(.right) {
+  opacity: 0.4;
+}
+
+.ap-tries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.ap-tries li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 0.95rem;
+  animation: ap-rise 0.45s ease both;
+}
+.ap-tries .x {
+  color: var(--ember);
+  font-weight: 600;
+}
+
+.ap-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.ap-actions:empty {
+  display: none;
+}
+.ap-primary {
+  flex: 1;
+  min-height: 50px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--gold);
+  color: var(--night);
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: filter 0.2s;
+}
+.ap-primary:hover {
+  filter: brightness(1.07);
+}
+.ap-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.ap-primary svg,
+.ap-ghost svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ap-ghost {
+  min-height: 50px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.ap-ghost:hover {
+  color: var(--text);
+  border-color: var(--faint);
+}
+.ap-ghost:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.ap-link {
+  align-self: flex-start;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--gold);
+  font-size: 0.92rem;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.ap-sound-note {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--faint);
+}
+.ap-sound-note svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* botão "mas". O pulso é box-shadow, não transform: scale — transform conta
+   como overflow rolável e fazia o cartão ganhar barra de rolagem a cada ciclo
+   (mesma lição do .pulso-do-aviso em app/globals.css). */
+.ap-mas-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 6px;
+}
+.ap-mas {
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold);
+  background: transparent;
+  color: var(--gold-soft);
+  font: italic 500 2.5rem/1 var(--f-display);
+  transition: background 0.4s, color 0.4s;
+  animation: ap-pulse 2.2s ease-out infinite;
+}
+.ap-mas.tapped {
+  background: var(--gold);
+  color: var(--night);
+  cursor: default;
+  animation: none;
+}
+@keyframes ap-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(214, 171, 102, 0.55);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 22px rgba(214, 171, 102, 0);
+  }
+}
+
+/* botão de segurar */
+.ap-hold {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 58px;
+  border-radius: 14px;
+  border: 1.5px solid var(--gold);
+  background: transparent;
+  color: var(--gold-soft);
+  font-weight: 600;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+  transition: background 0.2s;
+}
+.ap-hold.holding {
+  background: var(--gold-wash);
+}
+.ap-hold svg {
+  width: 30px;
+  height: 30px;
+  transform: rotate(-90deg);
+}
+.ap-hold .track {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 3;
+}
+.ap-hold .ring {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+/* ── Versículo do rodapé ── */
+.ap-verse {
+  grid-area: verse;
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  font: 400 0.98rem/1.6 var(--f-display);
+  color: var(--muted);
+  text-wrap: balance;
+}
+.ap-verse cite {
+  display: block;
+  font: 500 0.68rem var(--f-ui);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-style: normal;
+  margin-top: 2px;
+}
+.ap .slot {
+  color: transparent;
+  background: var(--slot);
+  border-radius: 6px;
+  padding: 0 2px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: color 0.7s, background 0.7s;
+}
+.ap .slot.on {
+  color: var(--gold-soft);
+  background: transparent;
+  animation: ap-glint 1.8s ease;
+}
+.ap-verse.complete .q {
+  color: var(--text);
+  transition: color 1.2s;
+}
+@keyframes ap-glint {
+  0% {
+    text-shadow: 0 0 0 transparent;
+  }
+  30% {
+    text-shadow: 0 0 14px rgba(241, 217, 164, 0.9);
+  }
+  100% {
+    text-shadow: 0 0 0 transparent;
+  }
+}
+.ap-fly {
+  position: fixed;
+  z-index: 50;
+  margin: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  line-height: 1.1;
+  font-family: var(--f-display);
+  font-style: italic;
+  font-weight: 500;
+  color: var(--gold-soft);
+  text-shadow: 0 0 18px rgba(13, 31, 34, 0.95), 0 0 42px rgba(13, 31, 34, 0.85);
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+/* leitura final */
+.ap-big-verse {
+  margin: 0;
+  font: 400 1.32rem/1.6 var(--f-display);
+  color: var(--faint);
+  text-wrap: pretty;
+}
+.ap-big-verse .ph {
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.8s ease;
+}
+.ap-big-verse .ph.read {
+  color: var(--muted);
+}
+.ap-big-verse .ph.lit {
+  color: var(--gold-soft);
+}
+
+/* ── Desktop ── */
+@media (min-width: 900px) {
+  .ap {
+    grid-template-columns: minmax(0, 1.4fr) minmax(340px, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'top top' 'stage card' 'verse verse';
+    column-gap: 44px;
+    row-gap: 22px;
+    padding-top: 22px;
+    padding-bottom: 24px;
+    padding-left: max(32px, calc((100vw - 1320px) / 2));
+    padding-right: max(32px, calc((100vw - 1320px) / 2));
+  }
+  .ap-stage {
+    align-self: center;
+    max-height: 100%;
+  }
+  .ap-card {
+    justify-content: center;
+  }
+  .ap-scroll {
+    flex: 0 1 auto;
+  }
+  .ap h1 {
+    font-size: 2.5rem;
+  }
+  .ap-actions {
+    border-top: 0;
+    padding-top: 16px;
+  }
+  .ap-verse {
+    font-size: 1.25rem;
+    padding-top: 16px;
+  }
+  .ap-big-verse {
+    font-size: 1.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ap *,
+  .ap *::before,
+  .ap *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

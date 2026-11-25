@@ -45,6 +45,17 @@ const experimentos: Experimento[] = [
       en: "A new app fresh out of the oven. For now, just a teaser.",
     },
   },
+  // Por último de propósito: é a faixa inteira da 3ª linha do bento.
+  {
+    slug: "fe",
+    href: "/fe",
+    wip: false,
+    title: {pt: "Fé", en: "Faith"},
+    blurb: {
+      pt: "Dinâmicas interativas sobre Deus e a Palavra. A primeira é A Ponte: Romanos 6:23 contado em perguntas, com o desenho se montando a cada resposta.",
+      en: "Interactive pieces about God and the Bible. The first is The Bridge: Romans 6:23 told through questions, with the drawing coming together at each answer (in Portuguese).",
+    },
+  },
 ];
 
 const translations = {

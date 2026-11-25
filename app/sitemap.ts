@@ -57,6 +57,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {url: `${BASE_URL}/app`, changeFrequency: 'monthly', priority: 0.6},
     {url: `${BASE_URL}/livros`, changeFrequency: 'weekly', priority: 0.6},
     {url: `${BASE_URL}/livros/lista`, changeFrequency: 'weekly', priority: 0.5},
+    {url: `${BASE_URL}/fe`, changeFrequency: 'monthly', priority: 0.5},
+    {url: `${BASE_URL}/fe/a-ponte`, changeFrequency: 'monthly', priority: 0.6},
     {url: `${BASE_URL}/ingress`, changeFrequency: 'monthly', priority: 0.5},
     {url: `${BASE_URL}/ingress/fencherlc`, changeFrequency: 'weekly', priority: 0.7},
     {url: `${BASE_URL}/ingress/ranking`, changeFrequency: 'hourly', priority: 1.0},

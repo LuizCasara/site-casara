@@ -10,13 +10,14 @@
 
 import Link from "next/link";
 import type {ReactNode} from "react";
-import {FaArrowRight, FaBookOpen, FaBroadcastTower, FaGlobeAmericas, FaThLarge} from "react-icons/fa";
+import {FaArrowRight, FaBookOpen, FaBroadcastTower, FaCross, FaGlobeAmericas, FaThLarge} from "react-icons/fa";
 import {trackInternalProjectClick} from "@/lib/global/analytics";
+import MiniPonte from "@/components/fe/MiniPonte";
 
 type Lang = "pt" | "en";
 type Texto = {pt: string; en: string};
 
-export type ExperimentSlug = "aplicativos" | "livros" | "ingress" | "sintonia";
+export type ExperimentSlug = "aplicativos" | "livros" | "ingress" | "sintonia" | "fe";
 
 export type Experimento = {
   slug: ExperimentSlug;
@@ -32,24 +33,30 @@ const ICONES: Record<ExperimentSlug, ReactNode> = {
   livros: <FaBookOpen />,
   ingress: <FaGlobeAmericas />,
   sintonia: <FaBroadcastTower />,
+  fe: <FaCross />,
 };
 
 // Cada área tem a cor da própria área: verde do site para os apps, madeira da
-// sala de leitura, o fundo escuro do /ingress e um violeta novo para o Sintonia.
+// sala de leitura, o fundo escuro do /ingress, um violeta novo para o Sintonia
+// e a noite verde-petróleo de "A Ponte" para Fé.
 const FUNDO: Record<ExperimentSlug, string> = {
   aplicativos: "bg-gradient-to-br from-emerald-500 to-teal-700",
   livros: "bg-gradient-to-br from-amber-600 to-orange-900",
   ingress: "bg-gradient-to-br from-[#0b0f14] via-[#0f2a2a] to-[#0b2140]",
   sintonia: "bg-gradient-to-br from-violet-600 to-fuchsia-900",
+  fe: "bg-gradient-to-br from-[#0f2427] via-[#14302f] to-[#1f3d41]",
 };
 
 // Livros é o destaque grande, Aplicativos ocupa uma faixa larga, Ingress e
-// Sintonia são quadrados. No mobile tudo vira uma coluna.
+// Sintonia são quadrados, e Fé fecha o bento numa faixa inteira embaixo (uma
+// 3ª linha: os quatro primeiros já preenchem as 4×2 células). No mobile tudo
+// vira uma coluna.
 const TAMANHO: Record<ExperimentSlug, string> = {
   livros: "md:col-span-2 md:row-span-2 min-h-[22rem]",
   aplicativos: "md:col-span-2 min-h-[11rem]",
   ingress: "min-h-[11rem]",
   sintonia: "min-h-[11rem]",
+  fe: "md:col-span-4 min-h-[11rem]",
 };
 
 // ─── Cenas: mini-ilustrações em CSS ──────────────────────────────────────────
@@ -116,11 +123,16 @@ function SintoniaScene() {
   );
 }
 
+function FeScene() {
+  return <MiniPonte className="w-56 transition-transform duration-300 group-hover:-translate-y-1 sm:w-64" />;
+}
+
 // Ingress fica sem cena: o bloco é quadrado e pequeno, e ela apertava o texto.
 const CENAS: Partial<Record<ExperimentSlug, () => ReactNode>> = {
   aplicativos: AppsScene,
   livros: BooksScene,
   sintonia: SintoniaScene,
+  fe: FeScene,
 };
 
 // ─── Peças comuns ────────────────────────────────────────────────────────────
@@ -160,13 +172,16 @@ export function ExperimentBento({items, lang, wipLabel, openLabel}: Props) {
       {items.map((exp) => {
         const Cena = CENAS[exp.slug];
         const grande = exp.slug === "livros";
+        // Fé também é faixa larga, mas com a cena à direita (o desenho lê da
+        // pessoa, à esquerda, para Deus, à direita — como a própria dinâmica).
         const larga = exp.slug === "aplicativos";
+        const faixaFe = exp.slug === "fe";
         return (
           <BlocoShell
             key={exp.slug}
             exp={exp}
             className={`relative flex overflow-hidden rounded-3xl p-5 text-white transition-transform duration-300 ${FUNDO[exp.slug]} ${TAMANHO[exp.slug]} ${
-              larga ? "flex-row items-center gap-5" : "flex-col"
+              larga ? "flex-row items-center gap-5" : faixaFe ? "flex-col gap-4 md:flex-row md:items-center md:gap-8" : "flex-col"
             }`}
           >
             {/* Ícone gigante de marca d'água */}
@@ -195,7 +210,7 @@ export function ExperimentBento({items, lang, wipLabel, openLabel}: Props) {
             {Cena && (
               <div
                 className={`relative flex items-center ${
-                  grande ? "flex-1 justify-center py-6" : larga ? "order-1 shrink-0" : "mt-3"
+                  grande ? "flex-1 justify-center py-6" : larga ? "order-1 shrink-0" : faixaFe ? "justify-center md:shrink-0" : "mt-3"
                 }`}
               >
                 <Cena />

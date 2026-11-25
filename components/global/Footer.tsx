@@ -16,7 +16,7 @@ function Copyright() {
 
 const Footer = () => {
   const pathname = usePathname();
-  if (pathname.startsWith('/casamento') || pathname.startsWith('/w/') || pathname.startsWith('/q/') || pathname.startsWith('/ingress')) return null;
+  if (pathname.startsWith('/casamento') || pathname.startsWith('/w/') || pathname.startsWith('/q/') || pathname.startsWith('/ingress') || pathname.startsWith('/fe/')) return null;
 
   // Mesmo predicado que decide montar a sala 3D (RoomCanvasLoader usa esta
   // função): vale em /livros e /livros/<slug>, nunca em /livros/lista, que é

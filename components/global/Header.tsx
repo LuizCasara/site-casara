@@ -25,7 +25,7 @@ const navLinks: Record<'pt' | 'en', NavItem[]> = {
 // das áreas internas ficou toda em /projects. Ele continua aceso quando a pessoa
 // está numa área que vive sob ele. `/ingress` não entra porque o header nem é
 // renderizado lá.
-const PROJETOS_PREFIXOS = ['/projects', '/app', '/livros'];
+const PROJETOS_PREFIXOS = ['/projects', '/app', '/livros', '/fe'];
 const isActive = (pathname: string, href: string) =>
   href === '/projects'
     ? PROJETOS_PREFIXOS.some((pre) => pathname === pre || pathname.startsWith(pre + '/'))
@@ -43,7 +43,8 @@ const Header = () => {
     toggle();
   };
 
-  if (pathname.startsWith('/casamento') || pathname.startsWith('/w/') || pathname.startsWith('/q/') || pathname.startsWith('/ingress')) return null;
+  // `/fe/` com barra: as dinâmicas de fé são tela cheia, mas o hub `/fe` tem header.
+  if (pathname.startsWith('/casamento') || pathname.startsWith('/w/') || pathname.startsWith('/q/') || pathname.startsWith('/ingress') || pathname.startsWith('/fe/')) return null;
 
   const linkClasses = (ativo: boolean) =>
     `px-3 py-2 rounded-md text-sm font-medium transition-colors ${

@@ -112,6 +112,10 @@ const EVENT_LABELS: Record<string, string> = {
   book_comment_whatsapp:        "BOOK_COMMENT",
   book_suggestion_whatsapp:     "BOOK_SUGGEST",
   caderno_desbloqueado:         "CADERNO_UNLOCK",
+  ponte_started:                "PONTE_START",
+  ponte_response:               "PONTE_RESPOSTA",
+  ponte_whatsapp:               "PONTE_WHATSAPP",
+  ponte_shared:                 "PONTE_SHARE",
   ingress_compare_vs_me:        "ING_CMP_VS_ME",
   ingress_compare_two_agents:   "ING_CMP_TWO",
   ingress_ranking_join:         "ING_JOIN",
@@ -176,6 +180,10 @@ const EVENT_DESCRIPTIONS: Record<string, string> = {
   book_comment_whatsapp:        "Foi comentar sobre um livro pelo WhatsApp",
   book_suggestion_whatsapp:     "Foi sugerir um livro pelo WhatsApp",
   caderno_desbloqueado:         "Achou as 17 coisas da sala e pegou o caderno",
+  ponte_started:                "Começou a dinâmica A Ponte",
+  ponte_response:               "Chegou ao fim de A Ponte e escolheu o que fazer",
+  ponte_whatsapp:               "Chamou no WhatsApp a partir de A Ponte",
+  ponte_shared:                 "Compartilhou o link de A Ponte",
 };
 
 const TEMP_DISPLAY: Record<string, string> = {

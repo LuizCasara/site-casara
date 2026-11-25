@@ -34,6 +34,7 @@ export const REAL_ROUTE_PATTERN =
   `|^/livros$` +
   `|^/livros/lista$` +
   `|^/livros/[a-z0-9-]+$` +
+  `|^/fe(/a-ponte)?$` +
   `|^/ingress$` +
   `|^/ingress/(ranking|fencherlc)$` +
   `|^/ingress/fencherlc/linha-do-tempo$` +
